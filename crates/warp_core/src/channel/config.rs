@@ -83,10 +83,6 @@ pub struct OzConfig {
     pub workload_audience_url: Option<Cow<'static, str>>,
 }
 
-
-
-
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AutoupdateConfig {
     /// The base URL for fetching autoupdate versions and updated release bundles.

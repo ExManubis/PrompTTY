@@ -363,7 +363,6 @@ impl PrivacySettings {
         }
     }
 
-
     pub fn set_is_cloud_conversation_storage_enabled(
         &mut self,
         new_value: bool,

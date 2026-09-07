@@ -1800,10 +1800,9 @@ impl Block {
     /// Computes [`UserBlockCompleted::output_truncated_with_obfuscated_secrets`] lazily from the live
     /// block.
     fn compute_output_truncated_with_obfuscated_secrets(&self) -> String {
-        let mut output = self.output_grid().contents_to_string_force_secrets_obfuscated(
-            false,
-            Some(MAX_SERIALIZED_OUTPUT_LINES),
-        );
+        let mut output = self
+            .output_grid()
+            .contents_to_string_force_secrets_obfuscated(false, Some(MAX_SERIALIZED_OUTPUT_LINES));
         // If secret redaction is disabled, we manually scan for secrets and redact them.
         if matches!(
             self.output_grid().should_scan_for_secrets,

@@ -9,15 +9,13 @@ use warpui::{Entity, EntityId, ModelContext, ModelHandle};
 #[cfg(not(target_family = "wasm"))]
 use super::get_server_output_id;
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
-use crate::terminal::model::session::active_session::ActiveSession;
 #[cfg(not(target_family = "wasm"))]
-use crate::{
-    ai::{
-        agent::{AIAgentAction, AIAgentActionResultType, CallMCPToolResult},
-        blocklist::{BlocklistAIPermissions, action_model::AIAgentActionType},
-        mcp::TemplatableMCPServerManager,
-    },
+use crate::ai::{
+    agent::{AIAgentAction, AIAgentActionResultType, CallMCPToolResult},
+    blocklist::{BlocklistAIPermissions, action_model::AIAgentActionType},
+    mcp::TemplatableMCPServerManager,
 };
+use crate::terminal::model::session::active_session::ActiveSession;
 
 pub struct CallMCPToolExecutor {
     _active_session: ModelHandle<ActiveSession>,

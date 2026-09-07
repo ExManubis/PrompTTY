@@ -4,7 +4,11 @@ use std::time::Duration;
 
 use warp::settings::{AISettings, TuiVoiceSettings};
 pub(crate) use warp::tui_export::VoiceInputLifecycleState as TuiVoiceInputState;
-use warp::tui_export::{AIRequestUsageModel, BlocklistAIInputModel, RequestTeamScope, StartListeningError, TeamContextResolver, TranscribeError, UserWorkspaces, VoiceInput, VoiceInputToggledFrom, VoiceSessionResult, VoiceTranscriber};
+use warp::tui_export::{
+    AIRequestUsageModel, BlocklistAIInputModel, RequestTeamScope, StartListeningError,
+    TeamContextResolver, TranscribeError, UserWorkspaces, VoiceInput, VoiceInputToggledFrom,
+    VoiceSessionResult, VoiceTranscriber,
+};
 use warp_core::settings::Setting as _;
 use warp_errors::report_error;
 use warpui::event::KeyState;

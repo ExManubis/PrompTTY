@@ -203,7 +203,7 @@ impl Default for ZeroStateAnimationConfig {
             active_object: TuiZeroStateObject::BuiltIn,
             shape: Arc::new(ZeroStateShape::BuiltInWarp),
             rotation_period: Duration::from_secs_f64(
-                settings::DEFAULT_TUI_ZERO_STATE_ROTATION_PERIOD_SECONDS,
+                warp::settings::DEFAULT_TUI_ZERO_STATE_ROTATION_PERIOD_SECONDS,
             ),
             extrusion_depth: warp::settings::DEFAULT_TUI_ZERO_STATE_EXTRUSION_DEPTH,
             load_failure: None,

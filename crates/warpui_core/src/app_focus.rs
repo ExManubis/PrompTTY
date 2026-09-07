@@ -36,6 +36,12 @@ pub struct AppFocusInfo {
     daily_app_focus_duration: DailyAppFocusDuration,
 }
 
+impl Default for AppFocusInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AppFocusInfo {
     pub fn new() -> Self {
         let now = get_current_time();
@@ -60,6 +66,7 @@ impl AppFocusInfo {
     pub fn record_app_blur(&mut self) {
         let app_focus_duration =
             get_current_time().signed_duration_since(self.last_time_app_focused);
-        self.daily_app_focus_duration.add_duration(app_focus_duration);
+        self.daily_app_focus_duration
+            .add_duration(app_focus_duration);
     }
 }

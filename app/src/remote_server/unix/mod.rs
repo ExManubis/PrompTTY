@@ -22,7 +22,6 @@ use warpui::r#async::executor;
 
 use super::server_model::{ConnectionId, ServerModel};
 
-
 /// Run the `remote-server-daemon` subcommand.
 ///
 /// Delegates to `run_internal` with `LaunchMode::RemoteServerDaemon`.

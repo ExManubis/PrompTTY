@@ -5,10 +5,7 @@ use std::borrow::Cow;
 use ai::LLMId;
 use anyhow::Result;
 use onboarding::slides::OnboardingModelInfo;
-use onboarding::{
-    AgentOnboardingEvent, AgentOnboardingView, OfferVariant,
-    SelectedSettings,
-};
+use onboarding::{AgentOnboardingEvent, AgentOnboardingView, OfferVariant, SelectedSettings};
 use pathfinder_color::ColorU;
 use rust_embed::RustEmbed;
 use warp_core::ui::appearance::Appearance;

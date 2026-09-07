@@ -48,7 +48,10 @@ use crate::ai::agent::{
 use crate::ai::agent_sdk::driver::harness::exit_escalation::{
     ExitEscalation, ExitEscalationAction, ExitEscalationEvent, driver_result_after_harness_run,
 };
-use crate::ai::agent_sdk::driver::harness::{HarnessCleanupDisposition, HarnessKind, HarnessRunner, ResumePayload, SavePoint, ThirdPartyHarness, harness_model_env_vars, task_env_vars};
+use crate::ai::agent_sdk::driver::harness::{
+    HarnessCleanupDisposition, HarnessKind, HarnessRunner, ResumePayload, SavePoint,
+    ThirdPartyHarness, harness_model_env_vars, task_env_vars,
+};
 use crate::ai::agent_sdk::environment_snapshot::{
     EnvironmentSnapshot, EnvironmentSnapshotReporter,
 };
@@ -3388,11 +3391,7 @@ impl AgentDriver {
         foreground: &ModelSpawner<Self>,
     ) {
         let harness = harness_name.to_owned();
-        let _ = foreground
-            .spawn(move |_, ctx| {
-
-            })
-            .await;
+        let _ = foreground.spawn(move |_, ctx| {}).await;
     }
 
     /// Configure the active terminal session with the specified profile.

@@ -32,7 +32,10 @@ use crate::text::{
 use crate::text_layout::{
     ClipConfig, DEFAULT_TOP_BOTTOM_RATIO, StyleAndFont, TextAlignment, TextFrame, TextStyle,
 };
-use crate::{AfterLayoutContext, AppContext, Element, Event, EventContext, LayoutContext, PaintContext, SizeConstraint};
+use crate::{
+    AfterLayoutContext, AppContext, Element, Event, EventContext, LayoutContext, PaintContext,
+    SizeConstraint,
+};
 #[derive(Debug, Clone, PartialEq)]
 pub struct HeadingFontSizeMultipliers {
     pub h1: f32,

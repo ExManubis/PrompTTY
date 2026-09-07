@@ -9,9 +9,9 @@ use warp_errors::report_error;
 use warpui::elements::{
     ClippedScrollStateHandle, Container, Element, Flex, MouseStateHandle, ParentElement, Text,
 };
-use crate::code_review::GitDialogStatus;
 use warpui::{SingletonEntity, ViewContext};
 
+use crate::code_review::GitDialogStatus;
 use crate::code_review::git_dialog::{
     GitDialog, GitDialogAction, GitDialogEvent, GitDialogMode, render_branch_section,
     render_file_changes_box, should_send_git_ops_ai_request, show_toast, user_facing_git_error,

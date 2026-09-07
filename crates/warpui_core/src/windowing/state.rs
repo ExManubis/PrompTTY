@@ -6,7 +6,10 @@ use pathfinder_geometry::rect::RectF;
 use super::WindowCallbacks;
 use crate::platform::{self, FullscreenState, TerminationMode, WindowFocusBehavior};
 use crate::scene::{CornerRadius, Radius};
-use crate::{DisplayId, DisplayIdx, Entity, ModelContext, OptionalPlatformWindow, SingletonEntity, WindowId, geometry, windowing};
+use crate::{
+    DisplayId, DisplayIdx, Entity, ModelContext, OptionalPlatformWindow, SingletonEntity, WindowId,
+    geometry, windowing,
+};
 
 /// Description of the current stage in the lifecycle of the app.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]

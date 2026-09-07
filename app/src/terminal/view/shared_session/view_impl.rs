@@ -39,8 +39,8 @@ use crate::context_chips::ContextChipKind;
 use crate::drive::sharing::ShareableObject;
 use crate::editor::{InteractionState, ReplicaId};
 use crate::menu::{Event as MenuEvent, MenuItem, MenuItemFields};
-use crate::shared_enums::SharingDialogSource;
 use crate::settings::InputModeSettings;
+use crate::shared_enums::SharingDialogSource;
 use crate::terminal::TerminalModel;
 use crate::terminal::block_list_viewport::ScrollPositionUpdate;
 use crate::terminal::model::blocks::BlockListPoint;
@@ -68,7 +68,6 @@ use crate::terminal::view::{
     TerminalView,
 };
 use crate::view_components::{DismissibleToast, ToastFlavor};
-
 
 impl TerminalView {
     pub fn sharer_session_kind(&self) -> Option<&Kind> {
@@ -627,8 +626,7 @@ impl TerminalView {
             scrollback_type,
             source,
         });
-        if let Some(action_source) = action_source {
-        }
+        if let Some(action_source) = action_source {}
     }
 
     pub(crate) fn notify_shared_session_link_changed(&mut self, ctx: &mut ViewContext<Self>) {
@@ -721,7 +719,6 @@ impl TerminalView {
             "Shared session view stop requested: session_id={session_id:?} source_task_id={source_task_id:?} action_source={source:?} reason={reason:?}"
         );
         ctx.emit(Event::StopSharingCurrentSession { reason });
-
     }
 
     // TODO: why do we need to pass through input replica ID as a separate argument?
@@ -829,7 +826,6 @@ impl TerminalView {
         {
             self.maybe_auto_open_conversation_details_panel(ctx);
         }
-
     }
 
     pub fn rejoin_session_share(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1337,7 +1333,6 @@ impl TerminalView {
         } else {
             return;
         }
-
     }
 
     // If open, ensure that participant avatar context menu is not triggered
@@ -1465,7 +1460,6 @@ impl TerminalView {
                 crate::uri::web_intent_parser::open_url_on_desktop(&url);
             }
         }
-
     }
 
     // Called when viewer receives acknowledgment from server
@@ -1590,7 +1584,6 @@ impl TerminalView {
             let toast = DismissibleToast::default(COPY_LINK_TEXT.to_string());
             toast_stack.add_ephemeral_toast(toast, window_id, ctx);
         });
-
     }
 
     pub fn open_shared_session_qr_code(&mut self, ctx: &mut ViewContext<Self>) {

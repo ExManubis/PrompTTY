@@ -50,7 +50,6 @@ use crate::util::bindings;
 use crate::view_components::dropdown::DropdownAction;
 use crate::view_components::{Dropdown, SubmittableTextInput, SubmittableTextInputEvent};
 
-
 const PAGE_TITLE: &str = "Third party CLI agents";
 
 pub struct CLIAgentsPageView {
@@ -256,8 +255,7 @@ impl TypedActionView for CLIAgentsPageView {
                         .should_render_cli_agent_footer
                         .toggle_and_save_value(ctx)
                 }) {
-                    Ok(new_value) => {
-                    }
+                    Ok(new_value) => {}
                     Err(e) => {
                         log::warn!("Failed to set value for CLI Agent Footer setting: {e:?}");
                     }

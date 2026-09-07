@@ -398,7 +398,6 @@ impl ResponseStream {
         if is_auto_resume { "resume" } else { "original" }
     }
 
-
     fn retry(&mut self, ctx: &mut ModelContext<Self>) {
         self.recovery = self.recovery.next_attempt();
         self.retries_sent += 1;

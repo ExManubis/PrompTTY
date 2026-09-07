@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use instant::Instant;
+
 use super::transition::{LifecycleAction, LifecycleInputKind, LifecyclePhase, LifecycleSnapshot};
 use crate::terminal::model::block::BlockState;
 

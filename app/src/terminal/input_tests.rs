@@ -110,7 +110,9 @@ use crate::workspace::{ActiveSession, OneTimeModalModel, ToastStack, WorkspaceRe
 use crate::workspaces::team_tester::TeamTesterStatus;
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider, experiments};
+use crate::{
+    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider, experiments,
+};
 
 fn pending_ctrl_r_handoff() -> PendingShellWidgetHandoff {
     PendingShellWidgetHandoff {

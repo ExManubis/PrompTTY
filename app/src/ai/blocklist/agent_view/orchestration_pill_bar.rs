@@ -35,7 +35,6 @@ use warpui::{
     ViewHandle,
 };
 
-use crate::ai::blocklist::analytics_kinds::{PillBarActionKind, PillBarPillKind, PillSwitchOutcome};
 use crate::ai::agent::conversation::{
     AIConversation, AIConversationId, ConversationStatus, StatusColorStyle,
 };
@@ -48,6 +47,9 @@ use crate::ai::blocklist::agent_view::orchestration_pill_bar_model::{
     OrchestrationPillBarEvent, OrchestrationPillBarModel,
 };
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewControllerEvent};
+use crate::ai::blocklist::analytics_kinds::{
+    PillBarActionKind, PillBarPillKind, PillSwitchOutcome,
+};
 use crate::ai::blocklist::orchestration_topology::{
     LoadedSubtreeRollup, aggregated_orchestrator_status, child_conversations_in_pill_order,
     loaded_subtree_rollup, orchestration_root_conversation_id,

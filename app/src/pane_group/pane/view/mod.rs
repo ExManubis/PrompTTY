@@ -26,8 +26,8 @@ use crate::appearance::Appearance;
 use crate::pane_group::focus_state::{PaneFocusHandle, PaneGroupFocusEvent};
 use crate::pane_group::pane::ActionOrigin;
 use crate::pane_group::{Direction, SplitPaneState, TabBarHoverIndex};
-use crate::shared_enums::SharingDialogSource;
 use crate::settings::{PaneSettings, PaneSettingsChangedEvent};
+use crate::shared_enums::SharingDialogSource;
 use crate::util::bindings::CustomAction;
 use crate::workspace::util::{
     FLOATING_CARD_RADIUS, FLOATING_CHROME_INSET, get_pane_card_fill, metallic_border,

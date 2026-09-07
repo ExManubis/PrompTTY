@@ -38,10 +38,9 @@ use channel_versions::{ChannelVersions, ParsedVersion};
 use futures::TryStreamExt as _;
 use warp::settings::TuiAutoupdateSettings;
 use warp_core::channel::{Channel, ChannelState};
-use warp_core::{safe_warn};
+use warp_core::safe_warn;
 use warpui::r#async::Timer;
 use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
-
 
 /// Setting this environment variable (to any value) disables background
 /// auto-updates for a single launch, regardless of the

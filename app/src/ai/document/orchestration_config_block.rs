@@ -20,10 +20,10 @@ use warpui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
-use crate::ai::blocklist::analytics_kinds::OrchestrationApprovalStatus;
 use crate::BlocklistAIHistoryModel;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::BlocklistAIHistoryEvent;
+use crate::ai::blocklist::analytics_kinds::OrchestrationApprovalStatus;
 use crate::ai::blocklist::inline_action::create_environment_modal::{
     CreateEnvironmentModal, CreateEnvironmentModalEvent,
 };
@@ -1110,6 +1110,5 @@ impl OrchestrationConfigBlockView {
     ) {
     }
 
-    fn emit_agent_proposed_config(&self, ctx: &mut ViewContext<Self>) {
-    }
+    fn emit_agent_proposed_config(&self, ctx: &mut ViewContext<Self>) {}
 }

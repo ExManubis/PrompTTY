@@ -25,7 +25,10 @@ use crate::notification::{NotificationSendError, RequestPermissionsOutcome, User
 use crate::platform::file_picker::{FilePickerConfiguration, FilePickerError};
 use crate::platform::{Cursor, SaveFilePickerConfiguration, TerminationMode};
 use crate::windowing::WindowManager;
-use crate::{Action, AppContext, Effect, Entity, EntityId, GetSingletonModelHandle, ModelAsRef, ModelContext, ModelHandle, ReadModel, UpdateModel, WindowId};
+use crate::{
+    Action, AppContext, Effect, Entity, EntityId, GetSingletonModelHandle, ModelAsRef,
+    ModelContext, ModelHandle, ReadModel, UpdateModel, WindowId,
+};
 
 impl<'a, T: View> ViewContext<'a, T> {
     /// The layout-position cache is only populated by the GUI presenter; in

@@ -123,8 +123,7 @@ impl View for IntroSlide {
 
 impl IntroSlide {
     fn get_started_clicked(&mut self, ctx: &mut ViewContext<Self>) {
-        if FeatureFlag::AccountFirstOnboarding.is_enabled() {
-        }
+        if FeatureFlag::AccountFirstOnboarding.is_enabled() {}
 
         self.onboarding_state.update(ctx, |model, ctx| {
             model.next(ctx);

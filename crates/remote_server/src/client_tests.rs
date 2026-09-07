@@ -223,7 +223,7 @@ async fn initialize_round_trip() {
             InitializeParams {
                 user_id: String::new(),
                 user_email: String::new(),
-                    codebase_index_limits: None,
+                codebase_index_limits: None,
             },
         )
         .await
@@ -251,7 +251,7 @@ async fn initialize_sends_empty_auth_token_when_none() {
             InitializeParams {
                 user_id: String::new(),
                 user_email: String::new(),
-                    codebase_index_limits: None,
+                codebase_index_limits: None,
             },
         )
         .await
@@ -277,7 +277,7 @@ async fn initialize_sends_auth_token_when_provided() {
             InitializeParams {
                 user_id: String::new(),
                 user_email: String::new(),
-                    codebase_index_limits: None,
+                codebase_index_limits: None,
             },
         )
         .await
@@ -354,7 +354,7 @@ async fn disconnected_on_closed_stream() {
             InitializeParams {
                 user_id: String::new(),
                 user_email: String::new(),
-                    codebase_index_limits: None,
+                codebase_index_limits: None,
             },
         )
         .await;
@@ -436,7 +436,7 @@ async fn concurrent_in_flight_requests() {
                 InitializeParams {
                     user_id: String::new(),
                     user_email: String::new(),
-                            codebase_index_limits: None,
+                    codebase_index_limits: None,
                 },
             )
             .await

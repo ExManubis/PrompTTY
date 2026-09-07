@@ -49,8 +49,8 @@ use vim::{
     vim_inner_quote, vim_inner_word, vim_word_iterator_from_offset,
 };
 use warp_completer::completer::Description;
+use warp_core::safe_error;
 use warp_core::semantic_selection::SemanticSelection;
-use warp_core::{safe_error};
 use warp_editor::editor::NavigationKey;
 use warp_util::path::ShellFamily;
 use warp_util::user_input::UserInput;
@@ -106,7 +106,6 @@ use crate::search::ai_context_menu::mixer::AIContextMenuSearchableAction;
 use crate::search::ai_context_menu::view::{
     AIContextMenu, AIContextMenuCategory, AIContextMenuEvent,
 };
-
 #[cfg(feature = "voice_input")]
 use crate::settings::AISettingsChangedEvent;
 use crate::settings::{
@@ -3132,7 +3131,6 @@ impl EditorView {
                             item_count,
                             query_length,
                         } => {
-
                             ctx.emit(Event::SetAIContextMenuOpen(false));
                             ctx.focus_self();
                             ctx.notify();
@@ -3142,7 +3140,6 @@ impl EditorView {
                             item_count,
                             query_length,
                         } => {
-
                             ctx.emit(Event::AcceptAIContextMenuItem(action.clone()));
                             ctx.focus_self();
                             ctx.notify();

@@ -5,11 +5,11 @@ pub(crate) mod todos;
 pub(crate) mod api;
 pub(crate) mod comment;
 pub(crate) mod icons;
+mod identifiers;
 pub(crate) mod linearization;
 pub(crate) mod redaction;
 pub(crate) mod task;
 mod task_store;
-mod identifiers;
 pub(super) mod util;
 
 use std::collections::{HashMap, HashSet};
@@ -28,12 +28,12 @@ pub use ai_types::{AIAgentActionId, EntrypointType, PassiveSuggestionTriggerType
 use chrono::{DateTime, Local, TimeDelta};
 use comment::ReviewComment;
 use derivative::Derivative;
+pub use identifiers::AIIdentifiers;
 use markdown_parser::{FormattedTable, FormattedText, FormattedTextInline, parse_markdown};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::ParticipantId;
 use task::TaskId;
-pub use identifiers::AIIdentifiers;
 use uuid::Uuid;
 use warp_core::features::FeatureFlag;
 use warp_editor::render::model::LineCount;

@@ -20,7 +20,10 @@ use crate::platform::Cursor;
 use crate::scene::{Scene, ZIndex};
 use crate::text_layout::LayoutCache;
 use crate::zoom::Scale;
-use crate::{Action, AppContext, ClipBounds, EntityId, EntityIdMap, EntityIdSet, TaskId, View, ViewHandle, WindowId, WindowInvalidation, fonts};
+use crate::{
+    Action, AppContext, ClipBounds, EntityId, EntityIdMap, EntityIdSet, TaskId, View, ViewHandle,
+    WindowId, WindowInvalidation, fonts,
+};
 
 pub struct Presenter {
     // Number of frames rendered so far by this presenter

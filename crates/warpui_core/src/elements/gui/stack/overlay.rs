@@ -1,7 +1,10 @@
 use crate::elements::Point;
 use crate::event::DispatchedEvent;
 use crate::geometry::vector::Vector2F;
-use crate::{AfterLayoutContext, AppContext, ClipBounds, Element, EventContext, LayoutContext, PaintContext, SizeConstraint};
+use crate::{
+    AfterLayoutContext, AppContext, ClipBounds, Element, EventContext, LayoutContext, PaintContext,
+    SizeConstraint,
+};
 
 /// Internal elements used to support the `add_overlay_child` and `add_positioned_overlay_child`
 /// APIs within the `Stack`. It is a thin wrapper around the child, creating a new Overlay layer

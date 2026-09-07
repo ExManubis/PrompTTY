@@ -1,6 +1,5 @@
-pub use warp_terminal::local_tty::spawner::PtySpawnMode;
-
 use serde::{Deserialize, Serialize};
+pub use warp_terminal::local_tty::spawner::PtySpawnMode;
 
 #[derive(Clone, Copy, Serialize, Deserialize, Debug)]
 pub enum PaletteSource {
@@ -340,8 +339,6 @@ pub enum AICommandSearchEntrypoint {
     ShortHandTrigger,
     Keybinding,
 }
-
-
 
 #[derive(Clone, Copy, Debug, Serialize)]
 pub enum PaneStateChange {

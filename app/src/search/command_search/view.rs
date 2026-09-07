@@ -42,7 +42,6 @@ use crate::search::mixer::AddAsyncSourceOptions;
 use crate::search::result_renderer::{QueryResultRenderer, QueryResultRendererStyles};
 use crate::search::search_bar::{SearchBar, SearchBarEvent, SearchBarState, SearchResultOrdering};
 use crate::server::server_api::ai::AIClient;
-
 use crate::settings::AISettings;
 use crate::terminal::input::MenuPositioning;
 use crate::terminal::model::session::SessionId;
@@ -470,7 +469,6 @@ impl CommandSearchView {
                 Some(renderers) => renderers.len() - result_index - 1,
                 None => result_index,
             };
-
         }
 
         let query = self.search_bar.as_ref(ctx).query(ctx);

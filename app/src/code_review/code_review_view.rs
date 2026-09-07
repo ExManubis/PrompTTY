@@ -33,9 +33,6 @@ use warpui::clipboard::ClipboardContent;
 use warpui::elements::new_scrollable::{
     NewScrollable, NewScrollableElement, ScrollableAppearance, SingleAxisConfig,
 };
-use crate::code_review::CodeReviewContextDestination;
-use crate::code_review::DiffSetContextScope;
-use crate::shared_enums::PaneStateChange;
 use warpui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, DEFAULT_UI_LINE_HEIGHT_RATIO, DispatchEventResult,
@@ -87,7 +84,6 @@ use crate::code::local_code_editor::{
     LocalCodeEditorEvent, LocalCodeEditorView, render_unsaved_circle_with_tooltip,
 };
 use crate::code::view::PendingSaveIntent;
-use crate::code_review::DiffSetScope;
 use crate::code_review::comments::{
     AttachedReviewCommentTarget, CommentId, ReviewCommentBatch, ReviewCommentBatchEvent,
 };
@@ -106,6 +102,7 @@ use crate::code_review::find_model::CodeReviewFindModel;
 use crate::code_review::git_repo_model::{GitRepoModels, GitRepoStatusEvent, GitRepoStatusModel};
 use crate::code_review::github_repo_model::{GitHubRepoEvent, GitHubRepoModel};
 use crate::code_review::hidden_lines::calculate_hidden_lines;
+use crate::code_review::{CodeReviewContextDestination, DiffSetContextScope, DiffSetScope};
 #[cfg(feature = "local_fs")]
 use crate::coding_panel_enablement_state::CodingPanelEnablementState;
 use crate::editor::InteractionState;
@@ -114,10 +111,11 @@ use crate::pane_group::PaneId;
 use crate::pane_group::focus_state::{PaneFocusHandle, PaneGroupFocusEvent};
 use crate::pane_group::pane::{BackingView, PaneEvent, view};
 use crate::quit_warning::UnsavedStateSummary;
-#[cfg(feature = "local_fs")]
-use crate::shared_enums::CodePanelsFileOpenEntrypoint;
 use crate::settings::{AISettings, CodeSettings};
 use crate::settings_view::SettingsSection;
+#[cfg(feature = "local_fs")]
+use crate::shared_enums::CodePanelsFileOpenEntrypoint;
+use crate::shared_enums::PaneStateChange;
 use crate::terminal::cli_agent::{
     build_selection_line_range_prompt, build_selection_substring_prompt,
 };
@@ -2760,7 +2758,6 @@ impl CodeReviewView {
             model.update(ctx, |batch, ctx| {
                 batch.delete_comment(id, ctx);
             });
-
         }
     }
 
@@ -3561,8 +3558,7 @@ impl CodeReviewView {
             fallback_count,
         } = Self::relocate_comments(comments, state, &repo_path, ctx);
 
-        if fallback_count > 0 {
-        }
+        if fallback_count > 0 {}
 
         if !newly_imported_ids.is_empty() {
             let (active_count, outdated_count) = relocated_comments
@@ -5589,8 +5585,7 @@ impl CodeReviewView {
             CodeEditorEvent::Focused => {
                 ctx.emit(CodeReviewViewEvent::Pane(PaneEvent::FocusSelf));
             }
-            CodeEditorEvent::CommentEditorOpened => {
-            }
+            CodeEditorEvent::CommentEditorOpened => {}
             CodeEditorEvent::ContentChanged { origin, .. } => {
                 if origin.from_user() {
                     if let Some((view_handle, content_version)) = self.last_revert.take() {

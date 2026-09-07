@@ -556,8 +556,6 @@ pub struct CustomEndpointParams {
     pub schema: CustomEndpointSchema,
 }
 
-
-
 impl ApiKeyManager {
     pub fn new(ctx: &mut ModelContext<Self>) -> Self {
         let keys = Self::load_keys_from_secure_storage(ctx);
@@ -722,8 +720,7 @@ impl ApiKeyManager {
             let is_present = provider.api_key(&keys).is_some();
             self.keys = keys;
             ctx.emit(ApiKeyManagerEvent::KeysUpdated);
-            if was_present != is_present {
-            }
+            if was_present != is_present {}
         }
         Ok(())
     }
@@ -767,8 +764,7 @@ impl ApiKeyManager {
         self.grok_tokens = tokens;
         ctx.emit(ApiKeyManagerEvent::KeysUpdated);
         self.write_grok_tokens_to_secure_storage(ctx);
-        if was_connected != is_connected {
-        }
+        if was_connected != is_connected {}
     }
 
     pub fn set_provider_key(
@@ -784,8 +780,7 @@ impl ApiKeyManager {
         ctx.emit(ApiKeyManagerEvent::KeysUpdated);
         self.write_keys_to_secure_storage(ctx);
         let is_present = provider.api_key(&self.keys).is_some();
-        if was_present != is_present {
-        }
+        if was_present != is_present {}
     }
 
     pub fn add_custom_endpoint(

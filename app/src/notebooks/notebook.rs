@@ -68,7 +68,6 @@ use crate::pane_group::pane::view;
 use crate::pane_group::{BackingView, PaneConfiguration, PaneEvent};
 use crate::server::cloud_objects::update_manager::{FetchSingleObjectOption, UpdateManager};
 use crate::server::ids::{ClientId, ServerId, SyncId};
-use crate::shared_enums::{SharingDialogSource};
 use crate::settings::app_installation_detection::{
     UserAppInstallDetectionSettings, UserAppInstallStatus,
 };
@@ -76,6 +75,7 @@ use crate::settings::{
     FontSettings, FontSettingsChangedEvent, NotebookFontSize, decrease_notebook_font_size,
     increase_notebook_font_size,
 };
+use crate::shared_enums::SharingDialogSource;
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::throttle::throttle;
 use crate::ui_components::icons::{self, Icon};
@@ -967,7 +967,6 @@ impl NotebookView {
         });
 
         self.set_editor_interaction_state(InteractionState::Editable, ctx);
-
     }
 
     /// Sends a request to the server to grab notebook edit access, if the user is taking
@@ -2155,8 +2154,7 @@ impl TypedActionView for NotebookView {
                 ctx.emit(NotebookEvent::Pane(PaneEvent::FocusActiveSession))
             }
             NotebookAction::ContextMenu(action) => {
-                if matches!(action, ContextMenuAction::Open(_)) {
-                }
+                if matches!(action, ContextMenuAction::Open(_)) {}
                 self.context_menu.handle_action(action, ctx);
             }
             NotebookAction::Duplicate => self.duplicate_object(ctx),

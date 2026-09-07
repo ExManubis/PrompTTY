@@ -72,7 +72,6 @@ use crate::persistence::ModelEvent;
 use crate::server::server_api::AIApiError;
 #[cfg(not(target_family = "wasm"))]
 use crate::server::server_api::ServerApiProvider;
-
 use crate::terminal::ShellLaunchData;
 use crate::terminal::model::block::{
     BlockId, CURSOR_MARKER, formatted_terminal_contents_for_input,
@@ -729,8 +728,7 @@ impl BlocklistAIController {
         let (query, user_query_mode) = extract_user_query_mode(query);
 
         // Attribute /orchestrate queries to the slash-command entry surface.
-        if matches!(user_query_mode, UserQueryMode::Orchestrate) {
-        }
+        if matches!(user_query_mode, UserQueryMode::Orchestrate) {}
 
         let should_prepend_finished_action_results = matches!(
             input_query.input_query,

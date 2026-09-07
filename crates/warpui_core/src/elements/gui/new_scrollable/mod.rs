@@ -20,7 +20,10 @@ use crate::event::{DispatchedEvent, ModifiersState};
 use crate::text::word_boundaries::WordBoundariesPolicy;
 use crate::text::{IsRect, SelectionDirection, SelectionType};
 use crate::units::{IntoPixels, Pixels};
-use crate::{AfterLayoutContext, AppContext, ClipBounds, Element, Event, EventContext, LayoutContext, PaintContext, SizeConstraint};
+use crate::{
+    AfterLayoutContext, AppContext, ClipBounds, Element, Event, EventContext, LayoutContext,
+    PaintContext, SizeConstraint,
+};
 
 const LEFT_PADDING: f32 = 2.;
 const RIGHT_PADDING: f32 = 2.;

@@ -5,7 +5,7 @@ use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::{AIAgentActionType, ReadSkillRequest, ReadSkillResult};
 use crate::ai::blocklist::SessionContext;
-use crate::ai::skills::{SkillManager};
+use crate::ai::skills::SkillManager;
 use crate::terminal::model::session::active_session::ActiveSession;
 
 pub struct ReadSkillExecutor {
@@ -56,9 +56,7 @@ impl ReadSkillExecutor {
                 );
                 ActionExecution::Sync(ReadSkillResult::Success { content }.into())
             }
-            Err(error) => {
-                ActionExecution::Sync(ReadSkillResult::Error(error.to_string()).into())
-            }
+            Err(error) => ActionExecution::Sync(ReadSkillResult::Error(error.to_string()).into()),
         }
     }
 

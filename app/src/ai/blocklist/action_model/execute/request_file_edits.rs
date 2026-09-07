@@ -1,6 +1,6 @@
-mod edit_events;
 mod apply_diff_model;
 mod diff_application;
+mod edit_events;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -8,15 +8,15 @@ use ai::diff_validation::AIRequestedCodeDiff;
 use apply_diff_model::ApplyDiffModel;
 use diff_application::DiffApplicationError;
 pub(crate) use diff_application::{FileReadResult, apply_edits};
-use futures::FutureExt;
-use futures::channel::oneshot;
-use futures::future::BoxFuture;
-use itertools::Itertools;
+pub(crate) use edit_events::MalformedFinalLineProxyEvent;
 pub use edit_events::{
     EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats,
     RequestFileEditsFormatKind,
 };
-pub(crate) use edit_events::MalformedFinalLineProxyEvent;
+use futures::FutureExt;
+use futures::channel::oneshot;
+use futures::future::BoxFuture;
+use itertools::Itertools;
 #[allow(unused_imports)]
 use vec1::{Vec1, vec1};
 use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
@@ -189,8 +189,7 @@ impl RequestFileEditsExecutor {
                 lines_removed,
                 ..
             } = &result
-            {
-            }
+            {}
             AIAgentActionResultType::RequestFileEdits(result)
         })
     }

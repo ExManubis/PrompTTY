@@ -19,7 +19,6 @@ use crate::appearance::Appearance;
 use crate::changelog_model::{
     ChangelogHeader, ChangelogModel, ChangelogState, Event as ChangelogEvent,
 };
-
 use crate::themes::theme::Fill;
 use crate::ui_components::icons;
 

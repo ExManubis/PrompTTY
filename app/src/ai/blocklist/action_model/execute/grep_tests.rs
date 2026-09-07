@@ -2,7 +2,6 @@ use super::*;
 use crate::terminal::model::secrets::regexes::FIREBASE_AUTH_DOMAIN;
 use crate::terminal::shell::ShellType;
 
-
 #[test]
 fn build_git_grep_command_single_quotes_shell_substitution() {
     let queries = vec!["$(touch /tmp/warp-poc); `id`".to_string()];

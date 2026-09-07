@@ -23,7 +23,11 @@ use crate::safe_warn;
 use crate::view_components::DismissibleToast;
 use crate::workspace::{ToastStack, active_terminal_in_window};
 #[cfg(feature = "local_fs")]
-use crate::{notebooks::export_notebook, server::cloud_objects::update_manager::get_duplicate_object_name, view_components::ToastLink, workflows::export_workflow::export_serialize, workspace::WorkspaceAction};
+use crate::{
+    notebooks::export_notebook, server::cloud_objects::update_manager::get_duplicate_object_name,
+    view_components::ToastLink, workflows::export_workflow::export_serialize,
+    workspace::WorkspaceAction,
+};
 
 /// Singleton model for exporting from Warp Drive.
 pub struct ExportManager {

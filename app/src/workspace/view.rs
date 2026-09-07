@@ -50,9 +50,6 @@ use command::blocking::Command;
 use futures::Future;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use crate::shared_enums::AddTabWithShellSource;
-use crate::code_review::CodeReviewPaneEntrypoint;
-use crate::shared_enums::WorktreeBranchNamingMode;
 pub(crate) use onboarding::OnboardingTutorial;
 use parking_lot::FairMutex;
 use pathfinder_color::ColorU;
@@ -178,7 +175,6 @@ use crate::ai::agent_management::view::{AgentManagementView, AgentManagementView
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent_sdk::driver::harness::{claude_transcript, codex_transcript};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
-
 use crate::ai::ambient_agents::handoff_types::CloudModeEntryPoint;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 use crate::ai::ambient_agents::handoff_types::{HandoffEntryPoint, HandoffSurface};
@@ -252,6 +248,7 @@ use crate::code::editor::{add_color, remove_color};
 #[cfg(feature = "local_fs")]
 use crate::code::editor_management::CodeManager;
 use crate::code::editor_management::CodeSource;
+use crate::code_review::CodeReviewPaneEntrypoint;
 #[cfg(feature = "local_fs")]
 use crate::code_review::GlobalCodeReviewModel;
 use crate::code_review::diff_state::DiffStateModel;
@@ -326,7 +323,6 @@ use crate::server::ids::{ObjectUid, ServerId, SyncId};
 use crate::server::network_log_pane_manager::NetworkLogPaneManager;
 use crate::server::server_api::ai::AIClient;
 use crate::server::server_api::{ServerApi, ServerApiProvider, ServerTime};
-use crate::shared_enums::{AnonymousUserSignupEntrypoint, CloseTarget, FileTreeSource, KnowledgePaneEntrypoint, LaunchConfigUiLocation, MCPServerCollectionPaneEntrypoint, PaletteSource, SharingDialogSource, WarpDriveSource};
 use crate::session_management::{SessionNavigationData, SessionSource, TabNavigationData};
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AccessibilitySettings, AliasExpansionSettings,
@@ -344,6 +340,11 @@ use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChange
 use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
 use crate::settings_view::pane_manager::SettingsPaneManager;
 use crate::settings_view::{SettingsSection, SettingsView, SettingsViewEvent, flags};
+use crate::shared_enums::{
+    AddTabWithShellSource, AnonymousUserSignupEntrypoint, CloseTarget, FileTreeSource,
+    KnowledgePaneEntrypoint, LaunchConfigUiLocation, MCPServerCollectionPaneEntrypoint,
+    PaletteSource, SharingDialogSource, WarpDriveSource, WorktreeBranchNamingMode,
+};
 #[cfg(all(target_os = "windows", feature = "local_tty"))]
 use crate::shell_indicator::ShellIndicatorType;
 use crate::tab::{
@@ -511,7 +512,9 @@ use crate::workspace::{ForkFromExchange, ForkedConversationDestination};
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
 use crate::workspaces::workspace::AdminEnablementSetting;
-use crate::{AgentNotificationsModel, BlocklistAIHistoryModel, GlobalResourceHandles, autoupdate, settings};
+use crate::{
+    AgentNotificationsModel, BlocklistAIHistoryModel, GlobalResourceHandles, autoupdate, settings,
+};
 
 /// The padding that should be applied to the workspace as a whole.
 ///
@@ -7904,7 +7907,6 @@ impl Workspace {
         }
     }
 
-
     fn should_trigger_get_started_onboarding(&self, ctx: &mut ViewContext<Self>) -> bool {
         // Onboarding requires a real user to interact with it; suppress when
         // running in a headless mode like the SDK/CLI.
@@ -7962,8 +7964,7 @@ impl Workspace {
 
             // Add telemetry banner for new users BEFORE the agentic onboarding blocks.
             if let Some(terminal_view_handle) = self.active_session_view(ctx) {
-                terminal_view_handle.update(ctx, |terminal_view, ctx| {
-                });
+                terminal_view_handle.update(ctx, |terminal_view, ctx| {});
             }
 
             // After onboarding is triggered, mark the user as onboarded
@@ -8512,7 +8513,6 @@ impl Workspace {
         additional_paths: &[PathBuf],
         ctx: &mut ViewContext<Self>,
     ) {
-
         let grouping_on = FeatureFlag::TabbedEditorView.is_enabled()
             && *EditorSettings::as_ref(ctx)
                 .prefer_tabbed_editor_view
@@ -8812,7 +8812,6 @@ impl Workspace {
             self.welcome_tips_view.update(ctx, |tips_view, ctx| {
                 tips_view.set_action_target(ctx.window_id(), input_id, ctx)
             });
-
         }
         ctx.focus(&self.welcome_tips_view);
         ctx.notify();
@@ -10513,8 +10512,7 @@ impl Workspace {
                     worktree_name.as_deref(),
                     ctx,
                 );
-                if should_track_existing_config_open {
-                }
+                if should_track_existing_config_open {}
                 self.close_tab_config_params_modal(ctx);
                 self.complete_pending_session_config_replacement(ctx);
 
@@ -11956,8 +11954,7 @@ impl Workspace {
         );
 
         // Telemetry whenever tabs actually closed, not when confirmation dialog comes up.
-        if tabs_closed {
-        }
+        if tabs_closed {}
     }
 
     /// Opens a confirmation dialog if necessary, or closes immediately if not.
@@ -11987,8 +11984,7 @@ impl Workspace {
         // Telemetry whenever tabs actually closed, not when confirmation dialog comes up.
         if tabs_closed {
             match direction {
-                TabMovement::Right if self.active_tab_index > index => {
-                }
+                TabMovement::Right if self.active_tab_index > index => {}
                 _ => (),
             }
         }
@@ -13986,7 +13982,6 @@ impl Workspace {
                     }
                 }
             });
-
         }
     }
 
@@ -14732,7 +14727,6 @@ impl Workspace {
             }
             SettingsViewEvent::OpenMCPServerCollection => {
                 self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
-
             }
             SettingsViewEvent::OpenCustomRouterEditor(router) => {
                 self.open_custom_router_editor_pane(None, router.clone(), ctx);
@@ -16861,8 +16855,7 @@ impl Workspace {
                     input_handle.read(ctx, |input, ctx| input.menu_positioning(ctx))
                 });
 
-            if !self.current_workspace_state.is_command_search_open {
-            }
+            if !self.current_workspace_state.is_command_search_open {}
 
             // Make sure we close any already-open input suggestions panel.
             if let Some(input_handle) = &active_input_handle {
@@ -17187,7 +17180,6 @@ impl Workspace {
             }
             DrivePanelEvent::OpenMCPServerCollection => {
                 self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
-
             }
             DrivePanelEvent::FocusWarpDrive => {
                 ctx.focus(&self.left_panel_view);
@@ -18577,8 +18569,7 @@ impl Workspace {
                     report_if_error!(settings.auto_handoff_on_sleep_enabled.set_value(true, ctx));
                 });
             }
-            AutoHandoffSleepModalEvent::Dismiss => {
-            }
+            AutoHandoffSleepModalEvent::Dismiss => {}
         }
         OneTimeModalModel::handle(ctx).update(ctx, |model, ctx| {
             model.mark_auto_handoff_sleep_modal_dismissed(ctx);
@@ -18781,7 +18772,6 @@ impl Workspace {
         args: &crate::linear::LinearIssueWork,
         ctx: &mut ViewContext<Self>,
     ) {
-
         self.add_new_session_tab_internal_with_default_session_mode_behavior(
             NewSessionSource::Tab,
             Some(ctx.window_id()),
@@ -18925,7 +18915,6 @@ impl Workspace {
         self.close_all_overlays(ctx);
         self.current_workspace_state.is_prompt_editor_open = true;
         ctx.focus(&self.prompt_editor_modal);
-
     }
 
     fn open_agent_toolbar_editor(
@@ -24103,14 +24092,12 @@ impl TypedActionView for Workspace {
                 entrypoint,
                 zero_state_prompt_suggestion_type,
             } => {
-
                 self.add_terminal_tab_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
             }
             NewPaneInAgentMode {
                 entrypoint,
                 zero_state_prompt_suggestion_type,
             } => {
-
                 self.add_terminal_pane_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
             }
             OpenCloudAgentSetupGuide => {
@@ -24131,8 +24118,7 @@ impl TypedActionView for Workspace {
             ClickedAIAssistantIcon => {
                 if !FeatureFlag::AgentMode.is_enabled() {
                     self.toggle_ai_assistant_panel(ctx);
-                    if self.current_workspace_state.is_ai_assistant_panel_open {
-                    }
+                    if self.current_workspace_state.is_ai_assistant_panel_open {}
                 }
             }
             ShowAIAssistantWarmWelcome => {
@@ -24214,8 +24200,7 @@ impl TypedActionView for Workspace {
             DismissAIAssistantWarmWelcome => {
                 self.dismiss_ai_assistant_warm_welcome(ctx);
             }
-            Crash => {
-            }
+            Crash => {}
             Panic => {
                 panic!("WorkspaceAction::Panic triggered from command palette");
             }
@@ -24464,7 +24449,6 @@ impl TypedActionView for Workspace {
             }
             OpenMCPServerCollection => {
                 self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
-
             }
             OpenEnvironmentManagementPane => {
                 self.open_environment_management_pane(None, EnvironmentsPage::Create, ctx);
@@ -25092,7 +25076,8 @@ impl TypedActionView for Workspace {
                             }
                             Ok(Err(io_err)) => {
                                 report_error!(
-                                    anyhow::Error::new(io_err).context("Failed to run sample command")
+                                    anyhow::Error::new(io_err)
+                                        .context("Failed to run sample command")
                                 );
                                 "Failed to sample process (check logs)".to_string()
                             }

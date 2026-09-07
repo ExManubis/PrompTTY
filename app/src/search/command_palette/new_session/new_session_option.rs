@@ -4,10 +4,9 @@ use std::fmt;
 use warpui::Action;
 
 use crate::WorkspaceAction;
-
+use crate::shared_enums::AddTabWithShellSource;
 use crate::terminal::available_shells::AvailableShell;
 use crate::terminal::view::TerminalAction;
-use crate::shared_enums::AddTabWithShellSource;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NewSessionOptionId(pub(crate) String);

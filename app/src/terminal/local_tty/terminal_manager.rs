@@ -133,7 +133,6 @@ pub struct TerminalSurfaceInit {
     pub inactive_pty_reads_rx: InactiveReceiver<Arc<Vec<u8>>>,
 }
 
-
 /// A newly constructed terminal surface and its manager post-wiring callback.
 pub struct TerminalSurfaceResult<S, PostWire> {
     pub surface: ViewHandle<S>,
@@ -358,8 +357,7 @@ impl<S> TerminalManager<S> {
                     !model.is_receiving_in_band_command_output()
                         && model.is_active_block_bootstrapped()
                 },
-                move |max_bytes_per_second| {
-                },
+                move |max_bytes_per_second| {},
                 ctx.background_executor().to_owned(),
             );
         }
@@ -989,8 +987,7 @@ fn get_shell_starter_internal(
             unsupported_shell,
             starter,
         } => {
-            if let Some(unsupported_shell) = unsupported_shell {
-            }
+            if let Some(unsupported_shell) = unsupported_shell {}
 
             ShellStarter::Direct(starter)
         }

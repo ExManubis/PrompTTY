@@ -14,7 +14,6 @@ use warpui::{
 };
 
 use super::{AgentInputButtonTheme, AmbientAgentViewModel};
-
 use crate::ai::cloud_environments::CloudEnvironmentCatalog;
 use crate::appearance::Appearance;
 use crate::context_chips::display_menu::{

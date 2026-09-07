@@ -15,7 +15,6 @@ use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View
 
 use crate::ui_components::blended_colors;
 
-
 const MODAL_WIDTH: f32 = 360.;
 const COMPACT_MODAL_HEIGHT: f32 = 360.;
 const HEADER_HEIGHT: f32 = 92.;

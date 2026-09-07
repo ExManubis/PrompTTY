@@ -20,7 +20,6 @@ use crate::ai::ambient_agents::github_auth_notifier::{GitHubAuthEvent, GitHubAut
 use crate::ai::ambient_agents::spawn::monitor_spawned_task;
 use crate::ai::ambient_agents::spawn::{AmbientAgentEvent, spawn_task, submit_run_followup};
 use crate::ai::ambient_agents::task::{HarnessAuthSecretsConfig, HarnessConfig};
-
 use crate::ai::ambient_agents::{AgentSource, AmbientAgentTaskId};
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
@@ -597,8 +596,7 @@ impl AmbientAgentViewModel {
             }
         }
         let error = handoff_dispatch_error(&failure.issue);
-        if let Some(derived_workspace_had_content) = failure.derived_workspace_had_content {
-        }
+        if let Some(derived_workspace_had_content) = failure.derived_workspace_had_content {}
         if failure.snapshot_failed {
             ctx.emit(AmbientAgentViewModelEvent::HandoffSnapshotUploadFailed {
                 error_message: "Workspace changes could not be uploaded; continuing without them."

@@ -76,7 +76,6 @@ use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEd
 use crate::code::editor_management::CodeSource;
 use crate::editor::InteractionState;
 use crate::menu::{Event as MenuEvent, Menu, MenuItemFields, MenuVariant};
-
 use crate::settings::AISettings;
 use crate::settings_view::SettingsSection;
 use crate::terminal::input::SET_INPUT_MODE_TERMINAL_ACTION_NAME;
@@ -532,7 +531,6 @@ impl CLISubagentView {
         if is_autoexecuted {
             self.enable_autoexecute_override(ctx);
         }
-
     }
 
     fn handle_reject_blocked_action(
@@ -541,7 +539,6 @@ impl CLISubagentView {
         ctx: &mut ViewContext<Self>,
     ) {
         self.reject_blocked_action(should_user_take_over, ctx);
-
     }
 
     fn take_control_of_running_command(&mut self, ctx: &mut ViewContext<Self>) {

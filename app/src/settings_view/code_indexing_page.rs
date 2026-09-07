@@ -64,7 +64,6 @@ use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::workspaces::workspace::AdminEnablementSetting;
 
-
 const MAIN_SECTION_MARGIN: f32 = 12.;
 const SUB_SECTION_MARGIN: f32 = 8.;
 
@@ -500,8 +499,7 @@ impl TypedActionView for CodeIndexingPageView {
 
                 CodeSettings::handle(ctx).update(ctx, |settings, ctx| {
                     match settings.codebase_context_enabled.toggle_and_save_value(ctx) {
-                        Ok(new_value) => {
-                        }
+                        Ok(new_value) => {}
                         Err(e) => {
                             log::warn!("Failed to set value for Codebase Context: {e:?}");
                         }
@@ -513,8 +511,7 @@ impl TypedActionView for CodeIndexingPageView {
             CodeIndexingPageAction::ToggleAutoIndexing => {
                 CodeSettings::handle(ctx).update(ctx, |settings, ctx| {
                     match settings.auto_indexing_enabled.toggle_and_save_value(ctx) {
-                        Ok(new_value) => {
-                        }
+                        Ok(new_value) => {}
                         Err(e) => {
                             log::warn!("Failed to set value for auto indexing: {e:?}");
                         }

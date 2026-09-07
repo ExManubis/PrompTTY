@@ -776,8 +776,7 @@ impl LocalCodeEditorView {
         request_offset: CharOffset,
         ctx: &mut ViewContext<Self>,
     ) {
-        if let Some(server) = &self.lsp_server {
-        }
+        if let Some(server) = &self.lsp_server {}
 
         // Get workspace root for relative path display from the LSP server
         let workspace_root = self
@@ -2154,8 +2153,7 @@ impl LocalCodeEditorView {
             move |_me, result, ctx| {
                 let had_result = matches!(&result, Ok(locations) if !locations.is_empty());
 
-                if let Some(server_type) = server_type_name {
-                }
+                if let Some(server_type) = server_type_name {}
 
                 match result {
                     Ok(locations) => {

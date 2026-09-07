@@ -21,6 +21,7 @@ use warpui::{
 
 use super::super::palette_styles as styles;
 use super::CommandPaletteMixer;
+use crate::ToastStack;
 use crate::appearance::Appearance;
 use crate::drive::CloudObjectTypeAndId;
 use crate::features::FeatureFlag;
@@ -39,14 +40,13 @@ use crate::search::search_bar::{
     SearchBar, SearchBarEvent, SearchBarState, SearchResultOrdering, SelectionUpdate,
 };
 use crate::server::ids::SyncId;
-use crate::shared_enums::{LaunchConfigUiLocation};
 use crate::session_management::SessionSource;
 use crate::settings::CtrlTabBehavior;
+use crate::shared_enums::LaunchConfigUiLocation;
 use crate::terminal::keys_settings::KeysSettings;
 use crate::themes::theme::WarpTheme;
 use crate::view_components::DismissibleToast;
 use crate::workspace::{ForkedConversationDestination, WorkspaceAction, active_terminal_in_window};
-use crate::{ToastStack};
 
 lazy_static! {
     /// Set of hardcoded action names that we want to show in the command palette zero state.
@@ -610,8 +610,8 @@ impl View {
         let buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
         let filter = self.active_query_filter(ctx);
         let event = if let Some(result_type) = accepted_action_type {
-            } else {
-            };
+        } else {
+        };
 
         self.state.clipped_scroll_state = Default::default();
         self.reset(ctx);
@@ -797,7 +797,6 @@ impl View {
                         &pane_view_locator,
                     );
                 }
-
             }
             CommandPaletteItemAction::NavigateToTab {
                 pane_group_id,
@@ -1007,7 +1006,6 @@ impl View {
         action: &dyn warpui::Action,
         ctx: &mut ViewContext<Self>,
     ) {
-
         let (window_id, view_id) = match self.binding_source.as_ref(ctx) {
             BindingSource::View {
                 window_id, view_id, ..

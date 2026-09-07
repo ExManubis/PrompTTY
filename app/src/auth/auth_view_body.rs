@@ -35,8 +35,8 @@ use crate::editor::{
 use crate::experiments::{AuthFlowInstructions, Experiment};
 use crate::modal::MODAL_CORNER_RADIUS;
 use crate::network::NetworkStatus;
-use crate::shared_enums::{AnonymousUserSignupEntrypoint};
 use crate::settings::{AISettings, PrivacySettings};
+use crate::shared_enums::AnonymousUserSignupEntrypoint;
 use crate::themes::theme::Fill as ThemeFill;
 use crate::util::color::{darken, lighten};
 const TOS_URL: &str = "https://www.warp.dev/terms-of-service";
@@ -868,8 +868,7 @@ impl TypedActionView for AuthViewBody {
                 ctx.emit(AuthViewBodyEvent::SignUpButtonClicked);
             }
             AuthViewBodyAction::ShowOverlay(overlay) => {
-                if let AuthViewOverlay::PrivacySettings = overlay {
-                }
+                if let AuthViewOverlay::PrivacySettings = overlay {}
                 self.active_overlay = Some(*overlay);
                 ctx.notify();
             }

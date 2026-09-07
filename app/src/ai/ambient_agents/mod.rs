@@ -12,7 +12,6 @@ pub mod task;
 pub use handoff_types::{
     CloudModeEntryPoint, HandoffEntryPoint, HandoffInjectionPath, HandoffSurface,
 };
-
 pub use task::{
     AgentConfigSnapshot, AgentSource, AmbientAgentLiveSessionState, AmbientAgentTask,
     AmbientAgentTaskState, ExecutionLocation, TaskStatusMessage, cancel_task_silently,

@@ -39,7 +39,6 @@ use crate::terminal::model_events::{ModelEvent, ModelEventDispatcher};
 use crate::terminal::shell::ShellType;
 use crate::workspaces::user_workspaces::TeamContext;
 
-
 pub struct ShellCommandExecutor {
     active_session: ModelHandle<ActiveSession>,
     block_finished_senders: HashMap<BlockSelector, oneshot::Sender<()>>,
@@ -218,8 +217,7 @@ impl ShellCommandExecutor {
                         _ => false,
                     };
 
-                    if should_autoexecute {
-                    }
+                    if should_autoexecute {}
 
                     should_autoexecute
                 }

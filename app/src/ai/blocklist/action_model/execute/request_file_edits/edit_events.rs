@@ -131,4 +131,3 @@ pub struct MalformedFinalLineProxyEvent {
     /// Whether this is a passive diff.
     pub passive_diff: bool,
 }
-

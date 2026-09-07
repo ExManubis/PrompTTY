@@ -290,14 +290,14 @@ use crate::server::experiments::ServerExperiments;
 #[cfg(not(target_family = "wasm"))]
 use crate::server::iap_identity_minter::ManagedSecretsIapMinter;
 use crate::server::sync_queue::{QueueItem, SyncQueue};
-pub use crate::shared_enums::{AgentModeEntrypoint, AgentModeEntrypointSelectionType};
-use crate::shared_enums::{CloseTarget, PaletteSource};
 use crate::session_management::{RunningSessionSummary, SessionNavigationData};
 use crate::settings::cloud_preferences_syncer::initialize_cloud_preferences_syncer;
 use crate::settings::manager::SettingsManager;
 use crate::settings::{AISettings, AccessibilitySettings, ScrollSettings, SelectionSettings};
 use crate::settings_view::DisplayCount;
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
+pub use crate::shared_enums::{AgentModeEntrypoint, AgentModeEntrypointSelectionType};
+use crate::shared_enums::{CloseTarget, PaletteSource};
 use crate::suggestions::ignored_suggestions_model::IgnoredSuggestionsModel;
 use crate::system::SystemStats;
 use crate::tab::TabShortcutModifierState;
@@ -615,7 +615,6 @@ impl LaunchMode {
         }
     }
 
-
     /// Whether profiling and tracing should be initialized.
     pub(crate) fn needs_profiling(&self) -> bool {
         match self {
@@ -878,6 +877,14 @@ fn run_worker_command(worker: &warp_cli::WorkerCommand) -> Result<()> {
     }
 }
 
+/// Runs the headless TUI front-end after `initialize_app`.
+#[cfg(feature = "tui")]
+pub fn run_tui(api_key: Option<String>, mount: TuiMountFn) -> Result<()> {
+    run_internal(LaunchMode::Tui {
+        entrypoint: TuiEntryPoint::Interactive { mount, api_key },
+    })
+}
+
 /// Executes a CLI command after initializing TUI-scoped settings and secure storage.
 #[cfg(feature = "tui")]
 pub fn run_tui_cli_command(execute: Box<dyn FnOnce(&mut warpui::AppContext)>) -> Result<()> {
@@ -1113,7 +1120,6 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
                 if let Some(initialization) = tracing_initialization.as_mut() {
                     initialization.shutdown();
                 }
-
             })),
             ..Default::default()
         }
@@ -1468,7 +1474,6 @@ pub(crate) fn initialize_app(
     );
 
     ctx.add_singleton_model(|_ctx| AuthStateProvider::new(auth_state.clone()));
-
 
     ctx.add_singleton_model(|ctx| {
         AuthManager::new(
@@ -1923,7 +1928,6 @@ pub(crate) fn initialize_app(
     ctx.add_singleton_model(move |_| History::new(command_history));
 
     ctx.add_singleton_model(CustomSecretRegexUpdater::new);
-
 
     // Register initial keybindings prior to creating menus
     ai::init(ctx);
@@ -2572,7 +2576,6 @@ pub(crate) fn app_callbacks(
             if let Some(initialization) = tracing_initialization.as_mut() {
                 initialization.shutdown();
             }
-
         })),
         on_should_close_window: Some(Box::new(move |window_id, ctx| {
             let general_settings = GeneralSettings::as_ref(ctx);
@@ -2835,7 +2838,6 @@ fn on_close_window_cancelled(
     open_navigation_palette: bool,
     ctx: &mut AppContext,
 ) {
-
     let sessions = SessionNavigationData::all_sessions(ctx).collect_vec();
     let sessions_summary = RunningSessionSummary::new(&sessions);
     let num_processes_in_window = sessions_summary.processes_in_window(&window_id).len();

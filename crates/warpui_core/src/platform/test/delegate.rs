@@ -23,7 +23,9 @@ use crate::platform::{
 };
 use crate::text_layout::TextAlignment;
 use crate::windowing::WindowCallbacks;
-use crate::{ApplicationBundleInfo, DisplayId, DisplayIdx, OptionalPlatformWindow, Scene, WindowId, geometry};
+use crate::{
+    ApplicationBundleInfo, DisplayId, DisplayIdx, OptionalPlatformWindow, Scene, WindowId, geometry,
+};
 
 pub struct AppDelegate {
     clipboard: InMemoryClipboard,

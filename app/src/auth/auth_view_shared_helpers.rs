@@ -436,7 +436,6 @@ pub fn render_privacy_settings_toggles<A: Action + Clone + 'static>(
             .finish()
     }
 
-
     let toggle_cloud = actions.toggle_cloud_conversation_storage.clone();
     let cloud_conversation_storage_toggle = Flex::row()
         .with_main_axis_size(MainAxisSize::Max)
@@ -476,7 +475,6 @@ pub fn render_privacy_settings_toggles<A: Action + Clone + 'static>(
     );
 
     let mut col = Flex::column().with_cross_axis_alignment(CrossAxisAlignment::Stretch);
-
 
     // Hide the cloud conversation storage toggle entirely when AI is disabled:
     // the setting has no effect without AI, and showing it is confusing.

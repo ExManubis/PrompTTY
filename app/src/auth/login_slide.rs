@@ -37,7 +37,6 @@ use crate::auth::auth_view_shared_helpers::{
 };
 use crate::auth::login_failure_notification::{self, LoginFailureReason};
 use crate::editor::{EditorView, SingleLineEditorOptions, TextColors, TextOptions};
-
 use crate::settings::PrivacySettings;
 use crate::themes::theme::Fill as ThemeFill;
 use crate::util::bindings::CustomAction;
@@ -441,8 +440,7 @@ impl LoginSlideView {
         action: &str,
         ctx: &mut ViewContext<Self>,
     ) {
-        if matches!(self.source, LoginSlideSource::AccountFirstOnboarding) {
-        }
+        if matches!(self.source, LoginSlideSource::AccountFirstOnboarding) {}
     }
 
     fn handle_pasted_auth_url(&mut self, pasted_url: String, ctx: &mut ViewContext<Self>) {
@@ -486,8 +484,7 @@ impl LoginSlideView {
         self.send_account_first_action("create_account", "continue_signup", ctx);
         self.last_login_failure_reason = None;
         self.step = LoginStep::BrowserOpen;
-        if matches!(self.source, LoginSlideSource::AccountFirstOnboarding) {
-        }
+        if matches!(self.source, LoginSlideSource::AccountFirstOnboarding) {}
         AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
             let sign_up_url = auth_manager.sign_up_url();
             ctx.open_url(&sign_up_url);

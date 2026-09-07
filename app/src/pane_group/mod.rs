@@ -82,6 +82,7 @@ use crate::auth::auth_view_modal::AuthViewVariant;
 use crate::banner::{Banner, BannerEvent, BannerState, BannerTextContent, DismissalType};
 use crate::channel::{Channel, ChannelState};
 use crate::cloud_object::Space;
+use crate::cmd_or_ctrl_shift;
 use crate::code::active_file::ActiveFileModel;
 use crate::code::buffer_location::LocalOrRemotePath;
 #[cfg(feature = "local_fs")]
@@ -112,11 +113,11 @@ use crate::resource_center::{
 use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::ids::{ObjectUid, SyncId};
 use crate::server::server_api::{ServerApi, ServerApiProvider};
-use crate::shared_enums::{AnonymousUserSignupEntrypoint, PaletteSource, SharingDialogSource};
 use crate::session_management::SessionNavigationData;
 use crate::settings::{AISettings, DefaultSessionMode, PaneSettings};
 use crate::settings_view::SettingsSection;
 use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
+use crate::shared_enums::{AnonymousUserSignupEntrypoint, PaletteSource, SharingDialogSource};
 use crate::shell_indicator::ShellIndicatorType;
 use crate::terminal::available_shells::{AvailableShell, AvailableShells};
 #[cfg(not(target_family = "wasm"))]
@@ -170,7 +171,6 @@ use crate::workspace::{
     self, CommandSearchOptions, PaneViewLocator, TabBarLocation, WorkspaceAction,
 };
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
-use crate::{cmd_or_ctrl_shift};
 
 mod ambient_pane_restoration;
 mod child_agent;
@@ -2759,7 +2759,6 @@ impl PaneGroup {
                     pane.focus(ctx);
                 }
                 ctx.notify();
-
             }
         }
     }

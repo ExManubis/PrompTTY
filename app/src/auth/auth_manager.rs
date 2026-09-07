@@ -39,10 +39,10 @@ use crate::server::server_api::auth::{
     UserAuthenticationError,
 };
 use crate::server::server_api::{ServerApi, ServerApiProvider};
-use crate::shared_enums::AnonymousUserSignupEntrypoint;
 use crate::settings::PrivacySettings;
 use crate::settings::cloud_preferences_syncer::CloudPreferencesSyncer;
 use crate::settings::initializer::SettingsInitializer;
+use crate::shared_enums::AnonymousUserSignupEntrypoint;
 use crate::terminal::general_settings::GeneralSettings;
 use crate::terminal::shared_session::manager::Manager as SharedSessionManager;
 #[cfg(target_family = "wasm")]

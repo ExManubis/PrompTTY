@@ -8,7 +8,6 @@ use ai::diff_validation::{
     DiffDelta, DiffType, ParsedDiff, SearchAndReplace, V4AHunk, fuzzy_match_diffs,
     fuzzy_match_v4a_diffs, parse_line_numbers,
 };
-use crate::code_review::CodeReviewPaneEntrypoint;
 use anyhow::Result;
 use futures::FutureExt;
 use futures::future::BoxFuture;
@@ -54,7 +53,11 @@ use crate::ai::agent::{
     AIAgentActionId, AIIdentifiers, FileEdit, RequestFileEditsResult, ServerOutputId,
 };
 use crate::ai::blocklist::RequestedEditResolution;
-use crate::ai::blocklist::action_model::{AIActionStatus, BlocklistAIActionEvent, BlocklistAIActionModel, EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats, MalformedFinalLineProxyEvent, RequestFileEditsFormatKind};
+use crate::ai::blocklist::action_model::{
+    AIActionStatus, BlocklistAIActionEvent, BlocklistAIActionModel,
+    EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats,
+    MalformedFinalLineProxyEvent, RequestFileEditsFormatKind,
+};
 use crate::ai::blocklist::diff_storage::{
     DiffStorage, DiffStorageHelper, FileSnapshot, RegisteredDiffStorage, SaveFuture,
     UpdatedFileState,
@@ -70,16 +73,20 @@ use crate::ai::blocklist::view_util::render_provider_icon_button;
 use crate::ai::mcp::{MCPProvider, mcp_provider_from_file_path};
 use crate::ai::paths::host_native_absolute_path;
 use crate::ai::predict::prompt_suggestions::ACCEPT_PROMPT_SUGGESTION_KEYBINDING;
-use crate::ai::skills::{SkillManager, SkillOpenOrigin, SkillReference, icon_override_for_skill_name, render_skill_button, skill_path_from_location};
+use crate::ai::skills::{
+    SkillManager, SkillOpenOrigin, SkillReference, icon_override_for_skill_name,
+    render_skill_button, skill_path_from_location,
+};
+use crate::cmd_or_ctrl_shift;
 use crate::code::diff_viewer::{DiffViewer, DisplayMode};
 use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEditorView};
 use crate::code::editor::{add_color, remove_color};
 use crate::code::inline_diff::{InlineDiffView, InlineDiffViewEvent};
+use crate::code_review::CodeReviewPaneEntrypoint;
 use crate::menu::{Event as MenuEvent, Menu, MenuItemFields, MenuVariant};
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::{PaneId, view};
 use crate::pane_group::{BackingView, PaneEvent};
-
 use crate::settings::AISettings;
 use crate::terminal::ShellLaunchData;
 use crate::terminal::input::SET_INPUT_MODE_AGENT_ACTION_NAME;
@@ -96,7 +103,6 @@ use crate::view_components::compactible_action_button::{
 };
 use crate::view_components::compactible_split_action_button::CompactibleSplitActionButton;
 use crate::workspace::ToastStack;
-use crate::{cmd_or_ctrl_shift};
 
 const REQUESTED_EDIT_CANCEL_LABEL: &str = "Cancel";
 const REQUESTED_EDIT_REFINE_LABEL: &str = "Refine";
@@ -939,10 +945,8 @@ impl CodeDiffView {
         }
 
         match selection {
-            AcceptSelection::Only => {
-            }
-            AcceptSelection::AndContinueWithAgent => {
-            }
+            AcceptSelection::Only => {}
+            AcceptSelection::AndContinueWithAgent => {}
             AcceptSelection::AndAutoExecute => {}
         }
 
@@ -1989,8 +1993,7 @@ impl CodeDiffView {
                 .update(ctx, |v, ctx| v.navigate_previous_diff_hunk(ctx)),
         };
 
-        if let Some(output_id) = self.server_output_id() {
-        }
+        if let Some(output_id) = self.server_output_id() {}
     }
 
     fn select_file(&mut self, direction: Direction, ctx: &mut ViewContext<Self>) {
@@ -2018,8 +2021,7 @@ impl CodeDiffView {
         });
         ctx.notify();
 
-        if let Some(output_id) = self.server_output_id() {
-        }
+        if let Some(output_id) = self.server_output_id() {}
     }
 
     fn set_display_mode(&mut self, display_mode: DisplayMode, ctx: &mut ViewContext<Self>) {
@@ -2120,7 +2122,6 @@ impl CodeDiffView {
     fn server_output_id(&self) -> Option<ServerOutputId> {
         self.identifiers.server_output_id.clone()
     }
-
 
     /// Emits the malformed-final-line proxy telemetry, computed from editor state
     /// at accept time. Called by the review surface when the user accepts.
@@ -2473,8 +2474,7 @@ impl TypedActionView for CodeDiffView {
                     self.selected_tab = *idx;
                     ctx.notify();
 
-                    if let Some(output_id) = self.server_output_id() {
-                    }
+                    if let Some(output_id) = self.server_output_id() {}
                 }
             }
             CodeDiffViewAction::Edit => {
@@ -2502,8 +2502,7 @@ impl TypedActionView for CodeDiffView {
                 });
                 ctx.notify();
 
-                if let Ok(checked) = checked {
-                }
+                if let Ok(checked) = checked {}
             }
             CodeDiffViewAction::OpenSettings => {
                 ctx.emit(CodeDiffViewEvent::OpenSettings);

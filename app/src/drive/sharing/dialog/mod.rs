@@ -44,7 +44,7 @@ use crate::server::cloud_objects::update_manager::{
     ObjectOperation, UpdateManager, UpdateManagerEvent,
 };
 use crate::server::ids::ServerId;
-use crate::shared_enums::{SharingDialogSource};
+use crate::shared_enums::SharingDialogSource;
 use crate::terminal::TerminalView;
 use crate::terminal::shared_session::SharedSessionActionSource;
 use crate::terminal::shared_session::permissions_manager::{
@@ -59,7 +59,6 @@ use crate::word_block_editor::{
 };
 use crate::workspace::{ToastStack, WorkspaceAction};
 use crate::workspaces::user_workspaces::{TeamContext, UserWorkspaces, UserWorkspacesEvent};
-
 
 mod inheritance;
 
@@ -645,13 +644,11 @@ impl SharingDialog {
                     None => return,
                 }
             }
-            Some(ShareableObject::Session { session_id, .. }) => {
-                }
+            Some(ShareableObject::Session { session_id, .. }) => {}
             // Skip telemetry for AI conversations
             Some(ShareableObject::AIConversation(_)) => return,
             None => return,
         };
-
     }
 
     fn reset_editable_state(&mut self, ctx: &mut ViewContext<Self>) {

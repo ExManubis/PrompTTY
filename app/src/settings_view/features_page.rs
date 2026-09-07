@@ -60,7 +60,6 @@ use crate::root_view::QuakeModePinPosition;
 use crate::search::command_search::settings::{
     CommandSearchSettings, ShowGlobalWorkflowsInUniversalSearch,
 };
-
 use crate::settings::ai::AISettings;
 use crate::settings::native_preference::{NativePreferenceSettings, UserNativePreference};
 use crate::settings::{
@@ -1758,7 +1757,6 @@ impl TypedActionView for FeaturesPageView {
                 });
             }
         }
-
     }
 }
 

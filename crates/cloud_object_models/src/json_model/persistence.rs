@@ -10,7 +10,14 @@ use cloud_objects::ids::GenericStringObjectId;
 use diesel::SqliteConnection;
 use diesel::result::Error;
 
-use crate::{CloudAIExecutionProfile, CloudAIExecutionProfileModel, CloudAIFact, CloudAIFactModel, CloudAmbientAgentEnvironment, CloudAmbientAgentEnvironmentModel, CloudEnvVarCollection, CloudEnvVarCollectionModel, CloudMCPServer, CloudMCPServerModel, CloudPreference, CloudPreferenceModel, CloudScheduledAmbientAgent, CloudScheduledAmbientAgentModel, CloudTemplatableMCPServer, CloudTemplatableMCPServerModel, CloudWorkflowEnum, CloudWorkflowEnumModel};
+use crate::{
+    CloudAIExecutionProfile, CloudAIExecutionProfileModel, CloudAIFact, CloudAIFactModel,
+    CloudAmbientAgentEnvironment, CloudAmbientAgentEnvironmentModel, CloudEnvVarCollection,
+    CloudEnvVarCollectionModel, CloudMCPServer, CloudMCPServerModel, CloudPreference,
+    CloudPreferenceModel, CloudScheduledAmbientAgent, CloudScheduledAmbientAgentModel,
+    CloudTemplatableMCPServer, CloudTemplatableMCPServerModel, CloudWorkflowEnum,
+    CloudWorkflowEnumModel,
+};
 
 pub enum PersistedGenericStringObject {
     Preference(CloudPreference),

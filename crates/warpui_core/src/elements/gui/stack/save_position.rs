@@ -5,7 +5,10 @@ use crate::elements::{Point, SelectableElement, Selection, SelectionFragment};
 use crate::event::DispatchedEvent;
 use crate::text::word_boundaries::WordBoundariesPolicy;
 use crate::text::{IsRect, SelectionDirection, SelectionType};
-use crate::{AfterLayoutContext, AppContext, Element, EntityId, EventContext, LayoutContext, PaintContext, SizeConstraint};
+use crate::{
+    AfterLayoutContext, AppContext, Element, EntityId, EventContext, LayoutContext, PaintContext,
+    SizeConstraint,
+};
 
 pub struct SavePosition {
     child: Box<dyn Element>,

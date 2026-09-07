@@ -23,7 +23,6 @@ use crate::ai::blocklist::controller::{BlocklistAIController, BlocklistAIControl
 use crate::ai::blocklist::{
     BlocklistAIHistoryModel, BlocklistAIPermissions, read_local_file_context,
 };
-use crate::shared_enums::PromptSuggestionFallbackReason;
 use crate::ai::paths::host_native_absolute_path;
 use crate::ai::predict::generate_am_query_suggestions::{
     GenerateAMQuerySuggestionsRequest, GenerateAMQuerySuggestionsResponse, Suggestion,
@@ -33,8 +32,8 @@ use crate::network::NetworkStatus;
 use crate::safe_warn;
 use crate::server::server_api::ServerApiProvider;
 use crate::server::team_scope::RequestTeamScope;
-
 use crate::settings::AISettings;
+use crate::shared_enums::PromptSuggestionFallbackReason;
 use crate::terminal::event::{BlockType, UserBlockCompleted};
 use crate::terminal::model::block::BlockId;
 use crate::terminal::model::session::SessionType;

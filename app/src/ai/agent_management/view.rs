@@ -34,6 +34,7 @@ use warpui::{
     ViewContext, ViewHandle, WeakViewHandle,
 };
 
+use crate::AgentModeEntrypoint;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent_conversations_model::{
     AgentConversationEntry, AgentConversationEntryId, AgentConversationNavigationSubject,
@@ -87,7 +88,6 @@ use crate::workspace::{
     ForkedConversationDestination, RestoreConversationLayout, ToastStack, WorkspaceAction,
 };
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{AgentModeEntrypoint};
 
 lazy_static! {
     static ref HASHER: SipHasher = SipHasher::new_with_keys(0, 0);
@@ -888,8 +888,7 @@ impl AgentManagementView {
 
     /// Shows the setup guide from a deep-link/action without toggling it off on repeated calls.
     pub(crate) fn show_setup_guide_from_link(&mut self, ctx: &mut ViewContext<Self>) {
-        if !self.is_viewing_setup_guide {
-        }
+        if !self.is_viewing_setup_guide {}
         self.is_viewing_setup_guide = true;
         ctx.notify();
     }
@@ -1113,11 +1112,9 @@ impl AgentManagementView {
                 // We open the cards directly via clicking on them.
             }
             AgentDetailsButtonEvent::CancelTask { task_id } => {
-
                 cancel_task_with_toast(*task_id, ctx);
             }
             AgentDetailsButtonEvent::ForkConversation { conversation_id } => {
-
                 ctx.dispatch_typed_action(&WorkspaceAction::ForkAIConversation {
                     conversation_id: *conversation_id,
                     fork_from_exchange: None,
@@ -1129,17 +1126,14 @@ impl AgentManagementView {
                 });
             }
             AgentDetailsButtonEvent::ViewDetails { item_id } => {
-
                 self.update_details_panel_for_item(item_id, ctx);
                 self.selected_item_id = Some(*item_id);
                 ctx.notify();
             }
             AgentDetailsButtonEvent::CopyLink { link } => {
                 match item_id {
-                    ManagementCardItemId::Conversation(conversation_id) => {
-                    }
-                    ManagementCardItemId::AmbientRun(task_id) => {
-                    }
+                    ManagementCardItemId::Conversation(conversation_id) => {}
+                    ManagementCardItemId::AmbientRun(task_id) => {}
                 }
 
                 ctx.clipboard()
@@ -2269,10 +2263,8 @@ impl TypedActionView for AgentManagementView {
                 };
 
                 match item_id {
-                    ManagementCardItemId::Conversation(conversation_id) => {
-                    }
-                    ManagementCardItemId::AmbientRun(task_id) => {
-                    }
+                    ManagementCardItemId::Conversation(conversation_id) => {}
+                    ManagementCardItemId::AmbientRun(task_id) => {}
                 }
                 ctx.dispatch_typed_action(&action);
             }

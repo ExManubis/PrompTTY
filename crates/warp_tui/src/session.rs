@@ -158,7 +158,7 @@ pub fn run() -> Result<()> {
         Err(error) => return Err(anyhow::Error::new(error)),
     };
     if let Some(TuiCommand::DumpSettingsSchema { output_path }) = args.command {
-        features::init_feature_flags();
+        warp::features::init_feature_flags();
         return warp::settings::dump_settings_schema(output_path.as_deref());
     }
     let provider_api_key_command = if let Some(provider) = args.set_provider_api_key {
@@ -243,7 +243,7 @@ fn init(
     exit_summary: TuiExitSummaryHandle,
     ctx: &mut AppContext,
 ) {
-    warp_core::    // Register the TUI views' keybindings (and, in debug builds, the
+    // Register the TUI views' keybindings (and, in debug builds, the
     // cross-surface binding validators) before any input can be dispatched.
     crate::keybindings::init(ctx);
 

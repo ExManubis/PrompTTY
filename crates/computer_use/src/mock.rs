@@ -11,7 +11,9 @@ use std::sync::{Arc, Mutex, OnceLock};
 use async_trait::async_trait;
 use instant::Instant;
 
-use crate::{RecordingCompletionStatus, RecordingConfig, RecordingError, RecordingHandle, RecordingOutput};
+use crate::{
+    RecordingCompletionStatus, RecordingConfig, RecordingError, RecordingHandle, RecordingOutput,
+};
 
 // The executors build a fresh recorder per tool call, so the start time lives
 // in a module-level static rather than on the recorder instance.

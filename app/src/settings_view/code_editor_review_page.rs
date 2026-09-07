@@ -28,7 +28,6 @@ use crate::terminal::general_settings::GeneralSettings;
 use crate::view_components::{Dropdown, DropdownItem};
 use crate::workspace::tab_settings::TabSettings;
 
-
 const PAGE_TITLE: &str = "Editor and Code Review";
 
 pub struct EditorAndCodeReviewPageView {

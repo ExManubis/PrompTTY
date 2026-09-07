@@ -10,7 +10,10 @@ use crate::elements::{
     Clipped, ConstrainedBox, DispatchEventResult, EventHandler, ParentElement, Rect, ZIndex,
 };
 use crate::platform::WindowStyle;
-use crate::{App, AppContext, Entity, EntityIdSet, Event, Presenter, TypedActionView, ViewContext, ViewHandle, WindowId, WindowInvalidation};
+use crate::{
+    App, AppContext, Entity, EntityIdSet, Event, Presenter, TypedActionView, ViewContext,
+    ViewHandle, WindowId, WindowInvalidation,
+};
 
 #[derive(Default)]
 struct View {

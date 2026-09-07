@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 use futures::channel::oneshot;
 use futures::future::{self, BoxFuture, FutureExt as _};
-use warp_core::{safe_warn};
+use warp_core::safe_warn;
 use warp_util::sync::Condition;
 use warpui_core::ModelHandle;
 use warpui_core::r#async::{FutureId, SpawnedFutureHandle};

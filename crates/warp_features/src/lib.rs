@@ -77,7 +77,6 @@ pub enum FeatureFlag {
     /// Warp Agent Mode.
     AgentMode,
 
-
     /// A setting to enable a traditional completions experience.
     ClassicCompletions,
 
@@ -211,8 +210,6 @@ pub enum FeatureFlag {
 
     /// Enables support for Warp Packs.
     WarpPacks,
-
-
 
     /// Enables auto-generated AI memories.
     AIMemories,
@@ -350,7 +347,6 @@ pub enum FeatureFlag {
 
     /// Enables the tabbed file viewer
     TabbedEditorView,
-
 
     /// Enables multiple agent profiles in settings for managing different AI agent configurations.
     MultiProfile,

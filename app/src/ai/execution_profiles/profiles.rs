@@ -1227,8 +1227,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if let Some(model_id) = &llm_id {
-        }
+        if let Some(model_id) = &llm_id {}
     }
 
     pub fn set_coding_model(
@@ -1249,8 +1248,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if let Some(model_id) = &model_id {
-        }
+        if let Some(model_id) = &model_id {}
     }
 
     pub fn set_cli_agent_model(
@@ -1271,8 +1269,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if let Some(model_id) = &model_id {
-        }
+        if let Some(model_id) = &model_id {}
     }
 
     pub fn set_computer_use_model(
@@ -1293,8 +1290,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if let Some(model_id) = &model_id {
-        }
+        if let Some(model_id) = &model_id {}
     }
 
     pub fn set_context_window_limit(
@@ -1352,7 +1348,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn set_read_files(
@@ -1372,7 +1367,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn set_execute_commands(
@@ -1392,7 +1386,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn set_write_to_pty(
@@ -1437,7 +1430,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn set_computer_use(
@@ -1462,8 +1454,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if current_value != Some(*permission) {
-        }
+        if current_value != Some(*permission) {}
     }
 
     pub fn set_ask_user_question(
@@ -1488,8 +1479,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if current_value != Some(permission) {
-        }
+        if current_value != Some(permission) {}
     }
 
     pub fn set_run_agents(
@@ -1514,8 +1504,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if current_value != Some(permission) {
-        }
+        if current_value != Some(permission) {}
     }
 
     pub fn set_web_search_enabled(
@@ -1535,7 +1524,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn set_autosync_plans_to_warp_drive(
@@ -1555,7 +1543,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn set_profile_name(
@@ -1575,7 +1562,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn add_to_command_allowlist(
@@ -1595,7 +1581,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn remove_from_command_allowlist(
@@ -1613,7 +1598,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn add_to_directory_allowlist(
@@ -1633,7 +1617,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn remove_from_directory_allowlist(
@@ -1651,7 +1634,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn add_to_command_denylist(
@@ -1671,7 +1653,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn remove_from_command_denylist(
@@ -1689,7 +1670,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn add_to_mcp_allowlist(
@@ -1709,7 +1689,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn remove_from_mcp_allowlist(
@@ -1727,7 +1706,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn add_to_mcp_denylist(
@@ -1747,7 +1725,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     pub fn remove_from_mcp_denylist(
@@ -1765,7 +1742,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
     }
 
     /// `edit_profile_internal` edits an AIExecutionProfile and upserts the changed profile to the cloud

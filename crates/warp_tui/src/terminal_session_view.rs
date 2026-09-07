@@ -18,7 +18,38 @@ use warp::settings::{
 };
 #[cfg(feature = "voice_input")]
 use warp::tui_export::slash_commands;
-use warp::tui_export::{AIAgentActionId, AIAgentContext, AIAgentExchangeId, AIAgentPtyWriteMode, AIConversation, AIConversationAutoexecuteMode, AIConversationId, AcceptSlashCommandOrSavedPrompt, ActiveSession, ActiveSessionEvent, AfterBlockCompletedEvent, AgentConversationEntryId, AgentConversationListEntryState, AgentConversationsModel, AgentInteractionMetadata, AgentViewEntryOrigin, Appearance, BlockId, BlockType, BlocklistAIActionEvent, BlocklistAIActionModel, BlocklistAIContextModel, BlocklistAIController, BlocklistAIHistoryEvent, BlocklistAIHistoryModel, BlocklistAIInputModel, CLISubagentController, CLISubagentEvent, CLISubagentTarget, COMMAND_REGISTRY, CancellationReason, ChangelogModel, ChangelogRequestType, CloudConversationData, CommandExecutionSource, ConversationFileExport, ConversationSelection, ConversationSelectionHandle, ExecuteCommandEvent, FORK_PREFIX, ForkConversationError, GetRelevantFilesController, GitHubRepoModel, GitRepoStatusModel, LLMId, LLMPreferences, LLMPreferencesEvent, LOCAL_SKILLS_REMOTE_EXECUTION_ERROR_MESSAGE, LinkedWorkflowData, ModelEvent, ParsedSlashCommandInput, PersistenceWriter, PillBarActionKind, PillBarInteractionEvent, PillBarPillKind, PillSwitchOutcome, PtyIntent, PtyIntentEvent, QueuedQueryEvent, QueuedQueryModel, RepoDetectionSessionType, RepoDetectionSource, ResolvedTeamScope, ServerConversationToken, ServerId, SessionSettings, Sessions, SessionsEvent, ShellCommandExecutorEvent, SizeInfo, SizeUpdate, SkillReference, SlashCommandDataSource as _, SlashCommandKind, SlashCommandSelectionBehavior, StartAgentExecutorEvent, StartAgentRequest, StaticCommand, TerminalModel, TerminalSurface, TerminalSurfaceInit, TranscriptScope, TuiMcpAction, TuiMcpManager, TuiMcpServerId, TuiMcpVariableValue, TuiOnboardingMarker, TuiOnboardingMarkers, TuiOnboardingMarkersEvent, TuiSlashCommandDataSource, TuiSlashCommandDataSourceArgs, TuiUpArrowHistoryItemKind, TuiUserInfoManager, TuiUserInfoManagerEvent, TuiZeroStateDataSource, UserTakeOverReason, UserWorkspaces, UserWorkspacesEvent, WAKEUP_THROTTLE_PERIOD, WarpConfig, WarpConfigUpdateEvent, block_context_from_terminal_model, build_slash_command_mixer, detect_possible_git_repo, export_conversation_markdown, loaded_subtree_rollup, log_out_tui, maybe_build_ai_query_upsert_event, prepare_conversation_block_restoration, record_autodetection_toggle_from_slash_command, record_saved_prompt_accepted, record_static_slash_command_accepted, saved_prompt_text_for_id, slash_command_selection_behavior, throttle};
+use warp::tui_export::{
+    AIAgentActionId, AIAgentContext, AIAgentExchangeId, AIAgentPtyWriteMode, AIConversation,
+    AIConversationAutoexecuteMode, AIConversationId, AcceptSlashCommandOrSavedPrompt,
+    ActiveSession, ActiveSessionEvent, AfterBlockCompletedEvent, AgentConversationEntryId,
+    AgentConversationListEntryState, AgentConversationsModel, AgentInteractionMetadata,
+    AgentViewEntryOrigin, Appearance, BlockId, BlockType, BlocklistAIActionEvent,
+    BlocklistAIActionModel, BlocklistAIContextModel, BlocklistAIController,
+    BlocklistAIHistoryEvent, BlocklistAIHistoryModel, BlocklistAIInputModel, CLISubagentController,
+    CLISubagentEvent, CLISubagentTarget, COMMAND_REGISTRY, CancellationReason, ChangelogModel,
+    ChangelogRequestType, CloudConversationData, CommandExecutionSource, ConversationFileExport,
+    ConversationSelection, ConversationSelectionHandle, ExecuteCommandEvent, FORK_PREFIX,
+    ForkConversationError, GetRelevantFilesController, GitHubRepoModel, GitRepoStatusModel, LLMId,
+    LLMPreferences, LLMPreferencesEvent, LOCAL_SKILLS_REMOTE_EXECUTION_ERROR_MESSAGE,
+    LinkedWorkflowData, ModelEvent, ParsedSlashCommandInput, PersistenceWriter, PtyIntent,
+    PtyIntentEvent,
+    QueuedQueryEvent, QueuedQueryModel, RepoDetectionSessionType, RepoDetectionSource,
+    ResolvedTeamScope, ServerConversationToken, ServerId, SessionSettings, Sessions, SessionsEvent,
+    ShellCommandExecutorEvent, SizeInfo, SizeUpdate, SkillReference, SlashCommandDataSource as _,
+    SlashCommandKind, SlashCommandSelectionBehavior, StartAgentExecutorEvent, StartAgentRequest,
+    StaticCommand, TerminalModel, TerminalSurface, TerminalSurfaceInit, TranscriptScope,
+    TuiMcpAction, TuiMcpManager, TuiMcpServerId, TuiMcpVariableValue, TuiOnboardingMarker,
+    TuiOnboardingMarkers, TuiOnboardingMarkersEvent, TuiSlashCommandDataSource,
+    TuiSlashCommandDataSourceArgs, TuiUpArrowHistoryItemKind, TuiUserInfoManager,
+    TuiUserInfoManagerEvent, TuiZeroStateDataSource, UserTakeOverReason, UserWorkspaces,
+    UserWorkspacesEvent, WAKEUP_THROTTLE_PERIOD, WarpConfig, WarpConfigUpdateEvent,
+    block_context_from_terminal_model, build_slash_command_mixer, detect_possible_git_repo,
+    export_conversation_markdown, loaded_subtree_rollup, log_out_tui,
+    maybe_build_ai_query_upsert_event, prepare_conversation_block_restoration,
+    record_autodetection_toggle_from_slash_command, record_saved_prompt_accepted,
+    record_static_slash_command_accepted, saved_prompt_text_for_id,
+    slash_command_selection_behavior, throttle,
+};
 use warp_core::channel::{Channel, ChannelState};
 use warp_core::features::FeatureFlag;
 use warp_core::settings::Setting;
@@ -45,6 +76,7 @@ use warpui_core::{
     AppContext, Entity, EntityId, ModelHandle, TuiView, TypedActionView, ViewContext, ViewHandle,
 };
 
+use crate::conversation_restore_target::ConversationRestoreTarget;
 use crate::alt_screen_view::AltScreenElement;
 use crate::api_keys_menu::{TuiApiKeysMenuEvent, TuiApiKeysMenuModel, render_api_keys_footer};
 use crate::attachment_bar::{
@@ -1969,7 +2001,7 @@ impl TuiTerminalSessionView {
             ModelEvent::BlockCompleted(completed) => {
                 view.handle_block_completed(&completed.block_id, ctx);
             }
-            ModelEvent::AfterBlockCompleted(completed) => {
+            ModelEvent::AfterBlockCompleted(_completed) => {
                 view.ensure_external_commands_are_warming(ctx);
             }
             ModelEvent::AfterBlockStarted { .. } => {
@@ -3843,8 +3875,7 @@ impl TuiTerminalSessionView {
                 controller.set_latest_instruction(block_id, prompt, ctx);
             });
         }
-        if dispatched {
-        }
+        if dispatched {}
     }
 
     /// Wraps the rendered session tree in the hold-to-talk modifier handler.

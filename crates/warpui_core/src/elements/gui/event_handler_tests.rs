@@ -9,7 +9,10 @@ use crate::elements::{
     ParentOffsetBounds, Rect, Stack,
 };
 use crate::platform::WindowStyle;
-use crate::{App, AppContext, Entity, EntityId, EntityIdSet, Presenter, TypedActionView, ViewContext, WindowInvalidation};
+use crate::{
+    App, AppContext, Entity, EntityId, EntityIdSet, Presenter, TypedActionView, ViewContext,
+    WindowInvalidation,
+};
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 enum ElementIdentifier {

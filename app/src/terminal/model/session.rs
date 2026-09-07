@@ -40,7 +40,6 @@ use super::terminal_model::{HistoryEntry, SubshellInitializationInfo};
 use crate::features::FeatureFlag;
 #[cfg(feature = "local_tty")]
 use crate::remote_server::manager::{RemoteServerManager, RemoteServerManagerEvent};
-
 use crate::terminal::event::{ExecutedExecutorCommandEvent, RemoteServerSetupState};
 use crate::terminal::shell::{Shell, ShellType};
 use crate::terminal::warpify::SubshellSource;
@@ -427,8 +426,7 @@ impl Sessions {
             .map(|info| info.was_triggered_by_rc_file_snippet)
             .unwrap_or(false);
 
-        crate::
-        History::handle(ctx).update(ctx, |history, ctx| {
+        crate::History::handle(ctx).update(ctx, |history, ctx| {
             let session_id = session.id();
             let shell_host = ShellHost::from_session(session.as_ref());
 

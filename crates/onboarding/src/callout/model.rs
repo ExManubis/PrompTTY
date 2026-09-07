@@ -321,7 +321,6 @@ impl OnboardingCalloutModel {
         self.state
     }
 
-
     fn set_state(&mut self, new_state: OnboardingCalloutState, ctx: &mut ModelContext<Self>) {
         if self.state != new_state {
             self.state = new_state;

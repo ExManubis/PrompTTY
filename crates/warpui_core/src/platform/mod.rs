@@ -39,7 +39,10 @@ use crate::notification::{NotificationSendError, RequestPermissionsOutcome, User
 use crate::rendering::{GPUPowerPreference, OnGPUDeviceSelected};
 use crate::text_layout::{ClipConfig, Line, StyleAndFont, TextAlignment, TextFrame};
 use crate::windowing::WindowCallbacks;
-use crate::{AppContext, ApplicationBundleInfo, Clipboard, DisplayId, DisplayIdx, OptionalPlatformWindow, Scene, WindowId, geometry, rendering};
+use crate::{
+    AppContext, ApplicationBundleInfo, Clipboard, DisplayId, DisplayIdx, OptionalPlatformWindow,
+    Scene, WindowId, geometry, rendering,
+};
 
 #[cfg(not(target_family = "wasm"))]
 lazy_static! {

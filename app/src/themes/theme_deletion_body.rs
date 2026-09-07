@@ -14,11 +14,10 @@ use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::appearance::Appearance;
-
 use crate::settings::{ThemeSettings, active_theme_kind};
 use crate::themes::theme::{ThemeKind, WarpTheme};
+use crate::user_config;
 use crate::user_config::util::from_yaml;
-use crate::{user_config};
 
 const BUTTON_PADDING: f32 = 12.;
 const BUTTON_FONT_SIZE: f32 = 14.;

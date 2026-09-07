@@ -17,7 +17,10 @@ use crate::elements::tui::{
     TuiRectExt, TuiScreenPoint, TuiScreenPosition, TuiSize,
 };
 use crate::platform::WindowStyle;
-use crate::{AddWindowOptions, App, AppContext, Entity, FocusContext, TuiView, TypedActionView, ViewContext, ViewHandle};
+use crate::{
+    AddWindowOptions, App, AppContext, Entity, FocusContext, TuiView, TypedActionView, ViewContext,
+    ViewHandle,
+};
 
 // --- Test-double elements -------------------------------------------------
 

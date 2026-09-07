@@ -7,9 +7,7 @@ use url::{Origin, ParseError, Url};
 
 use super::Channel;
 use crate::AppId;
-use crate::channel::config::{
-    ChannelConfig, IapConfig, McpOAuthProviderConfig,
-};
+use crate::channel::config::{ChannelConfig, IapConfig, McpOAuthProviderConfig};
 use crate::features::FeatureFlag;
 
 lazy_static! {
@@ -307,10 +305,6 @@ impl ChannelState {
         origin_from_server_root_url(&Self::server_root_url())
     }
 
-    /// Returns the rudderstack destination for all events that don't contain user-generated content.
-    
-    /// Returns the rudderstack destination for all events that contain user-generated content.
-    
     pub fn channel() -> Channel {
         CHANNEL_STATE.lock().channel
     }

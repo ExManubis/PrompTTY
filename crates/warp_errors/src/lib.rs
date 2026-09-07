@@ -224,7 +224,6 @@ pub fn format_context_suffix(fields: &[(&'static str, String)]) -> String {
     suffix
 }
 
-
 pub trait ErrorExt: RegisteredError + std::error::Error {
     /// Returns whether or not an error is something that is actionable by our engineering team.
     fn is_actionable(&self) -> bool;

@@ -46,7 +46,6 @@ pub mod headers {
     /// Custom Warp header indicating the client role. We don't use the User-Agent header
     /// because it can't be set from WASM.
     pub(crate) const WARP_CLIENT_ID: &str = "X-Warp-Client-ID";
-
 }
 
 /// The environment variable containing extra HTTP headers to attach to requests.
@@ -783,4 +782,3 @@ mod origin_tests {
         assert!(!is_warp_server_origin(&url));
     }
 }
-

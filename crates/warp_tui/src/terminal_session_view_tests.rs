@@ -84,6 +84,7 @@ use super::{
 };
 use crate::agent_block::TuiAIBlock;
 use crate::autoupdate::TuiAutoupdater;
+use crate::conversation_restore_target::ConversationRestoreTarget;
 use crate::editor_element::TuiEditorAction;
 use crate::inline_menu::MAX_INLINE_MENU_ROWS;
 use crate::input::view::TuiInputAction;
@@ -103,7 +104,6 @@ use crate::read_only_menu::TuiReadOnlyMenuKind;
 use crate::root_view::RootTuiView;
 use crate::session_registry::{TuiSessionId, TuiSessions};
 use crate::statusline_config_view::TuiStatuslineConfigEvent;
-use crate::conversation_restore_target::ConversationRestoreTarget;
 use crate::terminal_block::{block_content_rows, should_render_terminal_block};
 use crate::terminal_use::TuiInputTarget;
 use crate::test_fixtures::{
@@ -2152,12 +2152,9 @@ fn fork_slash_command_replaces_the_surface_and_renders_original_resume_guidance(
         let (view, _) = add_focus_test_session(&mut app, &fixture, true);
         let (model_event_sender, _model_event_receiver) = std::sync::mpsc::sync_channel(2);
         app.update(|ctx| {
-            tui_export::GlobalResourceHandlesProvider::handle(ctx).update(
-                ctx,
-                |provider, _| {
-                    provider.set_model_event_sender_for_test(model_event_sender);
-                },
-            );
+            tui_export::GlobalResourceHandlesProvider::handle(ctx).update(ctx, |provider, _| {
+                provider.set_model_event_sender_for_test(model_event_sender);
+            });
         });
 
         let source_token = "11111111-1111-1111-1111-111111111111";
@@ -2904,7 +2901,6 @@ fn nld_slash_command_toggles_and_reports_its_effects() {
                 TransientHintTone::Success
             ))
         );
-
     });
 }
 

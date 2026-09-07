@@ -29,6 +29,7 @@ use super::view_impl::common::{
     WarpingIndicatorProps, WarpingProps, render_switch_control_to_user_button,
     render_warping_indicator, render_warping_indicator_base, status_message_naming_model,
 };
+use crate::BlocklistAIHistoryModel;
 use crate::ai::AgentTip;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{
@@ -51,7 +52,6 @@ use crate::ai::blocklist::{
 };
 use crate::ai::llms::LLMPreferences;
 use crate::server::server_api::ServerApiProvider;
-
 use crate::settings::{InputModeSettings, InputSettings, PrivacySettings};
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::terminal::input::buffer_model::{InputBufferModel, InputBufferUpdateEvent};
@@ -70,7 +70,6 @@ use crate::terminal::{
     TOGGLE_HIDE_CLI_RESPONSES_KEYBINDING, TOGGLE_QUEUE_NEXT_PROMPT_KEYBINDING, TerminalModel,
 };
 use crate::util::bindings::keybinding_name_to_keystroke;
-use crate::{BlocklistAIHistoryModel};
 
 pub fn init(app: &mut AppContext) {
     summarization_cancel_dialog::init(app);
@@ -745,8 +744,7 @@ impl BlocklistAIStatusBar {
             // Get the current tip from the model
             self.current_tip = tip_model.as_ref(ctx).current_tip().cloned();
 
-            if let Some(tip) = self.current_tip.as_ref() {
-            }
+            if let Some(tip) = self.current_tip.as_ref() {}
         } else {
             self.current_tip = None;
         }
@@ -1233,7 +1231,6 @@ fn resolve_warping_model_message<V: View>(
         is_new_user_query,
     })
 }
-
 
 impl View for BlocklistAIStatusBar {
     fn ui_name() -> &'static str {

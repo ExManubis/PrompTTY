@@ -41,7 +41,6 @@ use crate::editor::{
 use crate::input_suggestions::{Event as InputSuggestionsEvent, InputSuggestions};
 use crate::server::server_api::ServerApi;
 use crate::server::server_api::ai::AIClient;
-
 use crate::terminal::resizable_data::{DEFAULT_WARP_AI_WIDTH, ModalType, ResizableData};
 use crate::ui_components::blended_colors;
 use crate::ui_components::buttons::icon_button;
@@ -418,7 +417,6 @@ impl AIAssistantPanelView {
             // Not supported by the AI Assistant. Only supported by blocklist AI.
             AskAIType::FromBlocks { .. } => (),
         }
-
     }
 
     fn is_prompt_too_long(&self, prompt: &str) -> bool {

@@ -27,7 +27,6 @@ use crate::server::team_scope::RequestTeamScope;
 use crate::terminal::model::session::active_session::ActiveSession;
 use crate::workspaces::user_workspaces::TeamContext;
 
-
 pub struct SearchCodebaseExecutor {
     active_session: ModelHandle<ActiveSession>,
     get_relevant_files_controller: ModelHandle<GetRelevantFilesController>,

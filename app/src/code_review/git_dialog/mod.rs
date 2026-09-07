@@ -18,7 +18,6 @@ use warpui::elements::{
     Icon as IconElement, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
     ParentAnchor, ParentElement, ParentOffsetBounds, Radius, ScrollbarWidth, Stack, Text,
 };
-use crate::code_review::GitOperationKind;
 use warpui::keymap::{self, FixedBinding};
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
@@ -29,6 +28,7 @@ use warpui::{
 
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::{add_color, remove_color};
+use crate::code_review::GitOperationKind;
 use crate::code_review::diff_state::{
     CommitChainMode, DiffStateModel, DiffStateModelEvent, GitOpResult,
 };

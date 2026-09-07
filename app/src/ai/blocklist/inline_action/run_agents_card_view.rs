@@ -22,7 +22,6 @@ use warpui::{
     ViewHandle,
 };
 
-use crate::ai::blocklist::analytics_kinds::RunAgentsCardDecision;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIAgentActionId, AIAgentActionResultType, icons};
 use crate::ai::blocklist::action_model::{
@@ -30,6 +29,7 @@ use crate::ai::blocklist::action_model::{
     RunAgentsExecutorEvent, RunAgentsSpawningSnapshot,
 };
 use crate::ai::blocklist::agent_view::orchestration_pill_bar::render_static_agent_pill;
+use crate::ai::blocklist::analytics_kinds::RunAgentsCardDecision;
 use crate::ai::blocklist::block::AIBlock;
 use crate::ai::blocklist::block::model::{AIBlockModel, AIBlockOutputStatus};
 use crate::ai::blocklist::block::view_impl::WithContentItemSpacing;

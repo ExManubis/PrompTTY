@@ -53,8 +53,8 @@ use crate::editor::InteractionState;
 use crate::features::FeatureFlag;
 use crate::menu::MenuItemFields;
 use crate::notebooks::file::MarkdownDisplayMode;
-use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 use crate::notebooks::styles::block_footer_action_button;
+use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 use crate::settings::FontSettings;
 use crate::terminal::input::DEBOUNCE_INPUT_DECORATION_PERIOD;
 use crate::terminal::input::decorations::{

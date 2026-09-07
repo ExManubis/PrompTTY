@@ -38,11 +38,11 @@ use crate::pane_group::working_directories::WorkingDirectory;
 use crate::pane_group::{
     PaneGroup, WorkingDirectoriesEvent, WorkingDirectoriesModel, {self},
 };
+use crate::settings::AISettings;
+use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 #[cfg(feature = "local_fs")]
 use crate::shared_enums::CodePanelsFileOpenEntrypoint;
 use crate::shared_enums::{FileTreeSource, WarpDriveSource};
-use crate::settings::AISettings;
-use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 use crate::terminal::resizable_data::{ModalType, ResizableData};
 use crate::ui_components::buttons::{icon_button, icon_button_with_color};
 use crate::ui_components::icons;
@@ -1127,8 +1127,7 @@ impl LeftPanelView {
                     },
                     ctx,
                 );
-                if !was_active {
-                }
+                if !was_active {}
             }
             LeftPanelAction::WarpDrive => {
                 active_view_state::set(self, ToolPanelView::WarpDrive, ctx);
@@ -1140,8 +1139,7 @@ impl LeftPanelView {
             }
             LeftPanelAction::ConversationListView => {
                 active_view_state::set(self, ToolPanelView::ConversationListView, ctx);
-                if self.active_view_availability(ctx) == ToolPanelAvailability::Available {
-                }
+                if self.active_view_availability(ctx) == ToolPanelAvailability::Available {}
             }
             LeftPanelAction::SignIn => {
                 ctx.emit(LeftPanelEvent::SignInRequested);

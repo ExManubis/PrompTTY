@@ -411,7 +411,6 @@ impl AgentOnboardingView {
 
         // Preload customize-slide images so they're ready when the user reaches that slide.
         Self::preload_onboarding_images(ctx);
-
     }
 
     /// Eagerly loads all onboarding slide images into the asset cache

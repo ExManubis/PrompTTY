@@ -9,7 +9,6 @@ use warpui::elements::{
     CrossAxisAlignment, Empty, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack,
 };
-use crate::shared_enums::PromptChoice;
 use warpui::keymap::FixedBinding;
 use warpui::platform::Cursor;
 use warpui::ui_components::button::ButtonVariant;
@@ -18,6 +17,7 @@ use warpui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
+use crate::Appearance;
 use crate::appearance::AppearanceEvent;
 use crate::chip_configurator::{ChipConfigurator, ChipConfiguratorAction, ChipConfiguratorLayout};
 use crate::context_chips::prompt::{Prompt, PromptConfiguration, PromptSelection};
@@ -25,15 +25,14 @@ use crate::context_chips::renderer::Renderer as ContextChipRenderer;
 use crate::context_chips::{
     ChipAvailability, ChipRuntimeCapabilities, ContextChipKind, available_chips,
 };
-
 use crate::settings::{FontSettings, WarpPromptSeparator};
+use crate::shared_enums::PromptChoice;
 use crate::terminal::SizeInfo;
 use crate::terminal::blockgrid_element::BlockGridElement;
 use crate::terminal::model::ObfuscateSecrets;
 use crate::terminal::model::blockgrid::BlockGrid;
 use crate::terminal::session_settings::SessionSettings;
 use crate::view_components::{Dropdown, DropdownItem};
-use crate::{Appearance};
 
 const MODAL_WIDTH: f32 = 700.;
 const BORDER_WIDTH: f32 = 1.;
@@ -349,8 +348,7 @@ impl EditorModal {
                     let session_settings = SessionSettings::as_ref(ctx);
                     let current_same_line_prompt_enabled =
                         session_settings.saved_prompt.same_line_prompt_enabled();
-                    if self.same_line_prompt_enabled != current_same_line_prompt_enabled {
-                    }
+                    if self.same_line_prompt_enabled != current_same_line_prompt_enabled {}
 
                     // Updating the `Prompt` handles turning off PS1.
                     Prompt::handle(ctx).update(ctx, |prompt, ctx| {

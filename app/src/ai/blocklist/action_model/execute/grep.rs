@@ -15,6 +15,7 @@ use super::{
     ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput,
     get_server_output_id, is_file_path, is_git_repository,
 };
+use crate::PrivacySettings;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::redaction::redact_secrets;
 use crate::ai::agent::{
@@ -28,7 +29,6 @@ use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model::session::{ExecuteCommandOptions, Session, shell_quote_arg};
 use crate::terminal::shell::ShellType;
 use crate::workspaces::user_workspaces::TeamContext;
-use crate::{PrivacySettings};
 
 const GREP_TIMEOUT: Duration = Duration::from_secs(10);
 const NON_ZERO_EXIT_CODE_ERROR: &str = "Grep command exited with non-zero exit code";
@@ -230,8 +230,7 @@ impl GrepExecutor {
                                 ctx,
                             );
                         }
-                        GrepResult::Success { .. } => {
-                        }
+                        GrepResult::Success { .. } => {}
                         _ => {}
                     }
                     AIAgentActionResultType::Grep(grep_result)

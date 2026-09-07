@@ -15,7 +15,6 @@ use warpui::elements::{
     FormattedTextElement, HighlightedHyperlink, MainAxisAlignment, MainAxisSize, ParentElement,
     Text,
 };
-use crate::shared_enums::MCPTemplateInstallationSource;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{
@@ -51,7 +50,6 @@ use crate::editor::{
 use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::pane_group::Direction;
 use crate::search_bar::SearchBar;
-
 use crate::settings::{AISettings, AISettingsChangedEvent};
 use crate::settings_view::mcp_servers::server_card::{
     ServerCardEvent, ServerCardOptions, ServerCardStatus, ServerCardView, TitleChip,
@@ -62,6 +60,7 @@ use crate::settings_view::mcp_servers_page::InstallOrigin;
 use crate::settings_view::settings_page::{
     LocalOnlyIconState, ToggleState, build_toggle_element, render_body_item_label,
 };
+use crate::shared_enums::MCPTemplateInstallationSource;
 use crate::ui_components::blended_colors;
 use crate::util::truncation::truncate_from_end;
 use crate::view_components::DismissibleToast;

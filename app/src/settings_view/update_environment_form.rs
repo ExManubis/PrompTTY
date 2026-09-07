@@ -30,7 +30,6 @@ use super::settings_page::{InputListItem, render_input_list};
 use crate::ChannelState;
 use crate::ai::ambient_agents::github_auth_notifier::{GitHubAuthEvent, GitHubAuthNotifier};
 use crate::ai::ambient_agents::github_auth_url::{self, AuthSource, GithubAuthRedirectTarget};
-
 use crate::ai::cloud_environments::{AmbientAgentEnvironment, GithubRepo};
 use crate::appearance::Appearance;
 use crate::editor::{
@@ -1477,7 +1476,6 @@ impl UpdateEnvironmentForm {
             needs_custom_image,
             reason,
         };
-
     }
 
     #[cfg(not(target_family = "wasm"))]
@@ -3409,7 +3407,6 @@ impl TypedActionView for UpdateEnvironmentForm {
                 self.suggest_image(ctx);
             }
             UpdateEnvironmentFormAction::LaunchAgentForSelectedRepos => {
-
                 let repos = self.selected_repos_as_remote_repo_args();
                 if repos.is_empty() {
                     return;

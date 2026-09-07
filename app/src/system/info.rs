@@ -14,7 +14,6 @@ use warpui::{App, AppContext, Entity, ModelContext, SingletonEntity};
 use crate::system::memory_footprint;
 use crate::terminal::TerminalView;
 
-
 /// The threshold at which we emit a memory usage warning, in bytes.
 const MEMORY_USAGE_WARNING_THRESHOLD_BYTES: u64 = Byte::GIGABYTE.as_u64() * 10;
 
@@ -446,7 +445,6 @@ struct CpuUsageStats {
     avg_usage: f32,
 }
 
-
 #[derive(Copy, Clone)]
 struct MemoryUsageStats {
     total_application_usage_bytes: usize,
@@ -510,8 +508,6 @@ impl MemoryUsageStats {
     }
 }
 
-
-
 #[derive(Copy, Clone, Default, Serialize, PartialEq)]
 struct BlockMemoryStats {
     num_blocks: usize,
@@ -532,7 +528,6 @@ impl std::fmt::Debug for BlockMemoryStats {
             .finish()
     }
 }
-
 
 /// A single resource usage sample point.
 struct Sample {

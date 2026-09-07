@@ -4,9 +4,6 @@ use std::path::PathBuf;
 
 use ai::skills::SkillReference;
 use command_corrections::Correction;
-use crate::shared_enums::AgentModeRewindEntrypoint;
-use crate::code_review::CodeReviewPaneEntrypoint;
-use crate::shared_enums::ToggleBlockFilterSource;
 pub use onboarding::OnboardingIntention;
 use pathfinder_geometry::vector::Vector2F;
 use session_sharing_protocol::common::Role;
@@ -30,8 +27,9 @@ use crate::ai::agent::AIAgentExchangeId;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
 use crate::ai::blocklist::codebase_index_speedbump_banner::CodebaseIndexSpeedbumpBannerAction;
+use crate::code_review::CodeReviewPaneEntrypoint;
 use crate::server::ids::SyncId;
-use crate::shared_enums::{PaletteSource};
+use crate::shared_enums::{AgentModeRewindEntrypoint, PaletteSource, ToggleBlockFilterSource};
 use crate::terminal::available_shells::AvailableShell;
 use crate::terminal::block_list_element::{
     BlockHoverAction, BlockListMenuSource, BlockSelectAction, BlockTextSelectAction,

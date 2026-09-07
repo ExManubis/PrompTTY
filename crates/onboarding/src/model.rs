@@ -640,7 +640,6 @@ impl OnboardingStateModel {
         ctx.notify();
     }
 
-
     pub(crate) fn complete(&mut self, ctx: &mut ModelContext<Self>) {
         ctx.emit(OnboardingStateEvent::Completed);
         ctx.notify();
@@ -798,7 +797,6 @@ impl OnboardingStateModel {
         };
         (step_index, step_count)
     }
-
 }
 
 impl Entity for OnboardingStateModel {

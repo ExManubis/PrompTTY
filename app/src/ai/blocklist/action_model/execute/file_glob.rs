@@ -23,7 +23,6 @@ use crate::terminal::model::session::{ExecuteCommandOptions, Session};
 use crate::terminal::shell::ShellType;
 use crate::workspaces::user_workspaces::TeamContext;
 
-
 const FILE_GLOB_TIMEOUT: Duration = Duration::from_secs(10);
 
 use warp_errors::report_error;
@@ -150,8 +149,7 @@ impl FileGlobExecutor {
                             log::warn!("Executing file_glob resulted in error: {e:?}");
                             log_file_glob_error(conversation_id_clone, ctx);
                         }
-                        FileGlobV2Result::Success { .. } => {
-                        }
+                        FileGlobV2Result::Success { .. } => {}
                         _ => {}
                     }
                     // Convert FileGlobV2Result to FileGlobResult if the request was not V2.

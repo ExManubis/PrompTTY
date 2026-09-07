@@ -23,7 +23,10 @@ use x11rb::protocol::xproto;
 use x11rb::rust_connection::RustConnection;
 
 use super::x11::windows;
-use crate::{RecordingCompletionStatus, RecordingConfig, RecordingError, RecordingHandle, RecordingOutput, Target};
+use crate::{
+    RecordingCompletionStatus, RecordingConfig, RecordingError, RecordingHandle, RecordingOutput,
+    Target,
+};
 
 /// How long to wait for ffmpeg to open the display and produce first output.
 const START_TIMEOUT: Duration = Duration::from_secs(15);

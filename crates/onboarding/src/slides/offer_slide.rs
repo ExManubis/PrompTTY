@@ -110,7 +110,6 @@ impl OfferVariant {
             OfferVariant::ChooseHowToStart => &[],
         }
     }
-
 }
 
 #[derive(Clone, Debug)]
@@ -443,7 +442,6 @@ impl OfferSlide {
             layout::FOREGROUND_LAYOUT_DEFAULT,
         )
     }
-
 
     fn request_upgrade(&mut self, ctx: &mut ViewContext<Self>) {
         let Some(_variant) = self.variant(ctx) else {

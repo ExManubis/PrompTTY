@@ -10,7 +10,6 @@ use crate::ai::agent::{AIAgentActionId, AIAgentActionType};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::features::FeatureFlag;
-
 use crate::workspaces::user_workspaces::TeamContext;
 
 pub struct RequestComputerUseExecutor {

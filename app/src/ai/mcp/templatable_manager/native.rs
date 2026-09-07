@@ -27,6 +27,7 @@ use super::{
     MCPServerState, SpawnedServerInfo, TemplatableMCPServerInfo, TemplatableMCPServerManager,
     TemplatableMCPServerManagerEvent,
 };
+use crate::GlobalResourceHandlesProvider;
 use crate::ai::mcp::file_based_manager::FileBasedMCPManagerEvent;
 use crate::ai::mcp::parsing::resolve_json;
 use crate::ai::mcp::templatable::{CloudTemplatableMCPServer, GalleryData};
@@ -51,12 +52,10 @@ use crate::persistence::{
 use crate::server::cloud_objects::update_manager::{InitiatedBy, UpdateManager};
 use crate::server::ids::{ClientId, ServerId, SyncId};
 use crate::server::server_api::ServerApiProvider;
-
 use crate::settings::AISettings;
 use crate::view_components::DismissibleToast;
 use crate::workspace::ToastStack;
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{GlobalResourceHandlesProvider};
 
 /// Controls the behavior of `spawn_server_impl`.
 enum SpawnMode {
@@ -70,7 +69,6 @@ enum SpawnMode {
 }
 
 impl SpawnMode {
-
     fn should_persist_running_state_to_sqlite(&self) -> bool {
         matches!(
             self,
@@ -1706,8 +1704,7 @@ impl TemplatableMCPServerManager {
                 ctx,
             );
             match result {
-                Ok(result) => {
-                }
+                Ok(result) => {}
                 Err(e) => report_error!(
                     anyhow::Error::new(e)
                         .context("Failed to convert legacy MCP server to templatable")

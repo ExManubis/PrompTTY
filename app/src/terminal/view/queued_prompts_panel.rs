@@ -44,7 +44,6 @@ use crate::editor::{
     EditorOptions, EditorView, Event as EditorEvent, PropagateAndNoOpEscapeKey,
     PropagateAndNoOpNavigationKeys, PropagateHorizontalNavigationKeys, TextOptions,
 };
-
 use crate::terminal::cli_agent_sessions::{CLIAgentSessionsModel, CLIAgentSessionsModelEvent};
 use crate::terminal::input::suggestions_mode_model::InputSuggestionsModeModel;
 use crate::ui_components::icons::Icon as TerminalIcon;
@@ -659,8 +658,7 @@ impl QueuedPromptsPanelView {
         });
         if let Some(origin) = origin
             && !was_empty
-        {
-        }
+        {}
         ctx.emit(QueuedPromptsPanelEvent::EditEnded);
     }
 
@@ -839,8 +837,7 @@ impl TypedActionView for QueuedPromptsPanelView {
                 if let (Some(from_index), Some(to_index), Some(origin)) =
                     (from_index, to_index, origin)
                     && from_index != to_index
-                {
-                }
+                {}
                 ctx.notify();
             }
         }

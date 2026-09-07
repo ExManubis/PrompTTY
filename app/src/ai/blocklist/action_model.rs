@@ -24,7 +24,14 @@ use std::sync::Arc;
 
 use ai::document::DEFAULT_PLANNING_DOCUMENT_TITLE;
 use chrono::Local;
-pub use execute::{AskUserQuestionExecutor, EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats, NewConversationDecision, PromptSuggestionExecutor, ReadFileContextResult, RequestFileEditsExecutor, RequestFileEditsFormatKind, RunAgentsExecutor, RunAgentsExecutorEvent, RunAgentsSpawningSnapshot, ShellCommandExecutor, ShellCommandExecutorEvent, StartAgentExecutor, StartAgentExecutorEvent, StartAgentOutcome, StartAgentRequest, StartAgentRequestId, read_local_file_context};
+pub use execute::{
+    AskUserQuestionExecutor, EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent,
+    EditResolvedEvent, EditStats, NewConversationDecision, PromptSuggestionExecutor,
+    ReadFileContextResult, RequestFileEditsExecutor, RequestFileEditsFormatKind, RunAgentsExecutor,
+    RunAgentsExecutorEvent, RunAgentsSpawningSnapshot, ShellCommandExecutor,
+    ShellCommandExecutorEvent, StartAgentExecutor, StartAgentExecutorEvent, StartAgentOutcome,
+    StartAgentRequest, StartAgentRequestId, read_local_file_context,
+};
 pub(crate) use execute::{
     FileReadResult, MalformedFinalLineProxyEvent, apply_edits, coerce_integer_args,
 };
@@ -60,7 +67,6 @@ use crate::terminal::TerminalModel;
 use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model_events::ModelEventDispatcher;
 use crate::workspaces::user_workspaces::TeamContextResolver;
-
 
 /// The status of an action from an AI output.
 #[derive(Clone, Debug)]

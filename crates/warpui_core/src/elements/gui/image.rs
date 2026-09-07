@@ -16,7 +16,10 @@ use crate::assets::asset_cache::{AssetCache, AssetSource, AssetState};
 use crate::event::DispatchedEvent;
 pub use crate::image_cache::CacheOption;
 use crate::image_cache::{AnimatedImage, AnimatedImageBehavior, FitType, ImageCache, StaticImage};
-use crate::{AfterLayoutContext, AppContext, EventContext, LayoutContext, PaintContext, SingletonEntity, SizeConstraint};
+use crate::{
+    AfterLayoutContext, AppContext, EventContext, LayoutContext, PaintContext, SingletonEntity,
+    SizeConstraint,
+};
 
 lazy_static! {
     static ref IMAGE_LOAD_TIMEOUT_STARTED_AT: Mutex<HashMap<u64, Instant>> =

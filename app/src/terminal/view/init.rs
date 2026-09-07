@@ -3,7 +3,6 @@ use warpui::AppContext;
 use warpui::keymap::{
     BindingDescription, ContextPredicate, EditableBinding, FixedBinding, PerPlatformKeystroke,
 };
-use crate::shared_enums::ToggleBlockFilterSource;
 use warpui::platform::OperatingSystem;
 use warpui::units::IntoLines;
 
@@ -17,8 +16,8 @@ use crate::ai::blocklist::agent_view::{
 use crate::ai::predict::prompt_suggestions::ACCEPT_PROMPT_SUGGESTION_KEYBINDING;
 use crate::channel::{Channel, ChannelState};
 use crate::features::FeatureFlag;
-use crate::shared_enums::{InteractionSource};
 use crate::settings_view::flags;
+use crate::shared_enums::{InteractionSource, ToggleBlockFilterSource};
 use crate::terminal::TerminalView;
 use crate::terminal::input::{
     SET_INPUT_MODE_AGENT_ACTION_NAME, SET_INPUT_MODE_TERMINAL_ACTION_NAME,

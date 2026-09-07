@@ -41,7 +41,6 @@ use crate::appearance::Appearance;
 use crate::auth::auth_manager::AuthManager;
 use crate::channel::ChannelState;
 use crate::modal::{Modal, ModalEvent, ModalViewState};
-
 use crate::settings::{AISettings, CustomSecretRegex, PrivacySettings, RegexDisplayInfo};
 use crate::settings_view::privacy::AddRegexModalViewState;
 use crate::settings_view::render_body_item_label;
@@ -278,8 +277,6 @@ impl PrivacyPageView {
         });
         ctx.notify();
     }
-
-
 
     fn toggle_cloud_conversation_storage(&mut self, ctx: &mut ViewContext<Self>) {
         let privacy_settings_handle = PrivacySettings::handle(ctx);

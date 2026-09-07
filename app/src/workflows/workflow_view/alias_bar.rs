@@ -24,11 +24,9 @@ use crate::editor::{
     SingleLineEditorOptions, TextOptions, ValidInputType,
 };
 use crate::server::ids::SyncId;
-
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
 use crate::workflows::aliases::{WorkflowAlias, WorkflowAliases};
-
 
 /// Width of the alias name editor.
 const ALIAS_EDITOR_WIDTH: f32 = 100.;
@@ -180,7 +178,6 @@ impl AliasBar {
             }
 
             self.mark_dirty(true, ctx);
-
         }
     }
 
@@ -271,7 +268,6 @@ impl AliasBar {
         self.is_dirty = true;
         ctx.emit(AliasBarEvent::AliasesUpdated);
         ctx.notify();
-
     }
 
     fn remove_alias(&mut self, index: usize, ctx: &mut ViewContext<Self>) {
@@ -295,7 +291,6 @@ impl AliasBar {
         self.is_dirty = true;
         ctx.emit(AliasBarEvent::AliasesUpdated);
         ctx.notify();
-
     }
 
     fn rename_alias(&mut self, index: usize, ctx: &mut ViewContext<Self>) {

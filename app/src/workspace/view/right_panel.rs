@@ -14,7 +14,6 @@ use warpui::elements::{
     PositionedElementAnchor, Resizable, ResizableStateHandle, Shrinkable, Text,
     resizable_state_handle,
 };
-use crate::code_review::CodeReviewContextDestination;
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::EditableBinding;
 use warpui::platform::Cursor;
@@ -27,6 +26,7 @@ use warpui::{
 use crate::ai::agent::AgentReviewCommentBatch;
 use crate::appearance::{Appearance, AppearanceEvent};
 use crate::code::buffer_location::LocalOrRemotePath;
+use crate::code_review::CodeReviewContextDestination;
 use crate::code_review::code_review_header::HEADER_BUTTON_PADDING;
 #[cfg(feature = "local_fs")]
 use crate::code_review::code_review_view::CodeReviewAction;

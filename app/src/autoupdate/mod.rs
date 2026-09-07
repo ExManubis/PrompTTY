@@ -24,12 +24,11 @@ use warpui::windowing::{self, WindowManager};
 use warpui::{AppContext, Entity, ModelContext, SingletonEntity, ViewContext};
 
 pub use self::changelog::get_current_changelog;
+use crate::ChannelState;
 use crate::channel::Channel;
 use crate::features::FeatureFlag;
 use crate::server::server_api::ServerApi;
-
 use crate::workspace::Workspace;
-use crate::{ChannelState};
 
 /// A successfully downloaded and unpacked target update.
 #[derive(Clone, Debug)]

@@ -1,4 +1,3 @@
-mod conversation_restore_target;
 //! `warp_tui` — the headless TUI front-end for Warp.
 //!
 //! This crate contains:
@@ -22,6 +21,7 @@ mod cli_agent_osc_event_publisher;
 mod clipboard;
 mod cloud_run;
 mod cloud_run_view;
+mod conversation_restore_target;
 pub mod input;
 pub mod root_view;
 pub mod session;

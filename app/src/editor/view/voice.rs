@@ -19,7 +19,6 @@ use crate::appearance::Appearance;
 use crate::editor::EditorElement;
 use crate::server::server_api::TranscribeError;
 use crate::server::team_scope::RequestTeamScope;
-
 use crate::settings::{AISettings, VoiceInputToggleKey};
 use crate::themes::theme::Fill;
 use crate::ui_components::buttons::{icon_button, icon_button_with_color};
@@ -433,7 +432,6 @@ impl EditorView {
                 wav_base64,
                 session_duration_ms,
             } => {
-
                 // Start transcription
                 let voice_transcriber = VoiceTranscriber::handle(ctx).as_ref(ctx);
                 if let Some(transcriber) = voice_transcriber.transcriber() {

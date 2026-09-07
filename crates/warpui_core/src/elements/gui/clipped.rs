@@ -4,7 +4,10 @@ use pathfinder_geometry::vector::Vector2F;
 
 use super::Point;
 use crate::event::DispatchedEvent;
-use crate::{AfterLayoutContext, AppContext, ClipBounds, Element, EventContext, LayoutContext, PaintContext, SizeConstraint};
+use crate::{
+    AfterLayoutContext, AppContext, ClipBounds, Element, EventContext, LayoutContext, PaintContext,
+    SizeConstraint,
+};
 
 /// Element that clips a child to its bounds
 pub struct Clipped {

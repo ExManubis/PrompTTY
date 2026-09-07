@@ -22,8 +22,8 @@ use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
     TextOptions,
 };
-use crate::shared_enums::{FindOption};
 use crate::settings::InputModeSettings;
+use crate::shared_enums::FindOption;
 use crate::themes::theme::Fill;
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;

@@ -130,7 +130,6 @@ pub fn run(
     command: CliCommand,
     global_options: GlobalOptions,
 ) -> anyhow::Result<()> {
-
     launch_command(ctx, command, global_options)
 }
 

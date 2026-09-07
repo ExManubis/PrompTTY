@@ -14,12 +14,13 @@ pub(crate) mod queued_prompts_panel;
 #[path = "view/queued_prompts_tests.rs"]
 mod queued_prompts_tests;
 use ai::agent::action::InsertReviewComment;
-use crate::shared_enums::AgentModeRewindEntrypoint;
-use crate::code_review::CodeReviewPaneEntrypoint;
-use crate::shared_enums::PromptSuggestionFallbackReason;
-use crate::shared_enums::PromptSuggestionViewType;
-use crate::shared_enums::ToggleBlockFilterSource;
 pub use load_ai_conversation::ConversationRestorationInNewPaneType;
+
+use crate::code_review::CodeReviewPaneEntrypoint;
+use crate::shared_enums::{
+    AgentModeRewindEntrypoint, PromptSuggestionFallbackReason, PromptSuggestionViewType,
+    ToggleBlockFilterSource,
+};
 // TODO(advait): if we align on prompt suggestions banner in Input, move code out of inline_banner mod.
 pub(crate) mod init_environment;
 mod init_project;
@@ -355,8 +356,6 @@ use crate::search::slash_command_menu::static_commands::commands;
 use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::ids::{ObjectUid, SyncId};
 use crate::server::server_api::ServerApi;
-use crate::shared_enums::{AgentModeEntrypoint, AnonymousUserSignupEntrypoint, InteractionSource, PaletteSource, SaveAsWorkflowModalSource, SharingDialogSource};
-use crate::terminal::cli_agent_type::{NotificationAgentVariant};
 use crate::session_management::{CommandContext, SessionNavigationPromptElements};
 use crate::settings::ai::FocusedTerminalInfo;
 #[cfg(feature = "local_fs")]
@@ -373,6 +372,10 @@ use crate::settings::{
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
 use crate::settings_view::{SettingsSection, flags};
+use crate::shared_enums::{
+    AgentModeEntrypoint, AnonymousUserSignupEntrypoint, InteractionSource, PaletteSource,
+    SaveAsWorkflowModalSource, SharingDialogSource,
+};
 use crate::shell_indicator::ShellIndicatorType;
 use crate::terminal::alias::{AliasedCommand, check_for_alias_async};
 use crate::terminal::alt_screen::alt_screen_element::AltScreenElement;
@@ -404,6 +407,7 @@ use crate::terminal::cli_agent_sessions::{
     CLIAgentSessionContext, CLIAgentSessionStatus, CLIAgentSessionsModel,
     CLIAgentSessionsModelEvent,
 };
+use crate::terminal::cli_agent_type::NotificationAgentVariant;
 use crate::terminal::color::List;
 use crate::terminal::command_corrections_denylist::COMMAND_CORRECTIONS_PREFERRED_DENYLIST;
 use crate::terminal::event::{
@@ -546,7 +550,10 @@ use crate::workspace::{
 };
 use crate::workspaces::user_workspaces::{UserWorkspaces, UserWorkspacesEvent};
 use crate::workspaces::workspace::CustomerType;
-use crate::{AIAgentActionResultType, AIRequestUsageModel, ActiveSession as WindowActiveSession, safe_error, safe_warn};
+use crate::{
+    AIAgentActionResultType, AIRequestUsageModel, ActiveSession as WindowActiveSession, safe_error,
+    safe_warn,
+};
 
 lazy_static! {
     // A set of commands that perform minimal work that we use as a baseline to measure the latency of blocks.
@@ -5730,8 +5737,7 @@ impl TerminalView {
                 prompt_suggestion_id,
                 code_exchange_id,
                 block_id,
-            } => {
-            }
+            } => {}
             LegacyPassiveSuggestionsEvent::PassiveCodeDiffFailed { reason } => {
                 self.try_clear_prompt_suggestions_banner_code_state(*reason, ctx);
             }
@@ -9834,7 +9840,6 @@ impl TerminalView {
             };
 
             ctx.notify();
-
         }
     }
 
@@ -9898,7 +9903,6 @@ impl TerminalView {
         } else {
             self.start_bootstrap_timer(BOOTSTRAP_FAILED_DURATION, ctx);
         }
-
     }
 
     /// Util method to update the ssh block, with a lock
@@ -10496,8 +10500,7 @@ impl TerminalView {
 
     fn enable_vim_keybindings(&mut self, ctx: &mut ViewContext<Self>) {
         AppEditorSettings::handle(ctx).update(ctx, |editor_settings, ctx| {
-            if editor_settings.vim_mode.set_value(true, ctx).is_ok() {
-            }
+            if editor_settings.vim_mode.set_value(true, ctx).is_ok() {}
         });
     }
 
@@ -12155,8 +12158,7 @@ impl TerminalView {
 
                         // On debug builds, we're interested in the block commands, durations,
                         // and exit codes to trial Warp Analytics.
-                        if cfg!(debug_assertions) {
-                        }
+                        if cfg!(debug_assertions) {}
                     }
                 }
                 let active_session_id = self.active_block_session_id();
@@ -13755,7 +13757,6 @@ impl TerminalView {
             },
             ctx,
         );
-
     }
 
     fn should_display_vim_banner(
@@ -17595,7 +17596,6 @@ impl TerminalView {
             items,
             ctx,
         );
-
     }
 
     fn open_workflow_modal(&mut self, ctx: &mut ViewContext<Self>) {
@@ -17637,8 +17637,7 @@ impl TerminalView {
                 });
         }
         self.focus_block_filter_editor(ctx);
-        if matches!(opened_from_click, OpenedFromClick::Yes) {
-        }
+        if matches!(opened_from_click, OpenedFromClick::Yes) {}
     }
 
     fn close_block_filter_editor(&mut self, ctx: &mut ViewContext<Self>) {
@@ -17664,7 +17663,6 @@ impl TerminalView {
                 block.command_to_string(),
             ))
         }
-
     }
 
     fn open_workflow_modal_from_ai_generated_workflow(
@@ -17673,7 +17671,6 @@ impl TerminalView {
         ctx: &mut ViewContext<Self>,
     ) {
         ctx.emit(Event::OpenWorkflowModalWithTemporary(Box::new(workflow)));
-
     }
 
     pub fn open_workflow_modal_with_existing(
@@ -19192,7 +19189,6 @@ impl TerminalView {
         ctx: &mut ViewContext<Self>,
     ) {
         ctx.emit(Event::OpenWorkflowModalWithCommand(command));
-
     }
 
     fn copy_prompt(
@@ -21494,8 +21490,7 @@ impl TerminalView {
             InputEvent::ClearSelectedBlock => self.clear_selected_blocks(ctx),
             InputEvent::SelectRecentBlocks { count } => {
                 let is_first_selection = self.selected_blocks.is_empty();
-                if is_first_selection && self.ai_input_model.as_ref(ctx).is_ai_input_enabled() {
-                }
+                if is_first_selection && self.ai_input_model.as_ref(ctx).is_ai_input_enabled() {}
                 self.select_most_recent_blocks(*count, ctx)
             }
             InputEvent::Copy => self.copy(ctx),
@@ -22053,8 +22048,7 @@ impl TerminalView {
             || previous_filter
                 .is_some_and(|previous_filter| !previous_filter.is_active_and_nonempty()))
             && block_filter_query.is_active_and_nonempty()
-        {
-        }
+        {}
         drop(model);
 
         self.update_block_filter_for_block(
@@ -24889,8 +24883,7 @@ impl TerminalView {
                 }
             }
             AskAI(ask_source) => {
-                if FeatureFlag::AgentMode.is_enabled() {
-                }
+                if FeatureFlag::AgentMode.is_enabled() {}
 
                 self.ask_ai(ask_source, ctx);
             }
@@ -25192,7 +25185,6 @@ impl TerminalView {
         self.ai_controller.update(ctx, |controller, ctx| {
             controller.clear_finished_action_results(conversation_id, ctx);
         });
-
     }
 
     fn handle_input_context_menu_action(
@@ -25263,7 +25255,6 @@ impl TerminalView {
                 });
             }
         }
-
     }
 
     fn close_notification_error_banner(&mut self, ctx: &mut ViewContext<Self>) {
@@ -25369,7 +25360,6 @@ impl TerminalView {
                 ctx.notify();
             }
         }
-
     }
 
     /// Toggles the block filter on the last selected block, or the last non-hidden
@@ -25982,7 +25972,6 @@ impl TerminalView {
             footer.show_warpify(ctx);
         });
         self.maybe_show_use_agent_footer_in_blocklist(ctx);
-
     }
 
     fn show_initialization_block(&mut self) {
@@ -26045,8 +26034,6 @@ impl TerminalView {
         cli_agent: Option<crate::terminal::cli_agent_type::CLIAgentType>,
         ctx: &mut ViewContext<Self>,
     ) {
-        
-
         self.toggle_left_panel_file_tree(false, ctx);
     }
 }
@@ -26721,8 +26708,7 @@ impl TypedActionView for TerminalView {
                     }
                 }
 
-                if is_first_selection && self.ai_input_model.as_ref(ctx).is_ai_input_enabled() {
-                }
+                if is_first_selection && self.ai_input_model.as_ref(ctx).is_ai_input_enabled() {}
             }
             SelectNextBlock => {
                 match input_mode {
@@ -26843,7 +26829,6 @@ impl TypedActionView for TerminalView {
                 self.open_rich_content_link(link, ctx);
             }
             ShowInFileExplorer(path) => {
-
                 ctx.open_file_path_in_explorer(path);
             }
             OpenFileInWarp(path) => {
@@ -26877,8 +26862,7 @@ impl TypedActionView for TerminalView {
             }
             OpenBlockListContextMenu => self.open_block_list_context_menu_via_keybinding(ctx),
             AskAIAssistant { block_index } => {
-                if FeatureFlag::AgentMode.is_enabled() {
-                }
+                if FeatureFlag::AgentMode.is_enabled() {}
 
                 self.ask_ai(&AskAISource::Block(*block_index), ctx)
             }
@@ -26894,14 +26878,12 @@ impl TypedActionView for TerminalView {
                     "Subshell",
                     "subshell",
                     warpify_keybinding,
-                    
                     ctx,
                 );
             }
             DismissWarpifyBanner(remember) => {
                 self.dismiss_warpify_banner(remember, ctx);
-                if !remember.is_ssh() {
-                }
+                if !remember.is_ssh() {}
             }
             InsertMostRecentCommandCorrection => self.insert_most_recent_command_correction(ctx),
             AliasExpansionBanner(action) => self.alias_expansion_banner_action(*action, ctx),
@@ -28662,7 +28644,6 @@ impl Drop for TerminalView {
                 log_level,
                 "Session abandoned before bootstrap for shell {pending_shell:?} on ssh {has_pending_ssh_session}"
             );
-
         };
     }
 }

@@ -12,7 +12,10 @@ use crate::elements::{
 };
 use crate::fonts::FamilyId;
 use crate::platform::WindowStyle;
-use crate::{App, AppContext, Entity, EntityIdSet, Event, Presenter, TypedActionView, ViewContext, WindowInvalidation};
+use crate::{
+    App, AppContext, Entity, EntityIdSet, Event, Presenter, TypedActionView, ViewContext,
+    WindowInvalidation,
+};
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 enum ElementIdentifier {

@@ -34,8 +34,8 @@ use crate::root_view::{
     open_new_with_workspace_source,
 };
 use crate::server::ids::ServerId;
-use crate::shared_enums::{LaunchConfigUiLocation};
 use crate::settings_view::{SettingsSection, settings_widget_deeplink_target};
+use crate::shared_enums::LaunchConfigUiLocation;
 use crate::tab_configs::TabConfig;
 use crate::user_config::{load_launch_configs, load_tab_configs, tab_configs_dir};
 use crate::util::openable_file_type::{
@@ -1418,7 +1418,6 @@ fn open_file(window_id: Option<WindowId>, path: PathBuf, ctx: &mut AppContext) {
                 }
             }
         }
-
     }
 }
 
@@ -1483,7 +1482,6 @@ fn execute_file(window_id: WindowId, path_str: &str, ctx: &mut AppContext) {
             input.set_pending_command(&path_str, i_ctx);
         })
     });
-
 }
 
 fn open_window_with_action(active_window_id: Option<WindowId>, action: &str, ctx: &mut AppContext) {

@@ -23,7 +23,6 @@ use crate::editor::{
     EditOrigin, EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys,
     SingleLineEditorOptions, TextOptions, ValidInputType,
 };
-
 use crate::terminal::model::terminal_model::BlockIndex;
 use crate::themes::theme::Fill;
 use crate::ui_components::blended_colors;
@@ -303,8 +302,7 @@ impl BlockFilterEditor {
                 // the user now types in a non-empty query, then we should count this as an `UpdateBlockFilterQuery` event.
                 if self.previous_editor_event_was_select_all
                     && !self.query_editor_text(ctx).is_empty()
-                {
-                }
+                {}
                 self.previous_editor_event_was_select_all = false;
             }
             EditorEvent::Escape => self.close(ctx),

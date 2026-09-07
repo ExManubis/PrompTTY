@@ -64,9 +64,6 @@ use warp_completer::completer::{
     ExplicitTabCompletion, MatchStrategy, MatchType, PathSeparators, PreparedSuggestion,
     SuggestionResults,
 };
-use crate::shared_enums::AICommandSearchEntrypoint;
-use crate::shared_enums::CommandXRayTrigger;
-use crate::shared_enums::QueuedPromptSendNowTrigger;
 use warp_completer::meta::{HasSpan, Span, Spanned};
 use warp_completer::parsers::LiteCommand;
 use warp_completer::parsers::simple::command_at_cursor_position;
@@ -211,7 +208,7 @@ use crate::ai::predict::prompt_suggestions::{
     has_pending_code_or_unit_test_prompt_suggestion,
     is_accept_prompt_suggestion_bound_to_ctrl_enter,
 };
-use crate::ai::skills::{SkillOpenOrigin};
+use crate::ai::skills::SkillOpenOrigin;
 use crate::ai_assistant::execution_context::execution_context_for_session;
 use crate::appearance::{Appearance, AppearanceEvent};
 use crate::channel::{Channel, ChannelState};
@@ -267,7 +264,6 @@ use crate::server::server_api::ai::AttachmentInput;
 use crate::server::server_api::ai::{AIClient, AttachmentFileInfo};
 use crate::server::server_api::presigned_upload::upload_to_target;
 use crate::server::team_scope::RequestTeamScope;
-use crate::shared_enums::{AnonymousUserSignupEntrypoint, PaletteSource};
 use crate::session_management::SessionNavigationPromptElements;
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AliasExpansionSettings, AppEditorSettings,
@@ -275,6 +271,10 @@ use crate::settings::{
     MAX_TIMES_TO_SHOW_AUTOSUGGESTION_HINT, PrivacySettings,
 };
 use crate::settings_view::{SettingsSection, flags};
+use crate::shared_enums::{
+    AICommandSearchEntrypoint, AnonymousUserSignupEntrypoint, CommandXRayTrigger, PaletteSource,
+    QueuedPromptSendNowTrigger,
+};
 use crate::suggestions::ignored_suggestions_model::{
     IgnoredSuggestionsModel, IgnoredSuggestionsModelEvent, SuggestionType,
 };
@@ -4286,8 +4286,7 @@ impl Input {
         if !dispatched {
             return;
         }
-        if let Some(origin) = origin {
-        }
+        if let Some(origin) = origin {}
         QueuedQueryModel::handle(ctx).update(ctx, |model, ctx| {
             model.remove_fired_row(conversation_id, query_id, ctx);
         });
@@ -5203,7 +5202,6 @@ impl Input {
             let is_udi_enabled =
                 InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
             let current_input_mode = self.ai_input_model.as_ref(ctx).input_type();
-
         } else if self.suggestions_mode_model.as_ref(ctx).is_ai_context_menu() {
             self.close_ai_context_menu(ctx);
         }
@@ -7890,7 +7888,6 @@ impl Input {
                         is_from_ai,
                         predicted_command: response.most_likely_action.clone(),
                     });
-
             }
             // Reset state for whether the user accepted the intelligent autosuggestion.
             self.was_intelligent_autosuggestion_accepted = false;
@@ -9514,8 +9511,7 @@ impl Input {
 
     // TODO - Implement PageUp functionality for input suggestions menu
     fn editor_page_up(&mut self, ctx: &mut ViewContext<Self>) {
-        let event = self.editor.read(ctx, |editor, ctx| {
-            });
+        let event = self.editor.read(ctx, |editor, ctx| {});
         if self.suggestions_mode_model.as_ref(ctx).is_visible() {
             self.editor
                 .update(ctx, |input, ctx| input.move_page_up(ctx));
@@ -9797,8 +9793,7 @@ impl Input {
 
     // TODO - Implement PageDown functionality for input suggestions menu
     fn editor_page_down(&mut self, ctx: &mut ViewContext<Self>) {
-        let event = self.editor.read(ctx, |editor, ctx| {
-            });
+        let event = self.editor.read(ctx, |editor, ctx| {});
         if self.suggestions_mode_model.as_ref(ctx).is_visible() {
             self.editor
                 .update(ctx, |input, ctx| input.move_page_down(ctx));
@@ -14692,7 +14687,6 @@ impl Input {
         if let Some(workflow_state) = self.workflows_state.selected_workflow_state.as_ref()
             && let WorkflowType::Cloud(workflow) = &workflow_state.workflow_type
         {
-
             UpdateManager::handle(ctx).update(ctx, move |update_manager, ctx| {
                 update_manager.record_object_action(
                     workflow.cloud_object_type_and_id(),
@@ -14858,7 +14852,6 @@ impl Input {
             },
         )
     }
-
 
     /// Uploads `images`/`files` (when the cloud pane supports it) and emits `Event::SendAgentPrompt`
     /// with the resulting attachments. Shared by the immediate viewer submission and the queued
@@ -15614,7 +15607,6 @@ impl Input {
         let (workflow_id, workflow_command) = {
             match self.workflows_state.selected_workflow_state.as_ref() {
                 Some(selected_workflow_state) => {
-
                     let workflow_type = &selected_workflow_state.workflow_type;
                     let workflow_id = match workflow_type {
                         WorkflowType::Cloud(workflow) => Some(workflow.id),
@@ -16307,8 +16299,7 @@ impl TypedActionView for Input {
                             .ai_autodetection_enabled_internal
                             .toggle_and_save_value(model_ctx)
                     })
-                {
-                }
+                {}
             }
             InputAction::CycleNextCommandSuggestion => {
                 self.cycle_next_command_suggestion(ctx);

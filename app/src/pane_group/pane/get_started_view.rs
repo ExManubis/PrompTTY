@@ -26,7 +26,6 @@ use crate::util::bindings::{BindingGroup, CustomAction, keybinding_name_to_displ
 use crate::view_components::DismissibleToast;
 use crate::workspace::{ToastStack, Workspace, WorkspaceAction};
 
-
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
 

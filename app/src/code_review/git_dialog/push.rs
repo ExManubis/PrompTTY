@@ -16,10 +16,10 @@ use warpui::elements::{
     CrossAxisAlignment, Element, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, ParentElement, Radius, ScrollbarWidth, Text,
 };
-use crate::code_review::GitDialogStatus;
 use warpui::platform::Cursor;
 
 use crate::code::editor::{add_color, remove_color};
+use crate::code_review::GitDialogStatus;
 use crate::code_review::git_dialog::{
     GitDialog, GitDialogAction, GitDialogEvent, GitDialogMode, render_branch_section,
     render_chevron_icon, render_file_list, show_toast, user_facing_git_error,

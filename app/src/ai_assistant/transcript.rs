@@ -30,7 +30,7 @@ use super::utils::{
 };
 use crate::ai::AIRequestUsageModel;
 use crate::appearance::Appearance;
-use crate::shared_enums::{SaveAsWorkflowModalSource};
+use crate::shared_enums::SaveAsWorkflowModalSource;
 use crate::ui_components::blended_colors;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
@@ -194,7 +194,6 @@ impl Transcript {
         if let Some(code) = self.code_for_index(code_block_index, ctx) {
             ctx.clipboard().write(ClipboardContent::plain_text(code));
         }
-
     }
 
     fn paste_in_terminal_input(
@@ -213,7 +212,6 @@ impl Transcript {
         if let Some(code) = self.code_for_index(code_block_index, ctx) {
             ctx.emit(TranscriptEvent::OpenWorkflowModalWithCommand(code));
         }
-
     }
 
     fn handle_keydown(&mut self, keystroke: &Keystroke, ctx: &mut ViewContext<Self>) {
