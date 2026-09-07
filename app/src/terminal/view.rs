@@ -369,7 +369,6 @@ use crate::settings::{
     InputModeSettings, InputModeSettingsChangedEvent, InputSettings, PaneSettings,
     PaneSettingsChangedEvent, PrivacySettings, PrivacySettingsChangedEvent,
     PrivacySettingsSnapshot, SelectionSettings, VimBannerSettings,
-    should_collect_ai_ugc_telemetry,
 };
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
@@ -10956,29 +10955,6 @@ impl TerminalView {
                     InlineBannerItem::new(banner_id, InlineBannerType::ShellProcessTerminated),
                 );
         } else {
-            let (termination_reason, termination_details, exit_reason) = match &termination_type {
-                shell_terminated_banner::TerminationType::PtySpawnFailure { .. } => {
-                    (Some("PtySpawnFailure".to_string()), None, None)
-                }
-                shell_terminated_banner::TerminationType::Premature {
-                    shell_detail,
-                    reason,
-                } => (
-                    Some("Premature".to_string()),
-                    Some(shell_detail.into()),
-                    Some(reason),
-                ),
-                _ => (None, None, None),
-            };
-
-            if let Some(termination_reason) = termination_reason {
-                let (shell_path, shell_type) = self.get_shell_starter_local(ctx).unzip();
-                let antivirus_name = AntivirusInfo::as_ref(ctx).get();
-
-                let long_os_version = crate::system::long_os_version(ctx);
-
-            };
-
             let banner = ctx.add_typed_action_view(|ctx| {
                 shell_terminated_banner::ShellTerminatedBanner::new(termination_type, ctx)
             });
@@ -10996,9 +10972,6 @@ impl TerminalView {
 
         ctx.notify();
     }
-
-    /// Inserts telemetry policy banner into the blocklist.
-
 
     /// Redetermine focus in the terminal view -- note that this will not steal focus
     /// from other parts of the app, the find bar, or the block filter editor.
@@ -15588,12 +15561,6 @@ impl TerminalView {
                     return;
                 }
 
-                let (query_string, block_command) = if should_collect_ai_ugc_telemetry(ctx) {
-                    (Some(suggestion.prompt.to_string()), Some(command))
-                } else {
-                    (None, None)
-                };
-
                 let banner_id = self.inline_banners_state.next_banner_id();
 
                 self.clear_prompt_suggestions(ctx);
@@ -15601,9 +15568,6 @@ impl TerminalView {
                 // Don't show banner if is coding query
                 let is_coding_query =
                     suggestion.is_coding_query() && Self::passive_code_diffs_enabled(ctx);
-                let static_prompt_suggestion_name =
-                    suggestion.static_prompt_suggestion_name.clone();
-                let suggestion_id = suggestion.id.clone();
 
                 let trigger = {
                     let model = self.model.lock();
@@ -15635,9 +15599,6 @@ impl TerminalView {
                     input.set_prompt_suggestions_banner_state(Some(banner_state), ctx);
                     input.notify_and_notify_children(ctx);
                 });
-
-                if let Some(static_name) = static_prompt_suggestion_name {
-                }
 
                 ctx.notify();
             }

@@ -473,10 +473,6 @@ impl TuiConversationRestoreOrigin {
             Self::Fork => AgentViewEntryOrigin::Tui,
         }
     }
-
-    fn records_telemetry(self) -> bool {
-        matches!(self, Self::ConversationList)
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -926,50 +922,6 @@ impl TuiTerminalSessionView {
         })
     }
 
-    fn emit_input_buffer_submitted_telemetry(&self, ctx: &mut ViewContext<Self>) {
-        let input_model = self.ai_input_model.as_ref(ctx);
-        let block_id = self.terminal_model.lock().active_block_id().clone();
-        warp::    }
-
-    fn emit_block_completed_telemetry(
-        &self,
-        completed: &AfterBlockCompletedEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let Some(delay) = completed.command_finished_to_precmd_delay else {
-            return;
-        };
-        let honor_ps1_enabled = match &completed.block_type {
-            BlockType::User(user_block) => {
-                user_block
-                    .serialized_block
-                    .get_with(|compute| {
-                        let model = self.terminal_model.lock();
-                        compute(model.block_list())
-                    })
-                    .honor_ps1
-            }
-            BlockType::BootstrapVisible(serialized_block) => serialized_block.honor_ps1,
-            BlockType::BootstrapHidden
-            | BlockType::Restored
-            | BlockType::InBandCommand
-            | BlockType::Background(_)
-            | BlockType::Static => *SessionSettings::as_ref(ctx).honor_ps1,
-        };
-        let BlockType::User(user_block) = &completed.block_type else {
-            return;
-        };
-        let serialized_block = user_block.serialized_block.get_with(|compute| {
-            let model = self.terminal_model.lock();
-            compute(model.block_list())
-        });
-        warp::        if cfg!(debug_assertions) {
-            let duration = match (serialized_block.start_ts, serialized_block.completed_ts) {
-                (Some(start), Some(completed)) => (completed - start).to_std().unwrap_or_default(),
-                (None, _) | (_, None) => Duration::default(),
-            };
-            warp::        }
-    }
     fn handle_accepted_mcp_install_action(
         &mut self,
         action: TuiMcpInstallFlowAction,
@@ -2018,7 +1970,6 @@ impl TuiTerminalSessionView {
                 view.handle_block_completed(&completed.block_id, ctx);
             }
             ModelEvent::AfterBlockCompleted(completed) => {
-                view.emit_block_completed_telemetry(completed, ctx);
                 view.ensure_external_commands_are_warming(ctx);
             }
             ModelEvent::AfterBlockStarted { .. } => {
@@ -2041,7 +1992,7 @@ impl TuiTerminalSessionView {
             | ModelEvent::Handler(_)
             | ModelEvent::FinishUpdate(_) => ctx.notify(),
             ModelEvent::BackgroundBlockStarted => {
-                warp::                ctx.notify();
+                ctx.notify();
             }
             _ => {}
         });
@@ -2462,13 +2413,6 @@ impl TuiTerminalSessionView {
         let Some(session_id) = session_id else {
             return;
         };
-        if let Some(snapshot) = self.compute_orchestration_tab_snapshot(ctx) {
-            let pill_kind = if conversation_id == snapshot.root_conversation_id {
-                PillBarPillKind::Orchestrator
-            } else {
-                PillBarPillKind::Child
-            };
-            warp::        }
         if session_id.surface_id() == self.terminal_surface_id {
             self.refresh_orchestration_tab_state(ctx);
             self.set_orchestration_tab_focus(keep_tab_focus, ctx);
@@ -2558,8 +2502,6 @@ impl TuiTerminalSessionView {
     /// the conversations from history, removes their retained TUI sessions,
     /// and returns focus to the root orchestration agent.
     fn kill_child_agent(&mut self, conversation_id: AIConversationId, ctx: &mut ViewContext<Self>) {
-        if let Some(snapshot) = self.compute_orchestration_tab_snapshot(ctx) {
-            warp::        }
         // Clear any armed kill or exit window.
         self.exit_confirmation.disarm();
         self.child_kill_armed_conversation = None;
@@ -2844,9 +2786,6 @@ impl TuiTerminalSessionView {
             request_id,
             future: None,
         };
-        if origin.records_telemetry() {
-            warp::        }
-
         ctx.notify();
         let future =
             BlocklistAIHistoryModel::handle(ctx).update(ctx, |history, ctx| match &target {
@@ -3057,8 +2996,6 @@ impl TuiTerminalSessionView {
         self.conversation_restore_state = ConversationRestoreState::Idle;
         self.refresh_exit_summary(ctx);
         self.reconcile_focus(ctx);
-        if origin.records_telemetry() {
-            warp::        }
         ctx.notify();
     }
 
@@ -3095,8 +3032,6 @@ impl TuiTerminalSessionView {
             future.abort();
         }
         self.next_restore_request_id = self.next_restore_request_id.wrapping_add(1);
-        if origin.records_telemetry() {
-            warp::        }
         self.reconcile_focus(ctx);
         ctx.notify();
         true
@@ -3124,8 +3059,6 @@ impl TuiTerminalSessionView {
                 self.conversation_restore_state = ConversationRestoreState::Failed(message);
             }
             TuiConversationRestoreOrigin::ConversationList | TuiConversationRestoreOrigin::Fork => {
-                if origin.records_telemetry() {
-                    warp::                }
                 self.conversation_restore_state = ConversationRestoreState::Idle;
                 self.show_transient_hint(message, ctx);
                 self.reconcile_focus(ctx);
@@ -3873,7 +3806,6 @@ impl TuiTerminalSessionView {
                 source: CommandExecutionSource::User,
             },
         )));
-        self.emit_input_buffer_submitted_telemetry(ctx);
 
         // The submission was accepted: clear the input and return to the
         // setting-derived agent default.
@@ -3912,7 +3844,6 @@ impl TuiTerminalSessionView {
             });
         }
         if dispatched {
-            self.emit_input_buffer_submitted_telemetry(ctx);
         }
     }
 
@@ -4184,7 +4115,7 @@ impl TuiTerminalSessionView {
             }
         };
 
-        warp::        self.conversation_menu
+        self.conversation_menu
             .update(ctx, |menu, ctx| menu.dismiss(ctx));
         self.restore_conversation(target, TuiConversationRestoreOrigin::ConversationList, ctx);
     }

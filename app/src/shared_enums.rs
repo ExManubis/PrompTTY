@@ -314,21 +314,6 @@ pub enum QueuedPromptSendNowTrigger {
     EnterOnEmptyInput,
 }
 
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum RemoteCodebaseAutoIndexTrigger {
-    NavigatedToGitRepo,
-    CodebaseContextEnablementChanged,
-}
-
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum RemoteCodebaseIndexStatusTelemetrySource {
-    Snapshot,
-    PushUpdate,
-    MutationResponse,
-}
-
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum ToggleBlockFilterSource {
     /// This includes the keybinding and the command palette items.
@@ -356,15 +341,6 @@ pub enum AICommandSearchEntrypoint {
     Keybinding,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum AgentModeAutoDetectionFalsePositivePayload {
-    /// Payload includes input text for dogfood channels.
-    InternalDogfoodUsers { input_text: String },
-
-    /// Do not include the misclassified input text in stable channels due to privacy concerns.
-    ExternalUsers,
-}
 
 
 #[derive(Clone, Copy, Debug, Serialize)]

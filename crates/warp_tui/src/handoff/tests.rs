@@ -282,10 +282,10 @@ fn privacy_invalidation_restores_the_draft_and_removes_handoff_from_commands() {
         let fixture = fixture(&mut app);
         submit_handoff(&mut app, &fixture, "/handoff preserve privacy draft");
 
-        warp::settings::PrivacySettings::handle(&app).update(&mut app, |privacy_settings, ctx| {
+        settings::PrivacySettings::handle(&app).update(&mut app, |privacy_settings, ctx| {
             privacy_settings.is_cloud_conversation_storage_enabled = false;
             ctx.emit(
-                warp::settings::PrivacySettingsChangedEvent::UpdateIsCloudConversationStorageEnabled {
+                settings::PrivacySettingsChangedEvent::UpdateIsCloudConversationStorageEnabled {
                     old_value: true,
                     new_value: false,
                 },

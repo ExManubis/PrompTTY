@@ -619,10 +619,6 @@ impl TuiHandoffModel {
                     ctx.notify();
                 }
                 HandoffCommitOutcome::Failed(failure) => {
-                    warp::                    if let Some(derived_workspace_had_content) =
-                        failure.derived_workspace_had_content
-                    {
-                        warp::                    }
                     model.dismissed = true;
                     ctx.emit(TuiHandoffModelEvent::Failed {
                         restoration: failure.restoration,
@@ -638,7 +634,7 @@ impl TuiHandoffModel {
                     ctx.notify();
                 }
                 HandoffCommitOutcome::Created(created) => {
-                    warp::                    model.phase = TuiHandoffPhase::Created {
+                    model.phase = TuiHandoffPhase::Created {
                         url: created.url,
                         completed_at: Local::now()
                             .naive_local()

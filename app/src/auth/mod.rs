@@ -46,10 +46,7 @@ use crate::server::sync_queue::SyncQueue;
 use crate::shared_enums::PaletteSource;
 
 use crate::session_management::{RunningSessionSummary, SessionNavigationData};
-use crate::settings::{
-    AISettings, CRASH_REPORTING_ENABLED_DEFAULTS_KEY, CloudPreferencesSettings, PrivacySettings,
-    TELEMETRY_ENABLED_DEFAULTS_KEY,
-};
+use crate::settings::{AISettings, CloudPreferencesSettings, PrivacySettings};
 use crate::terminal::general_settings::GeneralSettings;
 use crate::terminal::shared_session::manager::Manager as SharedSessionManager;
 use crate::workflows::manager::WorkflowManager;
@@ -326,27 +323,6 @@ fn remove_cloud_persisted_settings(app: &mut AppContext) {
                 );
             }
         });
-    }
-
-    if let Err(e) = app
-        .private_user_preferences()
-        .remove_value(TELEMETRY_ENABLED_DEFAULTS_KEY)
-    {
-        report_error!(
-            anyhow::Error::new(e)
-                .context("Failed to remove Telemetry Enabled Defaults Key from user defaults")
-        );
-    }
-
-    if let Err(e) = app
-        .private_user_preferences()
-        .remove_value(CRASH_REPORTING_ENABLED_DEFAULTS_KEY)
-    {
-        report_error!(
-            anyhow::Error::new(e).context(
-                "Failed to remove Crash Reporting Enabled Defaults Key from user defaults"
-            )
-        );
     }
 
     if let Err(e) = app

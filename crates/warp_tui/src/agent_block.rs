@@ -529,14 +529,14 @@ impl TuiAIBlock {
             }
             self.time_to_last_token = Some(latency);
         }
-        let (was_user_facing_error, cancelled) = match status {
+        match status {
             AIBlockOutputStatus::Pending | AIBlockOutputStatus::PartiallyReceived { .. } => return,
-            AIBlockOutputStatus::Complete { .. } => (false, false),
-            AIBlockOutputStatus::Cancelled { .. } => (false, true),
-            AIBlockOutputStatus::Failed { .. } => (true, false),
-        };
+            AIBlockOutputStatus::Complete { .. }
+            | AIBlockOutputStatus::Cancelled { .. }
+            | AIBlockOutputStatus::Failed { .. } => {}
+        }
         self.terminal_telemetry_emitted = true;
-        warp::    }
+    }
 
     /// Records the exchange's tool-call action ids and todo presence, and
     /// creates child views for stateful tool calls that don't have one yet.

@@ -398,13 +398,6 @@ impl ResponseStream {
         if is_auto_resume { "resume" } else { "original" }
     }
 
-    /// Helper function to emit AgentModeError telemetry for error that is retryable (not user visible).
-    fn emit_retryable_agent_mode_error_telemetry(
-        &self,
-        error: String,
-        ctx: &mut ModelContext<Self>,
-    ) {
-    }
 
     fn retry(&mut self, ctx: &mut ModelContext<Self>) {
         self.recovery = self.recovery.next_attempt();
@@ -451,13 +444,11 @@ impl ResponseStream {
                 self.log_recovery(action, &format!("{delay:?}"), error);
                 // Only emit error telemetry here if we're recovering in-request. Final
                 // errors that aren't being retried are emitted elsewhere.
-                self.emit_retryable_agent_mode_error_telemetry(format!("{error:?}"), ctx);
                 self.defer_retry_after_backoff(delay, ctx);
                 RecoveryOutcome::InFlight
             }
             RecoveryAction::RetryWhenOnline => {
                 self.log_recovery(action, "connectivity", error);
-                self.emit_retryable_agent_mode_error_telemetry(format!("{error:?}"), ctx);
                 self.defer_retry_until_online(ctx);
                 RecoveryOutcome::InFlight
             }

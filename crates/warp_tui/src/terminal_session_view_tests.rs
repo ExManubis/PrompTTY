@@ -2152,7 +2152,7 @@ fn fork_slash_command_replaces_the_surface_and_renders_original_resume_guidance(
         let (view, _) = add_focus_test_session(&mut app, &fixture, true);
         let (model_event_sender, _model_event_receiver) = std::sync::mpsc::sync_channel(2);
         app.update(|ctx| {
-            warp::tui_export::GlobalResourceHandlesProvider::handle(ctx).update(
+            tui_export::GlobalResourceHandlesProvider::handle(ctx).update(
                 ctx,
                 |provider, _| {
                     provider.set_model_event_sender_for_test(model_event_sender);

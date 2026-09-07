@@ -112,7 +112,7 @@ impl TuiConversationMenuModel {
         let mut list = TuiInlineMenuListState::default();
         list.set_loading(true);
         self.state = TuiConversationMenuState::Open { list };
-        warp::        self.cloud_warning_shown = false;
+        self.cloud_warning_shown = false;
         let window_id = self.window_id;
         let model_id = ctx.model_id();
         AgentConversationsModel::handle(ctx).update(ctx, |model, ctx| {

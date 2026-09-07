@@ -100,7 +100,7 @@ fn block_state(interaction: TuiInteractionState) -> TuiTerminalSessionState {
 #[test]
 fn resolve_returns_error_after_terminal_model_owner_drops() {
     let terminal_model = std::sync::Arc::new(parking_lot::FairMutex::new(
-        warp::tui_export::TerminalModel::mock(None, None),
+        tui_export::TerminalModel::mock(None, None),
     ));
     let weak_terminal_model = std::sync::Arc::downgrade(&terminal_model);
     drop(terminal_model);

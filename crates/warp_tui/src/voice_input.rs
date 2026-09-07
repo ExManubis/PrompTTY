@@ -157,7 +157,7 @@ impl TuiVoiceInputModel {
         self.hold_key = source.hold_key();
         self.animation_clock = AnimationClock::starting_at(Duration::ZERO);
         self.set_state(TuiVoiceInputState::Listening, ctx);
-        warp::        self.recording_handle = Some(ctx.spawn(
+        self.recording_handle = Some(ctx.spawn(
             async move { session.await_result().await },
             Self::handle_session_result,
         ));
@@ -273,14 +273,12 @@ impl TuiVoiceInputModel {
         let wav_base64 = match result {
             VoiceSessionResult::Audio {
                 wav_base64,
-                session_duration_ms,
-            } => {
-                warp::                wav_base64
-            }
+                session_duration_ms: _,
+            } => wav_base64,
             VoiceSessionResult::Aborted {
-                session_duration_ms,
+                session_duration_ms: _,
             } => {
-                warp::                self.fail("Voice input stopped", ctx);
+                self.fail("Voice input stopped", ctx);
                 return;
             }
         };

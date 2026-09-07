@@ -6,7 +6,6 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use settings::macros::{define_settings_group, maybe_define_setting, register_settings_events};
 use settings::{RespectUserSyncSetting, Setting, SupportedPlatforms, SyncToCloud};
-use warp_core::features::FeatureFlag;
 use warp_errors::{report_error, report_if_error};
 use warp_graphql::mutations::update_user_settings::UpdateUserSettingsInput;
 pub use warp_terminal::model::secrets::RegexDisplayInfo;
@@ -24,15 +23,7 @@ use crate::server::server_api::auth::{AuthClient, SyncedUserSettings};
 use crate::terminal::safe_mode_settings::SafeModeSettings;
 use crate::workspaces::workspace::EnterpriseSecretRegex;
 
-
-/// Product-analytics UGC collection has been removed; always returns false.
-pub fn should_collect_ai_ugc_telemetry(_app: &AppContext) -> bool {
-    false
-}
-
-/// Legacy preference keys retained so logout can clear stale local values.
-pub const TELEMETRY_ENABLED_DEFAULTS_KEY: &str = "TelemetryEnabled";
-pub const CRASH_REPORTING_ENABLED_DEFAULTS_KEY: &str = "CrashReportingEnabled";
+/// Legacy preference key retained so logout can clear stale local values.
 pub const CLOUD_CONVERSATION_STORAGE_ENABLED_DEFAULTS_KEY: &str = "CloudConversationStorageEnabled";
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
@@ -137,10 +128,6 @@ pub struct PrivacySettings {
     /// List of enterprise-level secret regexes provided by the organization.
     /// These are kept separate from user-level secrets to support additive behavior.
     pub enterprise_secret_regex_list: Vec<CustomSecretRegex>,
-    /// Whether or not the user's organization has forced telemetry on, in which case we ignore any
-    /// user local/cloud settings. If false, we fall back to the user's settings.
-    /// This is populated by the server when teams data is fetched.
-    pub is_telemetry_force_enabled: bool,
     /// Whether or not the user's organization has enabled enterprise secret redaction.
     /// This is populated by the server when teams data is fetched.
     pub is_enterprise_secret_redaction_enabled: bool,
@@ -149,7 +136,6 @@ pub struct PrivacySettings {
 /// A snapshot of a user's [`PrivacySettings`] settings at some point in time.
 #[derive(Clone, Copy)]
 pub struct PrivacySettingsSnapshot {
-    is_telemetry_force_enabled: bool,
     // This is an option so that, if a user has not set this value (and it's set to its default value of true),
     // the default value won't override a value that the user previously set on a different device.
     // This is set to a non-option once the user manually changes this setting.
@@ -161,19 +147,10 @@ impl PrivacySettingsSnapshot {
         self.cloud_conversation_storage_enabled
     }
 
-    pub fn is_telemetry_force_enabled(&self) -> bool {
-        self.is_telemetry_force_enabled
-    }
-
-    pub fn should_collect_ai_ugc_telemetry(&self) -> bool {
-        false
-    }
-
     #[cfg(test)]
     pub fn mock() -> Self {
         Self {
             cloud_conversation_storage_enabled: None,
-            is_telemetry_force_enabled: false,
         }
     }
 }
@@ -241,18 +218,9 @@ impl PrivacySettings {
             is_cloud_conversation_storage_enabled,
             user_secret_regex_list,
             has_initialized_default_secret_regexes,
-            is_telemetry_force_enabled: false,
             is_enterprise_secret_redaction_enabled: false,
             enterprise_secret_regex_list: Vec::new(),
         }
-    }
-
-    pub fn is_telemetry_force_enabled(&self) -> bool {
-        self.is_telemetry_force_enabled
-    }
-
-    pub fn set_is_telemetry_force_enabled(&mut self, is_telemetry_force_enabled: bool) {
-        self.is_telemetry_force_enabled = is_telemetry_force_enabled;
     }
 
     pub fn is_enterprise_secret_redaction_enabled(&self) -> bool {
@@ -310,7 +278,6 @@ impl PrivacySettings {
     pub fn refresh_to_default(&mut self) {
         // TODO(zach): this seems incorrect - should we also update the values on disk?
         self.is_cloud_conversation_storage_enabled = true;
-        self.is_telemetry_force_enabled = false;
         self.is_enterprise_secret_redaction_enabled = false;
     }
 
@@ -379,7 +346,6 @@ impl PrivacySettings {
             is_cloud_conversation_storage_enabled: true,
             user_secret_regex_list: CustomSecretRegexList::new(None),
             has_initialized_default_secret_regexes: HasInitializedDefaultSecretRegexes::new(None),
-            is_telemetry_force_enabled: false,
             is_enterprise_secret_redaction_enabled: false,
             enterprise_secret_regex_list: Vec::new(),
         }
@@ -394,7 +360,6 @@ impl PrivacySettings {
         PrivacySettingsSnapshot {
             cloud_conversation_storage_enabled: (!self.is_cloud_conversation_storage_enabled)
                 .then_some(false),
-            is_telemetry_force_enabled: self.is_telemetry_force_enabled,
         }
     }
 

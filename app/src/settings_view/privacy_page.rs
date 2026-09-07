@@ -1358,8 +1358,7 @@ impl SettingsWidget for CloudConversationStorageWidget {
             return false;
         }
 
-        let privacy_settings = PrivacySettings::as_ref(app);
-        !privacy_settings.is_telemetry_force_enabled()
+        true
     }
 
     fn render(

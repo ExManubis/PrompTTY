@@ -1136,7 +1136,7 @@ impl TemplatableMCPServerManager {
                 me.pending_oauth_csrf.retain(|_, v| *v != installation_uuid);
                 me.authorization_urls.remove(&installation_uuid);
 
-                let error = match server_info {
+                match server_info {
                     Ok(info) => {
                         let peer = info.peer();
                         me.active_servers.insert(installation_uuid, info);
@@ -1150,7 +1150,6 @@ impl TemplatableMCPServerManager {
                         }
                         me.change_server_state(installation_uuid, MCPServerState::Running, ctx);
                         me.notify_reconnect_waiters(installation_uuid, Ok(peer));
-                        None
                     }
                     Err(e) => {
                         logger_clone
@@ -1174,8 +1173,6 @@ impl TemplatableMCPServerManager {
                         me.delete_credentials_from_secure_storage(installation_uuid, ctx);
 
                         me.notify_reconnect_waiters(installation_uuid, Err(error_message));
-
-                        Some(e.into())
                     }
                 };
             },

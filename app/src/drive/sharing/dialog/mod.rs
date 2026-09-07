@@ -944,17 +944,6 @@ impl SharingDialog {
     /// Copy the object's URL to the clipboard.
     pub fn copy_link(&self, ctx: &mut ViewContext<Self>) {
         if let Some(url) = self.target.as_ref().and_then(|target| target.link(ctx)) {
-            let event = match self.target {
-                Some(ShareableObject::Session { .. }) => {
-                    None}
-                Some(ShareableObject::WarpDriveObject(_))
-                | Some(ShareableObject::AIConversation(_)) => {
-                    None}
-                None => None,
-            };
-            if let Some(event) = event {
-            }
-
             ctx.clipboard().write(ClipboardContent::plain_text(url));
 
             let window_id = ctx.window_id();

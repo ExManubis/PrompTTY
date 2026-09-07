@@ -48,6 +48,7 @@ impl<S: Slide> CTAButton<S> {
     }
 }
 
+#[derive(Clone)]
 pub enum CTAButtonAction<S: Slide> {
     NextSlide(S),
     Close,

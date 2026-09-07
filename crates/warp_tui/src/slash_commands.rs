@@ -83,7 +83,6 @@ pub(crate) struct TuiSlashCommandModel {
     mixer: ModelHandle<SlashCommandMixer>,
     state: TuiSlashCommandState,
     lifecycle: InputDrivenInlineMenuLifecycle,
-    opened_telemetry_emitted: bool,
     highlighted_prefix_len: Option<usize>,
     argument_hint_text: Option<&'static str>,
     conversation_selection: ConversationSelectionHandle,
@@ -122,7 +121,6 @@ impl TuiSlashCommandModel {
             mixer,
             state: TuiSlashCommandState::Closed,
             lifecycle: InputDrivenInlineMenuLifecycle::default(),
-            opened_telemetry_emitted: false,
             highlighted_prefix_len: None,
             argument_hint_text: None,
             conversation_selection,
@@ -154,7 +152,6 @@ impl TuiSlashCommandModel {
                 list,
             },
             lifecycle: InputDrivenInlineMenuLifecycle::default(),
-            opened_telemetry_emitted: false,
             highlighted_prefix_len: None,
             argument_hint_text: None,
             conversation_selection,
@@ -346,7 +343,6 @@ impl TuiSlashCommandModel {
     fn update_from_input(&mut self, force_query: bool, ctx: &mut ModelContext<Self>) {
         let input = input_text(&self.input_editor, ctx);
         if input.is_empty() || !input.starts_with('/') {
-            self.opened_telemetry_emitted = false;
         }
         if matches!(
             self.suggestions_mode.as_ref(ctx).mode(),
@@ -421,9 +417,6 @@ impl TuiSlashCommandModel {
                     query: query.clone(),
                     list,
                 };
-                if !self.opened_telemetry_emitted {
-                    self.opened_telemetry_emitted = true;
-                    warp::                }
             }
             TuiSlashCommandState::Open {
                 query: current_query,

@@ -6,7 +6,6 @@ use warpui::{Element, Entity, SingletonEntity, TypedActionView, View, ViewContex
 
 use crate::appearance::Appearance;
 use crate::editor::{EditorView, Event, SingleLineEditorOptions, TextOptions};
-
 use crate::terminal::available_shells::{AvailableShell, AvailableShells};
 use crate::terminal::local_tty::shell::is_valid_path_or_command_for_supported_shell;
 use crate::terminal::session_settings::{SessionSettings, SessionSettingsChangedEvent};
@@ -39,6 +38,138 @@ pub enum NewSessionShellAction {
     ShowCustomPathInput,
 }
 
+impl StartupShellView {
+    /// Creates a new `StartupShellView`. The UI is initialized with the user's
+    /// current startup shell setting.
+    pub fn new(ctx: &mut ViewContext<Self>) -> Self {
+        let custom_shell_text = AvailableShells::handle(ctx).read(ctx, |shells, ctx| {
+            shells.get_user_preferred_shell(ctx).get_custom_path()
+        });
+
+        ctx.subscribe_to_model(&SessionSettings::handle(ctx), |me, _, event, ctx| {
+            if matches!(
+                event,
+                SessionSettingsChangedEvent::StartupShellOverride { .. }
+            ) {
+                Self::update_dropdown_state(me.shell_dropdown.clone(), ctx);
+                me.maybe_update_editor_state(ctx);
+            }
+            ctx.notify()
+        });
+
+        let shell_dropdown = ctx.add_typed_action_view(|ctx| {
+            let mut dropdown = Dropdown::new(ctx);
+            dropdown.set_top_bar_max_width(200.);
+            dropdown
+        });
+
+        Self::update_dropdown_state(shell_dropdown.clone(), ctx);
+
+        let shell_editor = ctx.add_typed_action_view(|ctx| {
+            let appearance_handle = Appearance::handle(ctx);
+            let options = SingleLineEditorOptions {
+                text: TextOptions::ui_font_size(appearance_handle.as_ref(ctx)),
+                ..Default::default()
+            };
+            let mut editor = EditorView::single_line(options, ctx);
+            editor.set_placeholder_text("Executable path", ctx);
+
+            if let Some(shell) = custom_shell_text.as_ref() {
+                editor.set_buffer_text(shell, ctx);
+            }
+
+            editor
+        });
+
+        ctx.subscribe_to_view(&shell_editor, move |me, _, event, ctx| {
+            me.handle_editor_event(event, ctx);
+        });
+
+        Self {
+            shell_dropdown,
+            custom_path_editor: shell_editor,
+            is_custom_path_valid: true,
+            should_display_editor: custom_shell_text.is_some(),
+        }
+    }
+
+    fn maybe_update_editor_state(&mut self, ctx: &mut ViewContext<Self>) {
+        let custom_shell_path = AvailableShells::handle(ctx).read(ctx, |shells, ctx| {
+            shells.get_user_preferred_shell(ctx).get_custom_path()
+        });
+        if let Some(custom_shell_path) = custom_shell_path {
+            self.should_display_editor = true;
+            self.custom_path_editor.update(ctx, |editor_view, ctx| {
+                editor_view.set_buffer_text(&custom_shell_path, ctx);
+            });
+        }
+    }
+
+    fn update_dropdown_state(
+        dropdown: ViewHandle<Dropdown<NewSessionShellAction>>,
+        ctx: &mut ViewContext<Self>,
+    ) {
+        dropdown.update(ctx, |dropdown, ctx| {
+            let mut items = vec![DropdownItem::new(
+                "Default",
+                NewSessionShellAction::Set(AvailableShell::default()),
+            )];
+            let shell_to_index = AvailableShells::handle(ctx).read(ctx, |model, _| {
+                let mut shell_to_index = std::collections::HashMap::new();
+                // Iterate over each shell in the model and add it to the dropdown if it's valid.
+                for shell_entry in model.get_available_shells() {
+                    items.push(DropdownItem::new(
+                        model.display_name_for_shell(shell_entry),
+                        NewSessionShellAction::Set(shell_entry.clone()),
+                    ));
+                    shell_to_index.insert(shell_entry.clone(), items.len() - 1);
+                }
+
+                shell_to_index
+            });
+
+            items.push(DropdownItem::new(
+                "Custom",
+                NewSessionShellAction::ShowCustomPathInput,
+            ));
+            let custom_index = items.len() - 1;
+            dropdown.set_items(items, ctx);
+
+            let selected_shell = AvailableShells::as_ref(ctx).get_user_preferred_shell(ctx);
+
+            let selected_index = if selected_shell.get_custom_path().is_some() {
+                custom_index
+            } else {
+                shell_to_index.get(&selected_shell).copied().unwrap_or(0)
+            };
+
+            dropdown.set_selected_by_index(selected_index, ctx);
+        });
+    }
+
+    /// This callback updates the startup shell override setting based on user
+    /// input. If the user hits Enter or the input loses focus, the new setting
+    /// is saved (they can also save it by clicking outside of the text field).
+    fn handle_editor_event(&mut self, event: &Event, ctx: &mut ViewContext<Self>) {
+        match event {
+            Event::Edited(_) => {
+                let buffer_text = self.custom_path_editor.as_ref(ctx).buffer_text(ctx);
+                let new_validity = is_valid_path_or_command_for_supported_shell(&buffer_text);
+                if new_validity != self.is_custom_path_valid {
+                    self.is_custom_path_valid = new_validity;
+                    ctx.notify();
+                }
+            }
+            Event::Blurred | Event::Enter => {
+                let buffer_text = self.custom_path_editor.as_ref(ctx).buffer_text(ctx);
+                if let Ok(shell) = AvailableShell::try_from(buffer_text.as_str()) {
+                    self.handle_action(&NewSessionShellAction::Set(shell), ctx);
+                }
+            }
+            _ => (),
+        }
+    }
+}
 
 impl Entity for StartupShellView {
     type Event = ();
@@ -112,5 +243,5 @@ impl TypedActionView for StartupShellView {
                 });
             }
         }
-    }
+            }
 }

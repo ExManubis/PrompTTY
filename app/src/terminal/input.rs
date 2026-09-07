@@ -65,7 +65,6 @@ use warp_completer::completer::{
     SuggestionResults,
 };
 use crate::shared_enums::AICommandSearchEntrypoint;
-use crate::shared_enums::AgentModeAutoDetectionFalsePositivePayload;
 use crate::shared_enums::CommandXRayTrigger;
 use crate::shared_enums::QueuedPromptSendNowTrigger;
 use warp_completer::meta::{HasSpan, Span, Spanned};
@@ -274,7 +273,6 @@ use crate::settings::{
     AISettings, AISettingsChangedEvent, AliasExpansionSettings, AppEditorSettings,
     AppEditorSettingsChangedEvent, InputModeSettings, InputSettings, InputSettingsChangedEvent,
     MAX_TIMES_TO_SHOW_AUTOSUGGESTION_HINT, PrivacySettings,
-    should_collect_ai_ugc_telemetry,
 };
 use crate::settings_view::{SettingsSection, flags};
 use crate::suggestions::ignored_suggestions_model::{
@@ -7893,7 +7891,6 @@ impl Input {
                         predicted_command: response.most_likely_action.clone(),
                     });
 
-                let should_collect_ugc = should_collect_ai_ugc_telemetry(ctx);
             }
             // Reset state for whether the user accepted the intelligent autosuggestion.
             self.was_intelligent_autosuggestion_accepted = false;
@@ -8220,13 +8217,7 @@ impl Input {
                 workflow,
                 workflow_source,
             } => {
-                let workflow_id = workflow.server_id();
                 let workflow_source = *workflow_source;
-                let space = workflow_id.and_then(|id| {
-                    CloudViewModel::as_ref(ctx)
-                        .object_space(&id.to_string(), ctx)
-                        .map(Into::into)
-                });
 
                 self.show_workflows_info_box_on_workflow_selection(
                     *workflow.clone(),
@@ -9629,42 +9620,6 @@ impl Input {
                 self.set_input_mode_natural_language_detection(ctx);
             }
             ctx.emit(Event::Escape);
-        }
-    }
-
-    /// Emits an `AgentModeAutodetectionFalsePositive` telemetry event if the current input text has
-    /// been autodetected as AI input and the user manually toggled to shell.
-    /// Also emits `AgentModeChangedInputType` if the user is part of the analytics experiment.
-    ///
-    /// This is intended to be called whenever the user manually toggles the input to new_input_type. Because the user is manually toggling
-    /// back to shell mode after input has been autodetected as natural language, we infer that the
-    /// current input text may not have been correctly classified as natural language.
-    /// For users opted in to the analytics experiment, we collect the input buffer text whenever the input type is toggled
-    /// in either direction.
-    fn maybe_send_autodetection_telemetry_on_manual_toggle(
-        &self,
-        new_input_type: InputType,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let input_buffer_text = self.buffer_text(ctx);
-        let buffer_length = input_buffer_text.len();
-        let input =
-            should_collect_ai_ugc_telemetry(ctx)
-                .then_some(input_buffer_text);
-        let is_udi_enabled = InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
-
-        let ai_input_model = self.ai_input_model.as_ref(ctx);
-        if matches!(new_input_type, InputType::Shell) && !ai_input_model.is_input_type_locked() {
-            let current_input_text = self.buffer_text(ctx);
-            if !current_input_text.is_empty() {
-                let event_payload = if cfg!(debug_assertions) {
-                    AgentModeAutoDetectionFalsePositivePayload::InternalDogfoodUsers {
-                        input_text: current_input_text,
-                    }
-                } else {
-                    AgentModeAutoDetectionFalsePositivePayload::ExternalUsers
-                };
-            }
         }
     }
 
@@ -11291,7 +11246,6 @@ impl Input {
             EditorEvent::DeleteAllLeft => {
                 if self.ai_input_model.as_ref(ctx).is_ai_input_enabled() {
                     let new_input_type = InputType::Shell;
-                    self.maybe_send_autodetection_telemetry_on_manual_toggle(new_input_type, ctx);
                     self.ai_input_model.update(ctx, |ai_input_model, ctx| {
                         ai_input_model.set_input_config_for_classic_mode(
                             InputConfig {
@@ -11974,7 +11928,6 @@ impl Input {
                 ai_input_model.set_input_config_for_classic_mode(new_input_config, ctx);
                 new_input_type
             });
-            self.maybe_send_autodetection_telemetry_on_manual_toggle(new_input_type, ctx);
         }
     }
 
@@ -13867,8 +13820,6 @@ impl Input {
                 #[cfg(not(all(feature = "local_fs", not(target_family = "wasm"))))]
                 let attachments = vec![];
 
-                self.emit_input_buffer_submitted_telemetry(ctx);
-
                 // Clear the buffer and pending attachments after collecting them.
                 self.editor.update(ctx, |editor, ctx| {
                     editor.clear_buffer(ctx);
@@ -13926,7 +13877,6 @@ impl Input {
             if !self.try_execute_command(&command, ctx) {
                 return;
             }
-            self.emit_input_buffer_submitted_telemetry(ctx);
 
             if FeatureFlag::AgentMode.is_enabled()
                 && AISettings::as_ref(ctx).is_ai_autodetection_enabled(ctx)
@@ -14537,7 +14487,6 @@ impl Input {
         self.ai_input_model.update(ctx, |model, ctx| {
             model.handle_input_buffer_submitted(ctx);
         });
-        self.emit_input_buffer_submitted_telemetry(ctx);
         self.editor.update(ctx, |editor, ctx| {
             editor.clear_buffer(ctx);
         });
@@ -14606,7 +14555,6 @@ impl Input {
         if prompt.is_empty() {
             return false;
         }
-        self.emit_input_buffer_submitted_telemetry(ctx);
 
         self.editor.update(ctx, |editor, ctx| {
             editor.clear_buffer(ctx);
@@ -14714,7 +14662,6 @@ impl Input {
         IgnoredSuggestionsModel::handle(ctx).update(ctx, |model, ctx| {
             model.remove_ignored_suggestion(ai_query.clone(), SuggestionType::AIQuery, ctx);
         });
-        self.emit_input_buffer_submitted_telemetry(ctx);
 
         self.ai_input_model.update(ctx, |model, ctx| {
             model.handle_input_buffer_submitted(ctx);
@@ -14783,7 +14730,6 @@ impl Input {
         // We're committed to sending the prompt, so finalize any in-flight image-attachment
         // processing. This drops images that haven't finished processing; already-processed ones
         // are collected as pending context below. (Local-action slash commands returned above.)
-        self.emit_input_buffer_submitted_telemetry(ctx);
         self.editor.update(ctx, |editor, ctx| {
             editor.abort_attached_images_future_handle(ctx);
         });
@@ -14913,10 +14859,6 @@ impl Input {
         )
     }
 
-    fn emit_input_buffer_submitted_telemetry(&self, ctx: &mut ViewContext<Self>) {
-        let input_model = self.ai_input_model.as_ref(ctx);
-        let block_id = self.model.lock().active_block_id().clone();
-    }
 
     /// Uploads `images`/`files` (when the cloud pane supports it) and emits `Event::SendAgentPrompt`
     /// with the resulting attachments. Shared by the immediate viewer submission and the queued

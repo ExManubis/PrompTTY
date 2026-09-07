@@ -814,6 +814,70 @@ pub fn run() -> Result<()> {
     })
 }
 
+/// Runs a parsed Warp worker command.
+fn run_worker_command(worker: &warp_cli::WorkerCommand) -> Result<()> {
+    match worker {
+        #[cfg(all(feature = "local_tty", unix))]
+        warp_cli::WorkerCommand::TerminalServer(args) => {
+            crate::terminal::local_tty::run_terminal_server(args);
+            Ok(())
+        }
+        #[cfg(feature = "plugin_host")]
+        warp_cli::WorkerCommand::PluginHost { .. } => crate::run_plugin_host(),
+        #[cfg(feature = "local_tty")]
+        warp_cli::WorkerCommand::MinidumpServer { socket_name } => {
+            let _ = socket_name;
+            anyhow::bail!("The minidump server is no longer supported");
+        }
+        #[cfg(not(target_family = "wasm"))]
+        warp_cli::WorkerCommand::RemoteServerProxy(args) => {
+            // Proxy is a thin byte bridge (stdin/stdout ↔ Unix socket).
+            // It only needs logging to stderr since stdout is the protocol
+            // channel.
+            let launch_mode = LaunchMode::RemoteServerProxy;
+            let mut tracing_initialization = tracing::init()?;
+            warp_logging::init(warp_logging::LogConfig {
+                frontend: launch_mode.log_frontend(),
+                log_destination: launch_mode.log_destination(),
+                ..Default::default()
+            })?;
+            tracing_initialization.log_initialization_warning();
+            crate::remote_server::run_proxy(args.identity_key.clone())
+        }
+        #[cfg(not(target_family = "wasm"))]
+        warp_cli::WorkerCommand::RemoteServerDaemon(args) => {
+            crate::remote_server::run_daemon(args.identity_key.clone())
+        }
+        #[cfg(not(target_family = "wasm"))]
+        warp_cli::WorkerCommand::RipgrepSearch {
+            parent,
+            ignore_case,
+            multiline,
+            pattern,
+            paths,
+        } => {
+            warp_ripgrep::search::run_search_subprocess(
+                std::slice::from_ref(pattern),
+                paths.clone(),
+                *ignore_case,
+                *multiline,
+                parent.pid,
+            )
+            .map_err(|err| anyhow!(err.to_string()))?;
+            Ok(())
+        }
+        #[cfg(not(any(
+            feature = "local_tty",
+            feature = "plugin_host",
+            not(target_family = "wasm")
+        )))]
+        worker => {
+            #[cfg(target_family = "wasm")]
+            panic!("Worker process not supported on WASM: {worker:?}")
+        }
+    }
+}
+
 /// Executes a CLI command after initializing TUI-scoped settings and secure storage.
 #[cfg(feature = "tui")]
 pub fn run_tui_cli_command(execute: Box<dyn FnOnce(&mut warpui::AppContext)>) -> Result<()> {

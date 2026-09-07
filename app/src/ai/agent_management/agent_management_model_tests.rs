@@ -309,9 +309,7 @@ fn should_trigger_notification_returns_false_for_cancelled() {
 // no stale "Task completed" toast survives a non-terminal transition.
 
 /// Disables `show_agent_notifications` so subsequent `add_notification`
-/// calls skip the `send_telemetry_from_ctx!` branch — the test app does
-/// not register a `TelemetryContextProvider` singleton and the macro
-/// would otherwise panic.
+/// calls do not surface agent toasts while exercising mailbox suppression.
 fn disable_telemetry_path(app: &mut App) {
     AISettings::handle(app).update(app, |settings, ctx| {
         report_if_error!(settings.show_agent_notifications.set_value(false, ctx));

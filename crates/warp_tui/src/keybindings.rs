@@ -52,7 +52,7 @@ fn is_tui_binding_cross_platform(binding: BindingLens) -> IsBindingValid {
     if is_tui_owned(binding.name, binding.group) {
         IsBindingValid::Yes
     } else {
-        warp::util::bindings::is_binding_cross_platform(binding)
+        util::bindings::is_binding_cross_platform(binding)
     }
 }
 pub(crate) fn binding_hint(name: &str, context: &Context, ctx: &AppContext) -> Option<String> {

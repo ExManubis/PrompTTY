@@ -13,7 +13,7 @@
 
 use std::rc::Rc;
 
-use warp::tui_export::{AIActionStatus, AIAgentAction, AIAgentActionId, AIAgentActionType, AIConversationId, AuthSecretSelection, BlocklistAIActionEvent, BlocklistAIActionModel, Harness, HarnessAvailabilityEvent, HarnessAvailabilityModel, LLMPreferences, LLMPreferencesEvent, ORCHESTRATION_WARP_WORKER_HOST, OptionSnapshot, OrchestrationConfig, OrchestrationConfigState, OrchestrationConfigStatus, OrchestrationEditState, OrchestrationEnteredEvent, OrchestrationEntrySource, RunAgentsCardDecision, RunAgentsExecutionMode, RunAgentsExecutor, RunAgentsExecutorEvent, RunAgentsRequest, RunAgentsSpawningSnapshot, TeamContextResolver, UserWorkspaces, persist_host_selection, resolve_auth_secret_selection_for_harness, resolve_default_environment_id, resolve_default_host_slug, run_agents_card_decision_event, should_show_auth_secret_picker};
+use warp::tui_export::{AIActionStatus, AIAgentAction, AIAgentActionId, AIAgentActionType, AIConversationId, AuthSecretSelection, BlocklistAIActionEvent, BlocklistAIActionModel, Harness, HarnessAvailabilityEvent, HarnessAvailabilityModel, LLMPreferences, LLMPreferencesEvent, ORCHESTRATION_WARP_WORKER_HOST, OptionSnapshot, OrchestrationConfig, OrchestrationConfigState, OrchestrationConfigStatus, OrchestrationEditState, RunAgentsCardDecision, RunAgentsExecutionMode, RunAgentsExecutor, RunAgentsExecutorEvent, RunAgentsRequest, RunAgentsSpawningSnapshot, TeamContextResolver, UserWorkspaces, persist_host_selection, resolve_auth_secret_selection_for_harness, resolve_default_environment_id, resolve_default_host_slug, should_show_auth_secret_picker};
 use warpui::SingletonEntity;
 use warpui_core::elements::tui::TuiElement;
 use warpui_core::keymap::macros::*;
@@ -423,27 +423,20 @@ impl TuiOrchestrationBlock {
     }
 
     fn emit_orchestration_entered_once(&mut self, ctx: &mut ViewContext<Self>) {
+        let _ = ctx;
         if self.entered_event_emitted || self.is_restored {
             return;
         }
         self.entered_event_emitted = true;
-        warp::    }
+    }
 
     fn emit_decision(&mut self, decision: RunAgentsCardDecision, ctx: &mut ViewContext<Self>) {
+        let _ = (decision, ctx);
         if self.decision_event_emitted || self.is_restored {
             return;
         }
         self.decision_event_emitted = true;
-        let event = run_agents_card_decision_event(
-            self.conversation_id,
-            (!self.request_fields.plan_id.is_empty()).then(|| self.request_fields.plan_id.clone()),
-            decision,
-            self.request_fields.agent_run_configs.len(),
-            &self.orchestration_edit_state.orchestration_config_state,
-            &self.request_fields,
-            self.active_config.as_ref(),
-        );
-        warp::    }
+    }
 
     /// Whether this card still awaits a user decision.
     pub(super) fn is_awaiting_confirmation(&self, ctx: &AppContext) -> bool {
