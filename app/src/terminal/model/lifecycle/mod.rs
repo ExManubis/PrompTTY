@@ -6,11 +6,9 @@
 //! corrective. Callers apply the planned action before committing its next phase.
 
 mod recovery;
-mod telemetry;
 mod transition;
 
 pub use recovery::LifecycleRecoveryRecord;
-pub(in crate::terminal) use telemetry::LifecycleTelemetryEvent;
 use recovery::LifecycleTelemetryLimiter;
 pub(in crate::terminal) use transition::{
     CommandStartKind, IgnoreReason, LifecycleAction, LifecycleInput, LifecyclePhase,

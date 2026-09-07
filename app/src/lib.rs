@@ -296,9 +296,7 @@ use crate::server::experiments::ServerExperiments;
 #[cfg(not(target_family = "wasm"))]
 use crate::server::iap_identity_minter::ManagedSecretsIapMinter;
 use crate::server::sync_queue::{QueueItem, SyncQueue};
-pub use crate::server::telemetry::TelemetryEvent;
 pub use crate::shared_enums::{AgentModeEntrypoint, AgentModeEntrypointSelectionType};
-use crate::server::telemetry::{AppStartupInfo, TelemetryCollector};
 use crate::shared_enums::{CloseTarget, PaletteSource};
 use crate::session_management::{RunningSessionSummary, SessionNavigationData};
 use crate::settings::cloud_preferences_syncer::initialize_cloud_preferences_syncer;

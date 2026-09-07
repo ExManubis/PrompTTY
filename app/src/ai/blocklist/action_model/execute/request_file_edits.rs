@@ -1,7 +1,5 @@
 mod apply_diff_model;
 mod diff_application;
-mod telemetry;
-
 use std::collections::HashMap;
 use std::path::PathBuf;
 

@@ -1,8 +1,5 @@
 //! Module containing utilities to query the currently running antivirus / EDR software on the
 //! user's machine.
-
-mod telemetry;
-
 use warpui::{Entity, ModelContext, SingletonEntity};
 
 /// Singleton model that reports the currently running antivirus software.

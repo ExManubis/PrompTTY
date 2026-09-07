@@ -10,7 +10,6 @@ pub(crate) mod redaction;
 pub(crate) mod task;
 mod task_store;
 mod identifiers;
-pub(super) mod telemetry;
 pub(super) mod util;
 
 use std::collections::{HashMap, HashSet};

@@ -101,7 +101,6 @@ mod set_default_model_modal;
 mod settings_file_footer;
 pub(crate) mod settings_page;
 mod show_blocks_view;
-mod telemetry;
 pub mod update_environment_form;
 mod warp_agent_page;
 mod warp_drive_page;

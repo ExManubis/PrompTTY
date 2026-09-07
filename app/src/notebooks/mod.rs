@@ -6,8 +6,6 @@ pub mod link;
 pub mod manager;
 pub mod notebook;
 mod styles;
-pub mod telemetry;
-
 use std::sync::Arc;
 
 use anyhow::Result;

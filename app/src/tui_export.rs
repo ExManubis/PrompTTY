@@ -50,7 +50,6 @@ pub use crate::ai::agent_conversations_model::{
     query_conversation_entries,
 };
 pub use crate::ai::ambient_agents::AmbientAgentTaskId;
-pub use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
 pub use crate::ai::ambient_agents::handoff_types::{HandoffEntryPoint, HandoffSurface};
 pub use crate::ai::blocklist::agent_view::{
     AgentViewController, AgentViewDisplayMode, AgentViewEntryOrigin, EnterAgentViewError,
@@ -193,7 +192,6 @@ pub use crate::server::server_api::ai::{
 };
 #[cfg(feature = "voice_input")]
 pub use crate::server::team_scope::RequestTeamScope;
-pub use crate::server::telemetry::{SlashMenuSource, TelemetryEvent};
 pub use crate::settings::{AISettingsChangedEvent, InputSettings};
 pub use crate::terminal::alt_screen::{should_intercept_mouse, should_intercept_scroll};
 pub use crate::terminal::color::{Colors as TerminalColors, List as TerminalColorList};

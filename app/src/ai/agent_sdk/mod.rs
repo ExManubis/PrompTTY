@@ -106,7 +106,6 @@ mod runner;
 mod schedule;
 mod secret;
 pub(crate) mod setup_observability;
-mod telemetry;
 #[cfg(test)]
 mod test_support;
 mod text_layout;

@@ -9,8 +9,6 @@ pub mod handoff_types;
 pub mod scheduled;
 pub mod spawn;
 pub mod task;
-pub mod telemetry;
-
 pub use handoff_types::{
     CloudModeEntryPoint, HandoffEntryPoint, HandoffInjectionPath, HandoffSurface,
 };

@@ -1,5 +1,3 @@
-pub mod telemetry;
-
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
