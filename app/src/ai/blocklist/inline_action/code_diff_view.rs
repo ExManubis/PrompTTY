@@ -2112,12 +2112,6 @@ impl CodeDiffView {
         self.identifiers.server_output_id.clone()
     }
 
-    /// Emits the malformed-final-line proxy telemetry, computed from editor state
-    /// at accept time. Called by the review surface when the user accepts.
-    pub fn send_malformed_line_telemetry(&self, ctx: &mut ViewContext<Self>) {
-        let _ = ctx;
-    }
-
     pub fn set_original_pane_id(&mut self, original_pane_id: Option<PaneId>) {
         self.original_pane_id = original_pane_id;
     }

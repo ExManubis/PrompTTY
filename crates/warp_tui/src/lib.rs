@@ -21,7 +21,6 @@ mod cli_agent_osc_event_publisher;
 mod clipboard;
 mod cloud_run;
 mod cloud_run_view;
-mod conversation_restore_target;
 pub mod input;
 pub mod root_view;
 pub mod session;

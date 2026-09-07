@@ -19,7 +19,7 @@ trap cleanup EXIT
 
 # By default we build release bundles.
 RELEASE_CHANNEL="release"
-FEATURES="release_bundle,crash_reporting"
+FEATURES="release_bundle"
 EXTRA_FEATURES=""
 PACKAGES=( appimage )
 BUILD="true"

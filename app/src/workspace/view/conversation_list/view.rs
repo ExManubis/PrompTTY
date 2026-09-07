@@ -611,13 +611,6 @@ impl ConversationListView {
         self.focus_query_editor(ctx);
     }
 
-    fn send_open_telemetry(id: &AgentConversationEntryId, _ctx: &mut ViewContext<Self>) {
-        match id {
-            AgentConversationEntryId::Conversation(_conversation_id) => {}
-            AgentConversationEntryId::AmbientRun(_task_id) => {}
-        }
-    }
-
     /// Activate the currently selected item by dispatching the appropriate WorkspaceAction
     /// (i.e. opening the selected conversation or starting a new conversation).
     fn activate_selected_item(&mut self, ctx: &mut ViewContext<Self>) {
@@ -638,7 +631,6 @@ impl ConversationListView {
                     None,
                     ctx,
                 ) {
-                    Self::send_open_telemetry(&entry.id, ctx);
                     ctx.dispatch_typed_action(&action);
                 }
             }
@@ -1165,7 +1157,6 @@ impl TypedActionView for ConversationListView {
                     return;
                 };
 
-                Self::send_open_telemetry(id, ctx);
                 ctx.dispatch_typed_action(&action);
             }
             ConversationListViewAction::ArrowUp => {

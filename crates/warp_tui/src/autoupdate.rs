@@ -317,6 +317,7 @@ impl VersionLease {
 
 /// The result of a single update check.
 #[derive(Debug)]
+#[allow(dead_code)]
 enum UpdateOutcome {
     /// Skipped: another process is installing an update right now.
     #[cfg(unix)]
@@ -331,33 +332,6 @@ enum UpdateOutcome {
     Installed { version: String },
     /// A newer Homebrew cask is available and must be installed by Homebrew.
     UpdateAvailable { version: String },
-}
-
-impl UpdateOutcome {
-    /// Stable identifier for this kind of outcome, used for telemetry and
-    /// for detecting transitions between consecutive checks.
-    fn kind(&self) -> &'static str {
-        match self {
-            #[cfg(unix)]
-            UpdateOutcome::Locked => "locked",
-            UpdateOutcome::UpToDate { .. } => "up_to_date",
-            UpdateOutcome::PendingRestart { .. } => "pending_restart",
-            UpdateOutcome::Installed { .. } => "installed",
-            UpdateOutcome::UpdateAvailable { .. } => "update_available",
-        }
-    }
-
-    /// The version associated with this outcome, if any.
-    fn version(&self) -> Option<&str> {
-        match self {
-            #[cfg(unix)]
-            UpdateOutcome::Locked => None,
-            UpdateOutcome::UpToDate { version }
-            | UpdateOutcome::PendingRestart { version }
-            | UpdateOutcome::Installed { version }
-            | UpdateOutcome::UpdateAvailable { version } => Some(version),
-        }
-    }
 }
 
 /// User-visible status of the background updater, shown next to the version
@@ -452,10 +426,6 @@ pub(crate) struct TuiAutoupdater {
     eligibility: AutoupdateEligibility,
     /// The user-visible status of the update loop.
     status: TuiAutoupdateStatus,
-    /// The outcome kind last reported to telemetry. Consecutive checks
-    /// usually resolve to the same outcome (e.g. `up_to_date` on every
-    /// poll), so only transitions are reported.
-    last_reported_outcome: Option<&'static str>,
 }
 
 impl Entity for TuiAutoupdater {
@@ -472,7 +442,6 @@ impl TuiAutoupdater {
         ctx.add_singleton_model(move |_| TuiAutoupdater {
             eligibility,
             status: TuiAutoupdateStatus::Idle,
-            last_reported_outcome: None,
         });
         TuiAutoupdater::handle(ctx).update(ctx, |me, ctx| match me.eligibility.clone() {
             AutoupdateEligibility::Native(layout) => me.check_native_now(layout, ctx),
@@ -550,7 +519,6 @@ impl TuiAutoupdater {
             Ok(outcome) => log::info!("TUI Homebrew update check finished: {outcome:?}"),
             Err(error) => log::warn!("TUI Homebrew update check failed: {error:#}"),
         }
-        self.report_outcome(&result, ctx);
         let status = settled_status(&result, fallback_status);
         self.set_status(status, ctx);
         ctx.spawn(
@@ -574,32 +542,12 @@ impl TuiAutoupdater {
             // from sleep) are common here.
             Err(error) => log::warn!("TUI autoupdate check failed: {error:#}"),
         }
-        self.report_outcome(&result, ctx);
         let status = settled_status(&result, fallback_status);
         self.set_status(status, ctx);
         ctx.spawn(
             async { Timer::after(CHECK_INTERVAL).await },
             move |me, _, ctx| me.check_native_now(layout, ctx),
         );
-    }
-
-    /// Sends a telemetry event when the outcome kind changed since the last
-    /// check, so the frequent poll doesn't emit repeated `up_to_date` (or
-    /// repeated-failure) events.
-    fn report_outcome(&mut self, result: &Result<UpdateOutcome>, ctx: &mut ModelContext<Self>) {
-        let kind = match result {
-            Ok(outcome) => outcome.kind(),
-            Err(_) => "failed",
-        };
-        if self.last_reported_outcome == Some(kind) {
-            return;
-        }
-        self.last_reported_outcome = Some(kind);
-
-        let event = match result {
-            Ok(outcome) => {}
-            Err(error) => {}
-        };
     }
 }
 

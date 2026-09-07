@@ -84,7 +84,6 @@ use super::{
 };
 use crate::agent_block::TuiAIBlock;
 use crate::autoupdate::TuiAutoupdater;
-use crate::conversation_restore_target::ConversationRestoreTarget;
 use crate::editor_element::TuiEditorAction;
 use crate::inline_menu::MAX_INLINE_MENU_ROWS;
 use crate::input::view::TuiInputAction;
@@ -2124,7 +2123,6 @@ fn fork_slash_command_keeps_a_conversation_without_a_resume_id_selected() {
             view.replace_conversation_surface(
                 source_conversation,
                 TuiConversationRestoreOrigin::ConversationList,
-                ConversationRestoreTarget::Local,
                 ctx,
             );
             view.execute_tui_slash_command(&slash_commands::FORK, None, ctx);
@@ -2152,7 +2150,7 @@ fn fork_slash_command_replaces_the_surface_and_renders_original_resume_guidance(
         let (view, _) = add_focus_test_session(&mut app, &fixture, true);
         let (model_event_sender, _model_event_receiver) = std::sync::mpsc::sync_channel(2);
         app.update(|ctx| {
-            tui_export::GlobalResourceHandlesProvider::handle(ctx).update(ctx, |provider, _| {
+            warp::tui_export::GlobalResourceHandlesProvider::handle(ctx).update(ctx, |provider, _| {
                 provider.set_model_event_sender_for_test(model_event_sender);
             });
         });
@@ -2182,7 +2180,6 @@ fn fork_slash_command_replaces_the_surface_and_renders_original_resume_guidance(
             view.replace_conversation_surface(
                 source_conversation,
                 TuiConversationRestoreOrigin::ConversationList,
-                ConversationRestoreTarget::Local,
                 ctx,
             );
             assert!(
@@ -4638,7 +4635,6 @@ fn footer_transient_state_replaces_all_sections() {
             view.exit_confirmation.disarm();
             view.conversation_restore_state = ConversationRestoreState::Loading {
                 origin: TuiConversationRestoreOrigin::ConversationList,
-                target: ConversationRestoreTarget::Local,
                 request_id: 0,
                 future: None,
             };
@@ -4662,7 +4658,6 @@ fn footer_transient_state_replaces_all_sections() {
             view.exit_confirmation.arm(Instant::now());
             view.conversation_restore_state = ConversationRestoreState::Loading {
                 origin: TuiConversationRestoreOrigin::ConversationList,
-                target: ConversationRestoreTarget::Local,
                 request_id: 1,
                 future: None,
             };

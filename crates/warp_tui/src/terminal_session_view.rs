@@ -87,7 +87,6 @@ use crate::cli_agent_osc_event_publisher::{
 use crate::clipboard::copy_to_clipboard;
 use crate::completion_menu::TuiCompletionMenuModel;
 use crate::conversation_menu::{TuiConversationMenuEvent, TuiConversationMenuModel};
-use crate::conversation_restore_target::ConversationRestoreTarget;
 use crate::conversation_selection::TuiConversationSelection;
 use crate::editor_interaction::TuiEditorCommand;
 use crate::exit_confirmation::{CTRL_C_EXIT_WINDOW, ExitConfirmation};
@@ -512,22 +511,12 @@ pub(crate) enum TuiConversationRestoreTarget {
     Server(ServerConversationToken),
 }
 
-impl TuiConversationRestoreTarget {
-    fn telemetry_target(&self) -> ConversationRestoreTarget {
-        match self {
-            Self::Local(_) => ConversationRestoreTarget::Local,
-            Self::Server(_) => ConversationRestoreTarget::Server,
-        }
-    }
-}
-
 #[derive(Default)]
 enum ConversationRestoreState {
     #[default]
     Idle,
     Loading {
         origin: TuiConversationRestoreOrigin,
-        target: ConversationRestoreTarget,
         request_id: u64,
         future: Option<SpawnedFutureHandle>,
     },
@@ -2810,10 +2799,8 @@ impl TuiTerminalSessionView {
         }
         self.next_restore_request_id = self.next_restore_request_id.wrapping_add(1);
         let request_id = self.next_restore_request_id;
-        let telemetry_target = target.telemetry_target();
         self.conversation_restore_state = ConversationRestoreState::Loading {
             origin,
-            target: telemetry_target,
             request_id,
             future: None,
         };
@@ -2895,7 +2882,7 @@ impl TuiTerminalSessionView {
             return;
         }
 
-        self.replace_conversation_surface(*conversation, origin, target.telemetry_target(), ctx);
+        self.replace_conversation_surface(*conversation, origin, ctx);
     }
 
     /// Discards the retained child-agent sessions of a previously restored
@@ -2955,7 +2942,6 @@ impl TuiTerminalSessionView {
         &mut self,
         conversation: AIConversation,
         origin: TuiConversationRestoreOrigin,
-        telemetry_target: ConversationRestoreTarget,
         ctx: &mut ViewContext<Self>,
     ) {
         let previous_conversation_id = self
@@ -3049,12 +3035,7 @@ impl TuiTerminalSessionView {
 
     fn cancel_conversation_restore(&mut self, ctx: &mut ViewContext<Self>) -> bool {
         let state = std::mem::take(&mut self.conversation_restore_state);
-        let ConversationRestoreState::Loading {
-            origin,
-            target,
-            future,
-            ..
-        } = state
+        let ConversationRestoreState::Loading { future, .. } = state
         else {
             self.conversation_restore_state = state;
             return false;
@@ -3074,13 +3055,12 @@ impl TuiTerminalSessionView {
         message: String,
         ctx: &mut ViewContext<Self>,
     ) {
-        let (origin, target) = match &self.conversation_restore_state {
+        let origin = match &self.conversation_restore_state {
             ConversationRestoreState::Loading {
                 origin,
-                target,
                 request_id: active_request_id,
                 ..
-            } if *active_request_id == request_id => (*origin, *target),
+            } if *active_request_id == request_id => *origin,
             ConversationRestoreState::Idle
             | ConversationRestoreState::Failed(_)
             | ConversationRestoreState::Loading { .. } => return,
@@ -4371,7 +4351,6 @@ impl TuiTerminalSessionView {
         self.replace_conversation_surface(
             forked_conversation,
             TuiConversationRestoreOrigin::Fork,
-            ConversationRestoreTarget::Local,
             ctx,
         );
         let resume_command =

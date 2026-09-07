@@ -3290,7 +3290,6 @@ impl AgentDriver {
             "Ambient agent CLI lifecycle: event=harness_exit_attempt \
              harness={harness_name} attempt=1 method=exit"
         );
-        Self::send_harness_exit_telemetry(harness_name, "exit", foreground).await;
         report_if_error!(
             runner
                 .exit(foreground)
@@ -3322,7 +3321,6 @@ impl AgentDriver {
             "Ambient agent CLI lifecycle: event=harness_exit_attempt \
              harness={harness_name} attempt=2 method=exit_followup"
         );
-        Self::send_harness_exit_telemetry(harness_name, "exit_followup", foreground).await;
         report_if_error!(
             runner
                 .exit_followup(foreground)
@@ -3354,7 +3352,6 @@ impl AgentDriver {
             "Ambient agent CLI lifecycle: event=harness_exit_attempt \
              harness={harness_name} attempt=3 method=force_kill"
         );
-        Self::send_harness_exit_telemetry(harness_name, "force_kill", foreground).await;
         Self::force_kill_harness(foreground).await;
         Err(AgentDriverError::HarnessExitTimedOut {
             harness: harness_name.to_owned(),
@@ -3378,20 +3375,6 @@ impl AgentDriver {
             return;
         };
         harness::process_control::force_kill_harness_if_safe(&shell_process_info);
-    }
-
-    /// Emits a telemetry event for one attempt in the harness exit
-    /// escalation ladder (`method` is `"exit"`, `"exit_followup"`, or
-    /// `"force_kill"`), so how often graceful exit succeeds vs. requires
-    /// escalation is measurable in production instead of only
-    /// reconstructable from logs.
-    async fn send_harness_exit_telemetry(
-        harness_name: &str,
-        _method: &'static str,
-        foreground: &ModelSpawner<Self>,
-    ) {
-        let _harness = harness_name.to_owned();
-        let _ = foreground.spawn(move |_, _ctx| {}).await;
     }
 
     /// Configure the active terminal session with the specified profile.

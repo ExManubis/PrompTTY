@@ -66,10 +66,6 @@ use crate::auth::auth_state::AuthState;
 use crate::server::team_scope::RequestTeamScope;
 
 pub const FETCH_CHANNEL_VERSIONS_TIMEOUT: std::time::Duration = Duration::from_secs(60);
-#[derive(Serialize)]
-struct AgentTipShownAnalyticsRequest {
-    tip: String,
-}
 
 /// We use a special error code header `X-Warp-Error-Code` to allow the server to send
 /// more specific error code information, so that the client can discern between different
@@ -876,41 +872,6 @@ impl ServerApi {
                     err.context("Could not retrieve access token for notifying user login")
                 );
             }
-        }
-    }
-
-    pub async fn send_agent_tip_shown_analytics_event(&self, tip: String) -> Result<()> {
-        let auth_token = self
-            .get_or_refresh_access_token()
-            .await
-            .context("Failed to get access token for API request")?;
-        let url = format!(
-            "{}/analytics/agent-tip-shown",
-            ChannelState::server_root_url()
-        );
-        let mut request = self
-            .base_client
-            .http_client()
-            .post(&url)
-            .json(&AgentTipShownAnalyticsRequest { tip });
-        if let Some(token) = auth_token.as_bearer_token() {
-            request = request.bearer_auth(token);
-        }
-
-        for (name, value) in self.ambient_agent_headers().await? {
-            request = request.header(name, value);
-        }
-
-        let response = request
-            .send()
-            .await
-            .with_context(|| format!("Failed to send API request to {url}"))?;
-
-        if response.status().is_success() {
-            Ok(())
-        } else {
-            self.observe_iap_challenge(&response);
-            Err(Self::error_from_response(response).await)
         }
     }
 

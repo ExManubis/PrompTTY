@@ -4,7 +4,7 @@ use std::sync::Arc;
 use instant::Instant;
 use remote_server::auth::RemoteServerAuthContext;
 use remote_server::setup::{
-    PreinstallCheckResult, PreinstallStatus, RemoteLibc, RemotePlatform, UnsupportedReason,
+    PreinstallCheckResult, PreinstallStatus, RemoteLibc, RemotePlatform,
 };
 use remote_server::transport::Error;
 use settings::Setting;
@@ -267,12 +267,10 @@ impl<T: EventLoopSender> RemoteServerController<T> {
             unreachable!("just matched AwaitingCheck above");
         };
         if let Some(PreinstallCheckResult {
-            status: PreinstallStatus::Unsupported { reason },
-            libc,
+            status: PreinstallStatus::Unsupported { .. },
             ..
         }) = preinstall_check.as_ref()
         {
-            send_unsupported_telemetry(self.remote_platform.as_ref(), reason, Some(libc), ctx);
             self.flush_stashed_bootstrap(session_info, ctx);
             return;
         }
@@ -595,32 +593,13 @@ fn connection_label_from_ssh_host(host: &str) -> String {
         .map_or(host, |(_user, host)| host)
         .to_string()
 }
-/// Describes a [`RemoteLibc`] as a short string for telemetry.
+/// Describes a [`RemoteLibc`] as a short string.
 fn describe_libc(libc: &RemoteLibc) -> String {
     match libc {
         RemoteLibc::Glibc(version) => format!("glibc {version}"),
         RemoteLibc::NonGlibc { name } => name.clone(),
         RemoteLibc::Unknown => "unknown".to_string(),
     }
-}
-
-fn send_unsupported_telemetry<T: EventLoopSender>(
-    remote_platform: Option<&RemotePlatform>,
-    _unsupported_reason: &UnsupportedReason,
-    detected_libc: Option<&RemoteLibc>,
-    _ctx: &mut ModelContext<RemoteServerController<T>>,
-) {
-    let (_remote_os, _remote_arch) = remote_platform
-        .map(|p| {
-            (
-                Some(p.os.as_str().to_owned()),
-                Some(p.arch.as_str().to_owned()),
-            )
-        })
-        .unwrap_or((None, None));
-    let _detected_libc = detected_libc
-        .map(describe_libc)
-        .unwrap_or_else(|| "unknown".to_string());
 }
 
 #[cfg(test)]

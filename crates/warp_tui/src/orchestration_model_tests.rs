@@ -206,7 +206,7 @@ fn dispatch_and_recv(
     execution_mode: StartAgentExecutionMode,
 ) -> (AIConversationId, StartAgentOutcome) {
     let parent_conversation_id = app.read(|ctx| {
-        tui_export::BlocklistAIHistoryModel::as_ref(ctx)
+        BlocklistAIHistoryModel::as_ref(ctx)
             .active_conversation(session_id.surface_id())
             .expect("fixture registered an active conversation")
             .id()

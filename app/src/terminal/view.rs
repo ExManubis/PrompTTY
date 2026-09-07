@@ -11281,14 +11281,10 @@ impl TerminalView {
         ctx.notify();
     }
 
-    /// Sends telemetry if an AI-requested command caused the shell to exit, and
-    /// returns the conversation that issued that command along with the
-    /// (secret-redacted) command text so the caller can finalize it as a
-    /// shell-exit failure.
-    fn maybe_send_agent_exited_shell_telemetry(
-        &self,
-        ctx: &mut ViewContext<Self>,
-    ) -> Option<(AIConversationId, String)> {
+    /// Returns the conversation that issued an AI-requested command that caused
+    /// the shell to exit, along with the (secret-redacted) command text so the
+    /// caller can finalize it as a shell-exit failure.
+    fn agent_command_that_exited_shell(&self) -> Option<(AIConversationId, String)> {
         let model = self.model.lock();
         let block_list = model.block_list();
         let blocks = block_list.blocks();
@@ -11315,17 +11311,9 @@ impl TerminalView {
         let mut command = agent_block.command_to_string();
         redact_secrets(&mut command);
 
-        let conversation_id = agent_block.ai_conversation_id();
-        let _server_output_id = conversation_id.and_then(|conversation_id| {
-            BlocklistAIHistoryModel::as_ref(ctx)
-                .conversation(&conversation_id)
-                .and_then(|conversation| {
-                    conversation
-                        .latest_exchange()
-                        .and_then(|e| e.output_status.server_output_id())
-                })
-        });
-        conversation_id.map(|conversation_id| (conversation_id, command))
+        agent_block
+            .ai_conversation_id()
+            .map(|conversation_id| (conversation_id, command))
     }
 
     /// Updates the back button's state and label. For child agents ESC
@@ -11706,8 +11694,7 @@ impl TerminalView {
             }
             ModelEvent::Exit { reason: _ } => {
                 if !self.manual_pty_shutdown_requested
-                    && let Some((conversation_id, command)) =
-                        self.maybe_send_agent_exited_shell_telemetry(ctx)
+                    && let Some((conversation_id, command)) = self.agent_command_that_exited_shell()
                 {
                     // The agent's command caused the shell to exit. Finalize the
                     // conversation as a failure (with a message naming the command)
@@ -15384,7 +15371,6 @@ impl TerminalView {
                     // surface per-file toasts from the view's save
                     // subscriptions.
                     let _save_future = view.update(ctx, |diff_view, ctx| {
-                        diff_view.send_malformed_line_telemetry(ctx);
                         DiffStorageHelper::accept_and_save(diff_view, ctx)
                     });
                     ctx.notify();
@@ -25513,7 +25499,7 @@ impl TerminalView {
             // TODO(CORE-2300): This appears to be used for invoking env vars.
             // Before we close out CORE-2300, we should evaluate if we need to add
             // shell info here.
-            let shell_starter = get_shell_starter(None, &self.auth_state, ctx)?;
+            let shell_starter = get_shell_starter(None, ctx)?;
             let shell_path = match &shell_starter {
                 ShellStarter::Direct(direct_shell_starter)
                 | ShellStarter::MSYS2(direct_shell_starter) => direct_shell_starter

@@ -16,11 +16,11 @@ use warp::settings::{AISettings, PrivacySettings, PrivacySettingsChangedEvent};
 use warp::tui_export::{
     AIConversationId, AISettingsChangedEvent, AttachmentInput, BlocklistAIContextModel,
     BlocklistAIController, BlocklistAIHistoryModel, CloudEnvironmentCatalog, HandoffCommitOutcome,
-    HandoffEntryPoint, HandoffLaunchAttachments, HandoffPrepareError, HandoffPrepareInput,
-    HandoffRestoration, HandoffSurface, LLMId, LLMPreferences, LLMPreferencesEvent, OptionRow,
-    OptionSnapshot, OptionSourceStatus, PendingCloudLaunch, PendingHandoff, ServerApiProvider,
-    SnapshotUploadTarget, TerminalModel, UserWorkspaces, UserWorkspacesEvent, execute_handoff,
-    handoff_dispatch_error, oz_model_snapshot, prepare_handoff, suggest_handoff_environment,
+    HandoffLaunchAttachments, HandoffPrepareError, HandoffPrepareInput, HandoffRestoration, LLMId,
+    LLMPreferences, LLMPreferencesEvent, OptionRow, OptionSnapshot, OptionSourceStatus,
+    PendingCloudLaunch, PendingHandoff, ServerApiProvider, SnapshotUploadTarget, TerminalModel,
+    UserWorkspaces, UserWorkspacesEvent, execute_handoff, oz_model_snapshot,
+    prepare_handoff, suggest_handoff_environment,
 };
 use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 
@@ -162,8 +162,6 @@ impl TuiHandoffModel {
                     ai_client: provider.get_ai_client(),
                     http: provider.get_http_client(),
                 },
-                HandoffEntryPoint::SlashCommand,
-                HandoffSurface::Tui,
             )
             .with_expected_conversation_id(source_conversation_id)
             .with_current_working_directory(current_working_directory.clone())

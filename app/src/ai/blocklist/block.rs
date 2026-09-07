@@ -3193,7 +3193,6 @@ impl AIBlock {
                     // The executor drives the save through the registered
                     // diff storage at execute time, pulling the (possibly
                     // edited) final content from the view's editor buffers.
-                    view.update(ctx, |view, ctx| view.send_malformed_line_telemetry(ctx));
                     me.action_model.update(ctx, |action_model, ctx| {
                         action_model.execute_action(
                             &action_id_clone,
