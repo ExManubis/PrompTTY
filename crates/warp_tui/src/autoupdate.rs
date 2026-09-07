@@ -42,7 +42,6 @@ use warp_core::{safe_warn};
 use warpui::r#async::Timer;
 use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
 
-use crate::telemetry::TuiAutoupdateTelemetryEvent;
 
 /// Setting this environment variable (to any value) disables background
 /// auto-updates for a single launch, regardless of the

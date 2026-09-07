@@ -7,10 +7,7 @@ use pathfinder_geometry::vector::vec2f;
 use super::*;
 use crate::elements::{ConstrainedBox, DispatchEventResult, EventHandler, Rect, ZIndex};
 use crate::platform::WindowStyle;
-use crate::{
-    App, AppContext, Entity, EntityIdSet, Event, Presenter, TypedActionView, ViewContext,
-    WindowInvalidation,
-};
+use crate::{App, AppContext, Entity, EntityIdSet, Event, Presenter, TypedActionView, ViewContext, WindowInvalidation};
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 enum ElementIdentifier {

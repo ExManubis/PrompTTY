@@ -38,7 +38,7 @@ use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model_events::{ModelEvent, ModelEventDispatcher};
 use crate::terminal::shell::ShellType;
 use crate::workspaces::user_workspaces::TeamContext;
-use crate::{TelemetryEvent};
+
 
 pub struct ShellCommandExecutor {
     active_session: ModelHandle<ActiveSession>,

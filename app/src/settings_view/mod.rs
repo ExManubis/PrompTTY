@@ -66,7 +66,7 @@ use crate::ui_components::icons;
 use crate::util::bindings::{BindingGroup, CustomAction, keybinding_name_to_display_string};
 use crate::view_components::ToastFlavor;
 use crate::workspace::WorkspaceAction;
-use crate::{GlobalResourceHandlesProvider, TelemetryEvent};
+use crate::{GlobalResourceHandlesProvider};
 
 mod about_page;
 mod agent_assisted_environment_modal;

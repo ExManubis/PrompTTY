@@ -49,9 +49,7 @@ use crate::workspace::{
     AutoCloudHandoffTrigger, ToastStack, Workspace, WorkspaceAction, WorkspaceRegistry,
     active_terminal_in_window,
 };
-use crate::{
-    ChannelState, OpenPath, quake_mode_window_id, quake_mode_window_is_open, safe_info,
-};
+use crate::{ChannelState, OpenPath, quake_mode_window_id, quake_mode_window_is_open, safe_info};
 
 const DESKTOP_REDIRECT_URI_PATH: &str = "/desktop_redirect";
 

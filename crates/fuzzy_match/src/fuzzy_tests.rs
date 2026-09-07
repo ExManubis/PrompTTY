@@ -156,9 +156,7 @@ fn test_ui_star_partial_patterns() {
     assert!(result3.is_some());
 }
 
-use crate::{
-    match_indices, match_indices_case_insensitive, match_indices_case_insensitive_ignore_spaces,
-};
+use crate::{match_indices, match_indices_case_insensitive, match_indices_case_insensitive_ignore_spaces};
 
 #[test]
 fn test_simple_fuzzy_match_indices() {

@@ -4,7 +4,6 @@ use warp_errors::report_error;
 use warpui::keymap::Keystroke;
 use warpui::{EntityId, SingletonEntity, ViewContext};
 
-use crate::TelemetryEvent;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::blocklist::agent_view::{

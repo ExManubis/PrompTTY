@@ -25,7 +25,7 @@ use crate::terminal::TerminalView;
 use crate::util::bindings::{BindingGroup, CustomAction, keybinding_name_to_display_string};
 use crate::view_components::DismissibleToast;
 use crate::workspace::{ToastStack, Workspace, WorkspaceAction};
-use crate::{TelemetryEvent};
+
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;

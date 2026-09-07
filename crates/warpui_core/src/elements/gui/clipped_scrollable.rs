@@ -12,10 +12,7 @@ use super::{
 use crate::event::DispatchedEvent;
 use crate::scene::ClipBounds;
 use crate::units::{IntoPixels, Pixels};
-use crate::{
-    AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext,
-    SizeConstraint,
-};
+use crate::{AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext, SizeConstraint};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ScrollToPositionMode {

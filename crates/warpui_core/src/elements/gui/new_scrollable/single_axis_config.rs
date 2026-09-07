@@ -10,10 +10,7 @@ use crate::elements::{
 };
 use crate::event::DispatchedEvent;
 use crate::units::{IntoPixels, Pixels};
-use crate::{
-    AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext,
-    SizeConstraint,
-};
+use crate::{AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext, SizeConstraint};
 
 /// Holds state that depends on whether the scrolling axis should
 /// be managed automatically by the scrollable (clipped) or it should

@@ -207,9 +207,7 @@ use crate::view_components::find::FindEvent;
 use crate::workspace::{ForkAIConversationParams, ForkedConversationDestination, WorkspaceAction};
 use crate::workspaces::user_profiles::{UserProfileWithUID, UserProfiles};
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{
-    AIAgentTodoList, Appearance, FileEdit, LLMPreferences, PrivacySettings, ToastStack,
-};
+use crate::{AIAgentTodoList, Appearance, FileEdit, LLMPreferences, PrivacySettings, ToastStack};
 
 /// The default display name used for the user if they have no associated display name.
 const DEFAULT_USER_DISPLAY_NAME: &str = "User";

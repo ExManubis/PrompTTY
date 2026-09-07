@@ -17,12 +17,7 @@ use nom::sequence::{delimited, pair, preceded, terminated, tuple};
 use nom::{FindToken, IResult, InputIter, InputLength, Parser, Slice};
 use serde_yaml::Value;
 
-use crate::{
-    CodeBlockText, CustomWeight, FormattedImage, FormattedIndentTextInline, FormattedTable,
-    FormattedTaskList, FormattedText, FormattedTextFragment, FormattedTextHeader,
-    FormattedTextInline, FormattedTextLine, FormattedTextStyles, Hyperlink,
-    OrderedFormattedIndentTextInline, TableAlignment,
-};
+use crate::{CodeBlockText, CustomWeight, FormattedImage, FormattedIndentTextInline, FormattedTable, FormattedTaskList, FormattedText, FormattedTextFragment, FormattedTextHeader, FormattedTextInline, FormattedTextLine, FormattedTextStyles, Hyperlink, OrderedFormattedIndentTextInline, TableAlignment};
 
 const HEADER_TAG_MIN_COUNT: usize = 1;
 const HEADER_TAG_MAX_COUNT: usize = 6;

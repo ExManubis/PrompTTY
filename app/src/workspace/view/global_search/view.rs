@@ -39,7 +39,6 @@ use warpui::{
     ViewHandle, WeakViewHandle,
 };
 
-use crate::TelemetryEvent;
 use crate::code::icon_from_file_path;
 use crate::coding_panel_enablement_state::CodingPanelEnablementState;
 use crate::editor::{

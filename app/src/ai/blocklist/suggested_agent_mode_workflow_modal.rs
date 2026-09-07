@@ -15,7 +15,6 @@ use warpui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
 };
 
-use crate::TelemetryEvent;
 use crate::ai::agent::SuggestedAgentModeWorkflow;
 use crate::modal::{Modal, ModalEvent};
 use crate::pane_group::PaneEvent;

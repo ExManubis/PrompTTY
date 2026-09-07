@@ -2,10 +2,7 @@ use pathfinder_geometry::vector::Vector2F;
 
 use super::Point;
 use crate::event::DispatchedEvent;
-use crate::{
-    AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext,
-    SizeConstraint,
-};
+use crate::{AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext, SizeConstraint};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Size {

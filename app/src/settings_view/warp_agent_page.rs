@@ -105,7 +105,7 @@ use crate::view_components::action_button::{
 use crate::view_components::{Dropdown, DropdownItem, FilterableDropdown};
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, TeamContext, UserWorkspacesEvent};
 use crate::workspaces::workspace::{AdminEnablementSetting, CustomerType};
-use crate::{TelemetryEvent, UserWorkspaces};
+use crate::{UserWorkspaces};
 
 const AI_SETTINGS_DROPDOWN_WIDTH: f32 = 250.;
 const AI_SETTINGS_DROPDOWN_MAX_HEIGHT: f32 = 250.;

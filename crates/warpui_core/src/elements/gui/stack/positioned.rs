@@ -8,10 +8,7 @@ use crate::elements::{Point, SelectableElement, Selection, SelectionFragment};
 use crate::event::DispatchedEvent;
 use crate::text::word_boundaries::WordBoundariesPolicy;
 use crate::text::{IsRect, SelectionDirection, SelectionType};
-use crate::{
-    AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext,
-    SizeConstraint,
-};
+use crate::{AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext, SizeConstraint};
 
 pub(super) struct Positioned {
     child: Box<dyn Element>,

@@ -25,10 +25,7 @@ use x11rb::protocol::xproto::{self, ConnectionExt as _};
 use x11rb::protocol::xtest::ConnectionExt as _;
 use x11rb::rust_connection::RustConnection;
 
-use crate::{
-    Action, ActionResult, MouseButton, Options, PointerEvent, PointerEventKind, PointerSink,
-    Target, TargetedAction,
-};
+use crate::{Action, ActionResult, MouseButton, Options, PointerEvent, PointerEventKind, PointerSink, Target, TargetedAction};
 
 /// How often to re-check whether a raise took effect. Raising is redirected to the window
 /// manager (when one is running), which restacks asynchronously.

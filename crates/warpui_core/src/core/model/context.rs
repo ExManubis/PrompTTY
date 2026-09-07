@@ -15,11 +15,7 @@ use crate::r#async::{
 };
 use crate::core::{Observation, Subscription, SubscriptionKey, TaskCallback};
 use crate::windowing::WindowManager;
-use crate::{
-    AppContext, Effect, Entity, EntityId, GetSingletonModelHandle, ModelAsRef, ModelHandle,
-    ReadModel, ReadView, RequestState, RetryOption, UpdateModel, UpdateView, View, ViewAsRef,
-    ViewContext, ViewHandle, ViewUpdateError, WeakModelHandle,
-};
+use crate::{AppContext, Effect, Entity, EntityId, GetSingletonModelHandle, ModelAsRef, ModelHandle, ReadModel, ReadView, RequestState, RetryOption, UpdateModel, UpdateView, View, ViewAsRef, ViewContext, ViewHandle, ViewUpdateError, WeakModelHandle};
 
 /// Error returned when a model has been dropped, and so references to it are invalid.
 #[derive(Debug, Error, PartialEq, Eq)]

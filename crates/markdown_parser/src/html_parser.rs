@@ -11,11 +11,7 @@ use serde_yaml::{Mapping, Value};
 
 use crate::markdown_parser::RUNNABLE_BLOCK_MARKDOWN_LANG;
 use crate::weight::CustomWeight;
-use crate::{
-    CodeBlockText, FormattedIndentTextInline, FormattedTaskList, FormattedText,
-    FormattedTextFragment, FormattedTextHeader, FormattedTextInline, FormattedTextLine,
-    FormattedTextStyles, Hyperlink, OrderedFormattedIndentTextInline,
-};
+use crate::{CodeBlockText, FormattedIndentTextInline, FormattedTaskList, FormattedText, FormattedTextFragment, FormattedTextHeader, FormattedTextInline, FormattedTextLine, FormattedTextStyles, Hyperlink, OrderedFormattedIndentTextInline};
 
 // Top element element tags we are not parsing for right now.
 // Note that we have "<b>" here because GDocs always include a top level <b> element to add additional

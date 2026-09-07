@@ -26,9 +26,7 @@ use nix::unistd::Pid;
 use tokio::process::{Child, Command};
 
 use super::util::main_display_dimensions;
-use crate::{
-    RecordingCompletionStatus, RecordingConfig, RecordingError, RecordingHandle, RecordingOutput,
-};
+use crate::{RecordingCompletionStatus, RecordingConfig, RecordingError, RecordingHandle, RecordingOutput};
 
 /// How long to wait for ffmpeg to open the display and produce first output.
 const START_TIMEOUT: Duration = Duration::from_secs(15);

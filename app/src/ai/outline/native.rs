@@ -25,7 +25,7 @@ use crate::settings::{
     InputSettingsChangedEvent,
 };
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{TelemetryEvent, safe_info, safe_warn};
+use crate::{safe_info, safe_warn};
 
 /// State for a repository outline, containing both the repository handle and the outline status.
 #[derive(Debug)]

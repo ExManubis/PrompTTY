@@ -49,7 +49,7 @@ use crate::terminal::CLIAgent;
 use crate::util::bindings;
 use crate::view_components::dropdown::DropdownAction;
 use crate::view_components::{Dropdown, SubmittableTextInput, SubmittableTextInputEvent};
-use crate::{TelemetryEvent};
+
 
 const PAGE_TITLE: &str = "Third party CLI agents";
 

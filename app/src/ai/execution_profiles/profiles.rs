@@ -38,7 +38,7 @@ use crate::settings::{
     AISettings, AISettingsChangedEvent, AgentModeCommandExecutionPredicate, ExecutionProfiles,
 };
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{CloudModel, LaunchMode, TelemetryEvent};
+use crate::{CloudModel, LaunchMode};
 
 #[derive(Clone, Debug)]
 pub struct AIExecutionProfileInfo {

@@ -26,7 +26,7 @@ use crate::features::FeatureFlag;
 use crate::server::team_scope::RequestTeamScope;
 use crate::terminal::model::session::active_session::ActiveSession;
 use crate::workspaces::user_workspaces::TeamContext;
-use crate::{TelemetryEvent};
+
 
 pub struct SearchCodebaseExecutor {
     active_session: ModelHandle<ActiveSession>,

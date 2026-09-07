@@ -45,9 +45,7 @@ use crate::elements::tui::{
     TuiBuffer, TuiConstraint, TuiElement, TuiLayoutContext, TuiPaintContext, TuiPaintSurface,
     TuiPresentationContext, TuiRect, TuiScene, TuiScreenPosition, TuiSize,
 };
-use crate::{
-    AppContext, EntityIdMap, EntityIdSet, TuiView, ViewHandle, WindowId, WindowInvalidation,
-};
+use crate::{AppContext, EntityIdMap, EntityIdSet, TuiView, ViewHandle, WindowId, WindowInvalidation};
 
 /// A painted frame: the composited cell [`TuiBuffer`] plus the absolute cursor
 /// position (in buffer cell coordinates), if a focused element owns the cursor.

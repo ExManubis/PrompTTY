@@ -28,7 +28,7 @@ use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model::session::{ExecuteCommandOptions, Session, shell_quote_arg};
 use crate::terminal::shell::ShellType;
 use crate::workspaces::user_workspaces::TeamContext;
-use crate::{PrivacySettings, TelemetryEvent};
+use crate::{PrivacySettings};
 
 const GREP_TIMEOUT: Duration = Duration::from_secs(10);
 const NON_ZERO_EXIT_CODE_ERROR: &str = "Grep command exited with non-zero exit code";

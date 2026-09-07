@@ -17,7 +17,7 @@ use crate::session_management::{RunningSessionSummary, SessionNavigationData};
 use crate::settings::CodeSettings;
 use crate::terminal::general_settings::GeneralSettings;
 use crate::workspace::Workspace;
-use crate::{TelemetryEvent};
+
 
 /// Scope of what's being quit/closed.
 #[derive(Clone)]

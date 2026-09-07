@@ -27,7 +27,7 @@ use crate::settings::{AppEditorSettings, CodeEditorLineNumberMode, CodeSettings}
 use crate::terminal::general_settings::GeneralSettings;
 use crate::view_components::{Dropdown, DropdownItem};
 use crate::workspace::tab_settings::TabSettings;
-use crate::{TelemetryEvent};
+
 
 const PAGE_TITLE: &str = "Editor and Code Review";
 

@@ -5,10 +5,7 @@ use crate::elements::{
     Align, Container, Fill, Hoverable, MouseStateHandle, ScrollStateHandle, Scrollable,
     ScrollableElement, ScrollbarWidth, Text, UniformList, UniformListState,
 };
-use crate::{
-    AppContext, Element, Entity, EntityId, EntityIdMap, TypedActionView, View, ViewContext,
-    WeakViewHandle, WindowId,
-};
+use crate::{AppContext, Element, Entity, EntityId, EntityIdMap, TypedActionView, View, ViewContext, WeakViewHandle, WindowId};
 
 /// Turns a map of parent->children into a list of (view, tree_depth) pairs,
 /// ordered via depth-first traversal of the input map.

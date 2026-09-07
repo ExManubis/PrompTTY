@@ -3,7 +3,6 @@ use warpui::{
     AppContext, Element, Entity, FocusContext, TypedActionView, View, ViewContext, ViewHandle,
 };
 
-use crate::TelemetryEvent;
 use crate::coding_entrypoints::glowing_editor::{GlowingEditor, GlowingEditorEvent};
 
 pub struct CloneRepoView {

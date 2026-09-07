@@ -10,7 +10,6 @@ use warpui::{
     ViewContext, ViewHandle,
 };
 
-use crate::TelemetryEvent;
 use crate::appearance::Appearance;
 use crate::coding_entrypoints::glowing_editor::{GlowingEditor, GlowingEditorEvent};
 use crate::settings::PrivacySettings;

@@ -14,7 +14,7 @@ use warpui::{App, AppContext, Entity, ModelContext, SingletonEntity};
 use crate::server::telemetry;
 use crate::system::memory_footprint;
 use crate::terminal::TerminalView;
-use crate::{TelemetryEvent};
+
 
 /// The threshold at which we emit a memory usage warning, in bytes.
 const MEMORY_USAGE_WARNING_THRESHOLD_BYTES: u64 = Byte::GIGABYTE.as_u64() * 10;

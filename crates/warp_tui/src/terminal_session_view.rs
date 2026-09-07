@@ -130,10 +130,6 @@ use crate::slash_commands::TuiSlashCommandModel;
 use crate::statusline_config_view::{TuiStatuslineConfigEvent, TuiStatuslineConfigView};
 use crate::tab_bar::{TuiTabBarConfig, TuiTabBarEvent, TuiTabBarView};
 use crate::team_menu::{TuiTeamMenuEvent, TuiTeamMenuModel};
-use crate::telemetry::{
-    TuiConversationMenuTelemetryEvent, TuiConversationRestoreTelemetryEvent,
-    TuiConversationRestoreTelemetryState, TuiConversationRestoreTelemetryTarget,
-};
 use crate::terminal_background::probed_colors;
 use crate::terminal_content_element::TuiTerminalContentElement;
 use crate::terminal_use::{
@@ -522,10 +518,10 @@ pub(crate) enum TuiConversationRestoreTarget {
 }
 
 impl TuiConversationRestoreTarget {
-    fn telemetry_target(&self) -> TuiConversationRestoreTelemetryTarget {
+    fn telemetry_target(&self) -> ConversationRestoreTarget {
         match self {
-            Self::Local(_) => TuiConversationRestoreTelemetryTarget::Local,
-            Self::Server(_) => TuiConversationRestoreTelemetryTarget::Server,
+            Self::Local(_) => ConversationRestoreTarget::Local,
+            Self::Server(_) => ConversationRestoreTarget::Server,
         }
     }
 }
@@ -536,7 +532,7 @@ enum ConversationRestoreState {
     Idle,
     Loading {
         origin: TuiConversationRestoreOrigin,
-        target: TuiConversationRestoreTelemetryTarget,
+        target: ConversationRestoreTarget,
         request_id: u64,
         future: Option<SpawnedFutureHandle>,
     },
@@ -3021,7 +3017,7 @@ impl TuiTerminalSessionView {
         &mut self,
         conversation: AIConversation,
         origin: TuiConversationRestoreOrigin,
-        telemetry_target: TuiConversationRestoreTelemetryTarget,
+        telemetry_target: ConversationRestoreTarget,
         ctx: &mut ViewContext<Self>,
     ) {
         let previous_conversation_id = self
@@ -4446,7 +4442,7 @@ impl TuiTerminalSessionView {
         self.replace_conversation_surface(
             forked_conversation,
             TuiConversationRestoreOrigin::Fork,
-            TuiConversationRestoreTelemetryTarget::Local,
+            ConversationRestoreTarget::Local,
             ctx,
         );
         let resume_command =

@@ -19,7 +19,7 @@ use crate::ai::codebase_auto_indexing::{
 };
 
 use crate::workspaces::user_workspaces::{UserWorkspaces, UserWorkspacesEvent};
-use crate::{TelemetryEvent};
+
 
 #[derive(Clone, Debug)]
 pub struct RemoteCodebaseSearchContext {

@@ -518,10 +518,7 @@ use crate::workspace::{ForkFromExchange, ForkedConversationDestination};
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
 use crate::workspaces::workspace::AdminEnablementSetting;
-use crate::{
-    AgentNotificationsModel, BlocklistAIHistoryModel, GlobalResourceHandles, TelemetryEvent,
-    autoupdate, settings,
-};
+use crate::{AgentNotificationsModel, BlocklistAIHistoryModel, GlobalResourceHandles, autoupdate, settings};
 
 /// The padding that should be applied to the workspace as a whole.
 ///

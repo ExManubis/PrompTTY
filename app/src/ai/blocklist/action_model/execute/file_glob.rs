@@ -22,7 +22,7 @@ use crate::terminal::model::session::command_executor::shell_quote_arg;
 use crate::terminal::model::session::{ExecuteCommandOptions, Session};
 use crate::terminal::shell::ShellType;
 use crate::workspaces::user_workspaces::TeamContext;
-use crate::{TelemetryEvent};
+
 
 const FILE_GLOB_TIMEOUT: Duration = Duration::from_secs(10);
 

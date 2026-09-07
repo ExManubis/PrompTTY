@@ -103,7 +103,7 @@ use crate::read_only_menu::TuiReadOnlyMenuKind;
 use crate::root_view::RootTuiView;
 use crate::session_registry::{TuiSessionId, TuiSessions};
 use crate::statusline_config_view::TuiStatuslineConfigEvent;
-use crate::telemetry::TuiConversationRestoreTelemetryTarget;
+use crate::conversation_restore_target::ConversationRestoreTarget;
 use crate::terminal_block::{block_content_rows, should_render_terminal_block};
 use crate::terminal_use::TuiInputTarget;
 use crate::test_fixtures::{
@@ -2124,7 +2124,7 @@ fn fork_slash_command_keeps_a_conversation_without_a_resume_id_selected() {
             view.replace_conversation_surface(
                 source_conversation,
                 TuiConversationRestoreOrigin::ConversationList,
-                TuiConversationRestoreTelemetryTarget::Local,
+                ConversationRestoreTarget::Local,
                 ctx,
             );
             view.execute_tui_slash_command(&slash_commands::FORK, None, ctx);
@@ -2185,7 +2185,7 @@ fn fork_slash_command_replaces_the_surface_and_renders_original_resume_guidance(
             view.replace_conversation_surface(
                 source_conversation,
                 TuiConversationRestoreOrigin::ConversationList,
-                TuiConversationRestoreTelemetryTarget::Local,
+                ConversationRestoreTarget::Local,
                 ctx,
             );
             assert!(
@@ -2853,7 +2853,6 @@ fn nld_slash_command_toggles_and_reports_its_effects() {
         let _agent_mode = warp_core::features::FeatureFlag::AgentMode.override_enabled(true);
         let fixture = focus_test_fixture(&mut app);
         let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-        flush_events();
 
         view.update(&mut app, |view, ctx| {
             view.input_view.update(ctx, |input, ctx| {
@@ -2906,41 +2905,6 @@ fn nld_slash_command_toggles_and_reports_its_effects() {
             ))
         );
 
-        let deadline = Instant::now() + Duration::from_secs(5);
-        let mut toggles = Vec::new();
-        while toggles.len() < 2 {
-            toggles.extend(
-                flush_events()
-                    .into_iter()
-                    .filter_map(|event| match event.payload {
-                        EventPayload::NamedEvent {
-                            name,
-                            value: Some(value),
-                            ..
-                        } if name == "AgentMode.ToggleAutoDetectionSetting" => Some(value),
-                        _ => None,
-                    }),
-            );
-            if toggles.len() >= 2 || Instant::now() >= deadline {
-                break;
-            }
-            Timer::after(Duration::from_millis(10)).await;
-        }
-        assert_eq!(toggles.len(), 2);
-        assert_eq!(
-            toggles[0],
-            serde_json::json!({
-                "is_autodetection_enabled": true,
-                "origin": "slash_command",
-            })
-        );
-        assert_eq!(
-            toggles[1],
-            serde_json::json!({
-                "is_autodetection_enabled": false,
-                "origin": "slash_command",
-            })
-        );
     });
 }
 
@@ -4678,7 +4642,7 @@ fn footer_transient_state_replaces_all_sections() {
             view.exit_confirmation.disarm();
             view.conversation_restore_state = ConversationRestoreState::Loading {
                 origin: TuiConversationRestoreOrigin::ConversationList,
-                target: TuiConversationRestoreTelemetryTarget::Local,
+                target: ConversationRestoreTarget::Local,
                 request_id: 0,
                 future: None,
             };
@@ -4702,7 +4666,7 @@ fn footer_transient_state_replaces_all_sections() {
             view.exit_confirmation.arm(Instant::now());
             view.conversation_restore_state = ConversationRestoreState::Loading {
                 origin: TuiConversationRestoreOrigin::ConversationList,
-                target: TuiConversationRestoreTelemetryTarget::Local,
+                target: ConversationRestoreTarget::Local,
                 request_id: 1,
                 future: None,
             };

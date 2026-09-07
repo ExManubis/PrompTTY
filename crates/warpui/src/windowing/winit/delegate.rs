@@ -35,10 +35,7 @@ use crate::platform::{
 };
 use crate::windowing::winit::app::CustomEvent::UpdateUIApp;
 use crate::windowing::{self, WindowCallbacks, WindowManager};
-use crate::{
-    AppContext, ApplicationBundleInfo, Clipboard, DisplayId, DisplayIdx, WindowId, accessibility,
-    geometry, keymap, notification, platform,
-};
+use crate::{AppContext, ApplicationBundleInfo, Clipboard, DisplayId, DisplayIdx, WindowId, accessibility, geometry, keymap, notification, platform};
 
 // No-op on WASM since the browser cannot provide this functionality.
 #[cfg(target_family = "wasm")]

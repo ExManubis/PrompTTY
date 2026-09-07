@@ -99,7 +99,7 @@ use crate::view_components::compactible_action_button::{
 };
 use crate::view_components::compactible_split_action_button::CompactibleSplitActionButton;
 use crate::workspace::ToastStack;
-use crate::{TelemetryEvent, cmd_or_ctrl_shift};
+use crate::{cmd_or_ctrl_shift};
 
 const REQUESTED_EDIT_CANCEL_LABEL: &str = "Cancel";
 const REQUESTED_EDIT_REFINE_LABEL: &str = "Refine";

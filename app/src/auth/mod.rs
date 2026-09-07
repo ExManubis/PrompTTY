@@ -55,9 +55,7 @@ use crate::terminal::shared_session::manager::Manager as SharedSessionManager;
 use crate::workflows::manager::WorkflowManager;
 use crate::workspace::{Workspace, WorkspaceAction};
 use crate::workspaces::update_manager::TeamUpdateManager;
-use crate::{
-    GlobalResourceHandlesProvider, focus_running_window_and_show_native_modal, persistence,
-};
+use crate::{GlobalResourceHandlesProvider, focus_running_window_and_show_native_modal, persistence};
 
 pub fn init(app: &mut AppContext) {
     auth_view_modal::init(app);

@@ -14,7 +14,7 @@ use warpui::ui_components::components::UiComponent;
 use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::ui_components::blended_colors;
-use crate::{TelemetryEvent};
+
 
 const MODAL_WIDTH: f32 = 360.;
 const COMPACT_MODAL_HEIGHT: f32 = 360.;

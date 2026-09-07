@@ -12,10 +12,7 @@ use crate::event::{DispatchedEvent, Event};
 use crate::platform::Cursor;
 use crate::presenter::PositionCache;
 use crate::scene::{ClipBounds, ZIndex};
-use crate::{
-    AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext,
-    SizeConstraint,
-};
+use crate::{AfterLayoutContext, AppContext, Element, EventContext, LayoutContext, PaintContext, SizeConstraint};
 
 /// The default drag threshold used when no value is explicitly set by the creator
 const DEFAULT_DRAG_THRESHOLD: f32 = 5.;

@@ -5,10 +5,7 @@ use pathfinder_geometry::vector::Vector2F;
 use super::{Point, ZIndex};
 use crate::event::DispatchedEvent;
 use crate::platform::Cursor;
-use crate::{
-    AfterLayoutContext, AppContext, Element, Event, EventContext, LayoutContext, PaintContext,
-    SizeConstraint,
-};
+use crate::{AfterLayoutContext, AppContext, Element, Event, EventContext, LayoutContext, PaintContext, SizeConstraint};
 
 /// Shared handle for drag-to-resize state, following the same `Arc<Mutex<_>>`
 /// pattern as `ResizableStateHandle`. The view creates the handle once at

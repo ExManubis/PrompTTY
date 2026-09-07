@@ -3,10 +3,7 @@ use pathfinder_geometry::vector::Vector2F;
 
 use super::Point;
 use crate::event::DispatchedEvent;
-use crate::{
-    AfterLayoutContext, AppContext, ClipBounds, Element, Event, EventContext, LayoutContext,
-    PaintContext, SizeConstraint,
-};
+use crate::{AfterLayoutContext, AppContext, ClipBounds, Element, Event, EventContext, LayoutContext, PaintContext, SizeConstraint};
 
 type DismissCallback = Box<dyn FnMut(&mut EventContext, &AppContext)>;
 

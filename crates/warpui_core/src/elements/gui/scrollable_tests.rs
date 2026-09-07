@@ -11,10 +11,7 @@ use crate::elements::{
 };
 use crate::platform::WindowStyle;
 use crate::presenter::DispatchedActionKind;
-use crate::{
-    App, AppContext, Entity, EntityIdSet, Event, Presenter, TypedActionView, ViewContext,
-    WindowInvalidation,
-};
+use crate::{App, AppContext, Entity, EntityIdSet, Event, Presenter, TypedActionView, ViewContext, WindowInvalidation};
 
 /// Since we support scrolling in both vertical and horizontal directions,
 /// this macro makes it easier to define tests for both directions. Simply

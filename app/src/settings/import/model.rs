@@ -12,7 +12,7 @@ use super::config::{SettingType, ThemeType};
 use crate::interval_timer::IntervalTimer;
 use crate::settings::import::config::{Config, ConfigError};
 #[cfg(target_os = "macos")]
-use crate::{TelemetryEvent};
+
 
 #[derive(Clone, Copy, Debug, EnumDiscriminants, Eq, Hash, PartialEq)]
 #[strum_discriminants(derive(EnumIter, Hash, Serialize))]

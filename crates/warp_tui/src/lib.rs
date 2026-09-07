@@ -1,3 +1,4 @@
+mod conversation_restore_target;
 //! `warp_tui` — the headless TUI front-end for Warp.
 //!
 //! This crate contains:
