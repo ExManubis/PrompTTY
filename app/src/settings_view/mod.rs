@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 
 use about_page::AboutPageView;
 use agent_profiles_page::{AgentProfilesPageAction, AgentProfilesPageEvent, AgentProfilesPageView};
@@ -11,7 +12,7 @@ use features_page::{FeaturesPageView, FeaturesSettingsPageEvent};
 use itertools::Itertools as _;
 use keybindings::KeybindingsView;
 use knowledge_page::{KnowledgePageAction, KnowledgePageEvent, KnowledgePageView};
-use main_page::{MainPageAction, MainSettingsPageEvent, MainSettingsPageView};
+use lazy_static::lazy_static;
 use mcp_servers_page::MCPServersSettingsPageView;
 use nav::{SettingsNavItem, SettingsUmbrella};
 use pathfinder_geometry::vector::Vector2F;
@@ -28,7 +29,9 @@ use warp_core::channel::ChannelState;
 use warp_core::context_flag::ContextFlag;
 use warp_core::features::FeatureFlag;
 use warp_core::send_telemetry_from_ctx;
+use settings::Setting as _;
 use warp_core::settings::ToggleableSetting as _;
+use warp_errors::report_if_error;
 use warp_core::ui::theme::color::internal_colors;
 use warp_editor::editor::NavigationKey;
 use warpify_page::{WarpifyPageAction, WarpifyPageView};
@@ -50,6 +53,9 @@ use self::telemetry::SettingsTelemetryEvent;
 use crate::ai::custom_model_routers::CustomModelRouter;
 use crate::ai::execution_profiles::ExecutionProfileId;
 use crate::appearance::Appearance;
+use crate::auth::AuthStateProvider;
+use crate::auth::auth_manager::AuthManager;
+use crate::auth::auth_view_modal::AuthViewVariant;
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
     TextColors, TextOptions,
@@ -60,6 +66,7 @@ use crate::pane_group::pane::view;
 use crate::pane_group::{BackingView, Direction, PaneConfiguration, PaneEvent, SplitPaneState};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::MCPServerCollectionPaneEntrypoint;
+use crate::settings::cloud_preferences::CloudPreferencesSettings;
 use crate::settings::{AISettings, BlockVisibilitySettings, SettingsFileError};
 use crate::settings_view::mcp_servers_page::{MCPServersSettingsPage, MCPServersSettingsPageEvent};
 use crate::terminal::SizeInfo;
@@ -89,7 +96,6 @@ mod features_page;
 pub(crate) mod handoff_environment_creation_modal;
 pub mod keybindings;
 mod knowledge_page;
-mod main_page;
 pub mod mcp_servers;
 pub mod mcp_servers_page;
 mod nav;
@@ -114,7 +120,6 @@ mod warpify_page;
 pub use cli_agents_page::cli_agent_settings_widget_id;
 pub use code_indexing_page::CodeIndexingPageView;
 pub use features_page::FeaturesPageAction;
-pub use main_page::handle_experiment_change;
 pub use privacy_page::PrivacyPageAction;
 pub use settings_page::{
     AdditionalInfo, InputListItem, LocalOnlyIconState, ToggleState, render_body_item_label,
@@ -265,7 +270,6 @@ pub enum SettingsViewEvent {
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub enum SettingsSection {
     About,
-    Account,
     #[default]
     Appearance,
     Features,
@@ -293,8 +297,7 @@ impl SettingsSection {
     /// Pages that only make sense when a Warp-hosted account/server exists.
     fn requires_warp_cloud(self) -> bool {
         match self {
-            SettingsSection::Account
-            | SettingsSection::SharedBlocks
+            SettingsSection::SharedBlocks
             | SettingsSection::WarpDrive
             | SettingsSection::Warpify
             | SettingsSection::CloudEnvironments
@@ -358,7 +361,6 @@ impl SettingsSection {
     pub fn slug(self) -> &'static str {
         match self {
             Self::About => "About",
-            Self::Account => "Account",
             Self::Appearance => "Appearance",
             Self::Features => "Features",
             Self::Keybindings => "Keyboard shortcuts",
@@ -391,7 +393,8 @@ impl SettingsSection {
     pub fn from_slug(slug: &str) -> Option<Self> {
         let section = match slug {
             "About" => Self::About,
-            "Account" => Self::Account,
+            // Account was removed; restore to Appearance, the page Settings now opens on.
+            "Account" => Self::Appearance,
             "Appearance" => Self::Appearance,
             "Features" => Self::Features,
             "Keyboard shortcuts" => Self::Keybindings,
@@ -650,12 +653,90 @@ pub mod flags {
     pub const SHOW_HIDDEN_FILES: &str = "ShowHiddenFiles";
 }
 
+lazy_static! {
+    static ref SETTINGS_SYNC_BINDINGS_ADDED: Arc<Mutex<bool>> = Default::default();
+}
+
+fn maybe_add_settings_sync_toggle_binding<T: Action + Clone>(
+    app: &mut AppContext,
+    context: &ContextPredicate,
+    builder: fn(SettingsAction) -> T,
+    toggle_binding_pairs: &mut Vec<ToggleSettingActionPair<T>>,
+) {
+    let mut lock = SETTINGS_SYNC_BINDINGS_ADDED
+        .lock()
+        .expect("settings sync bindings lock poisoned");
+    if !*lock {
+        *lock = true;
+        toggle_binding_pairs.push(
+            ToggleSettingActionPair::new(
+                "settings sync",
+                builder(SettingsAction::ToggleSettingsSync),
+                context,
+                flags::SETTINGS_SYNC_FLAG,
+            )
+            .is_supported_on_current_platform(
+                CloudPreferencesSettings::as_ref(app)
+                    .settings_sync_enabled
+                    .is_supported_on_current_platform(),
+            ),
+        );
+    }
+}
+
+/// Re-registers command-palette bindings that can change after server
+/// experiments are fetched.
+pub fn handle_experiment_change(app: &mut AppContext) {
+    let mut toggle_binding_pairs: Vec<ToggleSettingActionPair<WorkspaceAction>> = Vec::new();
+    maybe_add_settings_sync_toggle_binding(
+        app,
+        &id!("Workspace"),
+        WorkspaceAction::DispatchToSettingsTab,
+        &mut toggle_binding_pairs,
+    );
+    ToggleSettingActionPair::add_toggle_setting_action_pairs_as_bindings(toggle_binding_pairs, app);
+}
+
+fn toggle_settings_sync(ctx: &mut ViewContext<SettingsView>) {
+    if AuthStateProvider::as_ref(ctx)
+        .get()
+        .is_anonymous_or_logged_out()
+    {
+        AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
+            auth_manager.attempt_login_gated_feature(
+                "Toggle Settings Sync",
+                AuthViewVariant::RequireLoginCloseable,
+                ctx,
+            )
+        });
+        return;
+    }
+
+    let new_value = CloudPreferencesSettings::handle(ctx).update(ctx, |prefs_settings, ctx| {
+        report_if_error!(
+            prefs_settings
+                .settings_sync_enabled
+                .toggle_and_save_value(ctx)
+        );
+        *prefs_settings.settings_sync_enabled
+    });
+    send_telemetry_from_ctx!(
+        TelemetryEvent::ToggleSettingsSync {
+            is_settings_sync_enabled: new_value,
+        },
+        ctx
+    );
+    ctx.notify();
+}
+
 pub fn init_actions_from_parent_view<T: Action + Clone>(
     app: &mut AppContext,
     context: &ContextPredicate,
     builder: fn(SettingsAction) -> T,
 ) {
-    main_page::init_actions_from_parent_view(app, context, builder);
+    let mut settings_sync_pairs = Vec::new();
+    maybe_add_settings_sync_toggle_binding(app, context, builder, &mut settings_sync_pairs);
+    ToggleSettingActionPair::add_toggle_setting_action_pairs_as_bindings(settings_sync_pairs, app);
     appearance_page::init_actions_from_parent_view(app, context, builder);
     features_page::init_actions_from_parent_view(app, context, builder);
     warpify_page::init_actions_from_parent_view(app, context, builder);
@@ -964,7 +1045,7 @@ pub enum DebugSettingsAction {
 pub enum SettingsAction {
     SelectAndRefresh(SettingsSection),
     ToggleUmbrella(usize),
-    MainPageToggle(MainPageAction),
+    ToggleSettingsSync,
     AppearancePageToggle(AppearancePageAction),
     FeaturesPageToggle(FeaturesPageAction),
     PrivacyPageToggle(PrivacyPageAction),
@@ -1115,7 +1196,6 @@ fn next_stop_index(current: usize, len: usize, direction: CycleDirection) -> usi
 macro_rules! update_page {
     ($handle:expr_2021, $update:expr_2021, $ctx:expr_2021) => {
         match $handle {
-            SettingsPageViewHandle::Main(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::Appearance(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::Features(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::SharedBlocks(handle) => $ctx.update_view(handle, $update),
@@ -1174,12 +1254,6 @@ impl SettingsView {
         let pane_configuration = ctx.add_model(|_ctx| PaneConfiguration::new("Settings"));
 
         let global_resource_handles = GlobalResourceHandlesProvider::as_ref(ctx).get().clone();
-        // Main settings page with accounts info
-        let main_page_handle = ctx.add_typed_action_view(MainSettingsPageView::new);
-        ctx.subscribe_to_view(&main_page_handle, |me, _, event, ctx| {
-            me.handle_main_page_event(event, ctx);
-        });
-
         // Appearance & themes page
         let appearance_page_handle = ctx.add_typed_action_view(AppearanceSettingsPageView::new);
         ctx.subscribe_to_view(&appearance_page_handle, |me, _, event, ctx| {
@@ -1316,7 +1390,6 @@ impl SettingsView {
         });
 
         let mut settings_pages = vec![
-            SettingsPage::new(main_page_handle),
             SettingsPage::new(warp_agent_page_handle),
             SettingsPage::new(agent_profiles_page_handle),
             SettingsPage::new(knowledge_page_handle),
@@ -1346,7 +1419,6 @@ impl SettingsView {
         // Build sidebar nav items. Umbrellas group their subpages here and
         // nowhere else, so this list is the only place membership is declared.
         let mut nav_items = vec![
-            SettingsNavItem::Page(SettingsSection::Account),
             SettingsNavItem::Umbrella(SettingsUmbrella::new(
                 "Agents",
                 vec![
@@ -1694,20 +1766,6 @@ impl SettingsView {
             .collect();
     }
 
-    fn handle_main_page_event(
-        &mut self,
-        event: &MainSettingsPageEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        match event {
-            MainSettingsPageEvent::CheckForUpdate => ctx.emit(SettingsViewEvent::CheckForUpdate),
-            MainSettingsPageEvent::SignupAnonymousUser => {
-                ctx.emit(SettingsViewEvent::SignupAnonymousUser)
-            }
-            _ => (),
-        }
-    }
-
     fn handle_appearance_page_event(
         &mut self,
         event: &SettingsPageEvent,
@@ -2034,7 +2092,6 @@ impl SettingsView {
 
     fn should_render_page(&self, settings_page: &SettingsPage, app: &AppContext) -> bool {
         match &settings_page.view_handle {
-            SettingsPageViewHandle::Main(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::SharedBlocks(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::Keybindings(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::Features(v) => v.as_ref(app).should_render(app),
@@ -2615,15 +2672,7 @@ impl TypedActionView for SettingsView {
                     ctx.notify();
                 }
             }
-            SettingsAction::MainPageToggle(main_page_action) => {
-                if let Some(main_page) = self.settings_page(SettingsSection::Account)
-                    && let SettingsPageViewHandle::Main(view) = &main_page.view_handle
-                {
-                    view.update(ctx, |view, ctx| {
-                        view.handle_action(main_page_action, ctx);
-                    })
-                }
-            }
+            SettingsAction::ToggleSettingsSync => toggle_settings_sync(ctx),
             SettingsAction::AppearancePageToggle(appearance_action) => {
                 if let Some(appearance_page) = self.settings_page(SettingsSection::Appearance)
                     && let SettingsPageViewHandle::Appearance(view) = &appearance_page.view_handle
