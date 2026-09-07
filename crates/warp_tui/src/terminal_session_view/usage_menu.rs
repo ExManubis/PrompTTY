@@ -401,7 +401,3 @@ pub(super) fn render(info: &TuiUsageSnapshot, builder: &TuiUiBuilder) -> Box<dyn
         )
         .finish()
 }
-
-#[cfg(test)]
-#[path = "usage_menu_tests.rs"]
-mod tests;

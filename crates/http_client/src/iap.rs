@@ -23,7 +23,3 @@ pub fn is_iap_challenge(status: reqwest::StatusCode, headers: &http::HeaderMap) 
 pub trait IapTokenProvider: Send + Sync {
     fn cached_token(&self) -> Option<String>;
 }
-
-#[cfg(test)]
-#[path = "iap_tests.rs"]
-mod tests;

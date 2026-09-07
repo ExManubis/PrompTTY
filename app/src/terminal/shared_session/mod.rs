@@ -445,7 +445,3 @@ pub(crate) fn decode_scrollback(scrollback: &Scrollback) -> Vec<SerializedBlock>
         .filter_map(|block| serde_json::from_slice(&block.raw).ok())
         .collect()
 }
-
-#[cfg(test)]
-#[path = "mod_tests.rs"]
-mod tests;

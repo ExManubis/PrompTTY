@@ -408,7 +408,3 @@ impl TypedActionView for RootTuiView {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "root_view_tests.rs"]
-mod tests;

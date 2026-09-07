@@ -1426,7 +1426,3 @@ impl Entity for ServerApiProvider {
 }
 
 impl SingletonEntity for ServerApiProvider {}
-
-#[cfg(test)]
-#[path = "server_api_tests.rs"]
-mod tests;

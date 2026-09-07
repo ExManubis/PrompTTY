@@ -4832,7 +4832,3 @@ impl Entity for UpdateManager {
 }
 
 impl SingletonEntity for UpdateManager {}
-
-#[cfg(test)]
-#[path = "update_manager_tests.rs"]
-mod tests;

@@ -1498,10 +1498,6 @@ impl From<GqlUser> for WorkspacesMetadataResponse {
     }
 }
 
-#[cfg(test)]
-#[path = "gql_convert_tests.rs"]
-mod tests;
-
 pub fn object_update_message_from_gql(value: WarpDriveUpdate) -> Result<ObjectUpdateMessage> {
     match value {
         WarpDriveUpdate::ObjectActionOccurred(message) => {

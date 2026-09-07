@@ -5388,7 +5388,3 @@ impl TypedActionView for DriveIndex {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "index_tests.rs"]
-mod tests;

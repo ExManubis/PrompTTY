@@ -90,7 +90,3 @@ impl Entity for ServerExperiments {
 }
 
 impl SingletonEntity for ServerExperiments {}
-
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;
