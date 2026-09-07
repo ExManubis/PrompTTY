@@ -15,7 +15,7 @@ use crate::ai::blocklist::agent_view::{
 use crate::ai::blocklist::history_model::CloudConversationData;
 use crate::global_resource_handles::GlobalResourceHandlesProvider;
 use crate::persistence::ModelEvent;
-use crate::server::telemetry::TelemetryAgentViewEntryOrigin;
+
 use crate::terminal::TerminalView;
 use crate::terminal::input::message_bar::{Message, MessageItem};
 use crate::terminal::model::rich_content::RichContentType;

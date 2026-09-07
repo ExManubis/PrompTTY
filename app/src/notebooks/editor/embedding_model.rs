@@ -32,7 +32,6 @@ use crate::cloud_object::CloudObject;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::completer::SessionAgnosticContext;
 use crate::notebooks::styles::block_footer_action_button;
-use crate::notebooks::telemetry::{ActionEntrypoint, BlockInfo};
 use crate::server::ids::{HashableId, ToServerId};
 use crate::settings::FontSettings;
 use crate::terminal::input::decorations::{

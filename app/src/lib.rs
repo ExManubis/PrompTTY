@@ -164,7 +164,6 @@ use repo_metadata::{
     RepoMetadataModel, repositories::DetectedRepositories, watcher::DirectoryWatcher,
 };
 use server::network_log_pane_manager::NetworkLogPaneManager;
-use server::telemetry::context_provider::AppTelemetryContextProvider;
 use server::voice_transcriber::ServerVoiceTranscriber;
 #[cfg(feature = "local_fs")]
 use settings::import::model::ImportedConfigModel;
@@ -813,123 +812,6 @@ pub fn run() -> Result<()> {
                 return settings::schema_generation::dump_settings_schema(output_path.as_deref());
             }
             #[cfg(not(target_family = "wasm"))]
-            warp_cli::Command::PrintTelemetryEvents => {
-                return TelemetryEvent::print_telemetry_events_json();
-            }
-        }
-    }
-
-    // If running as a standalone CLI binary or invoked as "oz", print help
-    // instead of launching the GUI app.
-    let is_cli_binary = cfg!(feature = "standalone")
-        || warp_cli::binary_name().is_some_and(|name| name.starts_with("oz"))
-        || std::env::var_os("WARP_CLI_MODE").is_some();
-    if is_cli_binary {
-        warp_cli::Args::clap_command().print_help()?;
-        return Ok(());
-    }
-
-    let api_key = args.api_key().cloned();
-    run_internal(LaunchMode::App {
-        args: args.into_app_args(),
-        api_key,
-    })
-}
-
-/// Runs a parsed Warp worker command.
-fn run_worker_command(worker: &warp_cli::WorkerCommand) -> Result<()> {
-    match worker {
-        #[cfg(all(feature = "local_tty", unix))]
-        warp_cli::WorkerCommand::TerminalServer(args) => {
-            crate::terminal::local_tty::run_terminal_server(args);
-            Ok(())
-        }
-        #[cfg(feature = "plugin_host")]
-        warp_cli::WorkerCommand::PluginHost { .. } => crate::run_plugin_host(),
-        #[cfg(feature = "local_tty")]
-        warp_cli::WorkerCommand::MinidumpServer { socket_name } => {
-            cfg_if::cfg_if! {
-                if #[cfg(all(linux_or_windows, feature = "crash_reporting"))] {
-                    crate::crash_reporting::run_minidump_server(socket_name)
-                } else {
-                    let _ = socket_name;
-                    panic!("The minidump server is not supported on this platform");
-                }
-            }
-        }
-        #[cfg(not(target_family = "wasm"))]
-        warp_cli::WorkerCommand::RemoteServerProxy(args) => {
-            // Proxy is a thin byte bridge (stdin/stdout ↔ Unix socket).
-            // It only needs logging to stderr since stdout is the protocol
-            // channel. No crash reporting, no initialize_app.
-            let launch_mode = LaunchMode::RemoteServerProxy;
-            let mut tracing_initialization = tracing::init()?;
-            warp_logging::init(warp_logging::LogConfig {
-                frontend: launch_mode.log_frontend(),
-                log_destination: launch_mode.log_destination(),
-                ..Default::default()
-            })?;
-            tracing_initialization.log_initialization_warning();
-            crate::remote_server::run_proxy(args.identity_key.clone())
-        }
-        #[cfg(not(target_family = "wasm"))]
-        warp_cli::WorkerCommand::RemoteServerDaemon(args) => {
-            // Daemon handles its own full initialization (including
-            // initialize_app and crash reporting) inside run_daemon_app.
-            crate::remote_server::run_daemon(args.identity_key.clone())
-        }
-        #[cfg(not(target_family = "wasm"))]
-        warp_cli::WorkerCommand::RipgrepSearch {
-            parent,
-            ignore_case,
-            multiline,
-            pattern,
-            paths,
-        } => {
-            warp_ripgrep::search::run_search_subprocess(
-                std::slice::from_ref(pattern),
-                paths.clone(),
-                *ignore_case,
-                *multiline,
-                parent.pid,
-            )
-            .map_err(|err| anyhow!(err.to_string()))?;
-            Ok(())
-        }
-        #[cfg(not(any(
-            feature = "local_tty",
-            feature = "plugin_host",
-            not(target_family = "wasm")
-        )))]
-        worker => {
-            // On wasm, specifically, we should fail spectacularly if we get here.
-            #[cfg(target_family = "wasm")]
-            panic!("Worker process not supported on WASM: {worker:?}")
-        }
-    }
-}
-
-/// Runs an integration test using the provided test driver.
-pub fn run_integration_test(driver: TestDriver) -> Result<()> {
-    let is_integration_test = std::env::var("WARP_INTEGRATION").is_ok();
-    let launch = LaunchMode::Test {
-        driver: Box::new(Some(driver)),
-        is_integration_test,
-    };
-    run_internal(launch)
-}
-
-/// Runs the headless TUI front-end (the `warp-tui` binary in the `warp_tui`
-/// crate). Bootstraps the real (headless) app and then runs `mount`, which
-/// builds the root TUI view and starts the non-blocking TUI driver.
-///
-/// `mount` is supplied by the `warp_tui` crate (which owns the concrete root
-/// view plus the window/driver bootstrap), so `warp` never has to depend on
-/// `warp_tui`.
-#[cfg(feature = "tui")]
-pub fn run_tui(api_key: Option<String>, mount: TuiMountFn) -> Result<()> {
-    run_internal(LaunchMode::Tui {
-        entrypoint: TuiEntryPoint::Interactive { mount, api_key },
     })
 }
 
@@ -1174,7 +1056,6 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
         let mut tracing_initialization = tracing_initialization.take();
         warpui::platform::AppCallbacks {
             on_will_terminate: Some(Box::new(move |ctx| {
-                TelemetryCollector::handle(ctx).update(ctx, |telemetry_collector, ctx| {
                     telemetry_collector.flush_telemetry_events_for_shutdown(ctx);
                 });
 
@@ -1546,7 +1427,6 @@ pub(crate) fn initialize_app(
 
     ctx.add_singleton_model(|_ctx| AuthStateProvider::new(auth_state.clone()));
 
-    ctx.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
 
     ctx.add_singleton_model(|ctx| {
         AuthManager::new(
@@ -2027,8 +1907,6 @@ pub(crate) fn initialize_app(
     // Register the `TelemetryCollection` singleton model.
     let server_api_clone = server_api.clone();
     ctx.add_singleton_model(|ctx| {
-        let telemetry_collector = TelemetryCollector::new(server_api_clone);
-        telemetry_collector.initialize_telemetry_collection(ctx);
         telemetry_collector
     });
     timer.mark_interval_end("INITIALIZE_TELEMETRY_COLLECTION");
@@ -2644,7 +2522,6 @@ pub(crate) fn app_callbacks(
             });
 
             ctx.try_record_daily_app_focus_duration();
-            TelemetryCollector::handle(ctx).update(ctx, |telemetry_collector, ctx| {
                 telemetry_collector.flush_telemetry_events_for_shutdown(ctx);
             });
 

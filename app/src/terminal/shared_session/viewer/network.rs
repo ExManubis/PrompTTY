@@ -41,7 +41,7 @@ use crate::auth::{AuthStateProvider, UserUid};
 use crate::editor::{CrdtOperation, ReplicaId};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::auth::AuthClient;
-use crate::server::telemetry::telemetry_context;
+
 use crate::terminal::event_listener::ChannelEventListener;
 use crate::terminal::model::block::BlockId;
 use crate::terminal::shared_session::shared_handlers::RemoteUpdateGuard;

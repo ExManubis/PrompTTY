@@ -27,7 +27,7 @@ pub use self::changelog::get_current_changelog;
 use crate::channel::Channel;
 use crate::features::FeatureFlag;
 use crate::server::server_api::ServerApi;
-use crate::server::telemetry::TelemetryEvent;
+
 use crate::workspace::Workspace;
 use crate::{ChannelState};
 

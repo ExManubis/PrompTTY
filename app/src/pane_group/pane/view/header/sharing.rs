@@ -15,7 +15,7 @@ use super::{Event, OpenOverlay, PaneHeader, PaneHeaderAction};
 use crate::drive::sharing::dialog::{SharingDialog, SharingDialogEvent};
 use crate::drive::sharing::{ContentEditability, ShareableObject};
 use crate::pane_group::BackingView;
-use crate::server::telemetry::SharingDialogSource;
+use crate::shared_enums::SharingDialogSource;
 use crate::ui_components::buttons::{icon_button, icon_button_with_color};
 use crate::ui_components::icons::Icon;
 

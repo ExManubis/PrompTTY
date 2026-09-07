@@ -83,9 +83,7 @@ use crate::editor::{
     SingleLineEditorOptions, TextColors, TextOptions,
 };
 use crate::modal::{Modal, ModalEvent, ModalViewState};
-use crate::server::telemetry::{
-    AgentModeAutoDetectionSettingOrigin, ToggleCodeSuggestionsSettingSource,
-};
+
 use crate::settings::{
     AIAutoDetectionEnabled, AICommandDenylist, AISettings, AISettingsChangedEvent,
     AgentModeQuerySuggestionsEnabled, AutoApproveBypassesCommandDenylist, AwsBedrockAutoLogin,

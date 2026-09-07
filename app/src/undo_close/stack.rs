@@ -11,7 +11,7 @@ use super::settings::UndoCloseSettingsChangedEvent;
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::pane_group::{PaneGroup, PaneId};
-use crate::server::telemetry::{TelemetryEvent, UndoCloseItemType};
+
 use crate::tab::TabData;
 use crate::workspace::Workspace;
 

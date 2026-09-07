@@ -559,7 +559,6 @@ pub fn render_privacy_settings_toggles<A: Action + Clone + 'static>(
     // Builds without a telemetry/crash reporting config (e.g. OpenWarp) cannot
     // ship the corresponding events, so the toggles would be no-ops. Hide each
     // one independently based on whether its backing config is present.
-    if ChannelState::is_telemetry_available() && !FeatureFlag::GlobalAIAnalyticsBanner.is_enabled()
     {
         col.add_children(vec![
             Container::new(telemetry_toggle)

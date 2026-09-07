@@ -39,7 +39,7 @@ use crate::search::search_bar::{
     SearchBar, SearchBarEvent, SearchBarState, SearchResultOrdering, SelectionUpdate,
 };
 use crate::server::ids::SyncId;
-use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
+use crate::shared_enums::{LaunchConfigUiLocation};
 use crate::session_management::SessionSource;
 use crate::settings::CtrlTabBehavior;
 use crate::terminal::keys_settings::KeysSettings;

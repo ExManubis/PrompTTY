@@ -25,7 +25,7 @@ use crate::editor::{
     SingleLineEditorOptions, TextOptions, ValidInputType,
 };
 use crate::server::ids::SyncId;
-use crate::server::telemetry::TelemetrySpace;
+
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
 use crate::workflows::aliases::{WorkflowAlias, WorkflowAliases};

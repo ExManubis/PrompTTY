@@ -47,7 +47,7 @@ use crate::pane_group::pane::view::header::components::{
 };
 use crate::pane_group::pane::view::header::{PaneHeaderAction, toolbelt_button_position_id};
 use crate::pane_group::{BackingView, PaneConfiguration, PaneEvent};
-use crate::server::telemetry::TelemetryEvent;
+
 use crate::settings::FontSettings;
 use crate::terminal::input::MenuPositioning;
 use crate::terminal::view::TerminalView;

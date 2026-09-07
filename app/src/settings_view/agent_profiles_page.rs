@@ -66,7 +66,7 @@ use crate::cloud_object::GenericStringObjectFormat::Json;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::cloud_object::{JsonObjectType, ObjectType};
 use crate::editor::{EditorView, Event as EditorEvent, SingleLineEditorOptions, TextOptions};
-use crate::server::telemetry::AutonomySettingToggleSource;
+
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AgentModeCodingPermissionsType,
     AgentModeCommandExecutionDenylist, AgentModeCommandExecutionPredicate, CodeSettings,

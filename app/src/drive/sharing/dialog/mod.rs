@@ -44,9 +44,7 @@ use crate::server::cloud_objects::update_manager::{
     ObjectOperation, UpdateManager, UpdateManagerEvent,
 };
 use crate::server::ids::ServerId;
-use crate::server::telemetry::{
-    CloudObjectTelemetryMetadata, OpenedSharingDialogEvent, SharingDialogSource,
-};
+use crate::shared_enums::{SharingDialogSource};
 use crate::terminal::TerminalView;
 use crate::terminal::shared_session::SharedSessionActionSource;
 use crate::terminal::shared_session::permissions_manager::{

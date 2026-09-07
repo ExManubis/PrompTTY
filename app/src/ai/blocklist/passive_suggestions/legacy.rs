@@ -32,7 +32,7 @@ use crate::network::NetworkStatus;
 use crate::safe_warn;
 use crate::server::server_api::ServerApiProvider;
 use crate::server::team_scope::RequestTeamScope;
-use crate::server::telemetry::PromptSuggestionFallbackReason;
+
 use crate::settings::AISettings;
 use crate::terminal::event::{BlockType, UserBlockCompleted};
 use crate::terminal::model::block::BlockId;

@@ -20,7 +20,7 @@ use crate::ai::ambient_agents::github_auth_notifier::{GitHubAuthEvent, GitHubAut
 use crate::ai::ambient_agents::spawn::monitor_spawned_task;
 use crate::ai::ambient_agents::spawn::{AmbientAgentEvent, spawn_task, submit_run_followup};
 use crate::ai::ambient_agents::task::{HarnessAuthSecretsConfig, HarnessConfig};
-use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
+
 use crate::ai::ambient_agents::{AgentSource, AmbientAgentTaskId};
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]

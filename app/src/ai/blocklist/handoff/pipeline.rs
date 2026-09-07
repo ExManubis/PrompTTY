@@ -36,7 +36,7 @@ use super::{HandoffLaunchAttachments, PendingCloudLaunch};
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::agent::{CancellationReason, extract_user_query_mode};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
-use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
+
 use crate::ai::ambient_agents::handoff_types::{HandoffEntryPoint, HandoffInjectionPath, HandoffSurface};
 use crate::ai::blocklist::orchestration_topology::descendant_conversation_ids_in_spawn_order;
 use crate::ai::blocklist::{

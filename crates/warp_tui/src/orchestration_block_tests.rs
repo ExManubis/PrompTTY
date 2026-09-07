@@ -351,7 +351,6 @@ fn test_block(
     request: &RunAgentsRequest,
 ) -> (ViewHandle<TuiOrchestrationBlock>, Rc<TestController>) {
     app.add_singleton_model(|_| Appearance::mock());
-    app.update(warp_core::telemetry::testing::MockTelemetryContextProvider::register);
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
     app.add_singleton_model(|ctx| {
         let provider = ServerApiProvider::as_ref(ctx);

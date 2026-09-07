@@ -35,7 +35,6 @@ use warpui::{
 use super::context_menu::{ContextMenuAction, ContextMenuState, show_rich_editor_context_menu};
 use super::editor::view::{EditorViewEvent, RichTextEditorConfig, RichTextEditorView};
 use super::link::{NotebookLinks, SessionSource};
-use super::telemetry::NotebookTelemetryAction;
 use super::{NotebookLocation, styles};
 use crate::appearance::Appearance;
 #[cfg(feature = "local_fs")]
@@ -51,7 +50,7 @@ use crate::pane_group::pane::view::header::components::{
     render_three_column_header,
 };
 use crate::pane_group::{BackingView, PaneConfiguration, PaneEvent};
-use crate::server::telemetry::{NotebookActionEvent, NotebookTelemetryMetadata, TelemetryEvent};
+
 use crate::settings::FontSettings;
 use crate::terminal::model::session::Session;
 use crate::ui_components::icons::Icon;

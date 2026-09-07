@@ -49,7 +49,7 @@ use crate::auth::{AuthStateProvider, UserUid};
 use crate::editor::{CrdtOperation, ReplicaId};
 use crate::server::server_api::ServerApiProvider;
 #[cfg(not(any(test, feature = "integration_tests")))]
-use crate::server::telemetry::telemetry_context;
+
 use crate::terminal::TerminalModel;
 use crate::terminal::model::block::BlockId;
 #[cfg(not(any(test, feature = "integration_tests")))]

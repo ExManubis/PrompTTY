@@ -34,7 +34,7 @@ use crate::root_view::{
     open_new_with_workspace_source,
 };
 use crate::server::ids::ServerId;
-use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
+use crate::shared_enums::{LaunchConfigUiLocation};
 use crate::settings_view::{SettingsSection, settings_widget_deeplink_target};
 use crate::tab_configs::TabConfig;
 use crate::user_config::{load_launch_configs, load_tab_configs, tab_configs_dir};

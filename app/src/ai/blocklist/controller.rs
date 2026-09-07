@@ -72,7 +72,7 @@ use crate::persistence::ModelEvent;
 use crate::server::server_api::AIApiError;
 #[cfg(not(target_family = "wasm"))]
 use crate::server::server_api::ServerApiProvider;
-use crate::server::telemetry::TelemetryEvent;
+
 use crate::terminal::ShellLaunchData;
 use crate::terminal::model::block::{
     BlockId, CURSOR_MARKER, formatted_terminal_contents_for_input,

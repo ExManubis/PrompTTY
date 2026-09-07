@@ -72,8 +72,7 @@ use crate::server::server_api::TranscribeError;
 #[cfg(feature = "voice_input")]
 use crate::server::team_scope::RequestTeamScope;
 #[cfg(not(target_family = "wasm"))]
-use crate::server::telemetry::PluginChipTelemetryAction;
-use crate::server::telemetry::{PluginChipTelemetryKind, TelemetryEvent};
+
 use crate::settings::{
     AISettings, AISettingsChangedEvent, CodeSettings, CodeSettingsChangedEvent, PrivacySettings,
     PrivacySettingsChangedEvent,

@@ -22,7 +22,7 @@ use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
     TextOptions,
 };
-use crate::server::telemetry::{FindOption, TelemetryEvent};
+use crate::shared_enums::{FindOption};
 use crate::settings::InputModeSettings;
 use crate::themes::theme::Fill;
 use crate::ui_components::blended_colors;

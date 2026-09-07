@@ -42,7 +42,6 @@ use crate::ai::metadata_project_rules::read_project_rule_contents;
 #[cfg(feature = "local_fs")]
 use crate::code::language_server_shutdown_manager::LanguageServerShutdownManager;
 #[cfg(feature = "local_fs")]
-use crate::code::lsp_telemetry::LspTelemetryEvent;
 use crate::persistence::ModelEvent;
 #[cfg(feature = "local_fs")]
 #[cfg(feature = "local_fs")]

@@ -30,7 +30,7 @@ use super::utils::{
 };
 use crate::ai::AIRequestUsageModel;
 use crate::appearance::Appearance;
-use crate::server::telemetry::{SaveAsWorkflowModalSource, TelemetryEvent, WarpAIActionType};
+use crate::shared_enums::{SaveAsWorkflowModalSource};
 use crate::ui_components::blended_colors;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 

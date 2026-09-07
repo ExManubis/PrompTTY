@@ -53,7 +53,7 @@ use crate::editor::{
 use crate::features::FeatureFlag;
 use crate::gpu_state::{GPUState, GPUStateEvent};
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
-use crate::server::telemetry::{InputUXChangeOrigin, TelemetryEvent};
+
 use crate::settings::{
     AIFontName, AISettings, AISettingsChangedEvent, AppEditorSettings, CodeSettings, CursorBlink,
     CursorBlinkEnabled, CursorDisplayType, DEFAULT_MONOSPACE_FONT_NAME, EnforceMinimumContrast,

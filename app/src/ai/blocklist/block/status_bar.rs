@@ -51,7 +51,7 @@ use crate::ai::blocklist::{
 };
 use crate::ai::llms::LLMPreferences;
 use crate::server::server_api::ServerApiProvider;
-use crate::server::telemetry::TelemetryEvent;
+
 use crate::settings::{InputModeSettings, InputSettings, PrivacySettings};
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::terminal::input::buffer_model::{InputBufferModel, InputBufferUpdateEvent};
@@ -1240,7 +1240,6 @@ fn should_send_agent_tip_shown_analytics_event(app: &AppContext) -> bool {
     if privacy_settings_snapshot.should_disable_telemetry() {
         return false;
     }
-    if !FeatureFlag::AgentModeAnalytics.is_enabled() || ChannelState::is_release_bundle() {
         return false;
     }
 

@@ -42,7 +42,6 @@ pub const WARP_DRIVE_FEATURES: &[&str] = &["Warp Drive", "Session Sharing"];
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "bin")] {
-        pub use telemetry_provider::MockTelemetryContextProvider;
     }
 }
 

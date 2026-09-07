@@ -16,7 +16,7 @@ use crate::ai::blocklist::agent_view::{
 use crate::ai::predict::prompt_suggestions::ACCEPT_PROMPT_SUGGESTION_KEYBINDING;
 use crate::channel::{Channel, ChannelState};
 use crate::features::FeatureFlag;
-use crate::server::telemetry::{InteractionSource, ToggleBlockFilterSource};
+use crate::shared_enums::{InteractionSource};
 use crate::settings_view::flags;
 use crate::terminal::TerminalView;
 use crate::terminal::input::{

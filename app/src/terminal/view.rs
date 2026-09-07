@@ -255,7 +255,6 @@ use crate::ai::blocklist::orchestration_topology::OrchestrationNavigationDirecti
 use crate::ai::blocklist::suggested_agent_mode_workflow_modal::SuggestedAgentModeWorkflowAndId;
 use crate::ai::blocklist::suggested_rule_modal::SuggestedRuleAndId;
 use crate::ai::blocklist::summarization_cancel_dialog::SummarizationCancelDialog;
-use crate::ai::blocklist::telemetry_banner::{TelemetryBanner, should_collect_ai_ugc_telemetry};
 use crate::ai::blocklist::usage::conversation_usage_view::{
     ConversationUsageInfo, ConversationUsageView, TimingInfo,
 };
@@ -321,7 +320,6 @@ use crate::code_review::diff_state::LocalDiffStateModel;
 use crate::code_review::diff_state::{DiffMode, GitDeltaPreference};
 use crate::code_review::git_repo_model::{GitRepoModels, GitRepoStatusModel, GitStatusMetadata};
 use crate::code_review::github_repo_model::GitHubRepoModel;
-use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
 use crate::context_chips::ContextChipKind;
 use crate::context_chips::prompt::{Prompt, PromptSelection};
 use crate::context_chips::prompt_type::PromptType;
@@ -352,13 +350,8 @@ use crate::search::slash_command_menu::static_commands::commands;
 use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::ids::{ObjectUid, SyncId};
 use crate::server::server_api::ServerApi;
-use crate::server::telemetry::{
-    self, AgentModeAttachContextMethod, AgentModeEntrypoint, AgentModeRewindEntrypoint,
-    AnonymousUserSignupEntrypoint, BootstrappingInfo, InteractionSource, NotificationAgentVariant,
-    NotificationsTurnedOnSource, PaletteSource, PromptSuggestionViewType,
-    SaveAsWorkflowModalSource, SecretInteraction, SharingDialogSource, SlowBootstrapInfo,
-    TelemetryEvent, ToggleBlockFilterSource, WorkflowTelemetryMetadata,
-};
+use crate::shared_enums::{AgentModeEntrypoint, AnonymousUserSignupEntrypoint, InteractionSource, PaletteSource, SaveAsWorkflowModalSource, SharingDialogSource};
+use crate::terminal::cli_agent_type::{NotificationAgentVariant};
 use crate::session_management::{CommandContext, SessionNavigationPromptElements};
 use crate::settings::ai::FocusedTerminalInfo;
 #[cfg(feature = "local_fs")]
@@ -6123,7 +6116,6 @@ impl TerminalView {
             } => {
                 self.maybe_send_lrc_queued_prompts_after_subagent_handoff(*conversation_id, ctx);
                 // Hide telemetry banner forever after first AI input user sends.
-                if FeatureFlag::GlobalAIAnalyticsBanner.is_enabled()
                     && !GeneralSettings::as_ref(ctx)
                         .telemetry_banner_dismissed
                         .value()
@@ -11032,7 +11024,6 @@ impl TerminalView {
             return;
         }
 
-        if FeatureFlag::GlobalAIAnalyticsBanner.is_enabled()
             && !GeneralSettings::as_ref(ctx)
                 .telemetry_banner_dismissed
                 .value()
@@ -11224,7 +11215,6 @@ impl TerminalView {
         }
 
         // Hide telemetry banner forever after first block user executes.
-        if FeatureFlag::GlobalAIAnalyticsBanner.is_enabled()
             && !GeneralSettings::as_ref(ctx)
                 .telemetry_banner_dismissed
                 .value()
@@ -26169,11 +26159,11 @@ impl TerminalView {
 
     pub(super) fn toggle_file_tree(
         &mut self,
-        source: crate::server::telemetry::FileTreeSource,
-        cli_agent: Option<crate::server::telemetry::CLIAgentType>,
+        source: crate::shared_enums::FileTreeSource,
+        cli_agent: Option<crate::terminal::cli_agent_type::CLIAgentType>,
         ctx: &mut ViewContext<Self>,
     ) {
-        use crate::server::telemetry::TelemetryEvent;
+        
 
         self.toggle_left_panel_file_tree(false, ctx);
     }

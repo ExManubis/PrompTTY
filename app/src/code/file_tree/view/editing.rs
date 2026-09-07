@@ -16,7 +16,6 @@ use warpui::elements::MouseStateHandle;
 use super::{FileTreeIdentifier, FileTreeItem, FileTreeView};
 use crate::code::file_tree::FileTreeEvent;
 use crate::code::file_tree::view::{PendingEdit, PendingEditKind};
-use crate::server::telemetry::TelemetryEvent;
 
 /// Custom ordering function for items in the file tree.
 ///

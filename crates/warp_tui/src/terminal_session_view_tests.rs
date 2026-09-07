@@ -53,7 +53,6 @@ use warpui_core::event::ModifiersState;
 use warpui_core::keymap::{Context, DescriptionContext, Keystroke, Trigger};
 use warpui_core::platform::keyboard::KeyCode;
 use warpui_core::presenter::tui::{TuiFrame, TuiPresenter};
-use warpui_core::telemetry::{EventPayload, flush_events};
 use warpui_core::{App, AppContext, TuiView, TypedActionView, ViewContext, WindowInvalidation};
 
 use super::statusline::{

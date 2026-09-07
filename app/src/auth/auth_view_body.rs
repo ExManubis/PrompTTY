@@ -35,7 +35,7 @@ use crate::editor::{
 use crate::experiments::{AuthFlowInstructions, Experiment};
 use crate::modal::MODAL_CORNER_RADIUS;
 use crate::network::NetworkStatus;
-use crate::server::telemetry::{AnonymousUserSignupEntrypoint, LoginEventSource, TelemetryEvent};
+use crate::shared_enums::{AnonymousUserSignupEntrypoint};
 use crate::settings::{AISettings, PrivacySettings};
 use crate::themes::theme::Fill as ThemeFill;
 use crate::util::color::{darken, lighten};
@@ -351,7 +351,6 @@ impl AuthViewBody {
         .with_margin_bottom(8.)
         .finish();
 
-        let disclaimer_line_2 = if FeatureFlag::GlobalAIAnalyticsBanner.is_enabled() {
             Align::new(
                 ui_builder
                     .link(

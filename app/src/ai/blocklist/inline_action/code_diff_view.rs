@@ -73,22 +73,16 @@ use crate::ai::blocklist::view_util::render_provider_icon_button;
 use crate::ai::mcp::{MCPProvider, mcp_provider_from_file_path};
 use crate::ai::paths::host_native_absolute_path;
 use crate::ai::predict::prompt_suggestions::ACCEPT_PROMPT_SUGGESTION_KEYBINDING;
-use crate::ai::skills::{
-    SkillManager, SkillOpenOrigin, SkillReference, SkillTelemetryEvent,
-    icon_override_for_skill_name, render_skill_button, skill_path_from_location,
-};
+use crate::ai::skills::{SkillManager, SkillOpenOrigin, SkillReference, icon_override_for_skill_name, render_skill_button, skill_path_from_location};
 use crate::code::diff_viewer::{DiffViewer, DisplayMode};
 use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEditorView};
 use crate::code::editor::{add_color, remove_color};
 use crate::code::inline_diff::{InlineDiffView, InlineDiffViewEvent};
-use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
 use crate::menu::{Event as MenuEvent, Menu, MenuItemFields, MenuVariant};
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::{PaneId, view};
 use crate::pane_group::{BackingView, PaneEvent};
-use crate::server::telemetry::{
-    AgentModeCodeFileNavigationSource, ToggleCodeSuggestionsSettingSource,
-};
+
 use crate::settings::AISettings;
 use crate::terminal::ShellLaunchData;
 use crate::terminal::input::SET_INPUT_MODE_AGENT_ACTION_NAME;

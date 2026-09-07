@@ -181,7 +181,7 @@ use crate::ai::agent_management::view::{AgentManagementView, AgentManagementView
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent_sdk::driver::harness::{claude_transcript, codex_transcript};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
-use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
+
 use crate::ai::ambient_agents::handoff_types::CloudModeEntryPoint;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 use crate::ai::ambient_agents::handoff_types::{HandoffEntryPoint, HandoffSurface};
@@ -259,7 +259,6 @@ use crate::code::editor_management::CodeSource;
 use crate::code_review::CodeReviewTelemetryEvent;
 use crate::code_review::GlobalCodeReviewModel;
 use crate::code_review::diff_state::DiffStateModel;
-use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
 use crate::coding_panel_enablement_state::CodingPanelEnablementState;
 use crate::context_chips::ChipRuntimeCapabilities;
 use crate::default_terminal::DefaultTerminal;
@@ -331,12 +330,7 @@ use crate::server::ids::{ObjectUid, ServerId, SyncId};
 use crate::server::network_log_pane_manager::NetworkLogPaneManager;
 use crate::server::server_api::ai::AIClient;
 use crate::server::server_api::{ServerApi, ServerApiProvider, ServerTime};
-use crate::server::telemetry::{
-    AddTabWithShellSource, AnonymousUserSignupEntrypoint, CloseTarget, EnvVarTelemetryMetadata,
-    FileTreeSource, KnowledgePaneEntrypoint, LaunchConfigUiLocation,
-    MCPServerCollectionPaneEntrypoint, NotificationsTurnedOnSource, OpenedWarpAISource,
-    PaletteSource, SharingDialogSource, TabRenameEvent, WarpDriveSource,
-};
+use crate::shared_enums::{AnonymousUserSignupEntrypoint, CloseTarget, FileTreeSource, KnowledgePaneEntrypoint, LaunchConfigUiLocation, MCPServerCollectionPaneEntrypoint, PaletteSource, SharingDialogSource, WarpDriveSource};
 use crate::session_management::{SessionNavigationData, SessionSource, TabNavigationData};
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AccessibilitySettings, AliasExpansionSettings,
@@ -372,7 +366,6 @@ use crate::tab_configs::telemetry::{
     ExistingTabConfigOpenMode, GuidedModalSessionType, TabConfigsTelemetryEvent,
 };
 #[cfg(feature = "local_fs")]
-use crate::tab_configs::telemetry::{NewWorktreeConfigOpenSource, WorktreeBranchNamingMode};
 use crate::tab_configs::{
     NewWorktreeModal, NewWorktreeModalEvent, TabConfigParamsModal, TabConfigParamsModalEvent,
 };
@@ -7925,7 +7918,6 @@ impl Workspace {
         &mut self,
         ctx: &mut ViewContext<Self>,
     ) {
-        if FeatureFlag::GlobalAIAnalyticsBanner.is_enabled()
             && PrivacySettings::as_ref(ctx).is_telemetry_enabled
             && let Some(terminal_view_handle) = self.active_session_view(ctx)
         {

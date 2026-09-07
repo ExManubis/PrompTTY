@@ -26,7 +26,7 @@ use crate::channel::ChannelState;
 use crate::default_terminal::DefaultTerminal;
 use crate::features::{FeatureFlag, runtime_flags_menu_items};
 use crate::root_view::OpenLaunchConfigArg;
-use crate::server::telemetry::LaunchConfigUiLocation;
+use crate::shared_enums::LaunchConfigUiLocation;
 use crate::settings::{
     AISettings, BlockVisibilitySettings, DebugSettings, DefaultSessionMode, SelectionSettings,
 };
