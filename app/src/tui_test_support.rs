@@ -308,6 +308,13 @@ pub fn queue_tui_permission_action(
 ///
 /// Registration order mirrors model subscription dependencies.
 pub fn register_tui_session_view_test_singletons(app: &mut warpui::App) {
+    register_tui_session_view_test_singletons_with_auth(app, AuthStateProvider::new_for_test());
+}
+
+fn register_tui_session_view_test_singletons_with_auth(
+    app: &mut warpui::App,
+    auth_state: AuthStateProvider,
+) {
     app.add_singleton_model(|ctx| AppExecutionMode::new(ExecutionMode::App, false, ctx));
     app.update(warp_core::telemetry::testing::MockTelemetryContextProvider::register);
     app.update(init_and_register_user_preferences);
@@ -323,7 +330,7 @@ pub fn register_tui_session_view_test_singletons(app: &mut warpui::App) {
 
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
+    app.add_singleton_model(move |_| auth_state);
     app.add_singleton_model(AuthManager::new_for_test);
     app.add_singleton_model(|_| TuiOnboardingMarkers::new_ready_for_test(false, false));
     app.add_singleton_model(PrivacySettings::mock);

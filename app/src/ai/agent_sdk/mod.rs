@@ -1582,7 +1582,7 @@ fn command_authentication(
 fn command_requires_auth(command: &CliCommand) -> bool {
     match command {
         CliCommand::Agent(agent_cmd) => match agent_cmd {
-            AgentCommand::Run { .. } => true,
+            AgentCommand::Run { .. } => false,
             AgentCommand::RunCloud { .. } => true,
             AgentCommand::Profile(sub) => match sub {
                 AgentProfileCommand::List => true,

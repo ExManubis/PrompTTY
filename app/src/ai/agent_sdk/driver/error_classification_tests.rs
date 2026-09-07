@@ -82,21 +82,6 @@ fn terminal_unavailable_is_error_with_internal() {
 }
 
 #[test]
-fn not_logged_in_is_error_with_auth_required() {
-    let (state, update) = classify_driver_error(&AgentDriverError::NotLoggedIn);
-    assert_eq!(state, AgentTaskState::Error);
-    assert_eq!(
-        update.error_code,
-        Some(PlatformErrorCode::AuthenticationRequired)
-    );
-    assert!(
-        update.message.contains("WARP_API_KEY"),
-        "message should mention WARP_API_KEY: {:?}",
-        update.message
-    );
-}
-
-#[test]
 fn warp_drive_sync_failed_is_error() {
     assert_state_and_code(
         AgentDriverError::WarpDriveSyncFailed,

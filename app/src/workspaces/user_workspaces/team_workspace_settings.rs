@@ -80,6 +80,10 @@ impl TeamContextForOperation {
             team_uid: Some(team_uid),
         }
     }
+
+    pub(crate) fn new_unscoped_for_test() -> Self {
+        Self { team_uid: None }
+    }
 }
 
 /// The team a view renders as, borrowed for the duration of a single read.

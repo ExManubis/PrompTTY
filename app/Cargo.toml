@@ -5,7 +5,7 @@ description = "The local-first terminal for individuals and teams"
 edition = "2024"
 autobins = false
 name = "warp"
-version = "0.2.0"
+version = "0.2.1"
 publish.workspace = true
 license.workspace = true
 
@@ -453,7 +453,6 @@ codebase_index_persistence = ["full_source_code_embedding"]
 well_known_mcp_ids = []
 factory_mcp = []
 default = [
-    "skip_login",
     "agent_mode",
     "osc_hyperlinks",
     "render_continuous_block_selections_with_single_border",

@@ -603,15 +603,6 @@ fn open_launch_config(arg: &OpenLaunchConfigArg, ctx: &mut AppContext) {
     );
 }
 
-fn requires_post_onboarding_login(
-    is_logged_in: bool,
-    ai_enabled: bool,
-    warp_drive_enabled: bool,
-) -> bool {
-    !is_logged_in
-        && (FeatureFlag::AccountFirstOnboarding.is_enabled() || ai_enabled || warp_drive_enabled)
-}
-
 /// Replaces the settings and tutorial snapshots consumed when post-auth
 /// onboarding eventually completes.
 ///
@@ -2523,10 +2514,9 @@ impl RootView {
                 };
                 let workspace = target.to_workspace(ctx);
                 // User opted out of login: apply locally (no cloud race).
-                // Skipping leaves the user without an account, so AI is disabled.
                 if let Some(selected_settings) = self.pending_post_auth_onboarding_settings.take() {
                     let team_context = UserWorkspaces::as_ref(ctx).team_context_for_operation(ctx);
-                    apply_onboarding_settings(&selected_settings, false, team_context, ctx);
+                    apply_onboarding_settings(&selected_settings, team_context, ctx);
                 }
                 self.auth_onboarding_state = AuthOnboardingState::Terminal(workspace);
                 ctx.emit(RootViewEvent::AuthOnboardingStateChanged);
@@ -2584,15 +2574,11 @@ impl RootView {
                     ctx.notify();
                     return;
                 }
-                let AuthOnboardingState::Onboarding {
-                    target,
-                    onboarding_view,
-                } = &self.auth_onboarding_state
+                let AuthOnboardingState::Onboarding { target, .. } = &self.auth_onboarding_state
                 else {
                     return;
                 };
                 let target = target.clone();
-                let onboarding_view = onboarding_view.clone();
                 let account_first = FeatureFlag::AccountFirstOnboarding.is_enabled();
                 if !account_first {
                     mark_local_onboarding_completed(ctx);
@@ -2602,84 +2588,8 @@ impl RootView {
                 }
 
                 let is_logged_in = AuthStateProvider::as_ref(ctx).get().is_logged_in();
-                // Account-first always presents account creation to logged-out users.
-                // The fallback flow only requires login for account-backed settings.
-                let ai_enabled = selected_settings.is_ai_enabled();
-                let warp_drive_enabled = selected_settings.is_warp_drive_enabled();
-                // With old onboarding, we ask user to log in before onboarding, so don't do it after onboarding completes.
-                let requires_login =
-                    requires_post_onboarding_login(is_logged_in, ai_enabled, warp_drive_enabled);
-
-                if requires_login {
-                    refresh_pending_onboarding_choices(
-                        selected_settings,
-                        &mut self.pending_post_auth_onboarding_settings,
-                        &mut self.pending_tutorial,
-                    );
-
-                    let appearance = Appearance::as_ref(ctx);
-                    let theme_name = appearance
-                        .theme()
-                        .name()
-                        .unwrap_or_else(|| "Dark".to_string());
-                    let (use_vertical_tabs, intention, uses_third_party_agents) =
-                        match selected_settings {
-                            SelectedSettings::AgentDrivenDevelopment {
-                                ui_customization,
-                                agent_settings,
-                                ..
-                            } => (
-                                ui_customization
-                                    .as_ref()
-                                    .map(|c| c.use_vertical_tabs)
-                                    .unwrap_or(true),
-                                OnboardingIntention::AgentDrivenDevelopment,
-                                agent_settings.disable_oz,
-                            ),
-                            SelectedSettings::Terminal {
-                                ui_customization, ..
-                            } => (
-                                ui_customization
-                                    .as_ref()
-                                    .map(|c| c.use_vertical_tabs)
-                                    .unwrap_or(false),
-                                OnboardingIntention::Terminal,
-                                false,
-                            ),
-                        };
-
-                    let login_slide_view = ctx.add_typed_action_view(|ctx| {
-                        LoginSlideView::new(
-                            ai_enabled,
-                            uses_third_party_agents,
-                            &theme_name,
-                            use_vertical_tabs,
-                            intention,
-                            if account_first {
-                                LoginSlideSource::AccountFirstOnboarding
-                            } else {
-                                LoginSlideSource::OnboardingFlow
-                            },
-                            ctx,
-                        )
-                    });
-                    ctx.subscribe_to_view(&login_slide_view, |me, _view, event, ctx| {
-                        me.handle_login_slide_event(event, ctx);
-                    });
-
-                    self.auth_onboarding_state = AuthOnboardingState::LoginSlide {
-                        login_slide_view,
-                        onboarding_view,
-                        target,
-                    };
-                    ctx.emit(RootViewEvent::AuthOnboardingStateChanged);
-                    self.focus(ctx);
-                    ctx.notify();
-                    return;
-                }
-
                 let team_context = UserWorkspaces::as_ref(ctx).team_context_for_operation(ctx);
-                apply_onboarding_settings(selected_settings, is_logged_in, team_context, ctx);
+                apply_onboarding_settings(selected_settings, team_context, ctx);
 
                 if is_logged_in {
                     AuthManager::handle(ctx)
@@ -3560,10 +3470,9 @@ impl RootView {
                     if let Some(selected_settings) =
                         self.pending_post_auth_onboarding_settings.take()
                     {
-                        // Skipped login → no account → AI disabled.
                         let team_context =
                             UserWorkspaces::as_ref(ctx).team_context_for_operation(ctx);
-                        apply_onboarding_settings(&selected_settings, false, team_context, ctx);
+                        apply_onboarding_settings(&selected_settings, team_context, ctx);
                     }
                     self.auth_onboarding_state = AuthOnboardingState::Terminal(workspace);
                     ctx.emit(RootViewEvent::AuthOnboardingStateChanged);
@@ -3799,7 +3708,7 @@ impl RootView {
         };
         // Reached only after a successful login, so the user has an account.
         let team_context = UserWorkspaces::as_ref(ctx).team_context_for_operation(ctx);
-        apply_onboarding_settings(&selected_settings, true, team_context, ctx);
+        apply_onboarding_settings(&selected_settings, team_context, ctx);
     }
 
     /// If onboarding stored a pending tutorial (because login was required first),

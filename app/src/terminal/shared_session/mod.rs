@@ -30,7 +30,7 @@ pub mod sharer;
 pub mod viewer;
 
 #[cfg(test)]
-pub use tests::MAX_BYTES_SHAREABLE;
+pub const MAX_BYTES_SHAREABLE: usize = 1024 * 1024;
 
 /// The toast copy when copying a shared session link.
 pub const COPY_LINK_TEXT: &str = "Sharing link copied";

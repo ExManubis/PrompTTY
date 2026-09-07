@@ -124,20 +124,6 @@ fn exit_command_executes_immediately_and_takes_no_argument() {
 }
 
 #[test]
-fn logout_command_executes_immediately_and_takes_no_argument() {
-    use super::{SlashCommandSelectionBehavior, slash_command_selection_behavior};
-
-    assert_eq!(commands::LOGOUT.kind, SlashCommandKind::Logout);
-    assert!(commands::LOGOUT.argument.is_none());
-    assert!(!slash_command_is_submitted_as_prompt(&commands::LOGOUT));
-    assert_eq!(
-        slash_command_selection_behavior(&commands::LOGOUT),
-        SlashCommandSelectionBehavior::Execute
-    );
-    assert_eq!(commands::LOGOUT.availability, Availability::ALWAYS);
-}
-
-#[test]
 fn not_cloud_agent_commands_are_only_active_outside_cloud_mode() {
     let local_context = BASELINE_AVAILABILITY | Availability::NOT_CLOUD_AGENT;
     assert!(commands::AGENT.is_active(local_context));

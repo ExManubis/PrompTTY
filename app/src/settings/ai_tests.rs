@@ -993,6 +993,27 @@ fn ai_autodetection_defaults_to_opt_in() {
 }
 
 #[test]
+fn is_any_ai_enabled_respects_the_stored_toggle_when_logged_out() {
+    App::test((), |mut app| async move {
+        initialize_settings_for_tests(&mut app);
+        app.add_singleton_model(|_| AuthStateProvider::new_logged_out_for_test());
+        app.add_singleton_model(UserWorkspaces::default_mock);
+
+        AISettings::handle(&app).read(&app, |settings, ctx| {
+            assert!(!settings.is_any_ai_enabled(ctx));
+        });
+
+        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+            settings.is_any_ai_enabled.set_value(true, ctx).unwrap();
+        });
+
+        AISettings::handle(&app).read(&app, |settings, ctx| {
+            assert!(settings.is_any_ai_enabled(ctx));
+        });
+    });
+}
+
+#[test]
 fn ai_autodetection_setting_can_be_toggled_on_and_off() {
     App::test((), |mut app| async move {
         initialize_settings_for_tests(&mut app);

@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use anyhow::Context;
 #[cfg(test)]
-pub use tests::TestModel;
+pub use test_model::TestModel;
 use warp_errors::report_if_error;
 use warpui::{Entity, ModelContext, SingletonEntity};
 
@@ -90,3 +90,16 @@ impl Entity for ServerExperiments {
 }
 
 impl SingletonEntity for ServerExperiments {}
+
+#[cfg(test)]
+mod test_model {
+    use warpui::{Entity, SingletonEntity};
+
+    pub struct TestModel(pub i32);
+
+    impl Entity for TestModel {
+        type Event = ();
+    }
+
+    impl SingletonEntity for TestModel {}
+}
