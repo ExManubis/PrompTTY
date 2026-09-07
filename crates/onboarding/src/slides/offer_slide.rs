@@ -607,4 +607,3 @@ impl TypedActionView for OfferSlide {
         }
     }
 }
-

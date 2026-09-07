@@ -1027,4 +1027,3 @@ impl OnboardingStateModel {
 impl Entity for OnboardingStateModel {
     type Event = OnboardingStateEvent;
 }
-

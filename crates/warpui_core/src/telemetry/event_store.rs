@@ -198,4 +198,3 @@ impl EventStore {
         now > session_freshness_threshold
     }
 }
-

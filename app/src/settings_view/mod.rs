@@ -16,6 +16,7 @@ use nav::{SettingsNavItem, SettingsUmbrella};
 use pathfinder_geometry::vector::Vector2F;
 use privacy_page::{PrivacyPageView, PrivacyPageViewEvent};
 use scripting_page::ScriptingSettingsPageView;
+use settings::ToggleableSetting as _;
 use settings_file_footer::{SettingsFooterKind, SettingsFooterMouseStates, render_footer};
 use settings_page::{
     HEADER_PADDING, MatchData, SettingsPage, SettingsPageEvent, SettingsPageMeta,

@@ -114,4 +114,3 @@ fn release_mode(channel: Channel) -> &'static str {
         Channel::Integration => "integration_test",
     }
 }
-

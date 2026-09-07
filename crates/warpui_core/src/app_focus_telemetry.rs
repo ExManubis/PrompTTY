@@ -82,4 +82,3 @@ impl AppFocusInfo {
             .add_duration(app_focus_duration, user_id, anonymous_id);
     }
 }
-

@@ -197,4 +197,3 @@ fn recording_stopped_telemetry(
         },
     }
 }
-

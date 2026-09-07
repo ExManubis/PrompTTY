@@ -218,4 +218,3 @@ impl TelemetryEventDesc for AITelemetryEventDiscriminants {
 }
 
 register_telemetry_event!(AITelemetryEvent);
-

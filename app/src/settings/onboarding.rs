@@ -313,4 +313,3 @@ fn action_permissions_for_onboarding_autonomy(
         },
     }
 }
-

@@ -55,6 +55,7 @@ use warpui::{Entity, ModelContext, SingletonEntity};
 use workspace::WorkspaceClient;
 
 use super::experiments::{ServerExperiment, ServerExperiments};
+use crate::ChannelState;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::get_relevant_files::api::{GetRelevantFiles, GetRelevantFilesResponse};
 use crate::ai::predict::generate_ai_input_suggestions::GenerateAIInputSuggestionsRequest;
@@ -67,7 +68,6 @@ use crate::auth::auth_state::AuthState;
 use crate::server::team_scope::RequestTeamScope;
 use crate::server::telemetry::TelemetryApi;
 use crate::settings::PrivacySettingsSnapshot;
-use crate::ChannelState;
 
 pub const FETCH_CHANNEL_VERSIONS_TIMEOUT: std::time::Duration = Duration::from_secs(60);
 #[derive(Serialize)]

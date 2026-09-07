@@ -617,4 +617,3 @@ impl TelemetryEventDesc for BlocklistOrchestrationTelemetryEventDiscriminants {
 }
 
 warp_core::register_telemetry_event!(BlocklistOrchestrationTelemetryEvent);
-

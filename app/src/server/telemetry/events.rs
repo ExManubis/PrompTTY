@@ -7085,4 +7085,3 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
 }
 
 warp_core::register_telemetry_event!(TelemetryEvent);
-

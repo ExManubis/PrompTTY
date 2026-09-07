@@ -374,4 +374,3 @@ async fn load_markers_with_timeout(
         futures::future::Either::Right(_) => MarkerLoadResult::TimedOut,
     }
 }
-

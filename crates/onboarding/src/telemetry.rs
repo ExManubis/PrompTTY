@@ -386,4 +386,3 @@ impl TelemetryEventDesc for OnboardingEventDiscriminant {
 }
 
 warp_core::register_telemetry_event!(OnboardingEvent);
-

@@ -119,4 +119,3 @@ impl TelemetryEventDesc for RecordingTelemetryEventDiscriminants {
 }
 
 warp_core::register_telemetry_event!(RecordingTelemetryEvent);
-

@@ -14,17 +14,17 @@ use super::{
 use crate::ai::blocklist::block::cli_controller::CLISubagentController;
 #[cfg(feature = "voice_input")]
 use crate::ai::{AIRequestUsageModel, AIRequestUsageModelEvent};
+use crate::search::SyncDataSource;
 use crate::search::data_source::{Query, QueryResult};
 use crate::search::mixer::DataSourceRunErrorWrapper;
-use crate::search::slash_command_menu::static_commands::commands::{COMMAND_REGISTRY, VOICE};
 use crate::search::slash_command_menu::static_commands::Availability;
-use crate::search::SyncDataSource;
+use crate::search::slash_command_menu::static_commands::commands::{COMMAND_REGISTRY, VOICE};
 #[cfg(feature = "voice_input")]
 use crate::settings::{AISettings, AISettingsChangedEvent};
+use crate::terminal::TerminalModel;
 use crate::terminal::input::slash_commands::AcceptSlashCommandOrSavedPrompt;
 use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::view::resolve_ai_query_routing;
-use crate::terminal::TerminalModel;
 use crate::workspaces::user_workspaces::TeamContextResolver;
 #[cfg(feature = "voice_input")]
 use crate::workspaces::user_workspaces::UserWorkspaces;

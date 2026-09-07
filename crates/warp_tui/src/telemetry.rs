@@ -353,4 +353,3 @@ impl TelemetryEventDesc for TuiAutoupdateTelemetryEventDiscriminants {
 }
 
 warp_core::register_telemetry_event!(TuiAutoupdateTelemetryEvent);
-
