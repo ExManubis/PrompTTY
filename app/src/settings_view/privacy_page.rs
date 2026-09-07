@@ -72,12 +72,6 @@ const USER_SECRET_REGEX_TITLE: &str = "Custom secret redaction";
 const USER_SECRET_REGEX_DESCRIPTION: &str = "Use regex to define additional secrets or data you'd like to redact. This will take effect \
     when the next command runs. You can use the inline (?i) flag as a prefix to your regex \
     to make it case-insensitive.";
-const TELEMETRY_DESCRIPTION_OLD: &str = "App analytics help us make the product better for you. We only collect \
-    app usage metadata, never console input or output.";
-const TELEMETRY_TITLE: &str = "Help improve Warp";
-const TELEMETRY_DESCRIPTION: &str = "App analytics help us make the product better for you. We may collect \
-    certain console interactions to improve Warp's AI capabilities.";
-const TELEMETRY_DOCS_URL: &str = "https://docs.warp.dev/support-and-community/privacy-and-security/privacy#what-telemetry-data-does-warp-collect-and-why";
 
 const DATA_MANAGEMENT_TITLE: &str = "Manage your data";
 const DATA_MANAGEMENT_DESCRIPTION: &str = "At any time, you may choose to delete your Warp account permanently. \
@@ -220,7 +214,6 @@ impl PrivacyPageView {
     fn build_page() -> PageType<Self> {
         let mut widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![
             Box::new(SecretRedactionWidget::default()),
-            Box::new(AppAnalyticsWidget::default()),
             Box::new(CrashReportsWidget::default()),
             Box::new(CloudConversationStorageWidget::default()),
         ];
@@ -287,14 +280,6 @@ impl PrivacyPageView {
         ctx.notify();
     }
 
-    fn toggle_telemetry(&mut self, ctx: &mut ViewContext<Self>) {
-        let privacy_settings_handle = PrivacySettings::handle(ctx);
-        let old_value = privacy_settings_handle.as_ref(ctx).is_telemetry_enabled;
-        ctx.update_model(&privacy_settings_handle, |privacy_settings, ctx| {
-            privacy_settings.set_is_telemetry_enabled(!old_value, ctx);
-        });
-        ctx.notify();
-    }
 
     fn toggle_crash_reporting(&mut self, ctx: &mut ViewContext<Self>) {
         let privacy_settings_handle = PrivacySettings::handle(ctx);
@@ -488,7 +473,6 @@ pub enum PrivacyPageAction {
     ToggleSafeMode,
     ToggleHideSecretsInBlockList,
     SetSecretDisplayMode(SecretDisplayMode),
-    ToggleTelemetry,
     ToggleCrashReporting,
     ToggleCloudConversationStorage,
     LaunchNetworkLogging,
@@ -569,7 +553,6 @@ impl TypedActionView for PrivacyPageView {
             PrivacyPageAction::SetSecretDisplayMode(mode) => {
                 self.set_secret_display_mode(*mode, ctx)
             }
-            PrivacyPageAction::ToggleTelemetry => self.toggle_telemetry(ctx),
             PrivacyPageAction::ToggleCrashReporting => self.toggle_crash_reporting(ctx),
             PrivacyPageAction::ToggleCloudConversationStorage => {
                 self.toggle_cloud_conversation_storage(ctx)
@@ -1365,201 +1348,6 @@ impl SettingsWidget for SecretRedactionWidget {
 }
 
 #[derive(Default)]
-struct AppAnalyticsWidget {
-    switch_state: SwitchStateHandle,
-    docs_link_mouse_state: MouseStateHandle,
-    zdr_badge_mouse_state: MouseStateHandle,
-}
-
-impl AppAnalyticsWidget {
-    fn render_zero_data_retention_badge(&self, appearance: &Appearance) -> Box<dyn Element> {
-        let ui_builder = appearance.ui_builder();
-
-        Hoverable::new(self.zdr_badge_mouse_state.clone(), move |mouse_state| {
-            let is_hovered = mouse_state.is_hovered();
-            let theme = appearance.theme();
-
-            let background_color = appearance.theme().accent();
-
-            let badge = Container::new(
-                Text::new_inline("ZDR", appearance.ui_font_family(), CONTENT_FONT_SIZE - 2.)
-                    .with_color(theme.active_ui_text_color().into())
-                    .finish(),
-            )
-            .with_background(background_color)
-            .with_corner_radius(CornerRadius::with_all(Radius::Pixels(3.)))
-            .with_uniform_padding(3.)
-            .with_margin_left(8.)
-            .finish();
-
-            let mut stack = Stack::new().with_child(badge);
-            if is_hovered {
-                let tooltip = ui_builder.tool_tip(
-                    "Your administrator has enabled zero data retention for your team. User generated content will never be collected."
-                        .to_string(),
-                );
-                stack.add_positioned_child(
-                    tooltip.build().finish(),
-                    OffsetPositioning::offset_from_parent(
-                        vec2f(0., -3.),
-                        ParentOffsetBounds::Unbounded,
-                        ParentAnchor::TopLeft,
-                        ChildAnchor::BottomLeft,
-                    ),
-                );
-            }
-            stack.finish()
-        })
-        .with_cursor(Cursor::PointingHand)
-        .finish()
-    }
-
-    fn should_show_zdr_badge(&self, app: &AppContext) -> bool {
-        let setting = UserWorkspaces::as_ref(app).get_ugc_collection_enablement_setting();
-        matches!(setting, UgcCollectionEnablementSetting::Disable)
-    }
-}
-
-impl SettingsWidget for AppAnalyticsWidget {
-    type View = PrivacyPageView;
-
-    fn search_terms(&self) -> &str {
-        "telemetry usage analytics data collection"
-    }
-
-    fn should_render(&self, app: &AppContext) -> bool {
-        // Builds without a telemetry config (e.g. OpenWarp) cannot ship
-        // telemetry, so the toggle would be a no-op. Hide it in that case.
-        if !ChannelState::is_telemetry_available() {
-            return false;
-        }
-        let privacy_settings = PrivacySettings::as_ref(app);
-        !privacy_settings.is_telemetry_force_enabled()
-    }
-
-    fn render(
-        &self,
-        _view: &Self::View,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        let privacy_settings = PrivacySettings::as_ref(app);
-        let ui_builder = appearance.ui_builder();
-        let description_text_color = description_text_color(appearance.theme()).into_solid();
-
-        let is_enterprise = UserWorkspaces::as_ref(app)
-            .current_workspace()
-            .is_some_and(|w| w.billing_metadata.customer_type == CustomerType::Enterprise);
-        // Keep the old description for enterprise users because we do not collect block input/output for them.
-        let description = if is_enterprise {
-            TELEMETRY_DESCRIPTION_OLD
-        } else {
-            TELEMETRY_DESCRIPTION
-        };
-
-        let org_setting = UserWorkspaces::handle(app)
-            .as_ref(app)
-            .get_ugc_collection_enablement_setting();
-
-        let (is_toggleable, is_checked) = match org_setting {
-            UgcCollectionEnablementSetting::Enable => (false, true),
-            UgcCollectionEnablementSetting::Disable => (false, false),
-            UgcCollectionEnablementSetting::RespectUserSetting => {
-                (true, privacy_settings.is_telemetry_enabled)
-            }
-        };
-
-        let zdr_label_component = if self.should_show_zdr_badge(app) {
-            Flex::row()
-                .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                .with_child(render_body_item_label::<PrivacyPageAction>(
-                    TELEMETRY_TITLE.into(),
-                    None,
-                    None,
-                    LocalOnlyIconState::Hidden,
-                    is_toggleable.into(),
-                    appearance,
-                ))
-                .with_child(self.render_zero_data_retention_badge(appearance))
-                .finish()
-        } else {
-            render_body_item_label::<PrivacyPageAction>(
-                TELEMETRY_TITLE.into(),
-                None,
-                None,
-                LocalOnlyIconState::Hidden,
-                is_toggleable.into(),
-                appearance,
-            )
-        };
-
-        let switch = ui_builder
-            .switch(self.switch_state.clone())
-            .check(is_checked);
-        let switch = if is_toggleable {
-            switch
-                .build()
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(PrivacyPageAction::ToggleTelemetry)
-                })
-                .finish()
-        } else {
-            switch
-                .with_tooltip(TooltipConfig {
-                    text: "This setting is managed by your organization.".to_string(),
-                    styles: ui_builder.default_tool_tip_styles(),
-                })
-                .disable()
-                .build()
-                .finish()
-        };
-
-        let mut column = Flex::column();
-        column.add_child(super::settings_page::build_toggle_element(
-            zdr_label_component,
-            switch,
-            appearance,
-            None,
-        ));
-        column.add_child(
-            ui_builder
-                .paragraph(description)
-                .with_style(UiComponentStyles {
-                    font_color: Some(description_text_color),
-                    margin: Some(
-                        Coords::default()
-                            .top(styles::DESCRIPTION_NEGATIVE_MARGIN_OFFSET)
-                            .bottom(styles::DESCRIPTION_LINE_MARGIN_BOTTOM),
-                    ),
-                    ..Default::default()
-                })
-                .build()
-                .finish(),
-        );
-
-        column.add_child(
-            Align::new(
-                ui_builder
-                    .link(
-                        "Read more about Warp's use of data".into(),
-                        Some(TELEMETRY_DOCS_URL.into()),
-                        None,
-                        self.docs_link_mouse_state.clone(),
-                    )
-                    .soft_wrap(false)
-                    .build()
-                    .with_margin_bottom(styles::DESCRIPTION_MARGIN_BOTTOM)
-                    .finish(),
-            )
-            .left()
-            .finish(),
-        );
-
-        column.finish()
-    }
-}
-
-#[derive(Default)]
 struct CrashReportsWidget {
     switch_state: SwitchStateHandle,
 }
@@ -1959,14 +1747,6 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
     builder: fn(SettingsAction) -> T,
 ) {
     let mut toggle_binding_pairs = vec![
-        ToggleSettingActionPair::new(
-            "app analytics",
-            builder(SettingsAction::PrivacyPageToggle(
-                PrivacyPageAction::ToggleTelemetry,
-            )),
-            context,
-            flags::TELEMETRY_FLAG,
-        ),
         ToggleSettingActionPair::new(
             "crash reporting",
             builder(SettingsAction::PrivacyPageToggle(

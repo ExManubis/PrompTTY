@@ -169,7 +169,7 @@ impl AgentOnboardingView {
                     me.handle_onboarding_completed(ctx);
                 }
                 OnboardingStateEvent::UpgradeRequested => {
-                    ctx.emit(Agent);
+                    ctx.emit(AgentOnboardingEvent::UpgradeRequested);
                 }
                 OnboardingStateEvent::AuthStateChanged => {
                     me.handle_auth_state_changed(ctx);
@@ -191,7 +191,7 @@ impl AgentOnboardingView {
 
         ctx.subscribe_to_view(&intro_slide, |_me, _view, event, ctx| match event {
             IntroSlideEvent::LoginRequested => {
-                ctx.emit(Agent);
+                ctx.emit(AgentOnboardingEvent::LoginFromWelcomeRequested);
             }
         });
 
@@ -243,10 +243,10 @@ impl AgentOnboardingView {
         if let Some(ai_access_slide) = &ai_access_slide {
             ctx.subscribe_to_view(ai_access_slide, |_me, _view, event, ctx| match event {
                 AiAccessSlideEvent::CopyUpgradeUrlRequested => {
-                    ctx.emit(Agent);
+                    ctx.emit(AgentOnboardingEvent::UpgradeCopyUrlRequested);
                 }
                 AiAccessSlideEvent::PasteAuthTokenFromClipboardRequested => {
-                    ctx.emit(Agent);
+                    ctx.emit(AgentOnboardingEvent::UpgradePasteTokenFromClipboardRequested);
                 }
             });
         }
@@ -256,13 +256,13 @@ impl AgentOnboardingView {
             let offer_slide = ctx.add_typed_action_view(move |_| OfferSlide::new(onboarding_state));
             ctx.subscribe_to_view(&offer_slide, |_me, _view, event, ctx| match event {
                 OfferSlideEvent::SetUpLaterSelected { variant } => {
-                    ctx.emit(Agent);
+                    ctx.emit(AgentOnboardingEvent::OfferSetUpLaterSelected { variant: *variant });
                 }
                 OfferSlideEvent::CopyUpgradeUrlRequested => {
-                    ctx.emit(Agent);
+                    ctx.emit(AgentOnboardingEvent::UpgradeCopyUrlRequested);
                 }
                 OfferSlideEvent::PasteAuthTokenFromClipboardRequested => {
-                    ctx.emit(Agent);
+                    ctx.emit(AgentOnboardingEvent::UpgradePasteTokenFromClipboardRequested);
                 }
             });
             Some(offer_slide)
@@ -291,7 +291,7 @@ impl AgentOnboardingView {
                     .is_none_or(|last| now.duration_since(last) >= APP_BECAME_ACTIVE_DEBOUNCE);
                 if should_refresh {
                     me.last_model_refresh = Some(now);
-                    ctx.emit(Agent);
+                    ctx.emit(AgentOnboardingEvent::AppBecameActive);
                 }
             }
         });
@@ -519,14 +519,14 @@ impl AgentOnboardingView {
 
     fn handle_onboarding_completed(&mut self, ctx: &mut ViewContext<Self>) {
         let settings = self.onboarding_state.as_ref(ctx).settings();
-        ctx.emit(Agent);
+        ctx.emit(AgentOnboardingEvent::OnboardingCompleted(settings));
     }
 
     fn handle_ai_sell_offer_satisfied(&mut self, ctx: &mut ViewContext<Self>) {
         let Some(variant) = self.onboarding_state.as_ref(ctx).offer_variant() else {
             return;
         };
-        ctx.emit(Agent);
+        ctx.emit(AgentOnboardingEvent::OfferAiSellSatisfied { variant });
     }
 
     /// Reacts to a billing/auth transition. When the user becomes a paying user
@@ -633,13 +633,15 @@ impl AgentOnboardingView {
     ) {
         match event {
             ThemePickerSlideEvent::ThemeSelected { theme_name } => {
-                ctx.emit(Agent);
+                ctx.emit(AgentOnboardingEvent::ThemeSelected {
+                    theme_name: theme_name.clone(),
+                });
             }
             ThemePickerSlideEvent::SyncWithOsToggled { enabled } => {
-                ctx.emit(Agent);
+                ctx.emit(AgentOnboardingEvent::SyncWithOsToggled { enabled: *enabled });
             }
             ThemePickerSlideEvent::PrivacySettingsRequested => {
-                ctx.emit(Agent);
+                ctx.emit(AgentOnboardingEvent::PrivacySettingsFromTerminalThemeSlideRequested);
             }
         }
     }
@@ -816,7 +818,7 @@ impl TypedActionView for AgentOnboardingView {
         }
 
         if matches!(action, AgentOnboardingAction::Escape) && self.skippable {
-            ctx.emit(Agent);
+            ctx.emit(AgentOnboardingEvent::OnboardingSkipped);
             return;
         }
 

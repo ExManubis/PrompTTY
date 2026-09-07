@@ -219,7 +219,6 @@ use url::Url;
 // Re-export the debounce function to simplify imports.
 pub use warp_core::r#async::debounce;
 use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
-// Re-export the send_telemetry_from_ctx macro at the crate root level
 // Re-export the safe logging macros at the crate root level for backwards compatibility
 pub use warp_core::{safe_debug, safe_error, safe_info, safe_warn};
 use warp_errors::{report_error, report_if_error};
@@ -1048,15 +1047,12 @@ fn run_internal(mut launch_mode: LaunchMode) -> Result<()> {
         terminal::local_tty::spawner::PtySpawner::new().context("Failed to create pty spawner")?;
 
     // The TUI front-end skips the GUI lifecycle callbacks, which reach for
-    // windows and GUI-only state, but still flushes telemetry and reporting on
+    // windows and GUI-only state, but still tears down tracing/reporting on
     // termination.
     let callbacks = if matches!(launch_mode, LaunchMode::Tui { .. }) {
         let mut tracing_initialization = tracing_initialization.take();
         warpui::platform::AppCallbacks {
-            on_will_terminate: Some(Box::new(move |ctx| {
-                    telemetry_collector.flush_telemetry_events_for_shutdown(ctx);
-                });
-
+            on_will_terminate: Some(Box::new(move |_ctx| {
                 profiling::teardown();
                 if let Some(initialization) = tracing_initialization.as_mut() {
                     initialization.shutdown();
@@ -1767,16 +1763,11 @@ pub(crate) fn initialize_app(
     let user_is_logged_in = auth_state.is_logged_in();
 
     if user_is_logged_in {
-        // Set the first frame callback to record the app's startup time.
-        // This is only sent for logged-in users so that new users don't skew performance metrics.
-        let is_screen_reader_enabled = ctx.is_screen_reader_enabled();
-        let from_relaunch = launch_mode.args().finish_update;
+        // Mark first-frame timing for logged-in users, then refresh GPU-dependent UI.
         ctx.on_first_frame_drawn(move |ctx| {
-            let timing_data = IntervalTimer::handle(ctx).update(ctx, |timer, _| {
+            IntervalTimer::handle(ctx).update(ctx, |timer, _| {
                 timer.mark_interval_end("FIRST_FRAME_DRAWN");
-                timer.compute_stats()
             });
-            let event = 
 
             GPUState::handle(ctx).update(ctx, |gpu_state, ctx| {
                 gpu_state
@@ -1790,7 +1781,6 @@ pub(crate) fn initialize_app(
                         settings.refresh_preferred_graphics_backend_dropdown(ctx);
                     })
             }
-
         });
 
         #[cfg(enable_crash_recovery)]
@@ -1896,12 +1886,6 @@ pub(crate) fn initialize_app(
 
     ctx.add_singleton_model(CustomSecretRegexUpdater::new);
 
-    // Register the `TelemetryCollection` singleton model.
-    let server_api_clone = server_api.clone();
-    ctx.add_singleton_model(|ctx| {
-        telemetry_collector
-    });
-    timer.mark_interval_end("INITIALIZE_TELEMETRY_COLLECTION");
 
     // Register initial keybindings prior to creating menus
     ai::init(ctx);
@@ -2514,8 +2498,6 @@ pub(crate) fn app_callbacks(
             });
 
             ctx.try_record_daily_app_focus_duration();
-                telemetry_collector.flush_telemetry_events_for_shutdown(ctx);
-            });
 
             // Shutdown all LSP servers gracefully before app termination
             lsp::LspManagerModel::handle(ctx).update(ctx, |manager, ctx| {

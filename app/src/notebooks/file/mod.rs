@@ -381,16 +381,6 @@ impl FileNotebookView {
     }
 
     #[cfg(feature = "local_fs")]
-    fn open_telemetry_metadata(&self, ctx: &ViewContext<Self>) -> NotebookTelemetryMetadata {
-        NotebookTelemetryMetadata::new(None, None, NotebookLocation::LocalFile, None)
-            .with_markdown_table_count(
-                self.editor
-                    .as_ref(ctx)
-                    .model()
-                    .as_ref(ctx)
-                    .markdown_table_count(ctx),
-            )
-    }
 
     fn set_context(&mut self, path: &Path, session: Arc<Session>, ctx: &mut ViewContext<Self>) {
         self.location = Some(FileLocation::new(path, session.home_dir()));
@@ -579,8 +569,6 @@ impl FileNotebookView {
         self.file_state = FileState::Loaded(SourceFile::Static { title });
     }
 
-    fn send_telemetry_action(&self, action: NotebookTelemetryAction, ctx: &mut ViewContext<Self>) {
-    }
 
     /// Reload the file that was most recently opened (or attempted to open).
     fn reload_file(&mut self, ctx: &mut ViewContext<Self>) {
@@ -785,32 +773,13 @@ impl FileNotebookView {
                     source,
                 });
             }
-            EditorViewEvent::OpenedBlockInsertionMenu(source) => self.send_telemetry_action(
-                NotebookTelemetryAction::OpenBlockInsertionMenu { source: *source },
-                ctx,
-            ),
-            EditorViewEvent::OpenedEmbeddedObjectSearch => {
-                self.send_telemetry_action(NotebookTelemetryAction::OpenEmbeddedObjectSearch, ctx)
-            }
-            EditorViewEvent::OpenedFindBar => {
-                self.send_telemetry_action(NotebookTelemetryAction::OpenFindBar, ctx)
-            }
-            EditorViewEvent::InsertedEmbeddedObject(info) => self
-                .send_telemetry_action(NotebookTelemetryAction::InsertEmbeddedObject(*info), ctx),
-            EditorViewEvent::CopiedBlock { block, entrypoint } => self.send_telemetry_action(
-                NotebookTelemetryAction::CopyBlock {
-                    block: *block,
-                    entrypoint: *entrypoint,
-                },
-                ctx,
-            ),
-            EditorViewEvent::NavigatedCommands => {
-                self.send_telemetry_action(NotebookTelemetryAction::CommandKeyboardNavigation, ctx)
-            }
-            EditorViewEvent::ChangedSelectionMode(mode) => self.send_telemetry_action(
-                NotebookTelemetryAction::ChangeSelectionMode { mode: *mode },
-                ctx,
-            ),
+            EditorViewEvent::OpenedBlockInsertionMenu(_source) => {}
+            EditorViewEvent::OpenedEmbeddedObjectSearch => {}
+            EditorViewEvent::OpenedFindBar => {}
+            EditorViewEvent::InsertedEmbeddedObject(_info) => {}
+            EditorViewEvent::CopiedBlock { .. } => {}
+            EditorViewEvent::NavigatedCommands => {}
+            EditorViewEvent::ChangedSelectionMode(_mode) => {}
             EditorViewEvent::Navigate(_)
             | EditorViewEvent::Edited
             | EditorViewEvent::EditWorkflow(_)
@@ -1089,7 +1058,6 @@ impl TypedActionView for FileNotebookView {
             FileNotebookAction::OpenAsCode => self.open_as_code(ctx),
             FileNotebookAction::ContextMenu(action) => {
                 if matches!(action, ContextMenuAction::Open(_)) {
-                    self.send_telemetry_action(NotebookTelemetryAction::OpenContextMenu, ctx);
                     let copy_file_path = self.file_state.path().map(|p| p.display_path());
                     self.context_menu.set_copy_file_path(copy_file_path);
                 }

@@ -111,28 +111,6 @@ impl OfferVariant {
         }
     }
 
-    pub(crate) fn slide_name(self) -> &'static str {
-        match self {
-            OfferVariant::HeadStart => "head_start",
-            OfferVariant::ChooseHowToStart => "choose_how_to_start",
-        }
-    }
-
-    pub(crate) fn account_class(self) -> &'static str {
-        match self {
-            OfferVariant::HeadStart => "free_icp",
-            OfferVariant::ChooseHowToStart => "free_standard",
-        }
-    }
-
-    fn primary_action(self) -> &'static str {
-        match self {
-            OfferVariant::HeadStart => "get_more_ai",
-            // Telemetry identifier, not user-facing copy: kept stable across the
-            // card's copy changes so existing dashboards don't lose continuity.
-            OfferVariant::ChooseHowToStart => "use_warp_with_ai",
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -466,14 +444,11 @@ impl OfferSlide {
         )
     }
 
-    fn send_action(&self, variant: OfferVariant, action: &str, ctx: &mut ViewContext<Self>) {
-    }
 
     fn request_upgrade(&mut self, ctx: &mut ViewContext<Self>) {
-        let Some(variant) = self.variant(ctx) else {
+        let Some(_variant) = self.variant(ctx) else {
             return;
         };
-        self.send_action(variant, variant.primary_action(), ctx);
         self.show_auth_prompt_bar = true;
         self.onboarding_state.update(ctx, |model, ctx| {
             model.request_upgrade(ctx);
@@ -485,7 +460,6 @@ impl OfferSlide {
         let Some(variant) = self.variant(ctx) else {
             return;
         };
-        self.send_action(variant, "set_up_later", ctx);
         ctx.emit(OfferSlideEvent::SetUpLaterSelected { variant });
     }
 

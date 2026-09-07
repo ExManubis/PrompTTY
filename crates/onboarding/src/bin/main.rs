@@ -163,7 +163,7 @@ impl OnboardingMainView {
         ctx: &mut ViewContext<Self>,
     ) {
         match event {
-            Agent=> {
+            AgentOnboardingEvent::ThemeSelected { theme_name } => {
                 let theme = match theme_name.as_str() {
                     "Phenomenon" => phenomenon(),
                     "Dark" => dark_theme(),
@@ -176,26 +176,33 @@ impl OnboardingMainView {
                     appearance.set_theme(theme, ctx);
                 });
             }
-            Agent=> {
+            AgentOnboardingEvent::OnboardingCompleted(selected_settings) => {
                 let finished_view = ctx.add_typed_action_view(|_| {
                     FinishedOnboardingView::new(Some(selected_settings.clone()))
                 });
                 self.state = OnboardingMainState::Finished(finished_view);
                 ctx.notify();
             }
-            Agent=> {
+            AgentOnboardingEvent::OnboardingSkipped => {
                 let finished_view =
                     ctx.add_typed_action_view(|_| FinishedOnboardingView::new(None));
                 self.state = OnboardingMainState::Finished(finished_view);
                 ctx.notify();
             }
-            Agent| Agent=> {
+            AgentOnboardingEvent::OfferAiSellSatisfied { .. }
+            | AgentOnboardingEvent::OfferSetUpLaterSelected { .. } => {
                 let finished_view =
                     ctx.add_typed_action_view(|_| FinishedOnboardingView::new(None));
                 self.state = OnboardingMainState::Finished(finished_view);
                 ctx.notify();
             }
-            Agent| Agent| Agent| Agent| Agent| Agent| Agent=> {
+            AgentOnboardingEvent::SyncWithOsToggled { .. }
+            | AgentOnboardingEvent::UpgradeRequested
+            | AgentOnboardingEvent::UpgradeCopyUrlRequested
+            | AgentOnboardingEvent::UpgradePasteTokenFromClipboardRequested
+            | AgentOnboardingEvent::LoginFromWelcomeRequested
+            | AgentOnboardingEvent::PrivacySettingsFromTerminalThemeSlideRequested
+            | AgentOnboardingEvent::AppBecameActive => {
                 // No-op in the standalone demo binary
             }
         }

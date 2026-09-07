@@ -640,27 +640,8 @@ impl OnboardingStateModel {
         ctx.notify();
     }
 
-    fn send_completion_telemetry(&self, ctx: &mut ModelContext<Self>) {
-        if warp_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled() {
-            return;
-        }
-        let (intention, model, autonomy, ai_access) = match &self.intention {
-            OnboardingIntention::Terminal => (self.intention.to_string(), None, None, None),
-            OnboardingIntention::AgentDrivenDevelopment => (
-                self.intention.to_string(),
-                Some(self.agent_settings.selected_model_id.to_string()),
-                self.agent_settings.autonomy.map(|x| x.to_string()),
-                Some(self.ai_setup_choice.to_string()),
-            ),
-        };
-
-    }
 
     pub(crate) fn complete(&mut self, ctx: &mut ModelContext<Self>) {
-        if warp_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled() {
-            self.send_account_first_action("next", ctx);
-        }
-        self.send_completion_telemetry(ctx);
         ctx.emit(OnboardingStateEvent::Completed);
         ctx.notify();
     }
@@ -706,9 +687,6 @@ impl OnboardingStateModel {
         };
 
         if let Some(prev) = prev {
-            if account_first {
-                self.send_account_first_action("back", ctx);
-            }
             self.set_step(prev, ctx);
         }
     }
@@ -716,20 +694,8 @@ impl OnboardingStateModel {
     pub(crate) fn next(&mut self, ctx: &mut ModelContext<Self>) {
         use warp_core::features::FeatureFlag;
         let account_first = FeatureFlag::AccountFirstOnboarding.is_enabled();
-        let is_last_step = matches!(
-            self.step,
-            OnboardingStep::ThemePicker | OnboardingStep::PostAuthOffer
-        );
-        if !is_last_step {
-        }
 
         if account_first {
-            if !matches!(
-                self.step,
-                OnboardingStep::Intro | OnboardingStep::PostAuthOffer
-            ) {
-                self.send_account_first_action("next", ctx);
-            }
             match self.step {
                 OnboardingStep::Intro => self.set_step(OnboardingStep::Customize, ctx),
                 OnboardingStep::Customize => self.set_step(OnboardingStep::ThemePicker, ctx),
@@ -776,28 +742,6 @@ impl OnboardingStateModel {
         }
 
         self.step = step;
-
-        let account_first = warp_core::features::FeatureFlag::AccountFirstOnboarding.is_enabled();
-        let slide_name = match step {
-            OnboardingStep::Intro => {
-                if account_first {
-                    "welcome"
-                } else {
-                    "intro"
-                }
-            }
-            OnboardingStep::PostAuthOffer => self
-                .offer_variant
-                .expect("offer variant is selected before entering the post-auth offer")
-                .slide_name(),
-            OnboardingStep::ThemePicker => "theme_picker",
-            OnboardingStep::Intention => "intention",
-            OnboardingStep::AiSetup => "ai_setup",
-            OnboardingStep::AiAccess => "ai_access",
-            OnboardingStep::Customize => "customize",
-            OnboardingStep::Agent => "agent",
-            OnboardingStep::ThirdParty => "third_party",
-        };
 
         ctx.emit(OnboardingStateEvent::SelectedSlideChanged);
         ctx.notify();
@@ -855,22 +799,6 @@ impl OnboardingStateModel {
         (step_index, step_count)
     }
 
-    fn send_account_first_action(&self, action: &str, ctx: &mut ModelContext<Self>) {
-        let slide_name = match self.step {
-            OnboardingStep::Intro => "welcome",
-            OnboardingStep::Customize => "customize",
-            OnboardingStep::ThemePicker => "theme_picker",
-            OnboardingStep::Intention => "intention",
-            OnboardingStep::AiSetup => "ai_setup",
-            OnboardingStep::Agent => "agent",
-            OnboardingStep::AiAccess => "ai_access",
-            OnboardingStep::ThirdParty => "third_party",
-            OnboardingStep::PostAuthOffer => self
-                .offer_variant
-                .expect("offer variant is selected before entering the post-auth offer")
-                .slide_name(),
-        };
-    }
 }
 
 impl Entity for OnboardingStateModel {

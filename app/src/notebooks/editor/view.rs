@@ -48,6 +48,7 @@ use warpui::{
 };
 
 use super::block_insertion_menu::{BlockInsertionMenuState, BlockInsertionSource};
+use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 use super::find_bar::{FindBar, FindBarEvent, FindBarState};
 use super::keys::NotebookKeybindings;
 use super::link_editor::{LinkEditor, LinkEditorEvent};

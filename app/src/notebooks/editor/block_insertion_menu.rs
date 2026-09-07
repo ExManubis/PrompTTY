@@ -1,3 +1,4 @@
+use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};

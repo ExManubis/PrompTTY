@@ -500,8 +500,6 @@ impl AuthManager {
 
                 // Fetch the user's privacy settings from the server if any or update the server settings.
                 let privacy_settings_handle = PrivacySettings::handle(ctx);
-                let privacy_settings_snapshot =
-                    privacy_settings_handle.as_ref(ctx).get_snapshot(ctx);
                 ctx.update_model(&privacy_settings_handle, |privacy_settings, ctx| {
                     privacy_settings.fetch_or_update_settings(ctx);
                 });
@@ -516,12 +514,6 @@ impl AuthManager {
                 let server_api = self.server_api.clone();
                 let _ = ctx.spawn(
                     async move {
-                        if let Err(e) = server_api
-                            .flush_telemetry_events(privacy_settings_snapshot)
-                            .await
-                        {
-                            log::info!("Failed to flush events from Telemetry queue: {e}");
-                        }
                         server_api.notify_login().await;
                     },
                     |_, _, _| {},
@@ -530,10 +522,7 @@ impl AuthManager {
                 // Once the user is authenticated, attempt to report the sandbox that Warp is running in, if any.
                 ctx.spawn(
                     async { warp_isolation_platform::detect() },
-                    |_, platform, ctx| {
-                        if let Some(platform) = platform {
-                        }
-                    },
+                    |_, _platform, _ctx| {},
                 );
 
                 ctx.emit(AuthManagerEvent::AuthComplete);

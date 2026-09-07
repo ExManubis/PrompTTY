@@ -5,7 +5,9 @@ pub mod file;
 pub mod link;
 pub mod manager;
 pub mod notebook;
+pub mod types;
 mod styles;
+pub use types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 use std::sync::Arc;
 
 use anyhow::Result;

@@ -1,3 +1,4 @@
+use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 //! Shared context menu implementation for notebooks.
 
 use pathfinder_geometry::vector::Vector2F;
