@@ -11,6 +11,7 @@ pub use ::ai::agent::{
 pub use ai::agent::action::{RunAgentsAgentRunConfig, RunAgentsExecutionMode, RunAgentsRequest};
 pub use ai::agent::orchestration_config::{OrchestrationConfig, OrchestrationConfigStatus};
 pub use repo_metadata::repositories::RepoDetectionSource;
+use thousands::Separable;
 #[cfg(feature = "voice_input")]
 pub use voice_input::{
     StartListeningError, VoiceInput, VoiceInputLifecycle, VoiceInputLifecycleState,
@@ -104,8 +105,8 @@ pub use crate::ai::blocklist::telemetry::{
     RunAgentsCardDecision, run_agents_card_decision_event,
 };
 pub use crate::ai::blocklist::view_util::{
-    FAILED_OUTPUT_USAGE_NOTICE_TEXT, FailedOutputPresentation, OUT_OF_CREDITS_SUBSCRIBE_LABEL,
-    failed_output_presentation, format_credits, should_show_failed_output_usage_notice,
+    FAILED_OUTPUT_USAGE_NOTICE_TEXT, FailedOutputPresentation, failed_output_presentation,
+    format_credits, should_show_failed_output_usage_notice,
 };
 pub use crate::ai::blocklist::{
     AIActionStatus, AskUserQuestionExecutor, AttachmentType, BlocklistAIActionEvent,
@@ -267,8 +268,7 @@ pub use crate::tui_test_support::{
     add_tui_history_test_models, append_tui_history_test_command,
     blocklist_ai_history_model_with_queries, forkable_tui_conversation_for_test,
     queue_tui_permission_action, register_tui_input_mode_test_settings,
-    register_tui_session_view_test_singletons, set_tui_default_team_admin_for_test,
-    set_tui_workspace_teams_for_test,
+    register_tui_session_view_test_singletons, set_tui_workspace_teams_for_test,
 };
 pub use crate::user_config::{WarpConfig, WarpConfigUpdateEvent};
 pub use crate::util::image::{
@@ -287,11 +287,20 @@ pub use crate::workspaces::user_workspaces::{
 pub use crate::workspaces::workspace::{AiCreditsUsageAndCostType, UsageVisibilityGranularity};
 
 pub fn format_usage_cost_cents(cents: i64) -> String {
-    crate::settings_view::format_cost_cents(cents)
+    let dollars = cents / 100;
+    let remainder = (cents.abs() % 100) as u8;
+    if dollars < 0 {
+        format!(
+            "-${}.{remainder:02}",
+            dollars.unsigned_abs().separate_with_commas()
+        )
+    } else {
+        format!("${}.{remainder:02}", dollars.separate_with_commas())
+    }
 }
 
 pub fn format_usage_credits(credits: i64) -> String {
-    crate::settings_view::format_credits(credits)
+    credits.separate_with_commas()
 }
 
 /// Builds the live-shell completion context used to parse TUI input for NLD.

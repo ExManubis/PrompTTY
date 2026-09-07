@@ -56,7 +56,6 @@ use crate::server::ids::{ObjectUid, ServerId};
 use crate::settings::AgentModeCodingPermissionsType;
 use crate::settings::import::config::ParsedTerminalSetting;
 use crate::settings::import::model::TerminalType;
-use crate::settings_view::TeamsInviteOption;
 use crate::tab::TabTelemetryAction;
 use crate::terminal::ShareBlockType;
 use crate::terminal::block_list_viewport::InputMode;
@@ -1505,7 +1504,7 @@ pub enum TelemetryEvent {
     DeletedWorkflow,
     DeletedNotebook,
     ToggleApprovalsModal,
-    ChangedInviteViewOption(TeamsInviteOption),
+    ChangedInviteViewOption,
     SendEmailInvites,
     SetLineHeight {
         new_value: f32,
@@ -4046,7 +4045,7 @@ impl TelemetryEvent {
             | TelemetryEvent::DeletedWorkflow
             | TelemetryEvent::DeletedNotebook
             | TelemetryEvent::ToggleApprovalsModal
-            | TelemetryEvent::ChangedInviteViewOption(_)
+            | TelemetryEvent::ChangedInviteViewOption
             | TelemetryEvent::SendEmailInvites
             | TelemetryEvent::ResourceCenterOpened
             | TelemetryEvent::ResourceCenterTipsCompleted
@@ -4827,7 +4826,7 @@ impl TelemetryEvent {
             | TelemetryEvent::DeletedWorkflow
             | TelemetryEvent::DeletedNotebook
             | TelemetryEvent::ToggleApprovalsModal
-            | TelemetryEvent::ChangedInviteViewOption(_)
+            | TelemetryEvent::ChangedInviteViewOption
             | TelemetryEvent::SendEmailInvites
             | TelemetryEvent::SetLineHeight { .. }
             | TelemetryEvent::ResourceCenterOpened
@@ -7086,7 +7085,3 @@ impl TelemetryEventDesc for TelemetryEventDiscriminants {
 }
 
 warp_core::register_telemetry_event!(TelemetryEvent);
-
-#[cfg(test)]
-#[path = "events_tests.rs"]
-mod tests;

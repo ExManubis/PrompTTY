@@ -4271,10 +4271,7 @@ impl TerminalView {
         });
 
         let cloud_agent_team_required_view =
-            ctx.add_typed_action_view(ambient_agent::CloudAgentTeamRequiredView::new);
-        ctx.subscribe_to_view(&cloud_agent_team_required_view, |me, _, event, ctx| {
-            me.handle_cloud_agent_team_required_view_event(event, ctx);
-        });
+            ctx.add_view(ambient_agent::CloudAgentTeamRequiredView::new);
 
         let environment_setup_mode_selector =
             ctx.add_typed_action_view(EnvironmentSetupModeSelector::new);
@@ -5029,18 +5026,6 @@ impl TerminalView {
             self.agent_view_controller.update(ctx, |controller, ctx| {
                 controller.exit_agent_view(ctx);
             });
-        }
-    }
-
-    fn handle_cloud_agent_team_required_view_event(
-        &mut self,
-        event: &ambient_agent::CloudAgentTeamRequiredViewEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        match event {
-            ambient_agent::CloudAgentTeamRequiredViewEvent::OpenTeamsSettings => {
-                ctx.emit(Event::OpenSettings(SettingsSection::Teams));
-            }
         }
     }
 
@@ -22432,11 +22417,6 @@ impl TerminalView {
                     is_auto_open: false,
                 });
             }
-            InputEvent::OpenAutoReloadModal { purchased_credits } => {
-                ctx.emit(Event::OpenAutoReloadModal {
-                    purchased_credits: *purchased_credits,
-                });
-            }
             InputEvent::AuthSecretDeleteConfirmationDialogToggled { is_open } => {
                 ctx.emit(Event::AuthSecretDeleteConfirmationDialogToggled { is_open: *is_open });
             }
@@ -24339,6 +24319,7 @@ impl TerminalView {
         .finish()
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_label_element(
         index: BlockIndex,
         model: &TerminalModel,
@@ -27156,7 +27137,6 @@ impl TypedActionView for TerminalView {
             | StartFileDropTarget
             | StopFileDropTarget
             | RunNativeShellCompletions { .. }
-            | OpenTeamSettingsPage
             | HideTelemetryBannerPermanently
             | GenerateCodebaseIndex
             | LoadAgentModeConversation
@@ -27174,7 +27154,6 @@ impl TypedActionView for TerminalView {
             | IndexProjectSpeedbump
             | OpenViewMCPPane
             | OpenAddMCPPane
-            | OpenBillingAndUsagePane
             | OpenAddRulePane
             | OpenRulesPane
             | OpenEditSkillPane { .. }
@@ -27797,9 +27776,6 @@ impl TypedActionView for TerminalView {
                     results_tx: results_tx.clone(),
                 });
             }
-            OpenTeamSettingsPage => {
-                ctx.emit(Event::OpenSettings(SettingsSection::Teams));
-            }
             SetMarkedText {
                 marked_text,
                 selected_range,
@@ -28126,9 +28102,6 @@ impl TypedActionView for TerminalView {
                 ctx.emit(Event::OpenMCPSettingsPage {
                     page: Some(MCPServersSettingsPage::Edit { item_id: None }),
                 });
-            }
-            OpenBillingAndUsagePane => {
-                ctx.emit(Event::OpenSettings(SettingsSection::BillingAndUsage));
             }
             OpenAddRulePane => {
                 ctx.emit(Event::OpenAddRulePane);

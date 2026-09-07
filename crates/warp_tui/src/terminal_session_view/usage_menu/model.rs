@@ -27,7 +27,6 @@ pub(in crate::terminal_session_view) struct TuiUsageSnapshot {
     pub(super) base_credits: Option<TuiUsageCreditBar>,
     pub(super) addon_credits: Option<TuiUsageCreditBar>,
     pub(super) pay_as_you_go: Option<TuiUsagePayAsYouGo>,
-    pub(super) manage_billing_url: Option<String>,
 }
 
 impl TuiUsageSnapshot {
@@ -141,10 +140,6 @@ impl TuiUsageSnapshot {
             })
         });
 
-        let manage_billing_url = team
-            .filter(|_| is_admin)
-            .map(|team| UserWorkspaces::admin_billing_link_for_team(team.uid));
-
         Self {
             plan_name: workspace
                 .map(|workspace| workspace.billing_metadata.tier.name.clone())
@@ -154,7 +149,6 @@ impl TuiUsageSnapshot {
             base_credits,
             addon_credits,
             pay_as_you_go,
-            manage_billing_url,
         }
     }
 }

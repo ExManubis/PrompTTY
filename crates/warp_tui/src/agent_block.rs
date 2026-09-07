@@ -18,20 +18,20 @@ use parking_lot::FairMutex;
 use warp::tui_export::{
     AIActionStatus, AIAgentAction, AIAgentActionId, AIAgentActionType, AIAgentExchangeId,
     AIAgentOutputMessageType, AIAgentText, AIAgentTextSection, AIAgentTodo, AIBlockModel,
-    AIBlockModelHelper, AIBlockOutputStatus, AIConversationId, AuthStateProvider, BlockId,
-    BlocklistAIActionEvent, BlocklistAIActionModel, BlocklistAIHistoryModel, CancellationReason,
+    AIBlockModelHelper, AIBlockOutputStatus, AIConversationId, BlockId, BlocklistAIActionEvent,
+    BlocklistAIActionModel, BlocklistAIHistoryModel, CancellationReason,
     FAILED_OUTPUT_USAGE_NOTICE_TEXT, FailedOutputPresentation, MessageId, ModelEvent,
     ModelEventDispatcher, ReceivedMessageDisplay, RenderableAIError, SummarizationType,
     TelemetryEvent, TerminalModel, TodoOperation, TodoStatus, TuiOnboardingMarker,
-    TuiOnboardingMarkers, TuiOnboardingMarkersEvent, UserWorkspaces, failed_output_presentation,
+    TuiOnboardingMarkers, TuiOnboardingMarkersEvent, failed_output_presentation,
     should_show_failed_output_usage_notice,
 };
 use warpui::SingletonEntity;
 use warpui_core::elements::MouseStateHandle;
 use warpui_core::elements::tui::{
     Modifier, TuiBuffer, TuiBufferExt, TuiChildView, TuiConstraint, TuiContainer, TuiElement,
-    TuiFlex, TuiHoverable, TuiLayoutContext, TuiPaintContext, TuiPaintSurface, TuiParentElement,
-    TuiRect, TuiScreenPosition, TuiSelectionSpan, TuiSize, TuiText,
+    TuiFlex, TuiLayoutContext, TuiPaintContext, TuiPaintSurface, TuiParentElement, TuiRect,
+    TuiScreenPosition, TuiSelectionSpan, TuiSize, TuiText,
 };
 use warpui_core::{
     AppContext, Entity, EntityId, EntityIdMap, ModelHandle, TuiView, TypedActionView, ViewContext,
@@ -62,17 +62,8 @@ use crate::tui_review_comments::render_review_comments_tool_call;
 const OUT_OF_CREDITS_TITLE: &str = "I’m sorry, I couldn’t complete that request.";
 const OUT_OF_CREDITS_DETAIL: &str =
     "In order to use Warp’s AI features, subscribe to a Warp plan or buy packs of credits.";
-const OUT_OF_CREDITS_ACTION_LABEL: &str = "Get started with AI";
-const OUT_OF_CREDITS_ACTION_HINT: &str = "(ctrl+o)";
 const FIRST_CREDIT_GATE_TITLE: &str = "You need AI credits in order to use Warp’s agent.";
-const FIRST_CREDIT_GATE_ACTION_LABEL: &str = "Start using AI";
-const FIRST_CREDIT_GATE_ACTION_HINT: &str = "(ctrl+o).";
 const FAILURE_WARNING_PREFIX: &str = "⚠ ";
-
-pub(crate) fn upgrade_url(app: &AppContext) -> String {
-    let user_id = AuthStateProvider::as_ref(app).get().user_id();
-    UserWorkspaces::warp_agent_cli_upgrade_link(user_id)
-}
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 struct TuiCodeBlockKey {
@@ -91,41 +82,10 @@ fn should_consume_first_credit_gate(
         )
 }
 
-fn render_first_credit_gate(
-    out_of_credits_hover_state: &MouseStateHandle,
-    app: &AppContext,
-) -> Box<dyn TuiElement> {
+fn render_first_credit_gate(app: &AppContext) -> Box<dyn TuiElement> {
     let builder = TuiUiBuilder::from_app(app);
-    let primary_style = builder.primary_text_style();
-    let upgrade_url = upgrade_url(app);
-    let click_url = upgrade_url.clone();
-    let action = TuiHoverable::new(
-        out_of_credits_hover_state.clone(),
-        TuiText::new(FIRST_CREDIT_GATE_ACTION_LABEL)
-            .with_style(primary_style.add_modifier(Modifier::UNDERLINED))
-            .finish(),
-    )
-    .on_click(move |_, app| app.open_url(&click_url))
-    .finish();
-    TuiFlex::column()
-        .child(
-            TuiText::new(FIRST_CREDIT_GATE_TITLE)
-                .with_style(builder.attention_glyph_style())
-                .finish(),
-        )
-        .child(
-            TuiFlex::row()
-                .child(action)
-                .child(TuiText::new(" ").with_style(primary_style).finish())
-                .child(
-                    TuiText::new(FIRST_CREDIT_GATE_ACTION_HINT)
-                        .with_style(builder.accent_text_style())
-                        .finish(),
-                )
-                .finish(),
-        )
-        .child(TuiText::new(" ").finish())
-        .child(TuiText::new(upgrade_url).with_style(primary_style).finish())
+    TuiText::new(FIRST_CREDIT_GATE_TITLE)
+        .with_style(builder.attention_glyph_style())
         .finish()
 }
 
@@ -233,7 +193,6 @@ impl CollapsibleSectionStates {
 
 fn render_failure_section(
     presentation: &FailedOutputPresentation,
-    out_of_credits_hover_state: &MouseStateHandle,
     app: &AppContext,
 ) -> Box<dyn TuiElement> {
     let builder = TuiUiBuilder::from_app(app);
@@ -263,27 +222,6 @@ fn render_failure_section(
         .finish(),
         FailedOutputPresentation::OutOfCredits { .. } => {
             let primary_style = builder.primary_text_style();
-            let link_style = primary_style.add_modifier(Modifier::UNDERLINED);
-            let upgrade_url = upgrade_url(app);
-            let click_url = upgrade_url.clone();
-            let action = TuiHoverable::new(
-                out_of_credits_hover_state.clone(),
-                TuiText::new(OUT_OF_CREDITS_ACTION_LABEL)
-                    .with_style(link_style)
-                    .finish(),
-            )
-            .on_click(move |_, app| app.open_url(&click_url))
-            .finish();
-            let actions = TuiFlex::row()
-                .child(TuiText::new("  ").with_style(primary_style).finish())
-                .child(action)
-                .child(TuiText::new(" ").with_style(primary_style).finish())
-                .child(
-                    TuiText::new(OUT_OF_CREDITS_ACTION_HINT)
-                        .with_style(builder.accent_text_style())
-                        .finish(),
-                )
-                .finish();
             TuiFlex::column()
                 .child(
                     TuiText::from_spans([
@@ -301,14 +239,6 @@ fn render_failure_section(
                     .with_padding_left(2)
                     .finish(),
                 )
-                .child(TuiText::new(" ").finish())
-                .child(actions)
-                .child(TuiText::new(" ").finish())
-                .child(
-                    TuiText::new(format!("  {upgrade_url}"))
-                        .with_style(primary_style)
-                        .finish(),
-                )
                 .finish()
         }
         FailedOutputPresentation::ContextWindowExceeded { message } => TuiText::from_spans([
@@ -325,7 +255,7 @@ fn render_usage_notice(app: &AppContext) -> Box<dyn TuiElement> {
         .finish()
 }
 
-fn failure_text(presentation: &FailedOutputPresentation, app: &AppContext) -> String {
+fn failure_text(presentation: &FailedOutputPresentation) -> String {
     match presentation {
         FailedOutputPresentation::Message(message)
         | FailedOutputPresentation::AwsBedrockCredentialsExpiredOrInvalid {
@@ -336,11 +266,7 @@ fn failure_text(presentation: &FailedOutputPresentation, app: &AppContext) -> St
         }
         | FailedOutputPresentation::ContextWindowExceeded { message } => message.clone(),
         FailedOutputPresentation::OutOfCredits { .. } => {
-            let upgrade_url = upgrade_url(app);
-            format!(
-                "{OUT_OF_CREDITS_TITLE}\n  {OUT_OF_CREDITS_DETAIL}\n\n  \
-                 {OUT_OF_CREDITS_ACTION_LABEL} {OUT_OF_CREDITS_ACTION_HINT}\n\n  {upgrade_url}"
-            )
+            format!("{OUT_OF_CREDITS_TITLE}\n  {OUT_OF_CREDITS_DETAIL}")
         }
         FailedOutputPresentation::InvalidApiKey { title, detail } => {
             format!("{title}\n{detail}")
@@ -429,7 +355,6 @@ pub(super) struct TuiAIBlock {
     /// Per-message UI state for this exchange's collapsible sections
     /// (thinking blocks and task lists).
     collapsible_states: CollapsibleSectionStates,
-    out_of_credits_hover_state: MouseStateHandle,
     first_credit_gate: bool,
     /// Every tool-call action id seen in this exchange's output, maintained by
     /// [`Self::sync_action_views`]. Mirrors the GUI `AIBlock`'s
@@ -477,7 +402,6 @@ impl TuiAIBlock {
             action_model: action_model.clone(),
             terminal_model,
             collapsible_states: Default::default(),
-            out_of_credits_hover_state: MouseStateHandle::default(),
             first_credit_gate: false,
             action_ids: HashSet::new(),
             action_views: HashMap::new(),
@@ -1273,6 +1197,7 @@ impl TuiAIBlock {
         failed_output_presentation(error, app).map(|presentation| (error, presentation))
     }
 
+    #[cfg_attr(not(test), allow(dead_code))]
     pub(super) fn has_out_of_credits_failure(&self, app: &AppContext) -> bool {
         let status = self.block_model.status(app);
         matches!(
@@ -1388,7 +1313,7 @@ impl TuiAIBlock {
             if !covers_start || !covers_end {
                 return None;
             }
-            collected.push(section_logical_text(section, app)?);
+            collected.push(section_logical_text(section)?);
         }
         overlapped_any.then(|| collected.join("\n"))
     }
@@ -1488,12 +1413,8 @@ impl TuiAIBlock {
                 )
             }
             TuiAIBlockSection::AgentMessage(_) => return None,
-            TuiAIBlockSection::Failure(presentation) => {
-                render_failure_section(presentation, &self.out_of_credits_hover_state, app)
-            }
-            TuiAIBlockSection::FirstCreditGate => {
-                render_first_credit_gate(&self.out_of_credits_hover_state, app)
-            }
+            TuiAIBlockSection::Failure(presentation) => render_failure_section(presentation, app),
+            TuiAIBlockSection::FirstCreditGate => render_first_credit_gate(app),
             TuiAIBlockSection::UsageNotice => render_usage_notice(app),
         })
     }
@@ -1886,11 +1807,9 @@ impl TuiAIBlock {
                     app,
                 ),
                 TuiAIBlockSection::Failure(presentation) => {
-                    render_failure_section(presentation, &self.out_of_credits_hover_state, app)
+                    render_failure_section(presentation, app)
                 }
-                TuiAIBlockSection::FirstCreditGate => {
-                    render_first_credit_gate(&self.out_of_credits_hover_state, app)
-                }
+                TuiAIBlockSection::FirstCreditGate => render_first_credit_gate(app),
                 TuiAIBlockSection::UsageNotice => render_usage_notice(app),
             };
 
@@ -1939,7 +1858,7 @@ fn last_row_content_width(element: &mut Box<dyn TuiElement>, width: u16, height:
 /// The copy-able logical text for a section, or `None` for section kinds with no
 /// clean logical form (tool calls, reasoning, summaries, todo lists, or agent
 /// messages), which fall back to per-row grid text.
-fn section_logical_text(section: &TuiAIBlockSection, app: &AppContext) -> Option<String> {
+fn section_logical_text(section: &TuiAIBlockSection) -> Option<String> {
     match section {
         TuiAIBlockSection::Input(text) => Some(text.clone()),
         TuiAIBlockSection::RichText(TuiRichTextSection::Markdown(formatted)) => {
@@ -1957,14 +1876,8 @@ fn section_logical_text(section: &TuiAIBlockSection, app: &AppContext) -> Option
         | TuiAIBlockSection::TodoList { .. }
         | TuiAIBlockSection::CompletedTodos { .. }
         | TuiAIBlockSection::AgentMessage(_) => None,
-        TuiAIBlockSection::Failure(presentation) => Some(failure_text(presentation, app)),
-        TuiAIBlockSection::FirstCreditGate => {
-            let upgrade_url = upgrade_url(app);
-            Some(format!(
-                "{FIRST_CREDIT_GATE_TITLE}\n{FIRST_CREDIT_GATE_ACTION_LABEL} \
-                 {FIRST_CREDIT_GATE_ACTION_HINT}\n\n{upgrade_url}"
-            ))
-        }
+        TuiAIBlockSection::Failure(presentation) => Some(failure_text(presentation)),
+        TuiAIBlockSection::FirstCreditGate => Some(FIRST_CREDIT_GATE_TITLE.to_owned()),
         TuiAIBlockSection::UsageNotice => Some(FAILED_OUTPUT_USAGE_NOTICE_TEXT.to_owned()),
     }
 }

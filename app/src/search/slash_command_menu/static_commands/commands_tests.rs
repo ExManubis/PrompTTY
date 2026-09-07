@@ -73,7 +73,7 @@ fn command_registry_contains_commands_for_both_surfaces() {
 
     assert_eq!(
         registry
-            .get_command_with_name(UPGRADE.name)
+            .get_command_with_name(USAGE.name)
             .map(|command| command.supported_surfaces),
         Some(SlashCommandSurfaces::TuiOnly)
     );
@@ -161,43 +161,6 @@ fn connect_grok_command_is_tui_only_and_has_no_arguments() {
 }
 
 #[test]
-fn manage_billing_command_is_always_available_only_in_tui_mode() {
-    let command = all_commands(settings::SettingsMode::Tui)
-        .into_iter()
-        .find(|command| command.kind == SlashCommandKind::ManageBilling)
-        .expect("expected /manage-billing to be registered in TUI mode");
-
-    assert_eq!(command, MANAGE_BILLING);
-    assert_eq!(command.availability, Availability::ALWAYS);
-    assert_eq!(command.supported_surfaces, SlashCommandSurfaces::TuiOnly);
-    assert!(!command.auto_enter_ai_mode);
-    assert!(command.argument.is_none());
-    assert!(
-        all_commands(settings::SettingsMode::Gui)
-            .iter()
-            .all(|command| command.kind != SlashCommandKind::ManageBilling)
-    );
-}
-
-#[test]
-fn upgrade_command_is_always_available_only_in_tui_mode() {
-    let command = all_commands(settings::SettingsMode::Tui)
-        .into_iter()
-        .find(|command| command.kind == SlashCommandKind::Upgrade)
-        .expect("expected /upgrade to be registered in TUI mode");
-
-    assert_eq!(command, UPGRADE);
-    assert_eq!(command.availability, Availability::ALWAYS);
-    assert_eq!(command.supported_surfaces, SlashCommandSurfaces::TuiOnly);
-    assert!(!command.auto_enter_ai_mode);
-    assert!(command.argument.is_none());
-    assert!(
-        all_commands(settings::SettingsMode::Gui)
-            .iter()
-            .all(|command| command.kind != SlashCommandKind::Upgrade)
-    );
-}
-#[test]
 fn auto_approve_command_is_local_agent_action_without_arguments() {
     let tui_commands = all_commands(settings::SettingsMode::Tui);
     let command = tui_commands
@@ -270,20 +233,6 @@ fn reset_statusline_command_is_always_available_only_in_tui_mode() {
             .all(|command| command.kind != SlashCommandKind::ResetStatusline)
     );
 }
-#[test]
-fn logout_command_is_registered_only_for_tui_mode() {
-    assert!(
-        all_commands(settings::SettingsMode::Tui)
-            .iter()
-            .any(|command| command == &LOGOUT)
-    );
-    assert!(
-        !all_commands(settings::SettingsMode::Gui)
-            .iter()
-            .any(|command| command == &LOGOUT)
-    );
-}
-
 #[test]
 fn version_command_is_not_registered() {
     for settings_mode in [settings::SettingsMode::Gui, settings::SettingsMode::Tui] {

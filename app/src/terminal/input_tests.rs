@@ -56,7 +56,6 @@ use crate::context_chips::prompt::Prompt;
 use crate::editor::{DisplayPoint, EditorAction, Point, TextStyleOperation};
 use crate::input_suggestions::{HistoryOrder, Item};
 use crate::network::NetworkStatus;
-use crate::pricing::PricingInfoModel;
 use crate::search::files::model::FileSearchModel;
 use crate::search::slash_command_menu::static_commands::commands;
 use crate::server::cloud_objects::listener::Listener;
@@ -113,8 +112,7 @@ use crate::workspaces::team_tester::TeamTesterStatus;
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::{
-    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider,
-    ReferralThemeStatus, experiments,
+    AgentNotificationsModel, GlobalResourceHandles, GlobalResourceHandlesProvider, experiments,
 };
 
 fn pending_ctrl_r_handoff() -> PendingShellWidgetHandoff {
@@ -258,12 +256,11 @@ fn renders_fixed_prompt_chip_command_without_interpolation() {
 pub fn initialize_app(app: &mut App) {
     initialize_settings_for_tests(app);
 
-    // NLD is now opt-in by default (`ai_autodetection_enabled_internal` defaults to false).
-    // These tests exercise the natural-language-detection-on code paths (buffer-driven slash
-    // command detection, auto-detection input mode), so explicitly re-enable it here to preserve
-    // the pre-opt-in test behavior. The opt-in default itself is covered by
-    // `ai_autodetection_defaults_to_opt_in` in `settings/ai_tests.rs`.
+    // Warp Agent and NLD are off by default. These tests exercise AI input-mode
+    // and slash-command paths, so turn both on here. The defaults themselves are
+    // covered by `ai_autodetection_defaults_to_opt_in` in `settings/ai_tests.rs`.
     crate::settings::AISettings::handle(app).update(app, |settings, ctx| {
+        settings.is_any_ai_enabled.set_value(true, ctx).unwrap();
         settings
             .ai_autodetection_enabled_internal
             .set_value(true, ctx)
@@ -359,14 +356,12 @@ pub fn initialize_app(app: &mut App) {
 
     // Add GlobalResourceHandlesProvider for persistence
     let tips_handle = app.add_model(|_| TipsCompleted::default());
-    let referral_theme_status = app.add_model(ReferralThemeStatus::new);
     let user_default_shell_unsupported_banner_model_handle =
         app.add_model(|_| UserDefaultShellUnsupportedBannerState::default_value());
     app.add_singleton_model(move |_ctx| {
         GlobalResourceHandlesProvider::new(GlobalResourceHandles {
             model_event_sender: None, // No persistence in tests
             tips_completed: tips_handle,
-            referral_theme_status,
             user_default_shell_unsupported_banner_model_handle,
             settings_file_error: None,
         })
@@ -383,8 +378,6 @@ pub fn initialize_app(app: &mut App) {
     app.add_singleton_model(OneTimeModalModel::new);
     app.add_singleton_model(|_| WorkspaceRegistry::new());
     app.add_singleton_model(|_| ToastStack);
-    app.add_singleton_model(|_| PricingInfoModel::new());
-    app.add_singleton_model(crate::ai::pricing_promotion::PricingPromotionState::new);
     app.add_singleton_model(ByoLlmAuthBannerSessionState::new);
     app.add_singleton_model(|_| {
         crate::ai::ambient_agents::github_auth_notifier::GitHubAuthNotifier::new()

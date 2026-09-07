@@ -615,11 +615,8 @@ impl AIAssistantPanelView {
     }
 
     fn issue_request(&mut self, request: String, ctx: &mut ViewContext<Self>) {
-        let team_uid = UserWorkspaces::as_ref(ctx)
-            .team_for_view(ctx)
-            .map(|team| team.uid);
         self.requests_model.update(ctx, |requests_model, ctx| {
-            requests_model.issue_request(request, team_uid, ctx);
+            requests_model.issue_request(request, ctx);
         });
         self.transcript_view.update(ctx, |transcript_view, ctx| {
             transcript_view.clear_selected_block(ctx);

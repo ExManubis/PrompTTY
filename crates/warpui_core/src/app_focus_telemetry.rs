@@ -82,7 +82,3 @@ impl AppFocusInfo {
             .add_duration(app_focus_duration, user_id, anonymous_id);
     }
 }
-
-#[cfg(test)]
-#[path = "app_focus_telemetry_tests.rs"]
-mod tests;

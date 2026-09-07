@@ -290,8 +290,6 @@ pub enum FeatureFlag {
     /// Enables reading images with the `read_files` tool.
     ReadImageFiles,
 
-    UsageBasedPricing,
-
     /// Enables cross-repo codebase context.
     CrossRepoContext,
 
@@ -870,8 +868,6 @@ pub enum FeatureFlag {
     /// background refresh loop that keeps them fresh during a task run.
     GitCredentialRefresh,
 
-    /// Gates the v2 billing and usage page redesign.
-    BillingAndUsagePageV2,
     /// Enables configurable expanded context windows for eligible GPT models.
     GPTConfigurableContextWindow,
 
@@ -1034,7 +1030,6 @@ impl FeatureFlag {
                 | FeatureFlag::SessionSharingAcls
                 | FeatureFlag::WarpPacks
                 | FeatureFlag::SharedBlockTitleGeneration
-                | FeatureFlag::UsageBasedPricing
                 | FeatureFlag::DriveObjectsAsContext
                 | FeatureFlag::AgentSharedSessions
                 | FeatureFlag::CloudEnvironments
@@ -1063,7 +1058,6 @@ impl FeatureFlag {
                 | FeatureFlag::HandoffLocalCloud
                 | FeatureFlag::HandoffCloudCloud
                 | FeatureFlag::FactoryMcp
-                | FeatureFlag::BillingAndUsagePageV2
                 | FeatureFlag::CloudRunners
                 | FeatureFlag::CloudAgentRunners
                 | FeatureFlag::WarpifyFooter

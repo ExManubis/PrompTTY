@@ -82,12 +82,10 @@ pub(crate) fn apply_account_first_onboarding_settings(
 
 /// Applies onboarding settings based on the user's selected mode.
 ///
-/// `has_account` indicates whether the user has (or is creating) a real Warp
-/// account. Warp's AI features run on a Warp account, so agent intent only
-/// enables AI when `has_account` is true; skipping login leaves AI off.
+/// Agent-driven development enables local AI from that intent. A Warp account
+/// is not required.
 pub(crate) fn apply_onboarding_settings(
     selected_settings: &SelectedSettings,
-    has_account: bool,
     team_context: TeamContextForOperation,
     app: &mut AppContext,
 ) {
@@ -101,11 +99,7 @@ pub(crate) fn apply_onboarding_settings(
             if let Some(ui) = ui_customization {
                 apply_ui_customization_settings(ui, true, app);
             }
-            // Agent intent means the user wants AI, but Warp's AI features run
-            // on a Warp account, so AI is only enabled once they have one.
-            // Skipping login leaves AI off even for agent intent (including the
-            // bring-your-own-agents `disable_oz` path).
-            has_account
+            true
         }
         SelectedSettings::Terminal {
             ui_customization,

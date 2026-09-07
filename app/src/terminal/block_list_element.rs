@@ -20,8 +20,7 @@ use warpui::elements::new_scrollable::{NewScrollableElement, ScrollableAxis};
 use warpui::elements::{
     Axis, Border, ChildAnchor, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius,
     Hoverable, Icon, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement,
-    ParentOffsetBounds, Point, Radius, SavePosition, ScrollData, ScrollableElement, Stack, Text,
-    ZIndex,
+    ParentOffsetBounds, Point, Radius, ScrollData, ScrollableElement, Stack, Text, ZIndex,
 };
 use warpui::event::{DispatchedEvent, KeyState, ModifiersState};
 use warpui::fonts::{FamilyId, Properties, Weight};

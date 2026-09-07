@@ -96,7 +96,6 @@ pub fn init(app: &mut AppContext) {
     view::auto_handoff_sleep_modal::init(app);
     view::cloud_agent_capacity_modal::init(app);
     view::codex_modal::init(app);
-    view::free_ai_removal_modal::init(app);
     view::global_search::view::GlobalSearchView::init(app);
     view::right_panel::RightPanelView::init(app);
     header_toolbar_editor::init(app);
@@ -171,20 +170,7 @@ pub fn init(app: &mut AppContext) {
         )]);
         #[cfg(debug_assertions)]
         {
-            // Debug actions for build plan migration modal (command palette only)
             app.register_editable_bindings([
-                EditableBinding::new(
-                    "workspace:open_build_plan_migration_modal",
-                    "[Debug] Open Build Plan Migration Modal",
-                    WorkspaceAction::OpenBuildPlanMigrationModal,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:reset_build_plan_migration_modal_state",
-                    "[Debug] Reset Build Plan Migration Modal State",
-                    WorkspaceAction::ResetBuildPlanMigrationModalState,
-                )
-                .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
                     "workspace:debug_reset_aws_bedrock_login_banner_dismissed",
                     "[Debug] Un-dismiss AWS login banner",
@@ -267,18 +253,6 @@ pub fn init(app: &mut AppContext) {
                     "workspace:trigger_auto_handoff_to_cloud",
                     "[Debug] Trigger Auto-Handoff to Cloud",
                     WorkspaceAction::TriggerAutoHandoffToCloud,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:open_free_ai_removal_modal",
-                    "[Debug] Open Free AI Removal Modal",
-                    WorkspaceAction::OpenFreeAiRemovalModal,
-                )
-                .with_context_predicate(id!("Workspace")),
-                EditableBinding::new(
-                    "workspace:reset_free_ai_removal_modal_state",
-                    "[Debug] Reset Free AI Removal Modal State",
-                    WorkspaceAction::ResetFreeAiRemovalModalState,
                 )
                 .with_context_predicate(id!("Workspace")),
                 EditableBinding::new(
@@ -1190,7 +1164,7 @@ pub fn init(app: &mut AppContext) {
                 query: None,
             },
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::SearchDrive),
     ]);
@@ -1222,7 +1196,7 @@ pub fn init(app: &mut AppContext) {
         "Log out",
         WorkspaceAction::LogOut,
     )
-    .with_enabled(|| ChannelState::cloud_enabled())
+    .with_enabled(ChannelState::cloud_enabled)
     .with_group(bindings::BindingGroup::Settings.as_str())
     .with_context_predicate(id!("Workspace") & !id!("IsAnonymousUser"))]);
 
@@ -1232,7 +1206,7 @@ pub fn init(app: &mut AppContext) {
             "Toggle resource center",
             WorkspaceAction::ToggleResourceCenter,
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_group(bindings::BindingGroup::Navigation.as_str())
         .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::ToggleResourceCenter)]);
@@ -1541,15 +1515,6 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_custom_action(CustomAction::ShowSettings),
         EditableBinding::new(
-            "workspace:show_settings_account_page",
-            "Open Settings: Account",
-            WorkspaceAction::ShowSettingsPage(SettingsSection::Account),
-        )
-        .with_enabled(|| ChannelState::cloud_enabled())
-        .with_context_predicate(id!("Workspace"))
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_custom_action(CustomAction::ShowAccount),
-        EditableBinding::new(
             "workspace:show_settings_appearance_page",
             BindingDescription::new("Open Settings: Appearance")
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Appearance..."),
@@ -1571,7 +1536,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "View Shared Blocks..."),
             WorkspaceAction::ShowSettingsPage(SettingsSection::SharedBlocks),
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::ViewSharedBlocks),
@@ -1596,16 +1561,6 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
         .with_context_predicate(id!("Workspace"))
         .with_custom_action(CustomAction::ShowAboutWarp),
         EditableBinding::new(
-            "workspace:show_settings_teams_page",
-            BindingDescription::new("Open Settings: Teams")
-                .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Open Team Settings"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::Teams),
-        )
-        .with_enabled(|| ChannelState::cloud_enabled())
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_custom_action(CustomAction::OpenTeamSettings)
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
             "workspace:show_settings_privacy_page",
             BindingDescription::new("Open Settings: Privacy"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::Privacy),
@@ -1618,7 +1573,7 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
                 .with_custom_description(bindings::MAC_MENUS_CONTEXT, "Configure Warpify..."),
             WorkspaceAction::ShowSettingsPage(SettingsSection::Warpify),
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
@@ -1630,14 +1585,6 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
-            "workspace:show_settings_billing_and_usage_page",
-            BindingDescription::new("Open Settings: Billing and usage"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::BillingAndUsage),
-        )
-        .with_enabled(|| ChannelState::cloud_enabled())
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
             "workspace:show_settings_code_page",
             BindingDescription::new("Open Settings: Code"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::CodeIndexing),
@@ -1645,19 +1592,11 @@ fn add_open_setting_pages_as_editable_binding(app: &mut AppContext) {
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
-            "workspace:show_settings_referrals_page",
-            BindingDescription::new("Open Settings: Referrals"),
-            WorkspaceAction::ShowSettingsPage(SettingsSection::Referrals),
-        )
-        .with_enabled(|| ChannelState::cloud_enabled())
-        .with_group(bindings::BindingGroup::Settings.as_str())
-        .with_context_predicate(id!("Workspace")),
-        EditableBinding::new(
             "workspace:show_settings_environments_page",
             BindingDescription::new("Open Settings: Environments"),
             WorkspaceAction::ShowSettingsPage(SettingsSection::CloudEnvironments),
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_group(bindings::BindingGroup::Settings.as_str())
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
@@ -1684,33 +1623,25 @@ fn add_overflow_menu_items_as_editable_binding(app: &mut AppContext) {
     // Add the ability to open all overflow menu items to the command palette.
     app.register_editable_bindings([
         EditableBinding::new(
-            "workspace:show_invite_modal",
-            "Invite People...",
-            WorkspaceAction::ShowReferralSettingsPage,
-        )
-        .with_enabled(|| ChannelState::cloud_enabled())
-        .with_context_predicate(id!("Workspace"))
-        .with_custom_action(CustomAction::ReferAFriend),
-        EditableBinding::new(
             "workspace:link_to_slack",
             "Join our Slack community (opens external link)",
             WorkspaceAction::JoinSlack,
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
             "workspace:link_to_user_docs",
             "View user docs (opens external link)",
             WorkspaceAction::ViewUserDocs,
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_context_predicate(id!("Workspace")),
         EditableBinding::new(
             "workspace:send_feedback",
             BindingDescription::new("Send feedback (opens external link)"),
             WorkspaceAction::SendFeedback,
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_context_predicate(id!("Workspace")),
         #[cfg(not(target_family = "wasm"))]
         EditableBinding::new(
@@ -1724,7 +1655,7 @@ fn add_overflow_menu_items_as_editable_binding(app: &mut AppContext) {
             "View privacy policy (opens external link)",
             WorkspaceAction::ViewPrivacyPolicy,
         )
-        .with_enabled(|| ChannelState::cloud_enabled())
+        .with_enabled(ChannelState::cloud_enabled)
         .with_context_predicate(id!("Workspace")),
     ]);
 }

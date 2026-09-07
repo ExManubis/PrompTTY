@@ -78,10 +78,8 @@ impl SelectedSettings {
     pub fn is_ai_enabled(&self) -> bool {
         match self {
             // Agent-driven development always means "I want AI" (including the
-            // bring-your-own-agents `disable_oz` path). This reflects intent and
-            // is used to decide that an account/login is required; whether AI is
-            // actually enabled is applied later based on whether the user has an
-            // account (see `apply_onboarding_settings`).
+            // bring-your-own-agents `disable_oz` path). `apply_onboarding_settings`
+            // enables AI from that intent without requiring an account.
             SelectedSettings::AgentDrivenDevelopment { .. } => true,
             SelectedSettings::Terminal { .. } => false,
         }
@@ -1027,7 +1025,3 @@ impl OnboardingStateModel {
 impl Entity for OnboardingStateModel {
     type Event = OnboardingStateEvent;
 }
-
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;

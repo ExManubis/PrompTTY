@@ -7,6 +7,25 @@ pub fn initialize_settings_for_tests(app: &mut App) {
     initialize_settings_for_tests_with_mode(app, ExecutionMode::App, false);
 }
 
+/// Turns Warp Agent on for tests that exercise AI-gated behavior.
+///
+/// The product default is off until a local LLM client exists. Feature tests
+/// still go through the normal app helpers and expect AI to be available.
+#[cfg(test)]
+pub fn enable_ai_for_tests(app: &mut App) {
+    use settings::Setting as _;
+    use warpui::SingletonEntity as _;
+
+    use crate::settings::AISettings;
+
+    AISettings::handle(app).update(app, |settings, ctx| {
+        settings
+            .is_any_ai_enabled
+            .set_value(true, ctx)
+            .expect("enabling AI in tests should succeed");
+    });
+}
+
 #[cfg(test)]
 pub fn initialize_history_persistence_for_tests(app: &mut App) {
     use crate::{GlobalResourceHandles, GlobalResourceHandlesProvider};

@@ -659,6 +659,7 @@ impl TuiSessions {
     }
 
     /// Removes every retained session without focusing an intermediate fallback.
+    #[cfg(test)]
     pub(crate) fn clear(&mut self, ctx: &mut ModelContext<Self>) {
         let removed_ids = self
             .sessions

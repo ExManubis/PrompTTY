@@ -70,7 +70,6 @@ use crate::network::NetworkStatus;
 use crate::notebooks::editor::keys::NotebookKeybindings;
 use crate::notebooks::manager::NotebookManager;
 use crate::notebooks::notebook::NotebookView;
-use crate::pricing::PricingInfoModel;
 use crate::resource_center::TipsCompleted;
 use crate::search::files::model::FileSearchModel;
 use crate::server::cloud_objects::listener::Listener;
@@ -219,8 +218,6 @@ fn initialize_app_with_history(app: &mut App, conversations: Vec<AgentConversati
     app.add_singleton_model(|_| WorkspaceRegistry::new());
     app.add_singleton_model(UndoCloseStack::new);
     app.add_singleton_model(|_| IgnoredSuggestionsModel::new(vec![]));
-    app.add_singleton_model(|_| PricingInfoModel::new());
-    app.add_singleton_model(crate::ai::pricing_promotion::PricingPromotionState::new);
     app.add_singleton_model(AIDocumentModel::new);
     app.add_singleton_model(|_| History::new(vec![]));
     app.add_singleton_model(|_| GitHubAuthNotifier::new());
@@ -3175,11 +3172,12 @@ fn test_initial_widths_are_computed_correctly() {
         let pane_group_width = window_width - 2.0 * workspace::WORKSPACE_PADDING;
         let pane_group_height =
             window_height - workspace::TOTAL_TAB_BAR_HEIGHT - 2.0 * workspace::WORKSPACE_PADDING;
-        let pane_card_inset = 2.0 * super::pane::view::PANE_CARD_PADDING;
 
         pane_group.read(&app, |pane_group, ctx| {
             // Make assertions about the expected widths of the various
-            // panes.
+            // panes. Initial `size_info` comes from `estimated_view_bounds`,
+            // which subtracts workspace padding and the tab bar but not the
+            // rendered card chrome.
             assert_eq!(
                 pane_group
                     .terminal_view_at_pane_index(0, ctx)
@@ -3188,7 +3186,7 @@ fn test_initial_widths_are_computed_correctly() {
                     .size_info()
                     .pane_width_px()
                     .as_f32(),
-                pane_group_width - pane_card_inset,
+                pane_group_width,
                 "Pane with index 0 had unexpected width!"
             );
             let half_width = (pane_group_width - tree::get_divider_thickness()) / 2.;
@@ -3201,7 +3199,7 @@ fn test_initial_widths_are_computed_correctly() {
                         .size_info()
                         .pane_width_px()
                         .as_f32(),
-                    half_width - pane_card_inset,
+                    half_width,
                     "Pane with index {i} had unexpected width!"
                 );
             }
@@ -3215,7 +3213,7 @@ fn test_initial_widths_are_computed_correctly() {
                         .size_info()
                         .pane_width_px()
                         .as_f32(),
-                    one_third_width - pane_card_inset,
+                    one_third_width,
                     "Pane with index {i} had unexpected width!"
                 );
             }
@@ -3232,7 +3230,7 @@ fn test_initial_widths_are_computed_correctly() {
                         .size_info()
                         .pane_height_px()
                         .as_f32(),
-                    one_third_height - pane_card_inset,
+                    one_third_height,
                     "Pane with index {i} had unexpected height!"
                 );
             }
@@ -3246,7 +3244,7 @@ fn test_initial_widths_are_computed_correctly() {
                         .size_info()
                         .pane_height_px()
                         .as_f32(),
-                    one_sixth_height - pane_card_inset,
+                    one_sixth_height,
                     "Pane with index {i} had unexpected height!"
                 );
             }

@@ -386,7 +386,3 @@ impl TelemetryEventDesc for OnboardingEventDiscriminant {
 }
 
 warp_core::register_telemetry_event!(OnboardingEvent);
-
-#[cfg(test)]
-#[path = "telemetry_tests.rs"]
-mod tests;

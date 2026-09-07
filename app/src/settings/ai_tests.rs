@@ -533,6 +533,7 @@ fn orchestration_is_enabled_when_ai_is_enabled() {
     App::test((), |mut app| async move {
         initialize_settings_for_tests(&mut app);
         add_ai_enablement_dependencies_for_test(&mut app);
+        crate::test_util::settings::enable_ai_for_tests(&mut app);
 
         AISettings::handle(&app).read(&app, |settings, ctx| {
             assert!(settings.is_orchestration_enabled(ctx));
@@ -984,10 +985,30 @@ fn ai_autodetection_defaults_to_opt_in() {
             // NLD is opt-in: a fresh user who never touched the setting has it off.
             // This fails before the default flip (default was `true`) and passes after.
             assert!(!*settings.ai_autodetection_enabled_internal.value());
-            // AI is enabled by default, so the getter reflects the opt-in setting
-            // rather than a disabled-AI state.
-            assert!(settings.is_any_ai_enabled(ctx));
+            // Warp Agent is off by default until a local LLM client exists.
+            assert!(!settings.is_any_ai_enabled(ctx));
             assert!(!settings.is_ai_autodetection_enabled(ctx));
+        });
+    });
+}
+
+#[test]
+fn is_any_ai_enabled_respects_the_stored_toggle_when_logged_out() {
+    App::test((), |mut app| async move {
+        initialize_settings_for_tests(&mut app);
+        app.add_singleton_model(|_| AuthStateProvider::new_logged_out_for_test());
+        app.add_singleton_model(UserWorkspaces::default_mock);
+
+        AISettings::handle(&app).read(&app, |settings, ctx| {
+            assert!(!settings.is_any_ai_enabled(ctx));
+        });
+
+        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+            settings.is_any_ai_enabled.set_value(true, ctx).unwrap();
+        });
+
+        AISettings::handle(&app).read(&app, |settings, ctx| {
+            assert!(settings.is_any_ai_enabled(ctx));
         });
     });
 }
@@ -997,6 +1018,11 @@ fn ai_autodetection_setting_can_be_toggled_on_and_off() {
     App::test((), |mut app| async move {
         initialize_settings_for_tests(&mut app);
         add_ai_enablement_dependencies_for_test(&mut app);
+
+        // The autodetection getter is gated on Warp Agent being on.
+        AISettings::handle(&app).update(&mut app, |settings, ctx| {
+            settings.is_any_ai_enabled.set_value(true, ctx).unwrap();
+        });
 
         // Mirrors what `/enable-natural-language-detection` does in the TUI.
         AISettings::handle(&app).update(&mut app, |settings, ctx| {

@@ -109,7 +109,3 @@ pub struct TaskGitCredential {
     pub email: Option<String>,
     pub host: String,
 }
-
-#[cfg(test)]
-#[path = "task_git_credentials_tests.rs"]
-mod tests;

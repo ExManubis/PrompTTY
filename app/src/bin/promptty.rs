@@ -47,7 +47,7 @@ embed_plist::embed_info_plist_bytes!(r#"
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>UIDesignRequiresCompatibility</key>
-    <true/>
+    <false/>
     <key>CFBundleURLTypes</key>
     <array><dict><key>CFBundleURLName</key><string>Custom App</string><key>CFBundleURLSchemes</key><array><string>promptty</string></array></dict></array>
     <key>NSHumanReadableCopyright</key>

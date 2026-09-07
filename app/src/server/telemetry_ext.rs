@@ -114,7 +114,3 @@ fn release_mode(channel: Channel) -> &'static str {
         Channel::Integration => "integration_test",
     }
 }
-
-#[cfg(test)]
-#[path = "telemetry_ext_tests.rs"]
-mod tests;

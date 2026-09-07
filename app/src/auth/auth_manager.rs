@@ -878,18 +878,6 @@ impl AuthManager {
         )
     }
 
-    /// The upgrade confirmation page will kick the user back to the app with a refresh token
-    /// if we send a `state` query param to /upgrade
-    pub fn upgrade_url(&mut self) -> String {
-        let state = self.generate_auth_state();
-        format!(
-            "{}/upgrade?scheme={}&state={}",
-            ChannelState::server_root_url(),
-            ChannelState::url_scheme(),
-            state,
-        )
-    }
-
     pub fn login_options_url(&mut self, custom_token: &str) -> String {
         let state = self.generate_auth_state();
         format!(
@@ -966,7 +954,3 @@ impl Entity for AuthManager {
 }
 
 impl SingletonEntity for AuthManager {}
-
-#[cfg(test)]
-#[path = "auth_manager_tests.rs"]
-mod auth_manager_test;

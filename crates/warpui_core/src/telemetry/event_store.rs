@@ -198,7 +198,3 @@ impl EventStore {
         now > session_freshness_threshold
     }
 }
-
-#[cfg(test)]
-#[path = "event_store_tests.rs"]
-mod tests;

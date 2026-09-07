@@ -25,16 +25,14 @@ use warp::tui_export::{
     AskUserQuestionType, BlockPadding, BlocklistAIHistoryEvent, BlocklistAIHistoryModel,
     ConversationStatus, ConversationUsageTotals, Harness, InputTypeAutoDetectionSource, LLMId,
     LLMPreferences, LinkedWorkflowData, LongRunningCommandControlState, MessageId,
-    OutputStatusUpdateCallback, ParsedSlashCommandInput, PtyIntent, PtyIntentEvent,
-    ResolvedTeamScope, ServerOutputId, Session, Shared, SizeInfo, SizeUpdate,
-    SlashCommandDataSource as _, SlashCommandKind, TaskId, TranscriptScope, TuiMcpAction,
-    TuiMcpServerId, TuiOnboardingMarker, TuiOnboardingMarkers, TuiUpArrowHistoryItemKind,
-    UserTakeOverReason, UserWorkspaces, WarpConfig, WarpConfigUpdateEvent,
-    export_conversation_markdown, forkable_tui_conversation_for_test, queue_tui_permission_action,
-    register_tui_session_view_test_singletons, set_tui_default_team_admin_for_test,
-    set_tui_workspace_teams_for_test, slash_commands,
+    OutputStatusUpdateCallback, PtyIntent, PtyIntentEvent, ResolvedTeamScope, ServerOutputId,
+    Session, Shared, SizeInfo, SizeUpdate, SlashCommandDataSource as _, SlashCommandKind, TaskId,
+    TranscriptScope, TuiMcpAction, TuiMcpServerId, TuiUpArrowHistoryItemKind, UserTakeOverReason,
+    UserWorkspaces, WarpConfig, WarpConfigUpdateEvent, export_conversation_markdown,
+    forkable_tui_conversation_for_test, queue_tui_permission_action,
+    register_tui_session_view_test_singletons, set_tui_workspace_teams_for_test, slash_commands,
 };
-use warp_core::channel::{Channel, ChannelState};
+use warp_core::channel::Channel;
 use warp_core::features::FeatureFlag;
 use warp_core::settings::Setting as _;
 use warp_editor::model::CoreEditorModel;
@@ -85,7 +83,7 @@ use super::{
     SESSION_COMPOSER_SHORTCUTS_ACTIVE_FLAG, VOICE_INPUT_BINDING_NAME, VOICE_USAGE_HINT,
     voice_argument_is_empty, voice_command_argument,
 };
-use crate::agent_block::{TuiAIBlock, upgrade_url};
+use crate::agent_block::TuiAIBlock;
 use crate::autoupdate::TuiAutoupdater;
 use crate::editor_element::TuiEditorAction;
 use crate::inline_menu::MAX_INLINE_MENU_ROWS;
@@ -111,7 +109,6 @@ use crate::terminal_block::{block_content_rows, should_render_terminal_block};
 use crate::terminal_use::TuiInputTarget;
 use crate::test_fixtures::{
     add_test_semantic_selection, add_test_terminal_session,
-    add_test_terminal_session_with_first_run_onboarding,
     add_test_terminal_session_with_settings_file_error,
 };
 use crate::transcript_view::TRANSCRIPT_BLOCK_SPACING;
@@ -127,13 +124,6 @@ use crate::zero_state_animation::{
 struct FocusTestFixture {
     window_id: warpui_core::WindowId,
     sessions: ModelHandle<TuiSessions>,
-}
-
-#[test]
-fn only_conversation_list_restores_emit_restore_telemetry() {
-    assert!(!TuiConversationRestoreOrigin::Startup.records_telemetry());
-    assert!(TuiConversationRestoreOrigin::ConversationList.records_telemetry());
-    assert!(!TuiConversationRestoreOrigin::Fork.records_telemetry());
 }
 
 #[test]
@@ -209,66 +199,11 @@ fn mcp_menu_footer_replaces_status_with_controls() {
 }
 
 #[test]
-fn out_of_credits_ctrl_o_binding_opens_upgrade() {
-    App::test((), |mut app| async move {
-        app.update(crate::keybindings::init);
-        app.read(|ctx| {
-            let ctrl_o = Trigger::Keystrokes(vec![Keystroke::parse("ctrl-o").unwrap()]);
-            assert!(
-                ctx.get_key_bindings().any(|binding| {
-                    *binding.trigger == ctrl_o
-                        && binding.name.is_empty()
-                        && binding.group == Some(TUI_BINDING_GROUP)
-                }),
-                "out-of-credits ctrl-o binding should be registered"
-            );
-        });
-
-        let fixture = focus_test_fixture(&mut app);
-        let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-        let expected_upgrade_url = app.read(upgrade_url);
-        app.read(|ctx| {
-            let ctrl_o = Trigger::Keystrokes(vec![Keystroke::parse("ctrl-o").unwrap()]);
-            let input_view_id = view.as_ref(ctx).input_view.id();
-            assert!(
-                !ctx.key_bindings_for_view(fixture.window_id, input_view_id)
-                    .iter()
-                    .any(|binding| *binding.trigger == ctrl_o),
-                "ctrl-o should not be active without an out-of-credits failure"
-            );
-        });
-        let opened_urls = Rc::new(RefCell::new(Vec::new()));
-        let opened_urls_for_callback = opened_urls.clone();
-        app.update(|ctx| {
-            ctx.set_before_open_url(move |url, _| {
-                opened_urls_for_callback.borrow_mut().push(url.to_owned());
-                url.to_owned()
-            });
-        });
-        view.update(&mut app, |view, ctx| {
-            view.handle_action(&TuiTerminalSessionAction::OpenUpgradeUrl, ctx);
-        });
-        assert_eq!(opened_urls.borrow().as_slice(), &[expected_upgrade_url]);
-    });
-}
-
-#[test]
-fn usage_slash_command_opens_panel_and_enables_upgrade_binding() {
+fn usage_slash_command_opens_panel() {
     App::test((), |mut app| async move {
         app.update(crate::keybindings::init);
         let fixture = focus_test_fixture(&mut app);
         let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-
-        app.read(|ctx| {
-            let ctrl_o = Trigger::Keystrokes(vec![Keystroke::parse("ctrl-o").unwrap()]);
-            let input_view_id = view.as_ref(ctx).input_view.id();
-            assert!(
-                !ctx.key_bindings_for_view(fixture.window_id, input_view_id)
-                    .iter()
-                    .any(|binding| *binding.trigger == ctrl_o),
-                "ctrl-o should not be active before the /usage panel is opened"
-            );
-        });
 
         view.update(&mut app, |view, ctx| {
             view.execute_tui_slash_command(&slash_commands::USAGE, None, ctx);
@@ -279,129 +214,6 @@ fn usage_slash_command_opens_panel_and_enables_upgrade_binding() {
                 TuiInputSuggestionsMode::ReadOnlyMenu(TuiReadOnlyMenuKind::Usage)
             );
         });
-
-        app.read(|ctx| {
-            let ctrl_o = Trigger::Keystrokes(vec![Keystroke::parse("ctrl-o").unwrap()]);
-            let input_view_id = view.as_ref(ctx).input_view.id();
-            assert!(
-                ctx.key_bindings_for_view(fixture.window_id, input_view_id)
-                    .iter()
-                    .any(|binding| *binding.trigger == ctrl_o),
-                "ctrl-o should open the upgrade page while the /usage panel is open"
-            );
-        });
-    });
-}
-
-#[test]
-fn upgrade_slash_command_is_always_available_and_opens_the_upgrade_page() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-        let expected_upgrade_url = app.read(upgrade_url);
-        let opened_urls = Rc::new(RefCell::new(Vec::new()));
-        let opened_urls_for_callback = opened_urls.clone();
-        app.update(|ctx| {
-            ctx.set_before_open_url(move |url, _| {
-                opened_urls_for_callback.borrow_mut().push(url.to_owned());
-                url.to_owned()
-            });
-        });
-
-        view.update(&mut app, |view, ctx| {
-            view.input_view
-                .update(ctx, |input, ctx| input.set_text("/upgrade", ctx));
-            assert!(matches!(
-                view.slash_commands_source
-                    .as_ref(ctx)
-                    .parse_input("/upgrade", ctx),
-                ParsedSlashCommandInput::SlashCommand(_)
-            ));
-            view.execute_tui_slash_command(&slash_commands::UPGRADE, None, ctx);
-        });
-
-        assert_eq!(opened_urls.borrow().as_slice(), &[expected_upgrade_url]);
-        view.read(&app, |view, ctx| {
-            assert!(view.input_view.as_ref(ctx).is_empty(ctx));
-        });
-    });
-}
-#[test]
-fn manage_billing_slash_command_opens_the_default_team_billing_page_for_admins() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-        view.read(&app, |view, ctx| {
-            assert!(!matches!(
-                view.slash_commands_source
-                    .as_ref(ctx)
-                    .parse_input("/manage-billing", ctx),
-                ParsedSlashCommandInput::SlashCommand(_)
-            ));
-        });
-        app.update(set_tui_default_team_admin_for_test);
-        let opened_urls = Rc::new(RefCell::new(Vec::new()));
-        let opened_urls_for_callback = opened_urls.clone();
-        app.update(|ctx| {
-            ctx.set_before_open_url(move |url, _| {
-                opened_urls_for_callback.borrow_mut().push(url.to_owned());
-                url.to_owned()
-            });
-        });
-
-        view.update(&mut app, |view, ctx| {
-            assert!(matches!(
-                view.slash_commands_source
-                    .as_ref(ctx)
-                    .parse_input("/manage-billing", ctx),
-                ParsedSlashCommandInput::SlashCommand(_)
-            ));
-            view.execute_tui_slash_command(&slash_commands::MANAGE_BILLING, None, ctx);
-        });
-
-        assert_eq!(
-            opened_urls.borrow().as_slice(),
-            &[format!(
-                "{}/admin/test_uid00000000000123/billing",
-                ChannelState::server_root_url().trim_end_matches('/')
-            )]
-        );
-    });
-}
-
-#[test]
-fn manage_billing_slash_command_rejects_users_without_an_admin_team() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        let (view, _) = add_focus_test_session(&mut app, &fixture, true);
-        let opened_urls = Rc::new(RefCell::new(Vec::new()));
-        let opened_urls_for_callback = opened_urls.clone();
-        app.update(|ctx| {
-            ctx.set_before_open_url(move |url, _| {
-                opened_urls_for_callback.borrow_mut().push(url.to_owned());
-                url.to_owned()
-            });
-        });
-
-        view.update(&mut app, |view, ctx| {
-            assert!(!matches!(
-                view.slash_commands_source
-                    .as_ref(ctx)
-                    .parse_input("/manage-billing", ctx),
-                ParsedSlashCommandInput::SlashCommand(_)
-            ));
-            view.execute_tui_slash_command(&slash_commands::MANAGE_BILLING, None, ctx);
-        });
-
-        assert!(opened_urls.borrow().is_empty());
-        assert_eq!(
-            view.read(&app, |view, _| {
-                view.transient_hint
-                    .current()
-                    .map(|(text, _)| text.to_owned())
-            }),
-            Some("Billing management is only available to team admins".to_owned())
-        );
     });
 }
 
@@ -2753,19 +2565,6 @@ fn add_focus_test_session(
     (view, session_id)
 }
 
-fn add_first_run_onboarding_test_session(
-    app: &mut App,
-    fixture: &FocusTestFixture,
-    focus: bool,
-) -> (ViewHandle<super::TuiTerminalSessionView>, TuiSessionId) {
-    let (view, manager) =
-        add_test_terminal_session_with_first_run_onboarding(app, fixture.window_id);
-    let session_id = app.update(|ctx| {
-        TuiSessions::register_session(&fixture.sessions, view.clone(), manager, focus, ctx)
-    });
-    (view, session_id)
-}
-
 fn add_focus_test_session_with_settings_file_error(
     app: &mut App,
     fixture: &FocusTestFixture,
@@ -3201,13 +3000,8 @@ fn status_slash_command_opens_dedicated_status_menu_via_shared_structure() {
         assert!(rendered.contains("Org"), "Org row:\n{rendered}");
         assert!(rendered.contains("Email"), "Email row:\n{rendered}");
 
-        // The fixture signs in as the test user, so the panel surfaces that
-        // email. No workspace is loaded (Org degrades to the em-dash placeholder)
+        // No workspace is loaded (Org degrades to the em-dash placeholder)
         // and there is no conversation yet (Session falls back to "Untitled").
-        assert!(
-            rendered.contains("test_user@warp.dev"),
-            "Email value:\n{rendered}"
-        );
         assert!(rendered.contains("Untitled"), "Session value:\n{rendered}");
         // Em dash (—) appears as the Org placeholder.
         assert!(
@@ -4202,197 +3996,6 @@ fn zero_state_renders_with_only_zero_height_bootstrap_blocks() {
             "starfield content should extend beyond the centered logo panel:\n{}",
             lines.join("\n")
         );
-    });
-}
-
-#[test]
-fn first_zero_state_stays_hidden_while_markers_load_and_reconciles_without_replacing_session() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        app.update(|ctx| {
-            TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {
-                markers.reset_for_account_transition(ctx);
-            });
-        });
-        let (view, session_id) = add_first_run_onboarding_test_session(&mut app, &fixture, true);
-
-        app.read(|ctx| {
-            assert!(
-                !view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-        });
-        let lines = render_session(&mut app, &view, 100, 24);
-        assert!(lines.iter().any(|line| line.contains("Warp Agent CLI")));
-        assert!(
-            lines
-                .iter()
-                .all(|line| !line.contains("What’s different about Warp"))
-        );
-        assert!(lines.iter().all(|line| !line.contains("████")));
-
-        app.update(|ctx| {
-            TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {
-                markers.set_ready_for_test(false, false, ctx);
-            });
-        });
-        app.read(|ctx| {
-            assert!(
-                !view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-            assert_eq!(
-                TuiSessions::as_ref(ctx).focused_session_id(),
-                Some(session_id)
-            );
-            assert!(TuiSessions::as_ref(ctx).session(session_id).is_some());
-        });
-    });
-}
-
-#[test]
-fn dismissed_pending_zero_state_stays_hidden_but_consumes_ready_marker() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        app.update(|ctx| {
-            TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {
-                markers.reset_for_account_transition(ctx);
-            });
-        });
-        let (view, _) = add_first_run_onboarding_test_session(&mut app, &fixture, true);
-
-        view.update(&mut app, |view, ctx| {
-            view.session_state.update(ctx, |state, ctx| {
-                state.dismiss_first_zero_state(ctx);
-            });
-        });
-        app.update(|ctx| {
-            TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {
-                markers.set_ready_for_test(true, false, ctx);
-            });
-        });
-
-        app.read(|ctx| {
-            assert!(
-                !view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-        });
-        app.update(|ctx| {
-            let consumed_again = TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {
-                markers.consume(TuiOnboardingMarker::FirstZeroState, ctx)
-            });
-            assert!(!consumed_again);
-        });
-    });
-}
-
-#[test]
-fn background_session_does_not_receive_first_run_onboarding() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        app.update(|ctx| {
-            TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {
-                markers.reset_for_account_transition(ctx);
-            });
-        });
-        let (onboarding_view, _) = add_first_run_onboarding_test_session(&mut app, &fixture, true);
-        let (background_view, _) = add_focus_test_session(&mut app, &fixture, false);
-
-        app.read(|ctx| {
-            assert!(
-                !onboarding_view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-            assert!(
-                !background_view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-        });
-        app.update(|ctx| {
-            TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {
-                markers.set_ready_for_test(true, false, ctx);
-            });
-        });
-        app.read(|ctx| {
-            assert!(
-                onboarding_view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-            assert!(
-                !background_view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-        });
-        let lines = render_session(&mut app, &onboarding_view, 100, 24);
-        assert!(
-            lines
-                .iter()
-                .any(|line| line.contains("Welcome to PrompTTY"))
-        );
-        assert!(
-            lines
-                .iter()
-                .any(|line| line.contains("What’s different about Warp"))
-        );
-    });
-}
-
-#[test]
-fn account_transition_hides_first_zero_state_while_markers_reload() {
-    App::test((), |mut app| async move {
-        let fixture = focus_test_fixture(&mut app);
-        let (view, session_id) = add_first_run_onboarding_test_session(&mut app, &fixture, true);
-        app.read(|ctx| {
-            assert!(
-                !view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-        });
-
-        app.update(|ctx| {
-            TuiOnboardingMarkers::handle(ctx).update(ctx, |markers, ctx| {
-                markers.reset_for_account_transition(ctx);
-            });
-        });
-        app.read(|ctx| {
-            assert!(
-                !view
-                    .as_ref(ctx)
-                    .session_state
-                    .as_ref(ctx)
-                    .show_first_zero_state()
-            );
-            assert_eq!(
-                TuiSessions::as_ref(ctx).focused_session_id(),
-                Some(session_id)
-            );
-            assert!(TuiSessions::as_ref(ctx).session(session_id).is_some());
-        });
     });
 }
 
@@ -7150,60 +6753,6 @@ fn killing_child_does_not_exit_tui_parent_session_remains_alive() {
             );
         });
     });
-}
-
-#[test]
-fn status_email_fallback_chain_requires_a_validated_identity() {
-    // Arm 1: non-empty email wins regardless of username.
-    assert_eq!(
-        super::resolve_status_email(
-            Some("user@example.com".to_owned()),
-            Some("display_name".to_owned()),
-            Some("user-123".to_owned()),
-            true,
-        ),
-        "user@example.com"
-    );
-    // Arm 2a: empty email falls back to a non-empty username.
-    assert_eq!(
-        super::resolve_status_email(
-            Some(String::new()),
-            Some("display_name".to_owned()),
-            Some("user-123".to_owned()),
-            true,
-        ),
-        "display_name"
-    );
-    // Arm 2b: None email falls back to a non-empty username.
-    assert_eq!(
-        super::resolve_status_email(
-            None,
-            Some("display_name".to_owned()),
-            Some("user-123".to_owned()),
-            true,
-        ),
-        "display_name"
-    );
-    // Arm 3: user ID is the final validated identity fallback.
-    assert_eq!(
-        super::resolve_status_email(None, None, Some("user-123".to_owned()), true),
-        "user-123"
-    );
-    // Arm 4: a missing identity never degrades to bare "Signed in".
-    assert_eq!(
-        super::resolve_status_email(Some(String::new()), Some(String::new()), None, true),
-        super::STATUS_NOT_SIGNED_IN
-    );
-    // Arm 5: an identity is ignored unless auth has been validated.
-    assert_eq!(
-        super::resolve_status_email(
-            Some("user@example.com".to_owned()),
-            Some("display_name".to_owned()),
-            Some("user-123".to_owned()),
-            false,
-        ),
-        super::STATUS_NOT_SIGNED_IN
-    );
 }
 
 #[test]

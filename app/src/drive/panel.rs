@@ -30,7 +30,7 @@ use crate::env_vars::manager::EnvVarCollectionSource;
 use crate::notebooks::CloudNotebook;
 use crate::notebooks::manager::NotebookSource;
 use crate::server::cloud_objects::update_manager::{InitiatedBy, UpdateManager};
-use crate::server::ids::{ClientId, ServerId, SyncId};
+use crate::server::ids::{ClientId, SyncId};
 use crate::server::telemetry::SharingDialogSource;
 use crate::workflows::manager::WorkflowOpenSource;
 use crate::workflows::{CloudWorkflow, WorkflowViewMode};
@@ -71,8 +71,6 @@ pub enum DrivePanelEvent {
         in_subshell: bool,
     },
     OpenSearch,
-    OpenSharedObjectsCreationDeniedModal(DriveObjectType, ServerId),
-    OpenTeamSettingsPage,
     OpenAIFactCollection,
     OpenMCPServerCollection,
     OpenImportModal {
@@ -297,9 +295,6 @@ impl DrivePanel {
             DriveIndexEvent::ExportObject(_cloud_object_type_and_id) => {
                 // No-op when no local filesystem.
             }
-            DriveIndexEvent::OpenTeamSettingsPage => {
-                ctx.emit(DrivePanelEvent::OpenTeamSettingsPage)
-            }
             DriveIndexEvent::RunObject(id) => {
                 let cloud_model = CloudModel::as_ref(ctx);
                 let object = cloud_model.get_by_uid(&id.uid());
@@ -321,11 +316,6 @@ impl DrivePanel {
                 self.open_workflow_modal_with_existing(*workflow_id, ctx)
             }
             DriveIndexEvent::FocusWarpDrive => ctx.emit(DrivePanelEvent::FocusWarpDrive),
-            DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(object_type, team_uid) => ctx
-                .emit(DrivePanelEvent::OpenSharedObjectsCreationDeniedModal(
-                    *object_type,
-                    *team_uid,
-                )),
             DriveIndexEvent::InvokeEnvVarCollectionInSubshell(id) => {
                 let cloud_model = CloudModel::as_ref(ctx);
                 let object = cloud_model.get_by_uid(&id.uid());
@@ -389,12 +379,6 @@ impl DrivePanel {
                             {
                                 // If team has reached the limit for notebooks, show the modal
                                 // and return early.
-                                ctx.emit(DrivePanelEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Notebook {
-                                        is_ai_document: false,
-                                    },
-                                    team_uid,
-                                ));
                                 return;
                             }
                         }
@@ -403,10 +387,6 @@ impl DrivePanel {
                             {
                                 // If team has reached the limit for workflows, show the modal
                                 // and return early.
-                                ctx.emit(DrivePanelEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Workflow,
-                                    team_uid,
-                                ));
                                 return;
                             }
                         }
@@ -752,7 +732,3 @@ pub(crate) mod styles {
     /// Right padding between the search button and the close button.
     pub const SEARCH_BUTTON_PADDING_RIGHT: f32 = 4.;
 }
-
-#[cfg(test)]
-#[path = "panel_tests.rs"]
-mod tests;

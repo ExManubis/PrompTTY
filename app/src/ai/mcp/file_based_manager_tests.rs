@@ -35,6 +35,12 @@ fn setup_app(app: &mut App) -> warpui::ModelHandle<FileBasedMCPManager> {
     app.add_singleton_model(|_| AuthStateProvider::new_for_test());
     app.add_singleton_model(UserWorkspaces::default_mock);
     app.add_singleton_model(FocusedTerminalInfo::new);
+    AISettings::handle(app).update(app, |settings, ctx| {
+        settings
+            .is_any_ai_enabled
+            .load_value(true, true, ctx)
+            .expect("load_value should succeed in tests");
+    });
     app.add_singleton_model(FileBasedMCPManager::new)
 }
 

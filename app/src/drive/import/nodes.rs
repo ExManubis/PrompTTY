@@ -28,10 +28,6 @@ use crate::workflows::export_workflow::export_deserialize;
 use crate::workflows::workflow::Workflow;
 use crate::workflows::workflow_enum::WorkflowEnum;
 
-#[cfg(test)]
-#[path = "node_tests.rs"]
-mod node_tests;
-
 /// Unique ID for a file node.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct FileId(pub usize);

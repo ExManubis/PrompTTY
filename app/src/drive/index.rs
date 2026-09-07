@@ -213,7 +213,6 @@ struct DriveIndexSectionState {
     header_hover_state: MouseStateHandle,
     collapsible_hover_state: MouseStateHandle,
     create_menu_mouse_state_handle: MouseStateHandle,
-    add_teammates_mouse_state: MouseStateHandle,
     empty_trash_mouse_state: MouseStateHandle,
 }
 
@@ -312,7 +311,6 @@ pub enum DriveIndexAction {
     },
     ClearDropTarget,
     ToggleSectionCollapsed(DriveIndexSection),
-    OpenTeamSettingsPage,
     RunObject(CloudObjectTypeAndId),
     OpenWorkflowModalWithNew {
         space: Space,
@@ -362,12 +360,6 @@ pub enum DriveIndexAction {
     EscapeKey,
     /// Hitting cmd+enter on a WD item toggles the context menu.
     ToggleDriveItemContextMenu,
-    ViewPlans {
-        team_uid: ServerId,
-    },
-    ManageBilling {
-        team_uid: ServerId,
-    },
     SignupAnonymousUser,
     DismissPersonalObjectLimits,
     /// Dismiss (and remember dismissing) the shared object limit banner shown
@@ -412,23 +404,13 @@ impl DriveIndexAction {
     }
 
     pub fn blocked_for_anonymous_user(&self) -> bool {
-        use DriveIndexAction::*;
-        matches!(
-            self,
-            OpenTeamSettingsPage | ViewPlans { .. } | ManageBilling { .. }
-        )
+        false
     }
 }
 
 impl From<&DriveIndexAction> for LoginGatedFeature {
-    fn from(val: &DriveIndexAction) -> LoginGatedFeature {
-        use DriveIndexAction::*;
-        match val {
-            OpenTeamSettingsPage => "Open Team Settings",
-            ViewPlans { .. } => "View Plans",
-            ManageBilling { .. } => "Manage Billing",
-            _ => "Unknown reason",
-        }
+    fn from(_val: &DriveIndexAction) -> LoginGatedFeature {
+        "Unknown reason"
     }
 }
 
@@ -470,7 +452,6 @@ pub enum DriveIndexEvent {
     },
     DuplicateObject(CloudObjectTypeAndId),
     ExportObject(CloudObjectTypeAndId),
-    OpenTeamSettingsPage,
     OpenImportModal {
         space: Space,
         initial_folder_id: Option<SyncId>,
@@ -483,7 +464,6 @@ pub enum DriveIndexEvent {
     },
     OpenWorkflowModalWithCloudWorkflow(SyncId),
     FocusWarpDrive,
-    OpenSharedObjectsCreationDeniedModal(DriveObjectType, ServerId),
     AttachPlanAsContext(AIDocumentId),
 }
 
@@ -494,11 +474,7 @@ struct MouseStateHandles {
     retry_button_mouse_state: MouseStateHandle,
     trash_row_mouse_state: MouseStateHandle,
     exit_trash_button_mouse_state: MouseStateHandle,
-    join_team_button_mouse_state: MouseStateHandle,
-    create_team_button_mouse_state: MouseStateHandle,
-    shared_object_limit_hit_banner_button_mouse_state: MouseStateHandle,
     shared_object_limit_hit_banner_close_mouse_state: MouseStateHandle,
-    payment_issue_banner_button_mouse_state: MouseStateHandle,
     anonymous_sign_up_button_mouse_state: MouseStateHandle,
     anonymous_object_limit_close_button_mouse_state: MouseStateHandle,
     search_button_mouse_state: MouseStateHandle,
@@ -1435,16 +1411,6 @@ impl DriveIndex {
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_child(Shrinkable::new(1., stack.finish()).finish());
 
-        // The teammates icon that redirects to the team settings page.
-        if matches!(section, DriveIndexSection::Space(Space::Team { .. }))
-            && self.is_online(app)
-            && let DriveIndexSection::Space(space) = section
-        {
-            let add_teammates_button =
-                self.render_add_teammates_button(appearance, section_state, space);
-            header_row.add_child(add_teammates_button)
-        }
-
         // The "+" icon for adding new objects.
         if let DriveIndexSection::Space(space) = section {
             let can_create_objects = match space {
@@ -2135,138 +2101,6 @@ impl DriveIndex {
             .finish()
     }
 
-    fn render_create_team_section(
-        &self,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        let button_text = "Create team".to_owned();
-        let create_button = if UserWorkspaces::as_ref(app).total_teammates_in_joinable_teams() == 0
-        {
-            appearance
-                .ui_builder()
-                .button(
-                    ButtonVariant::Accent,
-                    self.mouse_state_handles
-                        .create_team_button_mouse_state
-                        .clone(),
-                )
-                .with_style(UiComponentStyles {
-                    font_color: Some(
-                        appearance
-                            .theme()
-                            .main_text_color(appearance.theme().accent())
-                            .into_solid(),
-                    ),
-                    font_weight: Some(Weight::Medium),
-                    height: Some(38.),
-                    font_size: Some(14.),
-                    ..Default::default()
-                })
-                .with_centered_text_label(button_text)
-                .build()
-                .with_cursor(Cursor::PointingHand)
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(DriveIndexAction::OpenTeamSettingsPage)
-                })
-                .finish()
-        } else {
-            appearance
-                .ui_builder()
-                .button(
-                    ButtonVariant::Secondary,
-                    self.mouse_state_handles
-                        .create_team_button_mouse_state
-                        .clone(),
-                )
-                .with_style(UiComponentStyles {
-                    font_weight: Some(Weight::Medium),
-                    height: Some(38.),
-                    font_size: Some(14.),
-                    ..Default::default()
-                })
-                .with_centered_text_label(button_text)
-                .build()
-                .with_cursor(Cursor::PointingHand)
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(DriveIndexAction::OpenTeamSettingsPage)
-                })
-                .finish()
-        };
-
-        Container::new(create_button)
-            .with_margin_top(16.)
-            .with_margin_left(INDEX_CONTENT_MARGIN_LEFT)
-            .with_margin_right(INDEX_CONTENT_MARGIN_LEFT)
-            .with_margin_bottom(20.)
-            .finish()
-    }
-
-    fn render_join_discoverable_team_section(
-        &self,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        let text = if UserWorkspaces::as_ref(app).num_joinable_teams() > 1 {
-            "View teams to join"
-        } else {
-            "View team to join"
-        };
-
-        let join_button = Container::new(
-            appearance
-                .ui_builder()
-                .button(
-                    ButtonVariant::Accent,
-                    self.mouse_state_handles
-                        .join_team_button_mouse_state
-                        .clone(),
-                )
-                .with_style(UiComponentStyles {
-                    font_color: Some(
-                        appearance
-                            .theme()
-                            .main_text_color(appearance.theme().accent())
-                            .into_solid(),
-                    ),
-                    font_weight: Some(Weight::Medium),
-                    height: Some(38.),
-                    font_size: Some(14.),
-                    ..Default::default()
-                })
-                .with_centered_text_label(text.to_owned())
-                .build()
-                .with_cursor(Cursor::PointingHand)
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(DriveIndexAction::OpenTeamSettingsPage)
-                })
-                .finish(),
-        )
-        .with_margin_top(16.)
-        .finish();
-
-        let or_text = Container::new(
-            Text::new_inline("Or", appearance.ui_font_family(), ITEM_FONT_SIZE)
-                .with_color(appearance.theme().nonactive_ui_text_color().into())
-                .with_style(Properties::default().weight(Weight::Medium))
-                .finish(),
-        )
-        .with_margin_top(14.)
-        .finish();
-
-        let or_row = Flex::row()
-            .with_main_axis_size(MainAxisSize::Max)
-            .with_main_axis_alignment(MainAxisAlignment::Center)
-            .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_child(or_text)
-            .finish();
-
-        Container::new(Flex::column().with_children([join_button, or_row]).finish())
-            .with_margin_left(INDEX_CONTENT_MARGIN_LEFT)
-            .with_margin_right(INDEX_CONTENT_MARGIN_LEFT)
-            .finish()
-    }
-
     /// Renders the given space header as well as all the included items
     #[allow(clippy::unwrap_in_result)]
     fn render_section(
@@ -2361,17 +2195,7 @@ impl DriveIndex {
                                 .unwrap_or_default(),
                         );
                     }
-                    DriveIndexSection::CreateATeam => {
-                        if self.is_online(app) {
-                            rendered_space.push(self.render_create_team_section(appearance, app));
-                        }
-                    }
-                    DriveIndexSection::JoinTeam => {
-                        if self.is_online(app) {
-                            rendered_space
-                                .push(self.render_join_discoverable_team_section(appearance, app));
-                        }
-                    }
+                    DriveIndexSection::CreateATeam | DriveIndexSection::JoinTeam => {}
                 }
             }
         }
@@ -3138,48 +2962,6 @@ impl DriveIndex {
             .finish()
     }
 
-    fn render_add_teammates_button(
-        &self,
-        appearance: &Appearance,
-        state: &DriveIndexSectionState,
-        space: Space,
-    ) -> Box<dyn warpui::Element> {
-        let mut button = icon_button(
-            appearance,
-            Icon::AddTeammates,
-            false,
-            state.add_teammates_mouse_state.clone(),
-        );
-        // Set color contrast correctly when focused
-        if self.focused_index.is_some()
-            && self.ordered_items.get(self.focused_index.unwrap())
-                == Some(&WarpDriveItemId::Space(space))
-        {
-            button = highlight(button, appearance)
-        };
-
-        // Override hover background to surface_1 for better visibility on section header
-        button = button.with_hovered_styles(
-            UiComponentStyles::default()
-                .set_background(appearance.theme().surface_1().into())
-                .set_border_color(appearance.theme().surface_3().into()),
-        );
-
-        Container::new(
-            Align::new(
-                button
-                    .build()
-                    .on_click(move |ctx, _, _| {
-                        ctx.dispatch_typed_action(DriveIndexAction::OpenTeamSettingsPage)
-                    })
-                    .finish(),
-            )
-            .finish(),
-        )
-        .with_margin_right(2.) // These icons at the end of a row are spaced apart with 2 pixels between them
-        .finish()
-    }
-
     fn font_color_based_on_focused_state(
         &self,
         appearance: &Appearance,
@@ -3293,25 +3075,11 @@ impl DriveIndex {
             match *cloud_object_type_and_id {
                 CloudObjectTypeAndId::Notebook(_) => {
                     if !UserWorkspaces::has_capacity_for_shared_notebooks(team_uid, ctx, 1) {
-                        // If team has reached the limit for notebooks, show the modal
-                        // and return early.
-                        ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                            DriveObjectType::Notebook {
-                                is_ai_document: false,
-                            },
-                            team_uid,
-                        ));
                         return;
                     }
                 }
                 CloudObjectTypeAndId::Workflow(_) => {
                     if !UserWorkspaces::has_capacity_for_shared_workflows(team_uid, ctx, 1) {
-                        // If team has reached the limit for workflows, show the modal
-                        // and return early.
-                        ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                            DriveObjectType::Workflow,
-                            team_uid,
-                        ));
                         return;
                     }
                 }
@@ -3415,12 +3183,6 @@ impl DriveIndex {
                 if let Space::Team { team_uid } = space
                     && !UserWorkspaces::has_capacity_for_shared_notebooks(team_uid, ctx, 1)
                 {
-                    // If team has reached the limit for notebooks, show the modal
-                    // and return early.
-                    ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                        object_type,
-                        team_uid,
-                    ));
                     return;
                 }
                 ctx.emit(DriveIndexEvent::CreateNotebook {
@@ -3542,26 +3304,12 @@ impl DriveIndex {
                         CloudObjectTypeAndId::Notebook(_) => {
                             if !UserWorkspaces::has_capacity_for_shared_notebooks(team_uid, ctx, 1)
                             {
-                                // If team has reached the limit for notebooks, show the modal
-                                // and return early.
-                                ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Notebook {
-                                        is_ai_document: false,
-                                    },
-                                    team_uid,
-                                ));
                                 return;
                             }
                         }
                         CloudObjectTypeAndId::Workflow(_) => {
                             if !UserWorkspaces::has_capacity_for_shared_workflows(team_uid, ctx, 1)
                             {
-                                // If team has reached the limit for workflows, show the modal
-                                // and return early.
-                                ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Workflow,
-                                    team_uid,
-                                ));
                                 return;
                             }
                         }
@@ -3588,14 +3336,6 @@ impl DriveIndex {
                                 ctx,
                                 notebooks_in_trashed_folder,
                             ) {
-                                // If team has reached the limit for notebooks, show the modal
-                                // and return early.
-                                ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Notebook {
-                                        is_ai_document: false,
-                                    },
-                                    team_uid,
-                                ));
                                 return;
                             }
 
@@ -3609,12 +3349,6 @@ impl DriveIndex {
                                 ctx,
                                 workflows_in_trashed_folder,
                             ) {
-                                // If team has reached the limit for workflows, show the modal
-                                // and return early.
-                                ctx.emit(DriveIndexEvent::OpenSharedObjectsCreationDeniedModal(
-                                    DriveObjectType::Workflow,
-                                    team_uid,
-                                ));
                                 return;
                             }
                         }
@@ -4202,7 +3936,6 @@ impl DriveIndex {
     fn render_shared_object_limit_hit_banner(
         &self,
         appearance: &Appearance,
-        team_uid: ServerId,
         object_type: ObjectType,
     ) -> Box<dyn Element> {
         let theme = appearance.theme();
@@ -4228,35 +3961,7 @@ impl DriveIndex {
                 .build()
                 .finish(),
         )
-        .with_margin_bottom(16.)
         .finish();
-
-        let button = appearance
-            .ui_builder()
-            .button(
-                ButtonVariant::Accent,
-                self.mouse_state_handles
-                    .shared_object_limit_hit_banner_button_mouse_state
-                    .clone(),
-            )
-            .with_centered_text_label("Compare plans".into())
-            .with_style(UiComponentStyles {
-                font_size: Some(14.),
-                font_weight: Some(Weight::Light),
-                padding: Some(Coords {
-                    top: 8.,
-                    bottom: 8.,
-                    left: 12.,
-                    right: 12.,
-                }),
-                ..Default::default()
-            })
-            .build()
-            .with_cursor(Cursor::PointingHand)
-            .on_click(move |ctx, _, _| {
-                ctx.dispatch_typed_action(DriveIndexAction::ViewPlans { team_uid })
-            })
-            .finish();
 
         let banner_kind = match object_type {
             ObjectType::Notebook => SharedObjectLimitBannerKind::Notebook,
@@ -4299,13 +4004,12 @@ impl DriveIndex {
             .with_child(close_button)
             .finish();
 
-        // Keep the existing message + CTA centered while the header stretches
+        // Keep the existing message centered while the header stretches
         // full width so the close affordance sits in the top-right corner.
         let content = Flex::column()
             .with_main_axis_alignment(MainAxisAlignment::Center)
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
             .with_child(body)
-            .with_child(button)
             .finish();
 
         Container::new(
@@ -4329,7 +4033,6 @@ impl DriveIndex {
     fn render_payment_issue_banner(
         &self,
         appearance: &Appearance,
-        team_uid: ServerId,
         has_admin_permissions: bool,
         is_on_stripe_paid_plan: bool,
     ) -> Box<dyn Element> {
@@ -4375,37 +4078,6 @@ impl DriveIndex {
             )
             .finish(),
         );
-
-        // Only show a manage billing button if they are an admin and on a paid stripe plan
-        if has_admin_permissions && is_on_stripe_paid_plan {
-            let button = appearance
-                .ui_builder()
-                .button(
-                    ButtonVariant::Accent,
-                    self.mouse_state_handles
-                        .payment_issue_banner_button_mouse_state
-                        .clone(),
-                )
-                .with_centered_text_label("Manage billing".into())
-                .with_style(UiComponentStyles {
-                    font_size: Some(14.),
-                    font_weight: Some(Weight::Light),
-                    padding: Some(Coords {
-                        top: 8.,
-                        bottom: 8.,
-                        left: 12.,
-                        right: 12.,
-                    }),
-                    ..Default::default()
-                })
-                .build()
-                .with_cursor(Cursor::PointingHand)
-                .on_click(move |ctx, _, _| {
-                    ctx.dispatch_typed_action(DriveIndexAction::ManageBilling { team_uid })
-                })
-                .finish();
-            body.add_child(Container::new(button).with_margin_top(16.).finish());
-        }
 
         Container::new(
             Container::new(body.finish())
@@ -5254,7 +4926,6 @@ impl View for DriveIndex {
                 let is_on_stripe_paid_plan = team.billing_metadata.is_on_stripe_paid_plan();
                 drive.add_child(self.render_payment_issue_banner(
                     appearance,
-                    team.uid,
                     has_admin_permissions,
                     is_on_stripe_paid_plan,
                 ));
@@ -5266,11 +4937,9 @@ impl View for DriveIndex {
                 SharedObjectLimitBannerKind::Workflow,
                 app,
             ) {
-                drive.add_child(self.render_shared_object_limit_hit_banner(
-                    appearance,
-                    team.uid,
-                    ObjectType::Workflow,
-                ));
+                drive.add_child(
+                    self.render_shared_object_limit_hit_banner(appearance, ObjectType::Workflow),
+                );
             } else if UserWorkspaces::is_at_tier_limit_for_object_type(
                 team.uid,
                 ObjectType::Notebook,
@@ -5279,11 +4948,9 @@ impl View for DriveIndex {
                 SharedObjectLimitBannerKind::Notebook,
                 app,
             ) {
-                drive.add_child(self.render_shared_object_limit_hit_banner(
-                    appearance,
-                    team.uid,
-                    ObjectType::Notebook,
-                ));
+                drive.add_child(
+                    self.render_shared_object_limit_hit_banner(appearance, ObjectType::Notebook),
+                );
             }
         }
 
@@ -5539,9 +5206,6 @@ impl TypedActionView for DriveIndex {
             DriveIndexAction::ToggleSectionCollapsed(section) => {
                 self.toggle_section_collapse(section, ctx);
             }
-            DriveIndexAction::OpenTeamSettingsPage => {
-                ctx.emit(DriveIndexEvent::OpenTeamSettingsPage);
-            }
             DriveIndexAction::RunObject(id) => {
                 if !matches!(self.index_variant, DriveIndexVariant::Trash) {
                     ctx.emit(DriveIndexEvent::RunObject(*id));
@@ -5693,18 +5357,6 @@ impl TypedActionView for DriveIndex {
             DriveIndexAction::InvokeEnvVarCollectionInSubshell(id) => {
                 ctx.emit(DriveIndexEvent::InvokeEnvVarCollectionInSubshell(*id))
             }
-            DriveIndexAction::ViewPlans { team_uid } => {
-                ctx.open_url(UserWorkspaces::upgrade_link_for_team(*team_uid).as_str());
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::SharedObjectLimitHitBannerViewPlansButtonClicked,
-                    ctx
-                );
-            }
-            DriveIndexAction::ManageBilling { team_uid } => {
-                UserWorkspaces::handle(ctx).update(ctx, move |user_workspaces, ctx| {
-                    user_workspaces.generate_stripe_billing_portal_link(*team_uid, ctx);
-                });
-            }
             DriveIndexAction::ToggleShareDialog { warp_drive_item_id } => {
                 self.toggle_share_dialog(
                     warp_drive_item_id,
@@ -5736,7 +5388,3 @@ impl TypedActionView for DriveIndex {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "index_tests.rs"]
-mod tests;

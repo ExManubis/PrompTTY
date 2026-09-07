@@ -6,6 +6,7 @@ use std::sync::Arc;
 use ai::api_keys::ApiKeyManager;
 use ai::index::full_source_code_embedding::manager::CodebaseIndexManager;
 use chrono::{Duration, Local};
+use settings::Setting as _;
 use warp_core::SessionId;
 use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
 use warpui::{AppContext, ModelContext, ModelHandle, SingletonEntity as _};
@@ -64,7 +65,7 @@ use crate::tui_onboarding_markers::TuiOnboardingMarkers;
 use crate::user_config::WarpConfig;
 #[cfg(feature = "voice_input")]
 use crate::voice::transcriber::VoiceTranscriber;
-use crate::workspaces::team::{MembershipRole, Team, TeamMember};
+use crate::workspaces::team::Team;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::workspaces::workspace::Workspace;
 
@@ -244,52 +245,36 @@ pub fn append_tui_history_test_command(
     });
 }
 
-/// Registers the production settings dependencies required by focused TUI input-mode tests.
-pub fn register_tui_input_mode_test_settings(ctx: &mut AppContext) {
-    if ctx.has_singleton_model::<AISettings>() {
-        return;
-    }
-    init_and_register_user_preferences(ctx);
-    ctx.add_singleton_model(|_| SettingsManager::default());
-    ctx.add_singleton_model(WarpConfig::mock);
-    warpui_extras::secure_storage::register_noop("test", ctx);
-    ctx.add_singleton_model(|_| ServerApiProvider::new_for_test());
-    ctx.add_singleton_model(|_| AuthStateProvider::new_for_test());
-    AISettings::register_and_subscribe_to_events(ctx);
-    ctx.add_singleton_model(|ctx| {
-        let provider = ServerApiProvider::as_ref(ctx);
-        UserWorkspaces::mock(
-            provider.get_team_client(),
-            provider.get_workspace_client(),
-            Vec::new(),
-            ctx,
-        )
+fn enable_ai_for_tests(ctx: &mut AppContext) {
+    AISettings::handle(ctx).update(ctx, |settings, ctx| {
+        settings
+            .is_any_ai_enabled
+            .set_value(true, ctx)
+            .expect("enabling AI in tests should succeed");
     });
 }
 
-pub fn set_tui_default_team_admin_for_test(ctx: &mut AppContext) {
-    let auth = AuthStateProvider::as_ref(ctx).get();
-    let user_uid = auth.user_id().expect("test user should have an id");
-    let user_email = auth.user_email().expect("test user should have an email");
-    let mut team =
-        Team::from_local_cache(123.into(), "test team".to_owned(), None, None, None, None);
-    team.members.push(TeamMember {
-        uid: user_uid,
-        email: user_email,
-        role: MembershipRole::Owner,
-        is_disabled: false,
-    });
-    let workspace = Workspace::from_local_cache(
-        "workspace_uid123456789".to_owned().into(),
-        "test workspace".to_owned(),
-        Some(vec![team]),
-        None,
-    );
-    let workspace_uid = workspace.uid;
-    UserWorkspaces::handle(ctx).update(ctx, |workspaces, ctx| {
-        workspaces.update_workspaces(vec![workspace], ctx);
-        workspaces.set_current_workspace_uid(workspace_uid, ctx);
-    });
+/// Registers the production settings dependencies required by focused TUI input-mode tests.
+pub fn register_tui_input_mode_test_settings(ctx: &mut AppContext) {
+    if !ctx.has_singleton_model::<AISettings>() {
+        init_and_register_user_preferences(ctx);
+        ctx.add_singleton_model(|_| SettingsManager::default());
+        ctx.add_singleton_model(WarpConfig::mock);
+        warpui_extras::secure_storage::register_noop("test", ctx);
+        ctx.add_singleton_model(|_| ServerApiProvider::new_for_test());
+        ctx.add_singleton_model(|_| AuthStateProvider::new_for_test());
+        AISettings::register_and_subscribe_to_events(ctx);
+        ctx.add_singleton_model(|ctx| {
+            let provider = ServerApiProvider::as_ref(ctx);
+            UserWorkspaces::mock(
+                provider.get_team_client(),
+                provider.get_workspace_client(),
+                Vec::new(),
+                ctx,
+            )
+        });
+    }
+    enable_ai_for_tests(ctx);
 }
 
 pub fn set_tui_workspace_teams_for_test(teams: Vec<(ServerId, String)>, ctx: &mut AppContext) {
@@ -323,6 +308,13 @@ pub fn queue_tui_permission_action(
 ///
 /// Registration order mirrors model subscription dependencies.
 pub fn register_tui_session_view_test_singletons(app: &mut warpui::App) {
+    register_tui_session_view_test_singletons_with_auth(app, AuthStateProvider::new_for_test());
+}
+
+fn register_tui_session_view_test_singletons_with_auth(
+    app: &mut warpui::App,
+    auth_state: AuthStateProvider,
+) {
     app.add_singleton_model(|ctx| AppExecutionMode::new(ExecutionMode::App, false, ctx));
     app.update(warp_core::telemetry::testing::MockTelemetryContextProvider::register);
     app.update(init_and_register_user_preferences);
@@ -338,7 +330,7 @@ pub fn register_tui_session_view_test_singletons(app: &mut warpui::App) {
 
     app.add_singleton_model(|_| NetworkStatus::new());
     app.add_singleton_model(|_| ServerApiProvider::new_for_test());
-    app.add_singleton_model(|_| AuthStateProvider::new_for_test());
+    app.add_singleton_model(move |_| auth_state);
     app.add_singleton_model(AuthManager::new_for_test);
     app.add_singleton_model(|_| TuiOnboardingMarkers::new_ready_for_test(false, false));
     app.add_singleton_model(PrivacySettings::mock);
@@ -427,4 +419,5 @@ pub fn register_tui_session_view_test_singletons(app: &mut warpui::App) {
     );
     app.add_singleton_model(crate::workflows::local_workflows::LocalWorkflows::new);
     app.add_singleton_model(crate::ai::skills::SkillManager::new);
+    app.update(enable_ai_for_tests);
 }

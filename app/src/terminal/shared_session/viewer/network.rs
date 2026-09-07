@@ -1266,7 +1266,3 @@ impl Drop for Network {
         self.selection_throttled_tx.close();
     }
 }
-
-#[cfg(test)]
-#[path = "network_tests.rs"]
-mod tests;

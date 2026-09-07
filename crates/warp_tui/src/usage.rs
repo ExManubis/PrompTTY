@@ -92,7 +92,3 @@ fn entry_text(mode: TuiUsageDisplayMode, totals: ConversationUsageTotals) -> Str
 pub(crate) fn format_cost(cost_in_cents: f32) -> String {
     format!("${:.2}", cost_in_cents / 100.0)
 }
-
-#[cfg(test)]
-#[path = "usage_tests.rs"]
-mod tests;

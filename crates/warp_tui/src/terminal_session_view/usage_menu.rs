@@ -10,7 +10,6 @@ use warpui_core::elements::tui::{
 
 pub(super) use self::model::TuiUsageSnapshot;
 use self::model::{TuiUsageCreditBar, TuiUsagePayAsYouGo};
-use crate::link::TuiLink;
 use crate::tui_builder::TuiUiBuilder;
 mod model;
 
@@ -319,36 +318,14 @@ fn pay_as_you_go_section(
     ]
 }
 
-pub(super) fn render(
-    info: &TuiUsageSnapshot,
-    manage_billing_link: &TuiLink,
-    upgrade_link: &TuiLink,
-    upgrade_url: &str,
-    builder: &TuiUiBuilder,
-) -> Box<dyn TuiElement> {
+pub(super) fn render(info: &TuiUsageSnapshot, builder: &TuiUiBuilder) -> Box<dyn TuiElement> {
     let primary = builder.primary_text_style();
     let primary_bold = primary.add_modifier(Modifier::BOLD);
     let muted = builder.read_only_menu_label_style();
-    let shortcut = builder.link_text_style();
 
     let mut metadata = format!("Plan: {}", info.plan_name);
     if let Some(team_name) = &info.team_name {
         metadata.push_str(&format!(" | Team: {team_name}"));
-    }
-    let mut trailing = TuiFlex::row().child(
-        TuiText::new(metadata)
-            .with_style(primary)
-            .truncate()
-            .finish(),
-    );
-    if let Some(manage_billing_url) = info.manage_billing_url.clone() {
-        trailing = trailing
-            .child(TuiText::new(" | ").with_style(primary).truncate().finish())
-            .child(manage_billing_link.render(
-                "Manage billing and usage",
-                primary,
-                move |_, app| app.open_url(&manage_billing_url),
-            ));
     }
     let header = TuiContainer::new(
         TuiFlex::row()
@@ -359,7 +336,12 @@ pub(super) fn render(
                     .finish(),
             )
             .flex_child(TuiText::new(String::new()).finish())
-            .child(trailing.finish())
+            .child(
+                TuiText::new(metadata)
+                    .with_style(primary)
+                    .truncate()
+                    .finish(),
+            )
             .finish(),
     )
     .with_padding_x(1)
@@ -394,26 +376,6 @@ pub(super) fn render(
         }
     }
 
-    body = body.child(TuiText::new(" ").with_style(muted).truncate().finish());
-    let upgrade_url = upgrade_url.to_owned();
-    let upgrade_link = upgrade_link.render(
-        "Buy more credits or upgrade plan",
-        primary,
-        move |_, app| app.open_url(&upgrade_url),
-    );
-    body = body.child(
-        TuiFlex::row()
-            .child(upgrade_link)
-            .child(TuiText::new(" ").with_style(muted).truncate().finish())
-            .child(
-                TuiText::new("(ctrl+o)")
-                    .with_style(shortcut)
-                    .truncate()
-                    .finish(),
-            )
-            .finish(),
-    );
-
     let body = TuiContainer::new(body.finish()).with_padding_x(1).finish();
 
     let panel = TuiContainer::new(
@@ -439,7 +401,3 @@ pub(super) fn render(
         )
         .finish()
 }
-
-#[cfg(test)]
-#[path = "usage_menu_tests.rs"]
-mod tests;

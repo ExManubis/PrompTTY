@@ -1,4 +1,4 @@
-use std::cell::{Cell, RefCell};
+use std::cell::Cell;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
@@ -15,24 +15,23 @@ use warp::tui_export::{
     AIAgentOutputMessageType, AIAgentText, AIAgentTextSection, AIAgentTodo, AIAgentTodoList,
     AIBlockModel, AIBlockOutputStatus, AIConversationId, AIRequestType, ActiveSession,
     AgentOutputImage, AgentOutputImageLayout, AgentOutputMermaidDiagram, AgentOutputTable,
-    Appearance, AuthStateProvider, BlocklistAIActionModel, FailedOutputPresentation,
-    GetRelevantFilesController, LLMId, MessageId, ModelEventDispatcher, OutputStatusUpdateCallback,
-    ReceivedMessageDisplay, RenderableAIError, RequestCommandOutputResult, ServerOutputId,
-    Sessions, Shared, SummarizationType, TaskId, TerminalModel, TodoOperation, TodoStatus,
-    TuiOnboardingMarker, TuiOnboardingMarkers, UserQueryMode, UserWorkspaces,
-    queue_tui_permission_action, register_tui_session_view_test_singletons,
+    Appearance, BlocklistAIActionModel, FailedOutputPresentation, GetRelevantFilesController,
+    LLMId, MessageId, ModelEventDispatcher, OutputStatusUpdateCallback, ReceivedMessageDisplay,
+    RenderableAIError, RequestCommandOutputResult, ServerOutputId, Sessions, Shared,
+    SummarizationType, TaskId, TerminalModel, TodoOperation, TodoStatus, UserQueryMode,
+    UserWorkspaces, queue_tui_permission_action, register_tui_session_view_test_singletons,
     should_show_failed_output_usage_notice,
 };
 use warp_core::ui::color::blend::Blend;
 use warp_core::ui::theme::Fill as ThemeFill;
 use warpui::platform::WindowStyle;
 use warpui::{AddWindowOptions, SingletonEntity};
+use warpui_core::elements::Fill as CoreFill;
 use warpui_core::elements::tui::{
-    Color, Modifier, TuiBuffer, TuiBufferExt, TuiConstraint, TuiElement, TuiEvent, TuiEventContext,
+    Color, Modifier, TuiBuffer, TuiBufferExt, TuiConstraint, TuiEvent, TuiEventContext,
     TuiLayoutContext, TuiPaintContext, TuiPaintSurface, TuiPoint, TuiRect, TuiScreenPosition,
     TuiSize,
 };
-use warpui_core::elements::{Fill as CoreFill, MouseStateHandle};
 use warpui_core::event::ModifiersState;
 use warpui_core::presenter::tui::TuiPresenter;
 use warpui_core::{App, AppContext, EntityId, EntityIdMap, TuiView, ViewContext, ViewHandle};
@@ -40,7 +39,6 @@ use warpui_core::{App, AppContext, EntityId, EntityIdMap, TuiView, ViewContext, 
 use super::{
     CollapsibleSectionStates, TuiAIBlock, TuiAIBlockAction, TuiAIBlockEvent, TuiAIBlockSection,
     TuiCodeBlockKey, TuiRichTextSection, TuiToolCallView, render_failure_section,
-    render_first_credit_gate, should_consume_first_credit_gate, upgrade_url,
 };
 use crate::agent_block_sections::{
     completed_todos_label, render_fallback_tool_call_section, render_todo_list_section,
@@ -94,140 +92,6 @@ fn agent_block_renders_generic_failure_after_partial_output() {
             ))
             .into();
             assert_eq!(frame.buffer[(0, failure_row as u16)].fg, red);
-        });
-    });
-}
-
-#[test]
-fn restored_out_of_credits_exchange_does_not_consume_first_credit_gate() {
-    let presentation = FailedOutputPresentation::OutOfCredits {
-        message: "out of credits".to_owned(),
-        can_use_own_api_keys: false,
-    };
-    assert!(should_consume_first_credit_gate(false, Some(&presentation)));
-    assert!(!should_consume_first_credit_gate(true, Some(&presentation)));
-    assert!(!should_consume_first_credit_gate(false, None));
-}
-
-#[test]
-fn first_credit_gate_matches_design_and_opens_upgrade() {
-    App::test((), |mut app| async move {
-        app.add_singleton_model(|_| Appearance::mock());
-        app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-        let expected_upgrade_url = app.read(upgrade_url);
-        let opened_urls = Rc::new(RefCell::new(Vec::new()));
-        let opened_urls_for_callback = opened_urls.clone();
-        app.update(|ctx| {
-            ctx.set_before_open_url(move |url, _| {
-                opened_urls_for_callback.borrow_mut().push(url.to_owned());
-                url.to_owned()
-            });
-        });
-
-        app.read(|ctx| {
-            let hover_state = MouseStateHandle::default();
-            let mut presenter = TuiPresenter::new();
-            let frame = presenter.present_element(
-                render_first_credit_gate(&hover_state, ctx),
-                TuiRect::new(0, 0, 80, 4),
-                ctx,
-            );
-            assert_eq!(
-                frame
-                    .buffer
-                    .to_lines()
-                    .into_iter()
-                    .map(|line| line.trim_end().to_owned())
-                    .collect::<Vec<_>>(),
-                vec![
-                    "You need AI credits in order to use Warp’s agent.".to_owned(),
-                    "Start using AI (ctrl+o).".to_owned(),
-                    String::new(),
-                    expected_upgrade_url.clone(),
-                ]
-            );
-            let builder = TuiUiBuilder::from_app(ctx);
-            assert_eq!(
-                frame.buffer[(0, 0)].fg,
-                builder
-                    .attention_glyph_style()
-                    .fg
-                    .expect("attention foreground")
-            );
-            assert!(frame.buffer[(0, 1)].modifier.contains(Modifier::UNDERLINED));
-            assert_eq!(
-                frame.buffer[(15, 1)].fg,
-                builder.accent_text_style().fg.expect("accent foreground")
-            );
-            dispatch_click_on_text(
-                render_first_credit_gate(&hover_state, ctx),
-                "Start using AI",
-                80,
-                4,
-                ctx,
-            );
-        });
-
-        assert_eq!(&*opened_urls.borrow(), &[expected_upgrade_url]);
-    });
-}
-
-#[test]
-fn first_credit_gate_consumes_once_and_reacts_to_delayed_marker_readiness() {
-    App::test((), |mut app| async move {
-        register_tui_session_view_test_singletons(&mut app);
-        let markers = TuiOnboardingMarkers::handle(&app);
-        let first = test_agent_block_with_registered_singletons(
-            &mut app,
-            FakeAgentBlockModel {
-                inputs: Vec::new(),
-                status: failed_output(
-                    Vec::new(),
-                    RenderableAIError::QuotaLimit {
-                        user_display_message: Some("You’ve reached your credit limit.".to_owned()),
-                    },
-                ),
-            },
-        );
-        app.read(|ctx| {
-            assert!(!first.as_ref(ctx).first_credit_gate);
-        });
-
-        markers.update(&mut app, |markers, ctx| {
-            markers.set_ready_for_test(false, true, ctx);
-        });
-        app.read(|ctx| {
-            let lines = render_block_lines(first.as_ref(ctx), 100, ctx);
-            assert!(first.as_ref(ctx).first_credit_gate);
-            assert!(
-                lines
-                    .iter()
-                    .any(|line| line == "You need AI credits in order to use Warp’s agent.")
-            );
-            assert!(
-                lines
-                    .iter()
-                    .all(|line| !line.contains("won't count towards your usage"))
-            );
-        });
-        markers.update(&mut app, |markers, ctx| {
-            assert!(!markers.consume(TuiOnboardingMarker::FirstCreditGate, ctx));
-        });
-
-        let duplicate = test_agent_block_with_registered_singletons(
-            &mut app,
-            FakeAgentBlockModel {
-                inputs: Vec::new(),
-                status: failed_output(
-                    Vec::new(),
-                    RenderableAIError::QuotaLimit {
-                        user_display_message: Some("You’ve reached your credit limit.".to_owned()),
-                    },
-                ),
-            },
-        );
-        app.read(|ctx| {
-            assert!(!duplicate.as_ref(ctx).first_credit_gate);
         });
     });
 }
@@ -361,19 +225,9 @@ fn agent_block_renders_context_window_failure() {
 }
 
 #[test]
-fn out_of_credits_failure_matches_tui_design_and_opens_upgrade() {
-    App::test((), |mut app| async move {
+fn out_of_credits_failure_matches_tui_design() {
+    App::test((), |app| async move {
         app.add_singleton_model(|_| Appearance::mock());
-        app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-        let expected_upgrade_url = app.read(upgrade_url);
-        let opened_urls = Rc::new(RefCell::new(Vec::new()));
-        let opened_urls_for_callback = opened_urls.clone();
-        app.update(|ctx| {
-            ctx.set_before_open_url(move |url, _| {
-                opened_urls_for_callback.borrow_mut().push(url.to_owned());
-                url.to_owned()
-            });
-        });
 
         app.read(|ctx| {
             let presentation = FailedOutputPresentation::OutOfCredits {
@@ -381,15 +235,10 @@ fn out_of_credits_failure_matches_tui_design_and_opens_upgrade() {
                     .to_owned(),
                 can_use_own_api_keys: true,
             };
-            let out_of_credits_hover_state = MouseStateHandle::default();
             let mut presenter = TuiPresenter::new();
             let frame = presenter.present_element(
-                render_failure_section(
-                    &presentation,
-                    &out_of_credits_hover_state,
-                    ctx,
-                ),
-                TuiRect::new(0, 0, 100, 6),
+                render_failure_section(&presentation, ctx),
+                TuiRect::new(0, 0, 100, 2),
                 ctx,
             );
             assert_eq!(
@@ -403,10 +252,6 @@ fn out_of_credits_failure_matches_tui_design_and_opens_upgrade() {
                     "⚠ I’m sorry, I couldn’t complete that request.".to_owned(),
                     "  In order to use Warp’s AI features, subscribe to a Warp plan or buy packs of credits."
                         .to_owned(),
-                    String::new(),
-                    "  Get started with AI (ctrl+o)".to_owned(),
-                    String::new(),
-                    format!("  {expected_upgrade_url}"),
                 ]
             );
             let builder = TuiUiBuilder::from_app(ctx);
@@ -420,56 +265,24 @@ fn out_of_credits_failure_matches_tui_design_and_opens_upgrade() {
             );
             assert_eq!(frame.buffer[(2, 0)].fg, primary_foreground);
             assert_eq!(frame.buffer[(2, 1)].fg, primary_foreground);
-            assert_eq!(frame.buffer[(2, 3)].fg, primary_foreground);
-            assert_eq!(
-                frame.buffer[(22, 3)].fg,
-                builder
-                    .accent_text_style()
-                    .fg
-                    .expect("accent foreground")
-            );
-            assert_eq!(frame.buffer[(2, 5)].fg, primary_foreground);
-            assert!(
-                frame.buffer[(2, 3)]
-                    .modifier
-                    .contains(Modifier::UNDERLINED)
-            );
             let narrow_frame = presenter.present_element(
-                render_failure_section(
-                    &presentation,
-                    &out_of_credits_hover_state,
-                    ctx,
-                ),
-                TuiRect::new(0, 0, 64, 7),
+                render_failure_section(&presentation, ctx),
+                TuiRect::new(0, 0, 64, 4),
                 ctx,
             );
             let narrow_lines = narrow_frame.buffer.to_lines();
             assert!(
-                narrow_lines[2].starts_with("  "),
+                narrow_lines[1].starts_with("  "),
                 "wrapped detail should preserve its two-column indent: {narrow_lines:?}"
-            );
-
-            dispatch_click_on_text(
-                render_failure_section(
-                    &presentation,
-                    &out_of_credits_hover_state,
-                    ctx,
-                ),
-                "Get started with AI",
-                100,
-                6,
-                ctx,
             );
             assert!(
                 frame
                     .buffer
                     .to_lines()
                     .iter()
-                    .all(|line| !line.contains("API keys"))
+                    .all(|line| !line.contains("API keys") && !line.contains("http"))
             );
         });
-
-        assert_eq!(&*opened_urls.borrow(), &[expected_upgrade_url]);
     });
 }
 
@@ -2787,69 +2600,6 @@ fn render_block_lines_including_blank(
         .collect()
 }
 
-fn dispatch_click_on_text(
-    mut element: Box<dyn TuiElement>,
-    label: &str,
-    width: u16,
-    height: u16,
-    app: &AppContext,
-) {
-    let area = TuiRect::new(0, 0, width, height);
-    let mut rendered_views = EntityIdMap::default();
-    let mut layout_ctx = TuiLayoutContext {
-        rendered_views: &mut rendered_views,
-    };
-    element.layout(
-        TuiConstraint::loose(TuiSize::new(width, height)),
-        &mut layout_ctx,
-        app,
-    );
-    let (buffer, scene) = {
-        let mut buffer = TuiBuffer::empty(area);
-        let mut paint_ctx = TuiPaintContext::new(&mut rendered_views);
-        let mut surface = TuiPaintSurface::new(&mut buffer);
-        element.render(TuiScreenPosition::new(0, 0), &mut surface, &mut paint_ctx);
-        (buffer, Rc::new(paint_ctx.scene.clone()))
-    };
-    let lines = buffer.to_lines();
-    let (row, byte_index) = lines
-        .iter()
-        .enumerate()
-        .find_map(|(row, line)| line.find(label).map(|byte_index| (row, byte_index)))
-        .expect("rendered element contains target link");
-    let x = lines[row][..byte_index].chars().count() as u16;
-    let position = TuiPoint::new(x, row as u16);
-    let modifiers = ModifiersState::default();
-    let mut event_ctx = TuiEventContext::new(scene, &mut rendered_views);
-    event_ctx.set_origin_view(Some(EntityId::new()));
-    element.dispatch_event(
-        &TuiEvent::MouseMoved {
-            position,
-            modifiers,
-            is_synthetic: false,
-        },
-        &mut event_ctx,
-        app,
-    );
-    element.dispatch_event(
-        &TuiEvent::LeftMouseDown {
-            position,
-            modifiers,
-            click_count: 1,
-            is_first_mouse: false,
-        },
-        &mut event_ctx,
-        app,
-    );
-    element.dispatch_event(
-        &TuiEvent::LeftMouseUp {
-            position,
-            modifiers,
-        },
-        &mut event_ctx,
-        app,
-    );
-}
 fn render_tui_view_lines(
     view: &impl TuiView,
     width: u16,

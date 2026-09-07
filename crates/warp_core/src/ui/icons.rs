@@ -410,7 +410,7 @@ impl From<Icon> for &'static str {
             Icon::CloudFilled => "bundled/svg/cloud-filled.svg",
             Icon::CloudOffline => "bundled/svg/cloud-offline.svg",
             Icon::Compass => "bundled/svg/compass-3.svg",
-            Icon::CreateTeam => "bundled/svg/create-team.svg",
+            Icon::CreateTeam => "bundled/svg/user-plus-01.svg",
             Icon::WarpDrive => "bundled/svg/warp.svg",
             Icon::Warp => "bundled/svg/warp-drive.svg",
             Icon::WarpLogoLight => "bundled/svg/warp-logo-light.svg",

@@ -2,16 +2,7 @@ use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use cynic::{MutationBuilder, QueryBuilder};
 #[cfg(test)]
-use mockall::{automock, predicate::*};
-use warp_graphql::error::UserFacingErrorInterface;
-use warp_graphql::mutations::purchase_addon_credits::{
-    PurchaseAddonCredits, PurchaseAddonCreditsInput, PurchaseAddonCreditsResult,
-    PurchaseAddonCreditsVariables,
-};
-use warp_graphql::mutations::stripe_billing_portal::{
-    StripeBillingPortal, StripeBillingPortalInput, StripeBillingPortalResult,
-    StripeBillingPortalVariables,
-};
+use mockall::automock;
 use warp_graphql::mutations::update_workspace_settings::{
     AddonCreditsSettingsInput, UpdateWorkspaceSettings, UpdateWorkspaceSettingsInput,
     UpdateWorkspaceSettingsResult, UpdateWorkspaceSettingsVariables,
@@ -28,24 +19,10 @@ use crate::server::ids::ServerId;
 use crate::workspaces::user_workspaces::WorkspacesMetadataResponse;
 use crate::workspaces::workspace::AiOverages;
 
-/// Outcome of a successful `purchaseAddonCredits` mutation. Mirrors the
-/// server's `PurchaseAddonCreditsResult` union members one-to-one.
-pub enum PurchaseAddonCreditsOutcome {
-    /// The saved payment method was charged synchronously and credits were
-    /// granted immediately. Carries refreshed workspace metadata.
-    Completed(Box<WorkspacesMetadataResponse>),
-    /// There was no saved payment method to charge. The user must complete
-    /// the purchase in the browser at `checkout_url`; credits are granted
-    /// via webhook shortly after checkout completes.
-    CheckoutRequired { checkout_url: String },
-}
-
 #[cfg_attr(test, automock)]
 #[cfg_attr(not(target_family = "wasm"), async_trait)]
 #[cfg_attr(target_family = "wasm", async_trait(?Send))]
 pub trait WorkspaceClient: 'static + Send + Sync {
-    async fn generate_stripe_billing_portal_link(&self, team_uid: ServerId) -> Result<String>;
-
     async fn update_usage_based_pricing_settings(
         &self,
         team_uid: ServerId,
@@ -54,12 +31,6 @@ pub trait WorkspaceClient: 'static + Send + Sync {
     ) -> Result<WorkspacesMetadataResponse>;
 
     async fn refresh_ai_overages(&self) -> Result<AiOverages>;
-
-    async fn purchase_addon_credits(
-        &self,
-        team_uid: Option<ServerId>,
-        credits: i32,
-    ) -> Result<PurchaseAddonCreditsOutcome>;
 
     async fn update_addon_credits_settings(
         &self,
@@ -73,25 +44,6 @@ pub trait WorkspaceClient: 'static + Send + Sync {
 #[cfg_attr(not(target_family = "wasm"), async_trait)]
 #[cfg_attr(target_family = "wasm", async_trait(?Send))]
 impl WorkspaceClient for ServerApi {
-    async fn generate_stripe_billing_portal_link(&self, team_uid: ServerId) -> Result<String> {
-        let variables = StripeBillingPortalVariables {
-            input: StripeBillingPortalInput {
-                team_uid: team_uid.into(),
-            },
-            request_context: get_request_context(),
-        };
-        let operation = StripeBillingPortal::build(variables);
-        let response = self.send_graphql_request(operation, None).await?;
-
-        match response.stripe_billing_portal {
-            StripeBillingPortalResult::StripeBillingPortalOutput(output) => Ok(output.url),
-            StripeBillingPortalResult::UserFacingError(error) => {
-                Err(anyhow!(get_user_facing_error_message(error)))
-            }
-            StripeBillingPortalResult::Unknown => Err(anyhow!("Unknown error")),
-        }
-    }
-
     async fn update_usage_based_pricing_settings(
         &self,
         team_uid: ServerId,
@@ -158,48 +110,6 @@ impl WorkspaceClient for ServerApi {
                     current_period_end: overages.current_period_end.utc(),
                 }),
             UserResult::Unknown => Err(anyhow!("Unknown error")),
-        }
-    }
-
-    async fn purchase_addon_credits(
-        &self,
-        team_uid: Option<ServerId>,
-        credits: i32,
-    ) -> Result<PurchaseAddonCreditsOutcome> {
-        let variables = PurchaseAddonCreditsVariables {
-            input: PurchaseAddonCreditsInput {
-                team_uid: team_uid.map(Into::into),
-                credits,
-            },
-            request_context: get_request_context(),
-        };
-        let operation = PurchaseAddonCredits::build(variables);
-        let response = self.send_graphql_request(operation, None).await;
-
-        match response {
-            Err(_) => Err(anyhow!("Failed to purchase add-on credits")),
-            Ok(response) => match response.purchase_addon_credits {
-                PurchaseAddonCreditsResult::PurchaseAddonCreditsOutput(_) => {
-                    TeamClient::workspaces_metadata(self)
-                        .await
-                        .map(|w| PurchaseAddonCreditsOutcome::Completed(Box::new(w.metadata)))
-                }
-                PurchaseAddonCreditsResult::PurchaseAddonCreditsCheckoutOutput(output) => {
-                    Ok(PurchaseAddonCreditsOutcome::CheckoutRequired {
-                        checkout_url: output.checkout_url,
-                    })
-                }
-                PurchaseAddonCreditsResult::UserFacingError(error) => match error.error {
-                    UserFacingErrorInterface::BudgetExceededError(budget_error) => {
-                        Err(budget_error.into())
-                    }
-                    UserFacingErrorInterface::PaymentMethodDeclinedError(
-                        payment_declined_error,
-                    ) => Err(payment_declined_error.into()),
-                    _ => Err(anyhow!(get_user_facing_error_message(error))),
-                },
-                PurchaseAddonCreditsResult::Unknown => Err(anyhow!("Unknown error")),
-            },
         }
     }
 

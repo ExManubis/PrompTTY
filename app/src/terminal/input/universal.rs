@@ -7,8 +7,8 @@ use warpui::{AppContext, SingletonEntity};
 use super::Input;
 use super::common::{
     add_command_xray_overlay, add_input_suggestions_overlays, add_vim_status_to_stack,
-    add_voltron_overlay, add_workflow_info_overlay, maybe_add_buy_credits_banner,
-    wrap_input_with_focus_handler, wrap_warp_prompt_card,
+    add_voltron_overlay, add_workflow_info_overlay, wrap_input_with_focus_handler,
+    wrap_warp_prompt_card,
 };
 use crate::ai::blocklist::InputType;
 use crate::appearance::Appearance;
@@ -141,17 +141,6 @@ impl Input {
                 app,
             );
         }
-
-        maybe_add_buy_credits_banner(
-            &mut stack,
-            &self.buy_credits_banner,
-            self.is_pane_focused(app),
-            self.terminal_view_id,
-            self.is_input_at_top(&model, app),
-            &self.team_scope(app),
-            &model,
-            app,
-        );
 
         let flush_top = FeatureFlag::FileTree.is_enabled() && self.is_input_at_top(&model, app);
         let card = wrap_warp_prompt_card(

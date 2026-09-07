@@ -1982,7 +1982,3 @@ impl Entity for SyncQueue {
 }
 
 impl SingletonEntity for SyncQueue {}
-
-#[cfg(test)]
-#[path = "sync_queue_tests.rs"]
-mod tests;

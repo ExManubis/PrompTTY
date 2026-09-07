@@ -37,7 +37,6 @@ use warpui::elements::{
 };
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::{ContextPredicate, Keystroke};
-use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
 use warpui::{
@@ -2204,17 +2203,11 @@ impl WarpAgentPageView {
         }
 
         let global_ai_switch_state = SwitchStateHandle::default();
-        let global_ai_sign_up_button = MouseStateHandle::default();
         PageType::new_categorized(
             categories,
             Some(PageTitle::new("Warp Agent").with_trailing_element(
                 move |_view, appearance, app| {
-                    render_global_ai_toggle(
-                        &global_ai_switch_state,
-                        &global_ai_sign_up_button,
-                        appearance,
-                        app,
-                    )
+                    render_global_ai_toggle(&global_ai_switch_state, appearance, app)
                 },
             )),
         )
@@ -2979,17 +2972,12 @@ impl From<ViewHandle<WarpAgentPageView>> for SettingsPageViewHandle {
 /// The page title's trailing widget: the global master switch for all AI features.
 fn render_global_ai_toggle(
     switch_state: &SwitchStateHandle,
-    sign_up_button: &MouseStateHandle,
     appearance: &Appearance,
     app: &AppContext,
 ) -> Box<dyn Element> {
     let ui_builder = appearance.ui_builder();
     let is_ai_disabled_due_to_remote_session_org_policy =
         AISettings::as_ref(app).is_ai_disabled_due_to_remote_session_org_policy(app);
-
-    let is_anonymous = AuthStateProvider::as_ref(app)
-        .get()
-        .is_anonymous_or_logged_out();
 
     let mut row = Flex::row().with_cross_axis_alignment(CrossAxisAlignment::Center);
 
@@ -3014,73 +3002,20 @@ fn render_global_ai_toggle(
         );
     }
 
-    // Show sign-up button for anonymous users, toggle for logged-in users
-    if is_anonymous {
-        row.add_child(
-            Flex::row()
-                .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                .with_child(
-                    Container::new(
-                        Text::new_inline(
-                            "To use AI features, please create an account.",
-                            appearance.ui_font_family(),
-                            14.,
-                        )
-                        .with_color(
-                            appearance
-                                .theme()
-                                .sub_text_color(appearance.theme().surface_2())
-                                .into_solid(),
-                        )
-                        .finish(),
-                    )
-                    .with_margin_right(16.)
-                    .finish(),
-                )
-                .with_child(
-                    Container::new(
-                        ui_builder
-                            .button(ButtonVariant::Accent, sign_up_button.clone())
-                            .with_style(UiComponentStyles {
-                                font_size: Some(14.),
-                                font_weight: Some(Weight::Semibold),
-                                border_radius: Some(CornerRadius::with_all(Radius::Pixels(4.))),
-                                padding: Some(Coords {
-                                    top: 8.,
-                                    bottom: 8.,
-                                    left: 24.,
-                                    right: 24.,
-                                }),
-                                ..Default::default()
-                            })
-                            .with_text_label("Sign up".to_owned())
-                            .build()
-                            .on_click(move |ctx, _, _| {
-                                ctx.dispatch_typed_action(WarpAgentPageAction::SignupAnonymousUser);
-                            })
-                            .finish(),
-                    )
-                    .with_padding_right(TOGGLE_BUTTON_RIGHT_PADDING)
-                    .finish(),
-                )
+    row.add_child(
+        Container::new(
+            ui_builder
+                .switch(switch_state.clone())
+                .check(AISettings::as_ref(app).is_any_ai_enabled(app))
+                .build()
+                .on_click(move |ctx, _, _| {
+                    ctx.dispatch_typed_action(WarpAgentPageAction::ToggleGlobalAI);
+                })
                 .finish(),
-        );
-    } else {
-        row.add_child(
-            Container::new(
-                ui_builder
-                    .switch(switch_state.clone())
-                    .check(AISettings::as_ref(app).is_any_ai_enabled(app))
-                    .build()
-                    .on_click(move |ctx, _, _| {
-                        ctx.dispatch_typed_action(WarpAgentPageAction::ToggleGlobalAI);
-                    })
-                    .finish(),
-            )
-            .with_padding_right(TOGGLE_BUTTON_RIGHT_PADDING)
-            .finish(),
-        );
-    }
+        )
+        .with_padding_right(TOGGLE_BUTTON_RIGHT_PADDING)
+        .finish(),
+    );
 
     row.finish()
 }
@@ -5662,38 +5597,20 @@ impl SettingsWidget for ApiKeysWidget {
                 } else {
                     let current_user_email = auth_state.user_email().unwrap_or_default();
                     let has_admin_permissions = team.has_admin_permissions(&current_user_email);
-                    let upgrade_url = UserWorkspaces::upgrade_link_for_team(team.uid);
                     if has_admin_permissions {
-                        vec![
-                            FormattedTextFragment::hyperlink(
-                                "Upgrade to the Build plan",
-                                upgrade_url,
-                            ),
-                            FormattedTextFragment::plain_text(" to use your own API keys."),
-                        ]
+                        vec![FormattedTextFragment::plain_text(
+                            "Upgrade to the Build plan to use your own API keys.",
+                        )]
                     } else {
                         vec![FormattedTextFragment::plain_text(
                             "Ask your team's admin to upgrade to the Build plan to use your own API keys.",
                         )]
                     }
                 }
-            } else if FeatureFlag::SoloUserByok.is_enabled()
-                && auth_state.is_anonymous_or_logged_out()
-            {
-                vec![
-                    FormattedTextFragment::hyperlink_action(
-                        "Create an account",
-                        WarpAgentPageAction::SignupAnonymousUser,
-                    ),
-                    FormattedTextFragment::plain_text(" to use your own API keys."),
-                ]
             } else {
-                let user_id = auth_state.user_id().unwrap_or_default();
-                let upgrade_url = UserWorkspaces::upgrade_link(user_id);
-                vec![
-                    FormattedTextFragment::hyperlink("Upgrade to the Build plan", upgrade_url),
-                    FormattedTextFragment::plain_text(" to use your own API keys."),
-                ]
+                vec![FormattedTextFragment::plain_text(
+                    "Upgrade to the Build plan to use your own API keys.",
+                )]
             };
 
             let upgrade_text_element = FormattedTextElement::new(

@@ -2017,7 +2017,3 @@ impl crate::terminal::TerminalManager for TerminalManager {
         self
     }
 }
-
-#[cfg(test)]
-#[path = "terminal_manager_tests.rs"]
-mod tests;

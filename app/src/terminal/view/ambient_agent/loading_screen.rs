@@ -145,26 +145,9 @@ fn render_tier_limits_footer<T: Entity>(
     let shape = policy.instance_shape.as_ref()?;
     let specs = format!("{}CPU, {}GB", shape.vcpus, shape.memory_gb);
 
-    // If there's no way to upgrade, don't render the footer at all
-    // (Build Max users can still upgrade to Business plans)
-    if !team.billing_metadata.can_upgrade_to_build_plan()
-        && !team.billing_metadata.can_upgrade_to_build_max_plan()
-        && !team.billing_metadata.is_on_build_max_plan()
-    {
-        return None;
-    }
-
-    let mut fragments = vec![FormattedTextFragment::plain_text(format!(
-        "Your agent is currently running on a {} machine. ",
-        specs
+    let fragments = vec![FormattedTextFragment::plain_text(format!(
+        "Your agent is currently running on a {specs} machine."
     ))];
-
-    let upgrade_url = UserWorkspaces::upgrade_link_for_team(team.uid);
-
-    fragments.push(FormattedTextFragment::hyperlink("Upgrade", upgrade_url));
-    fragments.push(FormattedTextFragment::plain_text(
-        " for more powerful cloud agents.",
-    ));
 
     let formatted_text = FormattedText::new(vec![FormattedTextLine::Line(fragments)]);
 
@@ -177,13 +160,6 @@ fn render_tier_limits_footer<T: Entity>(
         Default::default(),
     )
     .with_alignment(TextAlignment::Center)
-    .with_hyperlink_font_color(theme.accent().into())
-    .register_default_click_handlers_with_action_support(|link, _evt, app| {
-        use warpui::elements::HyperlinkLens;
-        if let HyperlinkLens::Url(url) = link {
-            app.open_url(url);
-        }
-    })
     .finish();
 
     // Create info icon

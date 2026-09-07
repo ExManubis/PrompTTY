@@ -324,18 +324,11 @@ impl SyncDataSource for ModelSelectorDataSource {
                 })
                 .collect_vec()
         };
-        let upgrade_url = UserWorkspaces::as_ref(app).upgrade_link_for_scope(&scope, app);
         Ok(
             query_model_picker_choices(llm_preferences, choices, &query.text, &scope, app)
                 .into_iter()
                 .map(|choice| {
-                    QueryResult::from(ModelSearchItem::new(
-                        choice,
-                        &active_llm_id,
-                        &upgrade_url,
-                        &scope,
-                        app,
-                    ))
+                    QueryResult::from(ModelSearchItem::new(choice, &active_llm_id, &scope, app))
                 })
                 .collect(),
         )
@@ -349,7 +342,6 @@ impl Entity for ModelSelectorDataSource {
 #[derive(Clone)]
 struct ModelSearchItem {
     id: LLMId,
-    upgrade_url: String,
     provider: LLMProvider,
     spec: Option<LLMSpec>,
     leading_icon: Icon,
@@ -375,7 +367,6 @@ impl ModelSearchItem {
     fn new(
         choice: ModelPickerChoice,
         active_llm_id: &LLMId,
-        upgrade_url: &str,
         scope: &dyn TeamScope,
         app: &AppContext,
     ) -> Self {
@@ -400,7 +391,6 @@ impl ModelSearchItem {
             (!is_using_cloud_host && byo_key_source.is_some()).then_some(Icon::Key);
         Self {
             id: llm.id.clone(),
-            upgrade_url: upgrade_url.to_owned(),
             provider: llm.provider,
             spec: llm.spec.clone(),
             leading_icon,
@@ -701,17 +691,14 @@ impl SearchItem for ModelSearchItem {
                     LLMProvider::OpenAI | LLMProvider::Anthropic | LLMProvider::Google
                 );
 
-            let mut text_fragments = vec![
-                FormattedTextFragment::plain_text(format!(
-                    "{display_name} is not available for free users. "
-                )),
-                FormattedTextFragment::hyperlink("Upgrade", self.upgrade_url.clone()),
-            ];
+            let mut text_fragments = vec![FormattedTextFragment::plain_text(format!(
+                "{display_name} is not available for free users."
+            ))];
 
             if byok_available {
-                text_fragments.push(FormattedTextFragment::plain_text(" or ".to_string()));
+                text_fragments.push(FormattedTextFragment::plain_text(" ".to_string()));
                 text_fragments.push(FormattedTextFragment::hyperlink_action(
-                    "bring your own key",
+                    "Bring your own key",
                     WorkspaceAction::ShowSettingsPageWithSearch {
                         search_query: "api".to_string(),
                         section: Some(SettingsSection::WarpAgent),

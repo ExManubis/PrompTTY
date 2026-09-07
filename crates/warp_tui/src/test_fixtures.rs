@@ -149,16 +149,6 @@ pub(crate) fn add_test_terminal_session(
     add_test_terminal_session_with_options(app, window_id, false, None)
 }
 
-pub(crate) fn add_test_terminal_session_with_first_run_onboarding(
-    app: &mut App,
-    window_id: WindowId,
-) -> (
-    ViewHandle<TuiTerminalSessionView>,
-    ModelHandle<Box<dyn TerminalManagerTrait>>,
-) {
-    add_test_terminal_session_with_options(app, window_id, true, None)
-}
-
 pub(crate) fn add_test_terminal_session_with_settings_file_error(
     app: &mut App,
     window_id: WindowId,

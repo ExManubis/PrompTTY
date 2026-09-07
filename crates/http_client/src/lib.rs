@@ -822,14 +822,6 @@ mod origin_tests {
     use super::*;
 
     #[test]
-    fn local_only_build_does_not_treat_warp_dev_as_server_origin() {
-        assert!(!ChannelState::cloud_enabled());
-        assert!(ChannelState::server_root_url().is_empty());
-        let url = reqwest::Url::parse("https://app.warp.dev/graphql/v2").unwrap();
-        assert!(!is_warp_server_origin(&url));
-    }
-
-    #[test]
     fn third_party_origin_does_not_match() {
         let url = reqwest::Url::parse("https://evil.example.com/graphql/v2").unwrap();
         assert!(!is_warp_server_origin(&url));

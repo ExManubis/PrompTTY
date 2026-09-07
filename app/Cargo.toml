@@ -1,11 +1,11 @@
 [package]
-authors = ["Warp Team <dev@warp.dev>"]
+authors = ["Mikkel Jørgensen <mikkel@codemonkey.computer>"]
 default-run = "promptty"
 description = "The local-first terminal for individuals and teams"
 edition = "2024"
 autobins = false
 name = "warp"
-version = "0.1.0"
+version = "0.2.1"
 publish.workspace = true
 license.workspace = true
 
@@ -453,7 +453,6 @@ codebase_index_persistence = ["full_source_code_embedding"]
 well_known_mcp_ids = []
 factory_mcp = []
 default = [
-    "skip_login",
     "agent_mode",
     "osc_hyperlinks",
     "render_continuous_block_selections_with_single_border",
@@ -804,7 +803,6 @@ simulate_github_unauthed = []
 reload_stale_conversation_files = []
 shared_block_title_generation = []
 retry_truncated_code_responses = []
-usage_based_pricing = []
 ai_context_menu = []
 at_menu_outside_of_ai_mode = []
 agent_decides_command_execution = []
@@ -922,7 +920,6 @@ transfer_control_tool = []
 skip_firebase_anonymous_user = []
 custom_model_routers = []
 solo_user_byok = []
-billing_and_usage_page_v2 = []
 gpt_configurable_context_window = []
 configurable_toolbar = []
 warpify_footer = []

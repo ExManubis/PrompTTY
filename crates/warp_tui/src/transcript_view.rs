@@ -412,6 +412,7 @@ impl TuiTranscriptView {
             .any(|block| block.as_ref(ctx).has_exposed_plan(ctx))
     }
 
+    #[cfg_attr(not(test), allow(dead_code))]
     pub(super) fn latest_agent_block_is_out_of_credits(&self, ctx: &AppContext) -> bool {
         self.agent_blocks_in_canonical_order()
             .last()

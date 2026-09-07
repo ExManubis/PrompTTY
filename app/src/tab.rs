@@ -59,6 +59,7 @@ use crate::workspace::{
     PaneViewLocator, TabBarDropTargetData, TabBarLocation, TabContextMenuAnchor, WorkspaceAction,
 };
 
+#[cfg_attr(target_family = "wasm", allow(dead_code))]
 pub const TAB_BAR_BORDER_HEIGHT: f32 = 1.0;
 pub(crate) const TAB_INDICATOR_HEIGHT: f32 = 14.0;
 const TAB_SHORTCUT_HINT_REVEAL_DELAY: Duration = Duration::from_millis(750);
@@ -1092,6 +1093,9 @@ pub struct TabComponent<'a> {
     is_in_multi_tab_selection: bool,
     shortcut_hint_label: Option<String>,
     floating_horizontal: bool,
+    /// Gap after this tab when it is a top-level tab-bar slot. Applied inside
+    /// `Shrinkable` so the tab bar still sees the flex weight.
+    trailing_margin: f32,
 }
 
 /// Structure that holds TabComponent styles.
@@ -1256,6 +1260,7 @@ impl<'a> TabComponent<'a> {
             is_in_multi_tab_selection: false,
             shortcut_hint_label,
             floating_horizontal: !uses_vertical_tabs(ctx),
+            trailing_margin: 0.,
         }
     }
 
@@ -1288,6 +1293,11 @@ impl<'a> TabComponent<'a> {
     /// dispatch the multi-tab selection menu instead of the single-tab menu.
     pub fn with_multi_tab_selection(mut self, is_in_multi_tab_selection: bool) -> Self {
         self.is_in_multi_tab_selection = is_in_multi_tab_selection;
+        self
+    }
+
+    pub fn with_trailing_margin(mut self, trailing_margin: f32) -> Self {
+        self.trailing_margin = trailing_margin;
         self
     }
 
@@ -2010,7 +2020,7 @@ impl<'a> TabComponent<'a> {
             };
         }
 
-        let mut tab = if self.floating_horizontal {
+        let tab = if self.floating_horizontal {
             Container::new(stack)
                 .with_background(background_color)
                 .with_corner_radius(CornerRadius::with_all(Radius::Pixels(FLOATING_CARD_RADIUS)))
@@ -2087,6 +2097,7 @@ impl UiComponent for TabComponent<'_> {
         // Capture before `self` is moved into the Hoverable closure below.
         let for_drag_ghost = self.for_drag_ghost;
         let floating_horizontal = self.floating_horizontal;
+        let trailing_margin = self.trailing_margin;
         let sole_grouped_member = self.sole_grouped_member;
         let locator = self.locator;
         let is_in_multi_tab_selection = self.is_in_multi_tab_selection;
@@ -2195,6 +2206,13 @@ impl UiComponent for TabComponent<'_> {
             };
             let tab_with_drag: Box<dyn Element> = draggable.finish();
             SavePosition::new(tab_with_drag, &tab_position_id(tab_index)).finish()
+        };
+        let full_tab = if trailing_margin > 0. {
+            Container::new(full_tab)
+                .with_margin_right(trailing_margin)
+                .finish()
+        } else {
+            full_tab
         };
         if FeatureFlag::NewTabStyling.is_enabled() || floating_horizontal {
             Shrinkable::new(1.0, full_tab)

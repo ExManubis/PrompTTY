@@ -37,7 +37,6 @@ use crate::ai::ambient_agents::{
     AgentConfigSnapshot, AmbientAgentTask, AmbientAgentTaskId, AmbientAgentTaskState,
 };
 use crate::ai::artifacts::Artifact;
-use crate::auth::AuthStateProvider;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::server::ids::{ServerId, SyncId};
 use crate::server::server_api::ServerApi;
@@ -48,7 +47,6 @@ use crate::server::server_api::ai::{
 };
 use crate::terminal::shared_session;
 use crate::util::time_format::format_approx_duration_from_now_utc;
-use crate::workspaces::user_workspaces::UserWorkspaces;
 
 const MAX_LINE_WIDTH: usize = 90;
 const STREAM_RETRY_BACKOFF_STEPS: &[u64] = &[1, 2, 5, 10];
@@ -421,12 +419,6 @@ impl AmbientAgentRunner {
 
             let ai_client = ServerApiProvider::as_ref(ctx).get_ai_client();
 
-            // Compute the upgrade link in case we hit capacity.
-            let upgrade_link = AuthStateProvider::as_ref(ctx)
-                .get()
-                .user_id()
-                .map(UserWorkspaces::upgrade_link);
-
             let cli_mcp_servers =
                 match super::mcp_config::build_mcp_servers_from_specs(&args.mcp_specs) {
                     Ok(mcp_servers) => mcp_servers,
@@ -569,9 +561,6 @@ impl AmbientAgentRunner {
                             }
                             AmbientAgentEvent::AtCapacity => {
                                 println!("Concurrent cloud agent limit reached. This agent run will begin when one of your current cloud runs completes.");
-                                if let Some(url) = &upgrade_link {
-                                    println!("To increase your concurrent agent limit, upgrade your plan: {}", url);
-                                }
                             }
                             AmbientAgentEvent::StateChanged {
                                 state,

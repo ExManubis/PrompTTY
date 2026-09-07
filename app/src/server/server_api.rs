@@ -10,7 +10,6 @@ pub mod managed_mcp;
 pub mod managed_secrets;
 pub mod object;
 pub(crate) mod presigned_upload;
-pub mod referral;
 pub mod team;
 #[cfg(feature = "tui")]
 pub mod tui_onboarding;
@@ -33,7 +32,6 @@ use instant::Instant;
 use managed_mcp::ManagedMcpClient;
 use object::ObjectClient;
 use parking_lot::Mutex;
-use referral::ReferralsClient;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use team::TeamClient;
@@ -57,6 +55,7 @@ use warpui::{Entity, ModelContext, SingletonEntity};
 use workspace::WorkspaceClient;
 
 use super::experiments::{ServerExperiment, ServerExperiments};
+use crate::ChannelState;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::get_relevant_files::api::{GetRelevantFiles, GetRelevantFilesResponse};
 use crate::ai::predict::generate_ai_input_suggestions::GenerateAIInputSuggestionsRequest;
@@ -69,7 +68,6 @@ use crate::auth::auth_state::AuthState;
 use crate::server::team_scope::RequestTeamScope;
 use crate::server::telemetry::TelemetryApi;
 use crate::settings::PrivacySettingsSnapshot;
-use crate::{ChannelState, settings_view};
 
 pub const FETCH_CHANNEL_VERSIONS_TIMEOUT: std::time::Duration = Duration::from_secs(60);
 #[derive(Serialize)]
@@ -477,25 +475,6 @@ impl ServerApi {
         let client = Arc::new(http_client::Client::new_for_test());
 
         Self::new_with_parts(client, auth_state, tx, None, None, TelemetryApi::new())
-    }
-
-    #[cfg(all(test, feature = "skip_login"))]
-    fn new_for_test_with_bearer_token(
-        bearer_token: Option<String>,
-        event_sender: async_channel::Sender<AuthEvent>,
-    ) -> Self {
-        let auth_state = Arc::new(AuthState::new_logged_out_for_test());
-        if let Some(bearer_token) = bearer_token {
-            auth_state.set_remote_server_bearer_token(bearer_token);
-        }
-        Self::new_with_parts(
-            Arc::new(http_client::Client::new_for_test()),
-            auth_state,
-            event_sender,
-            None,
-            None,
-            TelemetryApi::new(),
-        )
     }
 
     /// Sets the ambient agent task ID to be sent with all subsequent requests.
@@ -1366,8 +1345,6 @@ impl ServerApiProvider {
         ServerExperiments::handle(ctx).update(ctx, |state, ctx| {
             state.apply_latest_state(experiments, ctx);
         });
-
-        settings_view::handle_experiment_change(ctx);
     }
 
     /// Constructs a new SeverApiProvider for tests.
@@ -1389,10 +1366,6 @@ impl ServerApiProvider {
 
     pub fn get_auth_client(&self) -> Arc<dyn AuthClient> {
         self.auth_client.clone()
-    }
-
-    pub fn get_referrals_client(&self) -> Arc<dyn ReferralsClient> {
-        self.server_api.clone()
     }
 
     pub fn get_block_client(&self) -> Arc<dyn BlockClient> {
@@ -1453,7 +1426,3 @@ impl Entity for ServerApiProvider {
 }
 
 impl SingletonEntity for ServerApiProvider {}
-
-#[cfg(test)]
-#[path = "server_api_tests.rs"]
-mod tests;

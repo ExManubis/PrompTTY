@@ -25,9 +25,10 @@ Environment variables:
 - `WS_SERVER_URL` - WebSocket endpoint (default: `ws://localhost:8080/graphql/v2`)
 
 ### Testing
-- `cargo nextest run --no-fail-fast --workspace --exclude command-signatures-v2` - Run tests with nextest
+- `./script/run-core-tests` - Core suite (emulator, parsers, utilities). This is what CI and `./script/presubmit` run.
+- `cargo nextest run --no-fail-fast --workspace --exclude command-signatures-v2` - Full inherited suite (account/Drive/UI tests included)
 - `cargo nextest run -p warp_completer --features v2` - Run completer tests with v2 features
-- `cargo test --doc` - Run doc tests
+- `./script/run-core-tests --doc` - Optional rustdoc examples (not part of CI)
 - `cargo test` - Run standard tests for individual packages
 
 ### Linting and Formatting

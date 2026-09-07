@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Run the core unit/doc test suite (see script/core_test_package_args).
+#
+#   ./script/run-core-tests              # nextest
+#   ./script/run-core-tests --no-run     # compile only
+#   ./script/run-core-tests --doc        # rustdoc tests
+#   ./script/run-core-tests --no-fail-fast
+#
+# Extra args are forwarded to nextest or `cargo test`.
+
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+# Word-splitting is intentional: the helper prints a cargo flag list.
+# shellcheck disable=SC2046
+if [[ "${1:-}" == "--doc" ]]; then
+  shift
+  exec cargo test --locked $(./script/core_test_package_args) --doc "$@"
+fi
+
+exec cargo nextest run --locked $(./script/core_test_package_args) "$@"
