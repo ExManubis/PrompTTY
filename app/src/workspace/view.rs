@@ -337,7 +337,6 @@ use crate::server::telemetry::{
     PaletteSource, SharingDialogSource, TabRenameEvent, WarpDriveSource,
 };
 use crate::session_management::{SessionNavigationData, SessionSource, TabNavigationData};
-use crate::settings::cloud_preferences::CloudPreferencesSettings;
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AccessibilitySettings, AliasExpansionSettings,
     AppEditorSettings, BlockVisibilitySettings, ChangelogSettings, CodeSettings,
@@ -22597,11 +22596,6 @@ impl Workspace {
 
         if privacy_settings.is_telemetry_enabled {
             context.set.insert(flags::TELEMETRY_FLAG);
-        }
-
-        let cloud_preferences_settings = CloudPreferencesSettings::as_ref(app);
-        if *cloud_preferences_settings.settings_sync_enabled.value() {
-            context.set.insert(flags::SETTINGS_SYNC_FLAG);
         }
 
         if *block_list_settings

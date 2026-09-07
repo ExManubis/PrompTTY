@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
 
 use about_page::AboutPageView;
 use agent_profiles_page::{AgentProfilesPageAction, AgentProfilesPageEvent, AgentProfilesPageView};
@@ -12,7 +11,6 @@ use features_page::{FeaturesPageView, FeaturesSettingsPageEvent};
 use itertools::Itertools as _;
 use keybindings::KeybindingsView;
 use knowledge_page::{KnowledgePageAction, KnowledgePageEvent, KnowledgePageView};
-use lazy_static::lazy_static;
 use mcp_servers_page::MCPServersSettingsPageView;
 use nav::{SettingsNavItem, SettingsUmbrella};
 use pathfinder_geometry::vector::Vector2F;
@@ -29,9 +27,6 @@ use warp_core::channel::ChannelState;
 use warp_core::context_flag::ContextFlag;
 use warp_core::features::FeatureFlag;
 use warp_core::send_telemetry_from_ctx;
-use settings::Setting as _;
-use warp_core::settings::ToggleableSetting as _;
-use warp_errors::report_if_error;
 use warp_core::ui::theme::color::internal_colors;
 use warp_editor::editor::NavigationKey;
 use warpify_page::{WarpifyPageAction, WarpifyPageView};
@@ -53,9 +48,6 @@ use self::telemetry::SettingsTelemetryEvent;
 use crate::ai::custom_model_routers::CustomModelRouter;
 use crate::ai::execution_profiles::ExecutionProfileId;
 use crate::appearance::Appearance;
-use crate::auth::AuthStateProvider;
-use crate::auth::auth_manager::AuthManager;
-use crate::auth::auth_view_modal::AuthViewVariant;
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
     TextColors, TextOptions,
@@ -66,7 +58,6 @@ use crate::pane_group::pane::view;
 use crate::pane_group::{BackingView, Direction, PaneConfiguration, PaneEvent, SplitPaneState};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::MCPServerCollectionPaneEntrypoint;
-use crate::settings::cloud_preferences::CloudPreferencesSettings;
 use crate::settings::{AISettings, BlockVisibilitySettings, SettingsFileError};
 use crate::settings_view::mcp_servers_page::{MCPServersSettingsPage, MCPServersSettingsPageEvent};
 use crate::terminal::SizeInfo;
@@ -505,7 +496,6 @@ pub mod flags {
     pub const SYNTAX_HIGHLIGHTING_FLAG: &str = "syntax_highlighting";
     pub const SAME_LINE_PROMPT: &str = "Same_Line_Prompt_Enabled";
     pub const TELEMETRY_FLAG: &str = "telemetry";
-    pub const SETTINGS_SYNC_FLAG: &str = "settings_sync";
     pub const SAFE_MODE_FLAG: &str = "safe_mode";
     pub const CRASH_REPORTING_FLAG: &str = "crash_reporting";
     pub const CLOUD_CONVERSATION_STORAGE_FLAG: &str = "Cloud_Conversation_Storage_Enabled";
@@ -653,90 +643,11 @@ pub mod flags {
     pub const SHOW_HIDDEN_FILES: &str = "ShowHiddenFiles";
 }
 
-lazy_static! {
-    static ref SETTINGS_SYNC_BINDINGS_ADDED: Arc<Mutex<bool>> = Default::default();
-}
-
-fn maybe_add_settings_sync_toggle_binding<T: Action + Clone>(
-    app: &mut AppContext,
-    context: &ContextPredicate,
-    builder: fn(SettingsAction) -> T,
-    toggle_binding_pairs: &mut Vec<ToggleSettingActionPair<T>>,
-) {
-    let mut lock = SETTINGS_SYNC_BINDINGS_ADDED
-        .lock()
-        .expect("settings sync bindings lock poisoned");
-    if !*lock {
-        *lock = true;
-        toggle_binding_pairs.push(
-            ToggleSettingActionPair::new(
-                "settings sync",
-                builder(SettingsAction::ToggleSettingsSync),
-                context,
-                flags::SETTINGS_SYNC_FLAG,
-            )
-            .is_supported_on_current_platform(
-                CloudPreferencesSettings::as_ref(app)
-                    .settings_sync_enabled
-                    .is_supported_on_current_platform(),
-            ),
-        );
-    }
-}
-
-/// Re-registers command-palette bindings that can change after server
-/// experiments are fetched.
-pub fn handle_experiment_change(app: &mut AppContext) {
-    let mut toggle_binding_pairs: Vec<ToggleSettingActionPair<WorkspaceAction>> = Vec::new();
-    maybe_add_settings_sync_toggle_binding(
-        app,
-        &id!("Workspace"),
-        WorkspaceAction::DispatchToSettingsTab,
-        &mut toggle_binding_pairs,
-    );
-    ToggleSettingActionPair::add_toggle_setting_action_pairs_as_bindings(toggle_binding_pairs, app);
-}
-
-fn toggle_settings_sync(ctx: &mut ViewContext<SettingsView>) {
-    if AuthStateProvider::as_ref(ctx)
-        .get()
-        .is_anonymous_or_logged_out()
-    {
-        AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
-            auth_manager.attempt_login_gated_feature(
-                "Toggle Settings Sync",
-                AuthViewVariant::RequireLoginCloseable,
-                ctx,
-            )
-        });
-        return;
-    }
-
-    let new_value = CloudPreferencesSettings::handle(ctx).update(ctx, |prefs_settings, ctx| {
-        report_if_error!(
-            prefs_settings
-                .settings_sync_enabled
-                .toggle_and_save_value(ctx)
-        );
-        *prefs_settings.settings_sync_enabled
-    });
-    send_telemetry_from_ctx!(
-        TelemetryEvent::ToggleSettingsSync {
-            is_settings_sync_enabled: new_value,
-        },
-        ctx
-    );
-    ctx.notify();
-}
-
 pub fn init_actions_from_parent_view<T: Action + Clone>(
     app: &mut AppContext,
     context: &ContextPredicate,
     builder: fn(SettingsAction) -> T,
 ) {
-    let mut settings_sync_pairs = Vec::new();
-    maybe_add_settings_sync_toggle_binding(app, context, builder, &mut settings_sync_pairs);
-    ToggleSettingActionPair::add_toggle_setting_action_pairs_as_bindings(settings_sync_pairs, app);
     appearance_page::init_actions_from_parent_view(app, context, builder);
     features_page::init_actions_from_parent_view(app, context, builder);
     warpify_page::init_actions_from_parent_view(app, context, builder);
@@ -1045,7 +956,6 @@ pub enum DebugSettingsAction {
 pub enum SettingsAction {
     SelectAndRefresh(SettingsSection),
     ToggleUmbrella(usize),
-    ToggleSettingsSync,
     AppearancePageToggle(AppearancePageAction),
     FeaturesPageToggle(FeaturesPageAction),
     PrivacyPageToggle(PrivacyPageAction),
@@ -2672,7 +2582,6 @@ impl TypedActionView for SettingsView {
                     ctx.notify();
                 }
             }
-            SettingsAction::ToggleSettingsSync => toggle_settings_sync(ctx),
             SettingsAction::AppearancePageToggle(appearance_action) => {
                 if let Some(appearance_page) = self.settings_page(SettingsSection::Appearance)
                     && let SettingsPageViewHandle::Appearance(view) = &appearance_page.view_handle
