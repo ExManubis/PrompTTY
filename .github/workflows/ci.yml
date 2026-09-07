@@ -16,7 +16,6 @@ name: CI
 env:
   CARGO_TERM_COLOR: always
   NEXTEST_PROFILE: ci
-  WORKSPACE_TEST_ARGS: --workspace --locked --exclude command-signatures-v2
   RUSTFLAGS: -C debuginfo=line-tables-only --cfg=web_sys_unstable_apis
 
 concurrency:
@@ -82,17 +81,17 @@ jobs:
           tool: nextest
 
       - name: Compile tests
-        run: cargo nextest run ${{ env.WORKSPACE_TEST_ARGS }} --no-run
+        run: ./script/run-core-tests --no-run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run unit tests
         if: success()
-        run: cargo nextest run ${{ env.WORKSPACE_TEST_ARGS }}
+        run: ./script/run-core-tests
 
       - name: Run doc tests
         if: success() || failure()
-        run: cargo test ${{ env.WORKSPACE_TEST_ARGS }} --doc
+        run: ./script/run-core-tests --doc
 
       - name: Run completions-on-js tests
         if: success() || failure()
@@ -157,9 +156,17 @@ jobs:
         shell: bash
         run: |
           set -e
-          cargo clippy --locked --workspace --exclude warp_completer --all-targets --tests -- -D warnings
-          cargo clippy --locked -p warp_completer --all-targets --tests -- -D warnings
-          cargo clippy --locked -p warp --all-targets --tests -- -D warnings
+          # Production code for the whole workspace. Do not pass --all-targets:
+          # that typechecks every inherited test file, including account/Drive/UI
+          # suites that are no longer in the default test run.
+          cargo clippy --locked --workspace --exclude warp_completer --lib --bins --examples -- -D warnings
+          cargo clippy --locked -p warp_completer --lib --bins --examples -- -D warnings
+          # Workspace feature unification enables `warp/tui` through `warp_tui`.
+          # Also lint the default GUI configuration used by `cargo run`.
+          cargo clippy --locked -p warp --lib --bins -- -D warnings
+          # Test targets only for the core suite (see script/core_test_package_args).
+          cargo clippy --locked $(./script/core_test_package_args) --tests -- -D warnings
+          cargo clippy --locked -p warp_completer --tests -- -D warnings
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

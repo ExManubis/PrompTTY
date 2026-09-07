@@ -2,6 +2,10 @@
 # Mark a test as slow if it takes longer than 30s to execute, and terminate it
 # if it takes 2x as long as the slow timeout (i.e.: 60s total).
 slow-timeout = { period = "30s", terminate-after = 2 }
+#
+# CI and `./script/presubmit` run the core suite only (emulator / parsers /
+# utilities). See `script/core_test_package_args`. The full inherited suite:
+#   cargo nextest run --workspace --exclude command-signatures-v2
 
 [profile.ci]
 # Print out output for failing tests as soon as they fail, and also at the end
