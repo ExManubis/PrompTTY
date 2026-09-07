@@ -19,8 +19,8 @@ use warp::tui_export::{
     HandoffLaunchAttachments, HandoffPrepareError, HandoffPrepareInput, HandoffRestoration, LLMId,
     LLMPreferences, LLMPreferencesEvent, OptionRow, OptionSnapshot, OptionSourceStatus,
     PendingCloudLaunch, PendingHandoff, ServerApiProvider, SnapshotUploadTarget, TerminalModel,
-    UserWorkspaces, UserWorkspacesEvent, execute_handoff, oz_model_snapshot,
-    prepare_handoff, suggest_handoff_environment,
+    UserWorkspaces, UserWorkspacesEvent, execute_handoff, oz_model_snapshot, prepare_handoff,
+    suggest_handoff_environment,
 };
 use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 

@@ -5,11 +5,11 @@ use ai::agent::orchestration_config::{
     OrchestrationConfig, OrchestrationConfigStatus, OrchestrationExecutionMode,
 };
 use warp::tui_export::{
-    AIActionStatus, AIAgentAction, AIAgentActionId, AIAgentActionType, AIConversationId,
-    Appearance, AuthSecretSelection, OptionRow, OptionSnapshot, OptionSourceStatus,
-    OrchestrationConfigState, OrchestrationEditState, RunAgentsAgentRunConfig,
-    RunAgentsExecutionMode, RunAgentsRequest, ServerApiProvider, TaskId, TeamContext,
-    UserWorkspaces, register_tui_session_view_test_singletons,
+    AIActionStatus, AIAgentAction, AIAgentActionId, AIAgentActionType, Appearance,
+    AuthSecretSelection, OptionRow, OptionSnapshot, OptionSourceStatus, OrchestrationConfigState,
+    OrchestrationEditState, RunAgentsAgentRunConfig, RunAgentsExecutionMode, RunAgentsRequest,
+    ServerApiProvider, TaskId, TeamContext, UserWorkspaces,
+    register_tui_session_view_test_singletons,
 };
 use warp_core::features::FeatureFlag;
 use warpui::platform::WindowStyle;
@@ -380,7 +380,6 @@ fn test_block(
         );
         ctx.add_typed_action_tui_view(window_id, move |ctx| {
             TuiOrchestrationBlock::from_parts(
-                AIConversationId::new(),
                 action,
                 &request,
                 None,
@@ -426,7 +425,6 @@ fn renderable_test_block(app: &mut App) -> ViewHandle<TuiOrchestrationBlock> {
         );
         ctx.add_typed_action_tui_view(window_id, move |ctx| {
             TuiOrchestrationBlock::from_parts(
-                AIConversationId::new(),
                 action,
                 &request,
                 None,

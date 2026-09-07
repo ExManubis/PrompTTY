@@ -347,7 +347,6 @@ impl TuiSlashCommandModel {
 
     fn update_from_input(&mut self, force_query: bool, ctx: &mut ModelContext<Self>) {
         let input = input_text(&self.input_editor, ctx);
-        if input.is_empty() || !input.starts_with('/') {}
         if matches!(
             self.suggestions_mode.as_ref(ctx).mode(),
             TuiInputSuggestionsMode::ApiKeys

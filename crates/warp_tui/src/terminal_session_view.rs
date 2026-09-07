@@ -21,10 +21,9 @@ use warp::tui_export::slash_commands;
 use warp::tui_export::{
     AIAgentActionId, AIAgentContext, AIAgentExchangeId, AIAgentPtyWriteMode, AIConversation,
     AIConversationAutoexecuteMode, AIConversationId, AcceptSlashCommandOrSavedPrompt,
-    ActiveSession, ActiveSessionEvent, AfterBlockCompletedEvent, AgentConversationEntryId,
-    AgentConversationListEntryState, AgentConversationsModel, AgentInteractionMetadata,
-    AgentViewEntryOrigin, Appearance, BlockId, BlockType, BlocklistAIActionEvent,
-    BlocklistAIActionModel, BlocklistAIContextModel, BlocklistAIController,
+    ActiveSession, ActiveSessionEvent, AgentConversationEntryId, AgentConversationListEntryState,
+    AgentConversationsModel, AgentInteractionMetadata, AgentViewEntryOrigin, Appearance, BlockId,
+    BlocklistAIActionEvent, BlocklistAIActionModel, BlocklistAIContextModel, BlocklistAIController,
     BlocklistAIHistoryEvent, BlocklistAIHistoryModel, BlocklistAIInputModel, CLISubagentController,
     CLISubagentEvent, CLISubagentTarget, COMMAND_REGISTRY, CancellationReason, ChangelogModel,
     ChangelogRequestType, CloudConversationData, CommandExecutionSource, ConversationFileExport,
@@ -33,8 +32,8 @@ use warp::tui_export::{
     LLMPreferences, LLMPreferencesEvent, LOCAL_SKILLS_REMOTE_EXECUTION_ERROR_MESSAGE,
     LinkedWorkflowData, ModelEvent, ParsedSlashCommandInput, PersistenceWriter, PtyIntent,
     PtyIntentEvent, QueuedQueryEvent, QueuedQueryModel, RepoDetectionSessionType,
-    RepoDetectionSource, ResolvedTeamScope, ServerConversationToken, ServerId, SessionSettings,
-    Sessions, SessionsEvent, ShellCommandExecutorEvent, SizeInfo, SizeUpdate, SkillReference,
+    RepoDetectionSource, ResolvedTeamScope, ServerConversationToken, ServerId, Sessions,
+    SessionsEvent, ShellCommandExecutorEvent, SizeInfo, SizeUpdate, SkillReference,
     SlashCommandDataSource as _, SlashCommandKind, SlashCommandSelectionBehavior,
     StartAgentExecutorEvent, StartAgentRequest, StaticCommand, TerminalModel, TerminalSurface,
     TerminalSurfaceInit, TranscriptScope, TuiMcpAction, TuiMcpManager, TuiMcpServerId,
@@ -3035,8 +3034,7 @@ impl TuiTerminalSessionView {
 
     fn cancel_conversation_restore(&mut self, ctx: &mut ViewContext<Self>) -> bool {
         let state = std::mem::take(&mut self.conversation_restore_state);
-        let ConversationRestoreState::Loading { future, .. } = state
-        else {
+        let ConversationRestoreState::Loading { future, .. } = state else {
             self.conversation_restore_state = state;
             return false;
         };

@@ -371,10 +371,10 @@ pub(super) struct TuiAIBlock {
     /// conversation-wide todo/status invalidations to the blocks whose
     /// rendering can actually change.
     renders_todos: bool,
-    is_restored_for_telemetry: bool,
+    is_restored: bool,
     time_to_first_token: OnceCell<TimeDelta>,
     time_to_last_token: Option<TimeDelta>,
-    terminal_telemetry_emitted: bool,
+    output_timing_recorded: bool,
     last_measured_width: Cell<Option<u16>>,
 }
 
@@ -390,7 +390,7 @@ impl TuiAIBlock {
         action_model: ModelHandle<BlocklistAIActionModel>,
         model_events: &ModelHandle<ModelEventDispatcher>,
         terminal_model: Arc<FairMutex<TerminalModel>>,
-        is_restored_for_telemetry: bool,
+        is_restored: bool,
         ctx: &mut ViewContext<Self>,
     ) -> Self {
         let (conversation_id, exchange_id) = identity;
@@ -406,10 +406,10 @@ impl TuiAIBlock {
             action_views: HashMap::new(),
             code_block_views: HashMap::new(),
             renders_todos: false,
-            is_restored_for_telemetry,
+            is_restored,
             time_to_first_token: OnceCell::new(),
             time_to_last_token: None,
-            terminal_telemetry_emitted: false,
+            output_timing_recorded: false,
             last_measured_width: Cell::new(None),
         };
         block.sync_action_views(&action_model, ctx);
@@ -485,7 +485,7 @@ impl TuiAIBlock {
         });
         block.block_model.on_updated_output(
             Box::new(move |me, ctx| {
-                me.record_output_telemetry(ctx);
+                me.record_output_timing(ctx);
                 me.sync_action_views(&action_model, ctx);
                 me.sync_code_block_views(ctx);
                 me.sync_first_credit_gate(ctx);
@@ -519,8 +519,8 @@ impl TuiAIBlock {
         }
     }
 
-    fn record_output_telemetry(&mut self, ctx: &mut ViewContext<Self>) {
-        if self.is_restored_for_telemetry || self.terminal_telemetry_emitted {
+    fn record_output_timing(&mut self, ctx: &mut ViewContext<Self>) {
+        if self.is_restored || self.output_timing_recorded {
             return;
         }
         let status = self.block_model.status(ctx);
@@ -544,7 +544,7 @@ impl TuiAIBlock {
             | AIBlockOutputStatus::Cancelled { .. }
             | AIBlockOutputStatus::Failed { .. } => {}
         }
-        self.terminal_telemetry_emitted = true;
+        self.output_timing_recorded = true;
     }
 
     /// Records the exchange's tool-call action ids and todo presence, and
@@ -809,11 +809,9 @@ impl TuiAIBlock {
             let card_action_model = action_model.clone();
             let run_agents_executor = action_model.as_ref(ctx).run_agents_executor(ctx);
             let fallback_base_model_id = self.block_model.base_model(ctx).map(|id| id.to_string());
-            let is_restored = self.is_restored_for_telemetry;
-            let conversation_id = self.conversation_id;
+            let is_restored = self.is_restored;
             let view = ctx.add_typed_action_tui_view(move |ctx| {
                 TuiOrchestrationBlock::new(
-                    conversation_id,
                     action,
                     &request,
                     active_config,

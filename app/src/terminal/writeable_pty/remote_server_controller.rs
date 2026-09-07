@@ -3,9 +3,7 @@ use std::sync::Arc;
 
 use instant::Instant;
 use remote_server::auth::RemoteServerAuthContext;
-use remote_server::setup::{
-    PreinstallCheckResult, PreinstallStatus, RemoteLibc, RemotePlatform,
-};
+use remote_server::setup::{PreinstallCheckResult, PreinstallStatus, RemoteLibc, RemotePlatform};
 use remote_server::transport::Error;
 use settings::Setting;
 use warp_core::SessionId;
