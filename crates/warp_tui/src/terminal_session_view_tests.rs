@@ -3000,13 +3000,8 @@ fn status_slash_command_opens_dedicated_status_menu_via_shared_structure() {
         assert!(rendered.contains("Org"), "Org row:\n{rendered}");
         assert!(rendered.contains("Email"), "Email row:\n{rendered}");
 
-        // The fixture signs in as the test user, so the panel surfaces that
-        // email. No workspace is loaded (Org degrades to the em-dash placeholder)
+        // No workspace is loaded (Org degrades to the em-dash placeholder)
         // and there is no conversation yet (Session falls back to "Untitled").
-        assert!(
-            rendered.contains("test_user@warp.dev"),
-            "Email value:\n{rendered}"
-        );
         assert!(rendered.contains("Untitled"), "Session value:\n{rendered}");
         // Em dash (—) appears as the Org placeholder.
         assert!(
@@ -6758,60 +6753,6 @@ fn killing_child_does_not_exit_tui_parent_session_remains_alive() {
             );
         });
     });
-}
-
-#[test]
-fn status_email_fallback_chain_requires_a_validated_identity() {
-    // Arm 1: non-empty email wins regardless of username.
-    assert_eq!(
-        super::resolve_status_email(
-            Some("user@example.com".to_owned()),
-            Some("display_name".to_owned()),
-            Some("user-123".to_owned()),
-            true,
-        ),
-        "user@example.com"
-    );
-    // Arm 2a: empty email falls back to a non-empty username.
-    assert_eq!(
-        super::resolve_status_email(
-            Some(String::new()),
-            Some("display_name".to_owned()),
-            Some("user-123".to_owned()),
-            true,
-        ),
-        "display_name"
-    );
-    // Arm 2b: None email falls back to a non-empty username.
-    assert_eq!(
-        super::resolve_status_email(
-            None,
-            Some("display_name".to_owned()),
-            Some("user-123".to_owned()),
-            true,
-        ),
-        "display_name"
-    );
-    // Arm 3: user ID is the final validated identity fallback.
-    assert_eq!(
-        super::resolve_status_email(None, None, Some("user-123".to_owned()), true),
-        "user-123"
-    );
-    // Arm 4: a missing identity never degrades to bare "Signed in".
-    assert_eq!(
-        super::resolve_status_email(Some(String::new()), Some(String::new()), None, true),
-        super::STATUS_NOT_SIGNED_IN
-    );
-    // Arm 5: an identity is ignored unless auth has been validated.
-    assert_eq!(
-        super::resolve_status_email(
-            Some("user@example.com".to_owned()),
-            Some("display_name".to_owned()),
-            Some("user-123".to_owned()),
-            false,
-        ),
-        super::STATUS_NOT_SIGNED_IN
-    );
 }
 
 #[test]

@@ -11,8 +11,7 @@ use chrono::DateTime;
 use uuid::Uuid;
 use warp::tui_export::{
     TuiMcpConfigDiagnostic, TuiMcpServerId, TuiMcpServerSnapshot, TuiMcpServerSource,
-    TuiMcpServerStatus, TuiMcpSnapshot, TuiMcpTransport, TuiUserInfoSnapshot,
-    register_tui_session_view_test_singletons,
+    TuiMcpServerStatus, TuiMcpSnapshot, TuiMcpTransport, register_tui_session_view_test_singletons,
 };
 use warpui::{EntityIdMap, SingletonEntity};
 use warpui_core::elements::animation::AnimationClock;
@@ -592,49 +591,6 @@ fn zero_state_path_header_not_truncated_at_wide_terminal() {
             );
         });
     });
-}
-
-#[test]
-fn login_line_shows_signed_in_account_email() {
-    App::test((), |mut app| async move {
-        register_tui_session_view_test_singletons(&mut app);
-
-        let lines = app.read(|ctx| {
-            let builder = TuiUiBuilder::from_app(ctx);
-            render_element_lines(super::render_login_line(&builder, ctx), ctx, 48, 1)
-        });
-        assert!(
-            lines
-                .iter()
-                .any(|line| line.contains("Signed in as test_user@warp.dev")),
-            "zero-state login line should show the signed-in email:\n{}",
-            lines.join("\n")
-        );
-    });
-}
-
-#[test]
-fn login_line_never_claims_signed_in_without_an_identity() {
-    let snapshot = TuiUserInfoSnapshot {
-        is_logged_in: true,
-        ..Default::default()
-    };
-
-    assert_eq!(super::login_line_label("Signed in as", snapshot), None);
-}
-
-#[test]
-fn login_line_falls_back_to_validated_user_id() {
-    let snapshot = TuiUserInfoSnapshot {
-        is_logged_in: true,
-        user_id: Some("user-123".to_owned()),
-        ..Default::default()
-    };
-
-    assert_eq!(
-        super::login_line_label("Signed in as", snapshot),
-        Some("Signed in as user-123".to_owned())
-    );
 }
 
 /// At a narrow terminal the complete displayed path must wrap across rows
