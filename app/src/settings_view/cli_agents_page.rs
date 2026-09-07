@@ -16,40 +16,34 @@ use warp_errors::report_if_error;
 use warpui::elements::{
     ChildView, Container, CornerRadius, CrossAxisAlignment, Element, Empty, Flex,
     FormattedTextElement, HighlightedHyperlink, MainAxisAlignment, MainAxisSize, MouseStateHandle,
-    ParentElement, Radius, Shrinkable,
-};
+    ParentElement, Radius, Shrinkable};
 use warpui::keymap::ContextPredicate;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{
-    Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, id,
-};
+    Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, id};
 
 use super::ai_shared::{
     render_ai_feature_switch, render_ai_setting_toggle, render_toolbar_layout_editor, styles,
-    update_editor_interaction_state,
-};
+    update_editor_interaction_state};
 use super::settings_page::{
     AdditionalInfo, CONTENT_FONT_SIZE, LocalOnlyIconState, MatchData, PageTitle, PageType,
     SettingsPageMeta, SettingsPageViewHandle, SettingsWidget, ToggleState, build_toggle_element,
-    render_body_item_label,
-};
+    render_body_item_label};
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::ai::blocklist::agent_view::agent_input_footer::editor::{
-    AgentToolbarEditorMode, AgentToolbarInlineEditor,
-};
+    AgentToolbarEditorMode, AgentToolbarInlineEditor};
 use crate::appearance::Appearance;
 use crate::menu::{MenuItem, MenuItemFields};
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AutoDismissRichInputAfterSubmit,
     AutoOpenRichInputOnCLIAgentStart, AutoToggleRichInput, ShouldRenderCLIAgentToolbar,
-    SubmitRichInputOnCtrlEnter,
-};
+    SubmitRichInputOnCtrlEnter};
 use crate::terminal::CLIAgent;
 use crate::util::bindings;
 use crate::view_components::dropdown::DropdownAction;
 use crate::view_components::{Dropdown, SubmittableTextInput, SubmittableTextInputEvent};
-use crate::{TelemetryEvent, send_telemetry_from_ctx};
+use crate::{TelemetryEvent};
 
 const PAGE_TITLE: &str = "Third party CLI agents";
 
@@ -59,8 +53,7 @@ pub struct CLIAgentsPageView {
     cli_agent_footer_command_editor: ViewHandle<SubmittableTextInput>,
     cli_agent_footer_command_mouse_state_handles: Vec<MouseStateHandle>,
     cli_agent_footer_command_agent_dropdowns: Vec<ViewHandle<Dropdown<CLIAgentsPageAction>>>,
-    cli_agent_toolbar_inline_editor: ViewHandle<AgentToolbarInlineEditor>,
-}
+    cli_agent_toolbar_inline_editor: ViewHandle<AgentToolbarInlineEditor>}
 
 impl CLIAgentsPageView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -83,8 +76,7 @@ impl CLIAgentsPageView {
                         settings.add_cli_agent_footer_enabled_command(command, ctx);
                     });
                 }
-                SubmittableTextInputEvent::Escape => ctx.emit(CLIAgentsPageEvent::FocusModal),
-            },
+                SubmittableTextInputEvent::Escape => ctx.emit(CLIAgentsPageEvent::FocusModal)},
         );
 
         let cli_agent_footer_command_mouse_state_handles = AISettings::as_ref(ctx)
@@ -120,8 +112,7 @@ impl CLIAgentsPageView {
             cli_agent_footer_command_editor,
             cli_agent_footer_command_mouse_state_handles,
             cli_agent_footer_command_agent_dropdowns: Self::create_cli_agent_dropdowns(ctx),
-            cli_agent_toolbar_inline_editor,
-        }
+            cli_agent_toolbar_inline_editor}
     }
 
     fn build_page() -> PageType<Self> {
@@ -169,8 +160,7 @@ impl CLIAgentsPageView {
                             .with_on_select_action(DropdownAction::select_action_and_close(
                                 CLIAgentsPageAction::SetCLIAgentForCommand {
                                     pattern: pattern_clone.clone(),
-                                    agent: Some(agent),
-                                },
+                                    agent: Some(agent)},
                             ));
                         if let Some(icon) = icon {
                             fields = fields.with_icon(icon);
@@ -183,8 +173,7 @@ impl CLIAgentsPageView {
                             .with_on_select_action(DropdownAction::select_action_and_close(
                                 CLIAgentsPageAction::SetCLIAgentForCommand {
                                     pattern: pattern_clone.clone(),
-                                    agent: None,
-                                },
+                                    agent: None},
                             ))
                             .into_item(),
                     );
@@ -228,8 +217,7 @@ impl View for CLIAgentsPageView {
 }
 
 pub enum CLIAgentsPageEvent {
-    FocusModal,
-}
+    FocusModal}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CLIAgentsPageAction {
@@ -241,9 +229,7 @@ pub enum CLIAgentsPageAction {
     RemoveCLIAgentToolbarEnabledCommand(String),
     SetCLIAgentForCommand {
         pattern: String,
-        agent: Option<CLIAgent>,
-    },
-}
+        agent: Option<CLIAgent>}}
 
 impl TypedActionView for CLIAgentsPageView {
     type Action = CLIAgentsPageAction;
@@ -257,12 +243,6 @@ impl TypedActionView for CLIAgentsPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleCLIAgentToolbarSetting {
-                                is_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for CLI Agent Footer setting: {e:?}");
@@ -410,8 +390,7 @@ pub fn cli_agent_settings_widget_id() -> &'static str {
 
 #[derive(Default)]
 struct CLIAgentWidget {
-    cli_agent_footer_toggle: SwitchStateHandle,
-}
+    cli_agent_footer_toggle: SwitchStateHandle}
 
 impl SettingsWidget for CLIAgentWidget {
     type View = CLIAgentsPageView;
@@ -483,8 +462,7 @@ fn should_render_cli_agent_rich_input(app: &AppContext) -> bool {
 #[derive(Default)]
 struct CLIAgentAutoToggleRichInputWidget {
     toggle: SwitchStateHandle,
-    info_tooltip: MouseStateHandle,
-}
+    info_tooltip: MouseStateHandle}
 
 impl SettingsWidget for CLIAgentAutoToggleRichInputWidget {
     type View = CLIAgentsPageView;
@@ -516,8 +494,7 @@ impl SettingsWidget for CLIAgentAutoToggleRichInputWidget {
                 secondary_text: None,
                 tooltip_override_text: Some(
                     "Requires the Warp plugin for your coding agent".to_owned(),
-                ),
-            }),
+                )}),
             LocalOnlyIconState::for_setting(
                 AutoToggleRichInput::storage_key(),
                 AutoToggleRichInput::sync_to_cloud(),
@@ -545,8 +522,7 @@ impl SettingsWidget for CLIAgentAutoToggleRichInputWidget {
 
 #[derive(Default)]
 struct CLIAgentAutoOpenRichInputWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for CLIAgentAutoOpenRichInputWidget {
     type View = CLIAgentsPageView;
@@ -583,8 +559,7 @@ impl SettingsWidget for CLIAgentAutoOpenRichInputWidget {
 
 #[derive(Default)]
 struct CLIAgentAutoDismissRichInputWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for CLIAgentAutoDismissRichInputWidget {
     type View = CLIAgentsPageView;
@@ -621,8 +596,7 @@ impl SettingsWidget for CLIAgentAutoDismissRichInputWidget {
 
 #[derive(Default)]
 struct CLIAgentSubmitRichInputWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for CLIAgentSubmitRichInputWidget {
     type View = CLIAgentsPageView;

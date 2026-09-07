@@ -4,8 +4,7 @@ use std::sync::Arc;
 use std::sync::mpsc::SyncSender;
 
 use ai::index::full_source_code_embedding::manager::{
-    CodebaseIndexManager, CodebaseIndexManagerEvent,
-};
+    CodebaseIndexManager, CodebaseIndexManagerEvent};
 use ai::project_context::model::{ProjectContextModel, ProjectContextModelEvent};
 use ai::workspace::{WorkspaceMetadata, WorkspaceMetadataEvent};
 use anyhow::Context;
@@ -36,8 +35,7 @@ use crate::ai::AIRequestUsageModel;
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};
 #[cfg(feature = "local_fs")]
 use crate::ai::codebase_auto_indexing::{
-    CodebaseAutoIndexingSurface, auto_index_candidate_roots, should_auto_index_codebase,
-};
+    CodebaseAutoIndexingSurface, auto_index_candidate_roots, should_auto_index_codebase};
 use crate::ai::metadata_project_rules::read_project_rule_contents;
 #[cfg(feature = "local_fs")]
 use crate::code::language_server_shutdown_manager::LanguageServerShutdownManager;
@@ -45,7 +43,6 @@ use crate::code::language_server_shutdown_manager::LanguageServerShutdownManager
 use crate::code::lsp_telemetry::LspTelemetryEvent;
 use crate::persistence::ModelEvent;
 #[cfg(feature = "local_fs")]
-use crate::send_telemetry_from_ctx;
 #[cfg(feature = "local_fs")]
 use crate::server::server_api::ServerApiProvider;
 use crate::settings::CodeSettings;
@@ -67,8 +64,7 @@ pub enum EnablementState {
     /// Server was detected as available for a repo but not yet explicitly
     /// enabled/disabled by the user. Entries with this state live only in
     /// memory and are never persisted to SQLite.
-    Suggested,
-}
+    Suggested}
 
 /// Describes an LSP operation to be executed after capturing the interactive shell PATH.
 #[cfg(feature = "local_fs")]
@@ -77,17 +73,14 @@ pub enum LspTask {
     Install {
         file_path: PathBuf,
         repo_root: PathBuf,
-        server_type: LSPServerType,
-    },
+        server_type: LSPServerType},
     /// Spawn LSP servers for a file path.
-    Spawn { file_path: PathBuf },
-}
+    Spawn { file_path: PathBuf }}
 
 pub enum LSPEnablementResultForFile {
     Enabled,
     UnsupportedLanguage,
-    LSPNotEnabled { root_name: Option<String> },
-}
+    LSPNotEnabled { root_name: Option<String> }}
 
 /// Tracks whether an LSP server is relevant/installed/enabled for a repo.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -103,8 +96,7 @@ pub enum LspRepoStatus {
     /// LSP is disabled and not installed.
     DisabledAndNotInstalled { server_type: LSPServerType },
     /// LSP is currently being installed.
-    Installing { server_type: LSPServerType },
-}
+    Installing { server_type: LSPServerType }}
 
 /// Global installation status for an LSP server (across all projects).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -112,8 +104,7 @@ pub enum LSPInstallationStatus {
     Installed,
     NotInstalled,
     Checking,
-    Installing,
-}
+    Installing}
 
 impl LspRepoStatus {
     /// Converts an [`LSPInstallationStatus`] (global, per-server-type) into an
@@ -126,15 +117,13 @@ impl LspRepoStatus {
             LSPInstallationStatus::Installed => Self::DisabledAndInstalled { server_type },
             LSPInstallationStatus::NotInstalled => Self::DisabledAndNotInstalled { server_type },
             LSPInstallationStatus::Checking => Self::CheckingForInstallation,
-            LSPInstallationStatus::Installing => Self::Installing { server_type },
-        }
+            LSPInstallationStatus::Installing => Self::Installing { server_type }}
     }
 }
 
 pub struct Workspace {
     metadata: WorkspaceMetadata,
-    language_servers: HashMap<LSPServerType, EnablementState>,
-}
+    language_servers: HashMap<LSPServerType, EnablementState>}
 
 impl Workspace {
     /// Returns `true` if this workspace has been persisted to SQLite.
@@ -166,8 +155,7 @@ pub struct PersistedWorkspace {
     model_event_sender: Option<SyncSender<ModelEvent>>,
     /// Global installation status per LSP server type.
     #[cfg(feature = "local_fs")]
-    lsp_installation_status: HashMap<LSPServerType, LSPInstallationStatus>,
-}
+    lsp_installation_status: HashMap<LSPServerType, LSPInstallationStatus>}
 
 #[derive(Debug, Clone)]
 pub enum PersistedWorkspaceEvent {
@@ -175,8 +163,7 @@ pub enum PersistedWorkspaceEvent {
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     InstallStatusUpdate {
         server_type: LSPServerType,
-        status: LSPInstallationStatus,
-    },
+        status: LSPInstallationStatus},
     /// Emitted when LSP installation completes successfully.
     /// Toast notification is shown directly by PersistedWorkspace.
     /// The server is also spawned automatically by PersistedWorkspace.
@@ -190,13 +177,11 @@ pub enum PersistedWorkspaceEvent {
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     AvailableServersDetected {
         workspace_path: PathBuf,
-        servers: Vec<LSPServerType>,
-    },
+        servers: Vec<LSPServerType>},
     /// Emitted when the user explicitly adds a repo via a picker (e.g. the tab-config
     /// params modal's repo dropdown). Subscribers can use this to refresh their list.
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-    WorkspaceAdded { path: PathBuf },
-}
+    WorkspaceAdded { path: PathBuf }}
 
 impl Entity for PersistedWorkspace {
     type Event = PersistedWorkspaceEvent;
@@ -211,8 +196,7 @@ impl PersistedWorkspace {
             workspaces: HashMap::new(),
             model_event_sender: None,
             #[cfg(feature = "local_fs")]
-            lsp_installation_status: HashMap::new(),
-        }
+            lsp_installation_status: HashMap::new()}
     }
 
     pub fn new(
@@ -234,8 +218,7 @@ impl PersistedWorkspace {
                     path,
                     Workspace {
                         metadata,
-                        language_servers,
-                    },
+                        language_servers},
                 )
             })
             .collect();
@@ -290,14 +273,12 @@ impl PersistedWorkspace {
 
                     if !delta.discovered_rules.is_empty() {
                         events.push(ModelEvent::UpsertProjectRules {
-                            project_rule_paths: delta.discovered_rules.clone(),
-                        });
+                            project_rule_paths: delta.discovered_rules.clone()});
                     }
 
                     if !delta.deleted_rules.is_empty() {
                         events.push(ModelEvent::DeleteProjectRules {
-                            path: delta.deleted_rules.clone(),
-                        });
+                            path: delta.deleted_rules.clone()});
                     }
 
                     if !events.is_empty() {
@@ -337,8 +318,7 @@ impl PersistedWorkspace {
             workspaces: metadata,
             model_event_sender,
             #[cfg(feature = "local_fs")]
-            lsp_installation_status: HashMap::new(),
-        };
+            lsp_installation_status: HashMap::new()};
 
         // Kick off LSP suggestion scanning for all existing workspaces so that
         // the available-server state is fresh by the time any footer is created.
@@ -380,8 +360,7 @@ impl PersistedWorkspace {
                 root_name: root
                     .file_name()
                     .and_then(|s| s.to_str())
-                    .map(|s| s.to_string()),
-            };
+                    .map(|s| s.to_string())};
         };
 
         for (language_server, enablement) in &workspace.language_servers {
@@ -396,8 +375,7 @@ impl PersistedWorkspace {
             root_name: root
                 .file_name()
                 .and_then(|s| s.to_str())
-                .map(|s| s.to_string()),
-        }
+                .map(|s| s.to_string())}
     }
 
     /// Internal method to set LSP server state for a path.
@@ -421,8 +399,7 @@ impl PersistedWorkspace {
             workspace.metadata.modified_ts = Some(Utc::now());
             let metadata = workspace.metadata.clone();
             self.save_to_db(vec![ModelEvent::UpsertCodebaseIndexMetadata {
-                index_metadata: Box::new(metadata),
-            }]);
+                index_metadata: Box::new(metadata)}]);
         }
 
         match self.workspaces.get_mut(path) {
@@ -435,19 +412,16 @@ impl PersistedWorkspace {
                     navigated_ts: None,
                     // Consider creation as a modification event.
                     modified_ts: Some(Utc::now()),
-                    queried_ts: None,
-                };
+                    queried_ts: None};
 
                 self.save_to_db(vec![ModelEvent::UpsertCodebaseIndexMetadata {
-                    index_metadata: Box::new(metadata.clone()),
-                }]);
+                    index_metadata: Box::new(metadata.clone())}]);
 
                 self.workspaces.insert(
                     path.to_path_buf(),
                     Workspace {
                         metadata,
-                        language_servers: HashMap::from([(server_type, state)]),
-                    },
+                        language_servers: HashMap::from([(server_type, state)])},
                 );
             }
         }
@@ -456,8 +430,7 @@ impl PersistedWorkspace {
         self.save_to_db(vec![ModelEvent::UpsertWorkspaceLanguageServer {
             workspace_path: path.to_path_buf(),
             lsp_type: server_type,
-            enabled: state,
-        }]);
+            enabled: state}]);
     }
 
     pub fn root_for_workspace<'a>(&self, path: &'a Path) -> Option<&'a Path> {
@@ -536,8 +509,7 @@ impl PersistedWorkspace {
                     workspace.language_servers.keys().copied().collect();
                 ctx.emit(PersistedWorkspaceEvent::AvailableServersDetected {
                     workspace_path,
-                    servers,
-                });
+                    servers});
                 continue;
             }
             paths_to_scan.push(workspace_path);
@@ -588,10 +560,8 @@ impl PersistedWorkspace {
                                     path: workspace_path.clone(),
                                     navigated_ts: None,
                                     modified_ts: None,
-                                    queried_ts: None,
-                                },
-                                language_servers: HashMap::new(),
-                            });
+                                    queried_ts: None},
+                                language_servers: HashMap::new()});
 
                     for &server_type in &servers {
                         workspace
@@ -602,8 +572,7 @@ impl PersistedWorkspace {
 
                     ctx.emit(PersistedWorkspaceEvent::AvailableServersDetected {
                         workspace_path,
-                        servers,
-                    });
+                        servers});
                 }
             },
         );
@@ -716,10 +685,8 @@ impl PersistedWorkspace {
                             path: path.clone(),
                             navigated_ts: Some(now),
                             modified_ts: None,
-                            queried_ts: None,
-                        },
-                        language_servers: HashMap::new(),
-                    },
+                            queried_ts: None},
+                        language_servers: HashMap::new()},
                 );
             }
         }
@@ -782,8 +749,7 @@ impl PersistedWorkspace {
                     navigated_ts: None,
                     // Count creation as a modification event.
                     modified_ts: Some(Utc::now()),
-                    queried_ts: None,
-                };
+                    queried_ts: None};
 
                 if let Some(existing) = self.workspaces.get_mut(root_path) {
                     // Preserve existing language server settings when re-creating
@@ -795,8 +761,7 @@ impl PersistedWorkspace {
                         root_path.clone(),
                         Workspace {
                             metadata: new_metadata,
-                            language_servers: HashMap::new(),
-                        },
+                            language_servers: HashMap::new()},
                     );
                 }
                 self.persist_metadata_for_index(root_path);
@@ -815,8 +780,7 @@ impl PersistedWorkspace {
 
         if let Some(single_metadata) = self.workspace_for_path(path) {
             self.save_to_db(vec![ModelEvent::UpsertCodebaseIndexMetadata {
-                index_metadata: Box::new(single_metadata),
-            }]);
+                index_metadata: Box::new(single_metadata)}]);
         }
     }
 
@@ -878,8 +842,7 @@ impl PersistedWorkspace {
         self.save_to_db(indices_to_remove.iter().filter_map(|path| {
             let Some(ws) = self.workspaces.get(path) else {
                 return Some(ModelEvent::DeleteCodebaseIndexMetadata {
-                    repo_path: path.to_path_buf(),
-                });
+                    repo_path: path.to_path_buf()});
             };
 
             // Skip non-persisted workspaces — they have no DB row to delete.
@@ -904,8 +867,7 @@ impl PersistedWorkspace {
             }
 
             Some(ModelEvent::DeleteCodebaseIndexMetadata {
-                repo_path: path.to_path_buf(),
-            })
+                repo_path: path.to_path_buf()})
         }));
     }
 
@@ -952,8 +914,7 @@ impl PersistedWorkspace {
             .insert(server_type, LSPInstallationStatus::Installing);
         ctx.emit(PersistedWorkspaceEvent::InstallStatusUpdate {
             server_type,
-            status: LSPInstallationStatus::Installing,
-        });
+            status: LSPInstallationStatus::Installing});
 
         let repo_root_clone = repo_root.clone();
         let file_path_clone = file_path.clone();
@@ -994,16 +955,14 @@ impl PersistedWorkspace {
                     // Also emit status update so listeners can update their UI
                     ctx.emit(PersistedWorkspaceEvent::InstallStatusUpdate {
                         server_type,
-                        status: LSPInstallationStatus::Installed,
-                    });
+                        status: LSPInstallationStatus::Installed});
 
                     // Spawn the server now that it's installed and enabled.
                     // This is done here so it happens exactly once, rather
                     // than relying on each subscriber to spawn independently.
                     me.execute_lsp_task(
                         LspTask::Spawn {
-                            file_path: file_path_clone,
-                        },
+                            file_path: file_path_clone},
                         ctx,
                     );
                 }
@@ -1034,8 +993,7 @@ impl PersistedWorkspace {
                     // Also emit status update so listeners can update their UI
                     ctx.emit(PersistedWorkspaceEvent::InstallStatusUpdate {
                         server_type,
-                        status: LSPInstallationStatus::NotInstalled,
-                    });
+                        status: LSPInstallationStatus::NotInstalled});
                 }
             },
         );
@@ -1121,20 +1079,8 @@ impl PersistedWorkspace {
             let server_type_name = server.as_ref(ctx).server_name();
             ctx.subscribe_to_model(&server, move |_me, _, event, ctx| match event {
                 LspEvent::Started => {
-                    send_telemetry_from_ctx!(
-                        LspTelemetryEvent::ServerStarted {
-                            server_type: server_type_name.clone(),
-                        },
-                        ctx
-                    );
                 }
                 LspEvent::Failed(e) => {
-                    send_telemetry_from_ctx!(
-                        LspTelemetryEvent::ServerFailed {
-                            server_type: server_type_name.clone(),
-                        },
-                        ctx
-                    );
                     if let Some(window_id) = WindowManager::as_ref(ctx).active_window()
                     {
                         ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
@@ -1183,8 +1129,7 @@ impl PersistedWorkspace {
             LspTask::Install {
                 file_path,
                 repo_root,
-                server_type,
-            } => {
+                server_type} => {
                 me.handle_install_lsp(file_path, repo_root, server_type, path_env_var, ctx);
             }
             LspTask::Spawn { file_path } => {
@@ -1258,8 +1203,7 @@ impl PersistedWorkspace {
                         me.lsp_installation_status.insert(server_type, status);
                         ctx.emit(PersistedWorkspaceEvent::InstallStatusUpdate {
                             server_type,
-                            status,
-                        });
+                            status});
                     },
                 );
 

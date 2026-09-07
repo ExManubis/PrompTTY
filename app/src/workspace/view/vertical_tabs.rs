@@ -25,8 +25,7 @@ use warpui::elements::{
     ParentAnchor, ParentElement, ParentOffsetBounds, PositionedElementAnchor,
     PositionedElementOffsetBounds, Radius, Resizable, ResizableStateHandle, SavePosition,
     ScrollTarget, ScrollToPositionMode, ScrollbarWidth, Shrinkable, Stack, Text,
-    resizable_state_handle,
-};
+    resizable_state_handle};
 use warpui::fonts::{Properties, Weight};
 use warpui::platform::Cursor;
 use warpui::prelude::Align;
@@ -52,13 +51,11 @@ use crate::drive::cloud_object_styling::warp_drive_icon_color;
 use crate::editor::EditorView;
 use crate::pane_group::pane::IPaneType;
 use crate::pane_group::{
-    CodePane, NotebookPane, PaneGroup, PaneId, TabBarHoverIndex, TerminalPane, WorkflowPane,
-};
+    CodePane, NotebookPane, PaneGroup, PaneId, TabBarHoverIndex, TerminalPane, WorkflowPane};
 use crate::safe_triangle::SafeTriangle;
 use crate::tab::{
     SelectedTabColor, TAB_INDICATOR_SYNCED_COLOR, TabData, reveals_tab_shortcut_hints,
-    tab_activate_binding_name, tab_position_id,
-};
+    tab_activate_binding_name, tab_position_id};
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::terminal::session_settings::SessionSettings;
 use crate::terminal::view::TerminalViewState;
@@ -77,16 +74,13 @@ use crate::workspace::sync_inputs::SyncedInputState;
 use crate::workspace::tab_group::{TabGroup, TabGroupId};
 use crate::workspace::tab_settings::{
     TabSettings, VerticalTabsCompactSubtitle, VerticalTabsDisplayGranularity,
-    VerticalTabsPrimaryInfo, VerticalTabsTabItemMode, VerticalTabsViewMode,
-};
+    VerticalTabsPrimaryInfo, VerticalTabsTabItemMode, VerticalTabsViewMode};
 use crate::workspace::view::vertical_tabs::telemetry::{
-    VerticalTabsChipEntrypoint, VerticalTabsTelemetryEvent,
-};
+    VerticalTabsChipEntrypoint, VerticalTabsTelemetryEvent};
 use crate::workspace::{
     PaneViewLocator, TabBarLocation, TabContextMenuAnchor, VerticalTabsPaneContextMenuTarget,
-    VerticalTabsPaneDropTargetData, Workspace,
-};
-use crate::{FeatureFlag, send_telemetry_from_app_ctx};
+    VerticalTabsPaneDropTargetData, Workspace};
+use crate::{FeatureFlag};
 
 const PANEL_WIDTH: f32 = 248.;
 const MIN_PANEL_WIDTH: f32 = 200.;
@@ -173,20 +167,16 @@ fn detail_target_for_hovered_row(
     match granularity {
         VerticalTabsDisplayGranularity::Panes => VerticalTabsDetailTarget::Pane {
             pane_group_id,
-            pane_id,
-        },
+            pane_id},
         VerticalTabsDisplayGranularity::Tabs => VerticalTabsDetailTarget::Tab {
             pane_group_id,
-            source_pane_id: pane_id,
-        },
-    }
+            source_pane_id: pane_id}}
 }
 
 fn detail_target_kind(target: VerticalTabsDetailTarget) -> VerticalTabsDetailTargetKind {
     match target {
         VerticalTabsDetailTarget::Pane { .. } => VerticalTabsDetailTargetKind::Pane,
-        VerticalTabsDetailTarget::Tab { .. } => VerticalTabsDetailTargetKind::Tab,
-    }
+        VerticalTabsDetailTarget::Tab { .. } => VerticalTabsDetailTargetKind::Tab}
 }
 
 /// Returns whether the current pointer geometry still justifies keeping the vertical-tabs detail
@@ -240,8 +230,7 @@ where
             .iter()
             .copied()
             .all(&mut is_supported)
-            .then(|| visible_pane_ids.to_vec()),
-    }
+            .then(|| visible_pane_ids.to_vec())}
 }
 
 fn pane_ids_for_detail_target(
@@ -270,8 +259,7 @@ fn pane_ids_for_detail_target(
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum TerminalPrimaryLineFont {
     Ui,
-    Monospace,
-}
+    Monospace}
 
 fn render_pane_icon_with_status(
     variant: IconWithStatusVariant,
@@ -292,8 +280,7 @@ struct PaneGroupStateHandles {
     header: MouseStateHandle,
     kebab: MouseStateHandle,
     close: MouseStateHandle,
-    action_buttons: MouseStateHandle,
-}
+    action_buttons: MouseStateHandle}
 
 /// Hover states for a tab group's container, header, chevron, kebab, and close button.
 #[derive(Clone, Default)]
@@ -302,8 +289,7 @@ struct TabGroupMouseStates {
     header: MouseStateHandle,
     chevron: MouseStateHandle,
     kebab: MouseStateHandle,
-    close: MouseStateHandle,
-}
+    close: MouseStateHandle}
 
 /// Describes how a pane row sits in its tab's row layout. Carried as state
 /// on `PaneProps`; the actual corner radius is derived at render time.
@@ -313,8 +299,7 @@ enum PaneRowStackPosition {
     Standalone,
     /// Stacked flush against siblings (no inter-row gap); only the outer
     /// (first/last) corners round so adjacent backgrounds meet edge-to-edge.
-    Flush { is_first: bool, is_last: bool },
-}
+    Flush { is_first: bool, is_last: bool }}
 
 impl PaneRowStackPosition {
     /// Resting corner radius for the row's background — derived from its
@@ -411,8 +396,7 @@ fn render_pane_row_element(
         pane_rename_editor: _,
         is_pinned,
         container_is_hovered,
-        shortcut_hint_binding_name: _,
-    } = props;
+        shortcut_hint_binding_name: _} = props;
     let is_selected = is_active_tab && is_focused;
     let show_pin = FeatureFlag::PinnedTabs.is_enabled() && is_pinned && !container_is_hovered;
     let mut row = Hoverable::new(mouse_state, move |state| {
@@ -475,8 +459,7 @@ fn render_pane_row_element(
     .on_click_with_modifiers(move |ctx, _, _, modifiers| {
         let locator = PaneViewLocator {
             pane_group_id,
-            pane_id,
-        };
+            pane_id};
         // Shift-click extends the range selection; cmd/ctrl-click toggles a
         // single tab in/out of the selection; plain click focuses the pane.
         if modifiers.shift && FeatureFlag::GroupedTabs.is_enabled() {
@@ -544,8 +527,7 @@ fn render_pane_row_element(
 
     let pane_locator = PaneViewLocator {
         pane_group_id,
-        pane_id,
-    };
+        pane_id};
     let row_supports_rename =
         renamable_tab_index.is_some() || pane_context_menu_tab_index.is_some();
     // Panes view: row == a pane, rename the pane. Tabs/Summary: row == the tab, rename the tab.
@@ -566,16 +548,14 @@ fn render_pane_row_element(
             if is_in_multi_tab_selection {
                 ctx.dispatch_typed_action(WorkspaceAction::ToggleTabSelectionRightClickMenu {
                     tab_index,
-                    anchor,
-                });
+                    anchor});
             } else {
                 // Right-clicking outside the multi-selection cancels it.
                 ctx.dispatch_typed_action(WorkspaceAction::ClearTabMultiSelection);
                 ctx.dispatch_typed_action(WorkspaceAction::ToggleVerticalTabsPaneContextMenu {
                     tab_index,
                     target: VerticalTabsPaneContextMenuTarget::ClickedPane(pane_locator),
-                    position,
-                });
+                    position});
             }
         });
     }
@@ -589,53 +569,44 @@ fn render_pane_row_element(
 #[derive(Clone, Default)]
 struct PaneRowBadgeMouseStates {
     diff_stats: MouseStateHandle,
-    pull_request: MouseStateHandle,
-}
+    pull_request: MouseStateHandle}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum VerticalTabsDetailTarget {
     Pane {
         pane_group_id: EntityId,
-        pane_id: PaneId,
-    },
+        pane_id: PaneId},
     Tab {
         pane_group_id: EntityId,
-        source_pane_id: PaneId,
-    },
-}
+        source_pane_id: PaneId}}
 
 impl VerticalTabsDetailTarget {
     fn pane_group_id(&self) -> EntityId {
         match self {
-            Self::Pane { pane_group_id, .. } | Self::Tab { pane_group_id, .. } => *pane_group_id,
-        }
+            Self::Pane { pane_group_id, .. } | Self::Tab { pane_group_id, .. } => *pane_group_id}
     }
 
     fn source_pane_id(&self) -> PaneId {
         match self {
             Self::Pane { pane_id, .. } => *pane_id,
-            Self::Tab { source_pane_id, .. } => *source_pane_id,
-        }
+            Self::Tab { source_pane_id, .. } => *source_pane_id}
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum VerticalTabsDetailTargetKind {
     Pane,
-    Tab,
-}
+    Tab}
 
 struct VerticalTabsDetailOverlayState {
     active_target: Option<VerticalTabsDetailTarget>,
-    safe_triangle: SafeTriangle,
-}
+    safe_triangle: SafeTriangle}
 
 impl Default for VerticalTabsDetailOverlayState {
     fn default() -> Self {
         Self {
             active_target: None,
-            safe_triangle: SafeTriangle::new(),
-        }
+            safe_triangle: SafeTriangle::new()}
     }
 }
 
@@ -643,8 +614,7 @@ impl Default for VerticalTabsDetailOverlayState {
 pub(super) struct VerticalTabsDetailHoverState {
     overlay_state: Arc<Mutex<VerticalTabsDetailOverlayState>>,
     sidecar_mouse_state: MouseStateHandle,
-    window_id: WindowId,
-}
+    window_id: WindowId}
 
 impl VerticalTabsDetailHoverState {
     pub(super) fn reconcile_visibility_for_mouse_position(
@@ -729,8 +699,7 @@ pub(super) struct VerticalTabsPanelState {
     show_diff_stats_mouse_state: MouseStateHandle,
     show_details_on_hover_mouse_state: MouseStateHandle,
     panel_right_click_mouse_state: MouseStateHandle,
-    pub(super) show_settings_popup: bool,
-}
+    pub(super) show_settings_popup: bool}
 
 impl Default for VerticalTabsPanelState {
     fn default() -> Self {
@@ -767,8 +736,7 @@ impl Default for VerticalTabsPanelState {
             show_diff_stats_mouse_state: Default::default(),
             show_details_on_hover_mouse_state: Default::default(),
             panel_right_click_mouse_state: Default::default(),
-            show_settings_popup: false,
-        }
+            show_settings_popup: false}
     }
 }
 
@@ -779,8 +747,7 @@ impl VerticalTabsPanelState {
         VerticalTabsDetailHoverState {
             overlay_state: self.detail_overlay_state.clone(),
             sidecar_mouse_state: self.detail_sidecar_mouse_state.clone(),
-            window_id,
-        }
+            window_id}
     }
 
     pub(super) fn has_active_detail_target(&self) -> bool {
@@ -857,47 +824,39 @@ struct PaneProps<'a> {
     /// True when the tab container containing this pane is hovered.
     /// The pin icon is hidden when a tab is hovered.
     container_is_hovered: bool,
-    shortcut_hint_binding_name: Option<&'static str>,
-}
+    shortcut_hint_binding_name: Option<&'static str>}
 
 struct PaneRowState {
     mouse_state: MouseStateHandle,
     title_mouse_state: Option<MouseStateHandle>,
     pane_color: Option<ThemeFill>,
-    badge_mouse_states: PaneRowBadgeMouseStates,
-}
+    badge_mouse_states: PaneRowBadgeMouseStates}
 
 enum TerminalPrimaryLineData {
     StatusText {
-        text: String,
-    },
+        text: String},
     Text {
         text: String,
-        font: TerminalPrimaryLineFont,
-    },
-}
+        font: TerminalPrimaryLineFont}}
 
 impl TerminalPrimaryLineData {
     fn text(&self) -> &str {
         match self {
             TerminalPrimaryLineData::StatusText { text, .. }
-            | TerminalPrimaryLineData::Text { text, .. } => text,
-        }
+            | TerminalPrimaryLineData::Text { text, .. } => text}
     }
 }
 
 enum TabGroupColorMode {
     Uniform(ThemeFill),
     PerPane(HashMap<PaneId, Option<ThemeFill>>),
-    None,
-}
+    None}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum VerticalTabsResolvedMode {
     Panes,
     FocusedSession,
-    Summary,
-}
+    Summary}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) enum SummaryPaneKind {
@@ -915,17 +874,14 @@ pub(super) enum SummaryPaneKind {
     AIFact,
     AIDocument,
     ExecutionProfileEditor,
-    Other,
-}
+    Other}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) enum SummaryPaneKindIcons {
     Single(SummaryPaneKind),
     Pair {
         primary: SummaryPaneKind,
-        secondary: SummaryPaneKind,
-    },
-}
+        secondary: SummaryPaneKind}}
 
 #[derive(Clone, Debug, PartialEq)]
 struct VerticalTabsSummaryBranchEntry {
@@ -935,24 +891,21 @@ struct VerticalTabsSummaryBranchEntry {
     pull_request_label: Option<String>,
     /// Full PR URL backing the chip, used to open the PR in the browser when the
     /// chip is clicked. Paired with `pull_request_label` (the display text).
-    pull_request_url: Option<String>,
-}
+    pull_request_url: Option<String>}
 
 #[derive(Clone, Debug, PartialEq)]
 struct VerticalTabsSummaryPrimaryLabel {
     text: String,
     /// Some when the contributing pane is a conversation with a known status. Drives the
     /// per-line status pill prefix in Summary mode.
-    status: Option<ConversationStatus>,
-}
+    status: Option<ConversationStatus>}
 
 #[derive(Clone, Debug, Default, PartialEq)]
 struct VerticalTabsSummaryData {
     primary_labels: Vec<VerticalTabsSummaryPrimaryLabel>,
     working_directories: Vec<String>,
     branch_entries: Vec<VerticalTabsSummaryBranchEntry>,
-    has_unread_activity: bool,
-}
+    has_unread_activity: bool}
 
 impl TabGroupColorMode {
     fn into_per_pane_colors(
@@ -967,8 +920,7 @@ impl TabGroupColorMode {
                     .map(|&id| (id, Some(fill)))
                     .collect(),
             ),
-            TabGroupColorMode::None => None,
-        }
+            TabGroupColorMode::None => None}
     }
 }
 
@@ -977,15 +929,13 @@ struct GroupHeaderProps<'a> {
     pane_group: &'a PaneGroup,
     is_being_renamed: bool,
     rename_editor: ViewHandle<EditorView>,
-    header_mouse_state: MouseStateHandle,
-}
+    header_mouse_state: MouseStateHandle}
 
 #[derive(Clone, Copy)]
 struct TabGroupDragState {
     is_any_pane_dragging: bool,
     insert_before_index: usize,
-    insert_after_index: Option<usize>,
-}
+    insert_after_index: Option<usize>}
 
 fn resolve_vertical_tabs_mode(app: &AppContext) -> VerticalTabsResolvedMode {
     let settings = TabSettings::as_ref(app);
@@ -1001,8 +951,7 @@ fn resolve_vertical_tabs_mode(app: &AppContext) -> VerticalTabsResolvedMode {
                     VerticalTabsResolvedMode::FocusedSession
                 }
             }
-        },
-    }
+        }}
 }
 
 fn push_normalized_unique_summary_text(
@@ -1037,8 +986,7 @@ fn push_normalized_unique_summary_label(
     seen.insert(normalized.clone(), ());
     values.push(VerticalTabsSummaryPrimaryLabel {
         text: normalized,
-        status,
-    });
+        status});
 }
 
 /// Stable sort that moves labels with a known `ConversationStatus` ahead of labels without
@@ -1143,8 +1091,7 @@ fn select_summary_pane_kind_icons(
     let primary = unique_kinds.next()?;
     match unique_kinds.next() {
         Some(secondary) => Some(SummaryPaneKindIcons::Pair { primary, secondary }),
-        None => Some(SummaryPaneKindIcons::Single(primary)),
-    }
+        None => Some(SummaryPaneKindIcons::Single(primary))}
 }
 
 fn resolve_summary_pane_kind_icons(
@@ -1162,8 +1109,7 @@ impl VerticalTabsPanelState {
     pub(super) fn scroll_to_tab(&self, tab_index: usize) {
         self.scroll_state.scroll_to_position(ScrollTarget {
             position_id: tab_position_id(tab_index),
-            mode: ScrollToPositionMode::FullyIntoView,
-        });
+            mode: ScrollToPositionMode::FullyIntoView});
     }
 
     /// Returns the indices (in original order) of tab groups that have at least
@@ -1226,8 +1172,7 @@ impl VerticalTabsPanelState {
                                     mouse_state: ms,
                                     title_mouse_state: None,
                                     pane_color: None,
-                                    badge_mouse_states: PaneRowBadgeMouseStates::default(),
-                                },
+                                    badge_mouse_states: PaneRowBadgeMouseStates::default()},
                                 self.detail_hover_state(tab.pane_group.window_id(app)),
                                 display_granularity,
                                 true,
@@ -1337,8 +1282,7 @@ pub(super) fn show_before_indicator(
     hovered_tab_index
         == Some(TabBarHoverIndex::BeforeTab {
             index: insert_index,
-            group: expected_group,
-        })
+            group: expected_group})
 }
 
 /// Insertion indicator line shown between rows during a pane drag. `group`
@@ -1480,8 +1424,7 @@ fn render_detail_kind_badge_icon(
                 // on both dark and light themes.
                 WarpIcon::Agent => theme.main_text_color(theme.background()),
                 WarpIcon::Terminal => disabled_text,
-                _ => sub_text,
-            };
+                _ => sub_text};
             icon.to_warpui_icon(color).finish()
         }
         TypedPane::Code(_) => icon_from_file_path(&props.title, appearance)
@@ -1606,8 +1549,7 @@ fn render_new_tab_button(
         .build()
         .on_click(|ctx, _, position| {
             ctx.dispatch_typed_action(WorkspaceAction::ToggleNewSessionMenu {
-                anchor: NewSessionMenuAnchor::AddTabButton(position),
-            });
+                anchor: NewSessionMenuAnchor::AddTabButton(position)});
         })
         .finish();
 
@@ -1699,8 +1641,7 @@ fn render_vertical_tabs_panel(
         DropTarget::new(
             panel_content,
             VerticalTabsPaneDropTargetData {
-                tab_bar_location: vertical_tabs_tab_bar_location(tab_count, tab_count),
-            },
+                tab_bar_location: vertical_tabs_tab_bar_location(tab_count, tab_count)},
         )
         .finish()
     } else {
@@ -1715,8 +1656,7 @@ fn render_vertical_tabs_panel(
 
     let drag_side = match side {
         super::PanelPosition::Left => DragBarSide::Right,
-        super::PanelPosition::Right => DragBarSide::Left,
-    };
+        super::PanelPosition::Right => DragBarSide::Left};
     // Wrap the panel in a `Hoverable` so right-clicking the empty area of the
     // vertical tabs panel opens the tab configs dropdown.
     let inner = Hoverable::new(state.panel_right_click_mouse_state.clone(), |_| {
@@ -1730,8 +1670,7 @@ fn render_vertical_tabs_panel(
     .on_right_click(|ctx, _, position| {
         if FeatureFlag::GroupedTabs.is_enabled() {
             ctx.dispatch_typed_action(WorkspaceAction::OpenNewSessionMenu {
-                anchor: NewSessionMenuAnchor::Pointer(position),
-            });
+                anchor: NewSessionMenuAnchor::Pointer(position)});
         }
     })
     .on_double_click(|ctx, _, _| {
@@ -1834,8 +1773,7 @@ fn render_groups(
                                         mouse_state: ms,
                                         title_mouse_state: None,
                                         pane_color: None,
-                                        badge_mouse_states: PaneRowBadgeMouseStates::default(),
-                                    },
+                                        badge_mouse_states: PaneRowBadgeMouseStates::default()},
                                     state.detail_hover_state(workspace.window_id),
                                     display_granularity,
                                     true,
@@ -1866,8 +1804,7 @@ fn render_groups(
                                     mouse_state,
                                     title_mouse_state: None,
                                     pane_color: None,
-                                    badge_mouse_states: PaneRowBadgeMouseStates::default(),
-                                },
+                                    badge_mouse_states: PaneRowBadgeMouseStates::default()},
                                 state.detail_hover_state(workspace.window_id),
                                 display_granularity,
                                 true,
@@ -1976,8 +1913,7 @@ fn render_groups(
                     TabGroupDragState {
                         is_any_pane_dragging,
                         insert_before_index,
-                        insert_after_index,
-                    },
+                        insert_after_index},
                     false, // in_tab_group
                     app,
                 ));
@@ -2093,8 +2029,7 @@ fn render_tab_group_internal(
         header: group_header_mouse_state,
         kebab: kebab_mouse_state,
         close: close_mouse_state,
-        action_buttons: action_buttons_mouse_state,
-    } = state
+        action_buttons: action_buttons_mouse_state} = state
         .group_mouse_states
         .borrow_mut()
         .entry(pane_group_id)
@@ -2170,8 +2105,7 @@ fn render_tab_group_internal(
         .flatten();
     let active_pane_context_menu_target = PaneViewLocator {
         pane_group_id,
-        pane_id: pane_group.focused_pane_id(app),
-    };
+        pane_id: pane_group.focused_pane_id(app)};
 
     let mut group_element = Hoverable::new(group_mouse_state, move |group_state| {
         // GroupedTabs: stack panes flush in Panes view.
@@ -2226,8 +2160,7 @@ fn render_tab_group_internal(
                         mouse_state: row_mouse_state.clone(),
                         title_mouse_state: None,
                         pane_color,
-                        badge_mouse_states,
-                    },
+                        badge_mouse_states},
                     state.detail_hover_state(workspace.window_id),
                     display_granularity,
                     false,
@@ -2270,8 +2203,7 @@ fn render_tab_group_internal(
                     .clone();
                 let locator = PaneViewLocator {
                     pane_group_id,
-                    pane_id: *pane_id,
-                };
+                    pane_id: *pane_id};
                 let is_pane_being_renamed = workspace
                     .current_workspace_state
                     .is_pane_being_renamed(locator);
@@ -2286,8 +2218,7 @@ fn render_tab_group_internal(
                         mouse_state: row_mouse_state.clone(),
                         title_mouse_state: title_mouse_states.get(pane_id).cloned(),
                         pane_color,
-                        badge_mouse_states,
-                    },
+                        badge_mouse_states},
                     state.detail_hover_state(workspace.window_id),
                     display_granularity,
                     true,
@@ -2308,14 +2239,12 @@ fn render_tab_group_internal(
                 if stack_panes_flush {
                     pane_props.stack_position = PaneRowStackPosition::Flush {
                         is_first: row_idx == 0,
-                        is_last: row_idx + 1 == total_rows,
-                    };
+                        is_last: row_idx + 1 == total_rows};
                 }
                 let view_mode = *TabSettings::as_ref(app).vertical_tabs_view_mode.value();
                 let row = match view_mode {
                     VerticalTabsViewMode::Compact => render_compact_pane_row(pane_props, app),
-                    VerticalTabsViewMode::Expanded => render_pane_row(pane_props, app),
-                };
+                    VerticalTabsViewMode::Expanded => render_pane_row(pane_props, app)};
                 rows.add_child(row);
             }
             rows.finish()
@@ -2337,8 +2266,7 @@ fn render_tab_group_internal(
                         pane_group,
                         is_being_renamed,
                         rename_editor: rename_editor.clone(),
-                        header_mouse_state: group_header_mouse_state.clone(),
-                    },
+                        header_mouse_state: group_header_mouse_state.clone()},
                     app,
                 ));
             }
@@ -2505,8 +2433,7 @@ fn render_tab_group_internal(
         if is_in_multi_tab_selection {
             ctx.dispatch_typed_action(WorkspaceAction::ToggleTabSelectionRightClickMenu {
                 tab_index,
-                anchor,
-            });
+                anchor});
         } else {
             // Right-clicking outside the multi-selection cancels it.
             ctx.dispatch_typed_action(WorkspaceAction::ClearTabMultiSelection);
@@ -2515,8 +2442,7 @@ fn render_tab_group_internal(
                 target: VerticalTabsPaneContextMenuTarget::ActivePane(
                     active_pane_context_menu_target,
                 ),
-                position,
-            });
+                position});
         }
     });
 
@@ -2552,8 +2478,7 @@ fn render_tab_group_internal(
             .on_drag(move |ctx, _, rect, _| {
                 ctx.dispatch_typed_action(WorkspaceAction::DragTab {
                     tab_index,
-                    tab_position: rect,
-                });
+                    tab_position: rect});
             })
             .on_drop(|ctx, _, _, _| {
                 ctx.dispatch_typed_action(WorkspaceAction::DropTab);
@@ -2592,8 +2517,7 @@ fn render_tab_group_internal(
         DropTarget::new(
             draggable,
             VerticalTabsPaneDropTargetData {
-                tab_bar_location: TabBarLocation::TabIndex(tab_index),
-            },
+                tab_bar_location: TabBarLocation::TabIndex(tab_index)},
         )
         .finish()
     }
@@ -2627,8 +2551,7 @@ fn render_group_action_buttons(
     .on_mouse_down(move |ctx, _, _| {
         ctx.dispatch_typed_action(WorkspaceAction::ToggleTabRightClickMenu {
             tab_index,
-            anchor: TabContextMenuAnchor::VerticalTabsKebab,
-        });
+            anchor: TabContextMenuAnchor::VerticalTabsKebab});
     })
     .finish();
 
@@ -2691,8 +2614,7 @@ pub(crate) fn render_tab_group_for_drag_ghost(
     let drag_state = TabGroupDragState {
         is_any_pane_dragging: false,
         insert_before_index: 0,
-        insert_after_index: None,
-    };
+        insert_after_index: None};
     render_tab_group_internal(
         &workspace.vertical_tabs_panel,
         workspace,
@@ -2835,8 +2757,7 @@ fn render_grouped_tabs_header(
                 mouse_states.kebab.clone(),
                 Some(WorkspaceAction::ToggleTabGroupRightClickMenu {
                     group_id,
-                    anchor: TabContextMenuAnchor::VerticalTabsKebab,
-                }),
+                    anchor: TabContextMenuAnchor::VerticalTabsKebab}),
             ),
             &vtab_group_kebab_position_id(group_id),
         )
@@ -2954,8 +2875,7 @@ fn render_grouped_tabs_header(
     hoverable = hoverable.on_right_click(move |ctx, _, position| {
         ctx.dispatch_typed_action(WorkspaceAction::ToggleTabGroupRightClickMenu {
             group_id,
-            anchor: TabContextMenuAnchor::Pointer(position),
-        });
+            anchor: TabContextMenuAnchor::Pointer(position)});
     });
     hoverable.finish()
 }
@@ -2994,8 +2914,7 @@ fn render_grouped_tab_container(
     let resolved_mode = resolve_vertical_tabs_mode(app);
     let needs_outer_horizontal_padding = uses_outer_group_container(match resolved_mode {
         VerticalTabsResolvedMode::Panes => VerticalTabsDisplayGranularity::Panes,
-        _ => VerticalTabsDisplayGranularity::Tabs,
-    });
+        _ => VerticalTabsDisplayGranularity::Tabs});
 
     // GroupedTabs: zero inter-tab gap in Panes mode (each tab already has
     // its own wrapper). Other modes keep `TABS_MODE_ITEM_SPACING`.
@@ -3057,8 +2976,7 @@ fn render_grouped_tab_container(
             DropTarget::new(
                 header,
                 VerticalTabsPaneDropTargetData {
-                    tab_bar_location: header_location,
-                },
+                    tab_bar_location: header_location},
             )
             .finish()
         } else {
@@ -3079,8 +2997,7 @@ fn render_grouped_tab_container(
                 let drag_state = TabGroupDragState {
                     is_any_pane_dragging,
                     insert_before_index: *tab_index,
-                    insert_after_index,
-                };
+                    insert_after_index};
                 let tab_element = render_tab_group(
                     state,
                     workspace,
@@ -3182,8 +3099,7 @@ fn render_grouped_tab_container(
     .on_right_click(move |ctx, _, position| {
         ctx.dispatch_typed_action(WorkspaceAction::ToggleTabGroupRightClickMenu {
             group_id,
-            anchor: TabContextMenuAnchor::Pointer(position),
-        });
+            anchor: TabContextMenuAnchor::Pointer(position)});
     })
     .with_defer_events_to_children()
     .finish();
@@ -3207,8 +3123,7 @@ fn render_grouped_tab_container(
                 ctx.dispatch_typed_action(WorkspaceAction::DragGroup {
                     group_id,
                     position: rect,
-                    cursor_position,
-                });
+                    cursor_position});
             })
             .on_drop(move |ctx, _, _, _| {
                 ctx.dispatch_typed_action(WorkspaceAction::DropGroup);
@@ -3241,8 +3156,7 @@ fn render_group_header(props: GroupHeaderProps<'_>, app: &AppContext) -> Box<dyn
         pane_group,
         is_being_renamed,
         rename_editor,
-        header_mouse_state,
-    } = props;
+        header_mouse_state} = props;
     let appearance = Appearance::as_ref(app);
     let theme = appearance.theme();
     let title = pane_group.display_title(app);
@@ -3326,8 +3240,7 @@ fn resolve_icon_with_status_variant(
                     // Plain terminal: use foreground color per design spec
                     IconWithStatusVariant::Neutral {
                         icon: WarpIcon::Terminal,
-                        icon_color: main_text,
-                    }
+                        icon_color: main_text}
                 }
             }
         }
@@ -3335,45 +3248,33 @@ fn resolve_icon_with_status_variant(
             Some(icon_element) => IconWithStatusVariant::NeutralElement { icon_element },
             _ => IconWithStatusVariant::Neutral {
                 icon: WarpIcon::Code2,
-                icon_color: sub_text,
-            },
-        },
+                icon_color: sub_text}},
         // Settings and environment management use the foreground color per design spec
         TypedPane::Settings | TypedPane::EnvironmentManagement => IconWithStatusVariant::Neutral {
             icon: typed.icon(),
-            icon_color: main_text,
-        },
+            icon_color: main_text},
         // Warp Drive object types use their established index colors
         TypedPane::Notebook { is_plan } => IconWithStatusVariant::Neutral {
             icon: typed.icon(),
             icon_color: drive_color(DriveObjectType::Notebook {
-                is_ai_document: *is_plan,
-            }),
-        },
+                is_ai_document: *is_plan})},
         TypedPane::Workflow { is_ai_prompt: true } => IconWithStatusVariant::Neutral {
             icon: typed.icon(),
-            icon_color: drive_color(DriveObjectType::AgentModeWorkflow),
-        },
+            icon_color: drive_color(DriveObjectType::AgentModeWorkflow)},
         TypedPane::Workflow {
-            is_ai_prompt: false,
-        } => IconWithStatusVariant::Neutral {
+            is_ai_prompt: false} => IconWithStatusVariant::Neutral {
             icon: typed.icon(),
-            icon_color: drive_color(DriveObjectType::Workflow),
-        },
+            icon_color: drive_color(DriveObjectType::Workflow)},
         TypedPane::EnvVarCollection => IconWithStatusVariant::Neutral {
             icon: typed.icon(),
-            icon_color: drive_color(DriveObjectType::EnvVarCollection),
-        },
+            icon_color: drive_color(DriveObjectType::EnvVarCollection)},
         TypedPane::AIFact => IconWithStatusVariant::Neutral {
             icon: typed.icon(),
-            icon_color: drive_color(DriveObjectType::AIFact),
-        },
+            icon_color: drive_color(DriveObjectType::AIFact)},
         // Other pane types use sub-text color
         other => IconWithStatusVariant::Neutral {
             icon: other.icon(),
-            icon_color: sub_text,
-        },
-    }
+            icon_color: sub_text}}
 }
 
 fn has_unread_activity(typed: &TypedPane<'_>, app: &AppContext) -> bool {
@@ -3612,8 +3513,7 @@ enum TypedPane<'a> {
     AIFact,
     AIDocument,
     ExecutionProfileEditor,
-    Other,
-}
+    Other}
 
 impl TypedPane<'_> {
     fn summary_pane_kind(&self, title: &str, app: &AppContext) -> SummaryPaneKind {
@@ -3630,26 +3530,22 @@ impl TypedPane<'_> {
                     Some(IconWithStatusVariant::CLIAgent {
                         agent, is_ambient, ..
                     }) => SummaryPaneKind::CLIAgent { agent, is_ambient },
-                    Some(_) | None => SummaryPaneKind::Terminal,
-                }
+                    Some(_) | None => SummaryPaneKind::Terminal}
             }
             TypedPane::Code(_) => SummaryPaneKind::Code {
-                title: title.to_string(),
-            },
+                title: title.to_string()},
             TypedPane::CodeDiff => SummaryPaneKind::CodeDiff,
             TypedPane::File => SummaryPaneKind::File,
             TypedPane::Notebook { is_plan } => SummaryPaneKind::Notebook { is_plan: *is_plan },
             TypedPane::Workflow { is_ai_prompt } => SummaryPaneKind::Workflow {
-                is_ai_prompt: *is_ai_prompt,
-            },
+                is_ai_prompt: *is_ai_prompt},
             TypedPane::Settings => SummaryPaneKind::Settings,
             TypedPane::EnvVarCollection => SummaryPaneKind::EnvVarCollection,
             TypedPane::EnvironmentManagement => SummaryPaneKind::EnvironmentManagement,
             TypedPane::AIFact => SummaryPaneKind::AIFact,
             TypedPane::AIDocument => SummaryPaneKind::AIDocument,
             TypedPane::ExecutionProfileEditor => SummaryPaneKind::ExecutionProfileEditor,
-            TypedPane::Other => SummaryPaneKind::Other,
-        }
+            TypedPane::Other => SummaryPaneKind::Other}
     }
 
     fn warp_drive_object_type(&self) -> Option<DriveObjectType> {
@@ -3674,8 +3570,7 @@ impl TypedPane<'_> {
             TypedPane::AIFact => "Rules",
             TypedPane::AIDocument => "Plan",
             TypedPane::ExecutionProfileEditor => "Execution Profile",
-            TypedPane::Other => "Other",
-        }
+            TypedPane::Other => "Other"}
     }
 
     fn badge(&self, app: &AppContext) -> Option<String> {
@@ -3696,8 +3591,7 @@ impl TypedPane<'_> {
             | TypedPane::AIFact
             | TypedPane::AIDocument
             | TypedPane::ExecutionProfileEditor
-            | TypedPane::Other => None,
-        }
+            | TypedPane::Other => None}
     }
 
     fn icon(&self) -> WarpIcon {
@@ -3710,15 +3604,13 @@ impl TypedPane<'_> {
             TypedPane::Notebook { is_plan: false } => WarpIcon::Notebook,
             TypedPane::Workflow { is_ai_prompt: true } => WarpIcon::Prompt,
             TypedPane::Workflow {
-                is_ai_prompt: false,
-            } => WarpIcon::Workflow,
+                is_ai_prompt: false} => WarpIcon::Workflow,
             TypedPane::Settings | TypedPane::EnvironmentManagement => WarpIcon::Gear,
             TypedPane::EnvVarCollection => WarpIcon::EnvVarCollection,
             TypedPane::AIFact => WarpIcon::BookOpen,
             TypedPane::AIDocument => WarpIcon::Compass,
             TypedPane::ExecutionProfileEditor => WarpIcon::Lightning,
-            TypedPane::Other => WarpIcon::File,
-        }
+            TypedPane::Other => WarpIcon::File}
     }
 }
 
@@ -3836,8 +3728,7 @@ fn build_vertical_tabs_summary_data(
                             .as_deref()
                             .map(terminal_pull_request_badge_label)
                             .and_then(|label| normalize_summary_text(&label)),
-                        pull_request_url,
-                    });
+                        pull_request_url});
                 }
             }
             TypedPane::Code(_) => {
@@ -3880,8 +3771,7 @@ fn build_vertical_tabs_summary_data(
         primary_labels,
         working_directories,
         branch_entries: coalesce_summary_branch_entries(branch_entries),
-        has_unread_activity,
-    }
+        has_unread_activity}
 }
 
 impl<'a> PaneProps<'a> {
@@ -3961,8 +3851,7 @@ impl<'a> PaneProps<'a> {
             pane_rename_editor,
             is_pinned,
             container_is_hovered,
-            shortcut_hint_binding_name,
-        })
+            shortcut_hint_binding_name})
     }
 
     /// Window this row is rendered in. Sourced from the detail hover state,
@@ -4158,40 +4047,34 @@ fn terminal_primary_line_data(
     let trimmed_working_directory = working_directory.trim();
     if let Some(cli_agent_title) = cli_agent_title {
         return TerminalPrimaryLineData::StatusText {
-            text: cli_agent_title,
-        };
+            text: cli_agent_title};
     }
 
     if is_long_running && !trimmed_title.is_empty() && trimmed_title != trimmed_working_directory {
         return TerminalPrimaryLineData::Text {
             text: trimmed_title.to_string(),
-            font: TerminalPrimaryLineFont::Monospace,
-        };
+            font: TerminalPrimaryLineFont::Monospace};
     }
 
     if let Some(conversation_title) = conversation_display_title {
         return TerminalPrimaryLineData::StatusText {
-            text: conversation_title,
-        };
+            text: conversation_title};
     }
     if !trimmed_title.is_empty() && trimmed_title != trimmed_working_directory {
         return TerminalPrimaryLineData::Text {
             text: trimmed_title.to_string(),
-            font: terminal_title_font,
-        };
+            font: terminal_title_font};
     }
 
     if let Some(last_completed_command) = last_completed_command {
         return TerminalPrimaryLineData::Text {
             text: last_completed_command,
-            font: TerminalPrimaryLineFont::Monospace,
-        };
+            font: TerminalPrimaryLineFont::Monospace};
     }
 
     TerminalPrimaryLineData::Text {
         text: "New session".to_string(),
-        font: TerminalPrimaryLineFont::Ui,
-    }
+        font: TerminalPrimaryLineFont::Ui}
 }
 
 fn terminal_kind_badge_label(is_oz_agent: bool, cli_agent: Option<CLIAgent>) -> String {
@@ -4207,8 +4090,7 @@ fn terminal_kind_badge_label(is_oz_agent: bool, cli_agent: Option<CLIAgent>) -> 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum AgentTabTextPreference {
     ConversationTitle,
-    LatestUserPrompt,
-}
+    LatestUserPrompt}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 struct TerminalAgentText {
@@ -4217,8 +4099,7 @@ struct TerminalAgentText {
     cli_agent_title: Option<String>,
     cli_agent_latest_user_prompt: Option<String>,
     is_oz_agent: bool,
-    cli_agent: Option<CLIAgent>,
-}
+    cli_agent: Option<CLIAgent>}
 
 fn agent_tab_text_preference(app: &AppContext) -> AgentTabTextPreference {
     if *TabSettings::as_ref(app).use_latest_user_prompt_as_conversation_title_in_tab_names {
@@ -4240,15 +4121,13 @@ fn preferred_agent_tab_titles(
         AgentTabTextPreference::LatestUserPrompt => agent_text
             .conversation_latest_user_prompt
             .clone()
-            .or_else(|| agent_text.conversation_display_title.clone()),
-    };
+            .or_else(|| agent_text.conversation_display_title.clone())};
     let cli_agent_title = match preference {
         AgentTabTextPreference::ConversationTitle => agent_text.cli_agent_title.clone(),
         AgentTabTextPreference::LatestUserPrompt => agent_text
             .cli_agent_latest_user_prompt
             .clone()
-            .or_else(|| agent_text.cli_agent_title.clone()),
-    };
+            .or_else(|| agent_text.cli_agent_title.clone())};
 
     (conversation_title, cli_agent_title)
 }
@@ -4347,8 +4226,7 @@ impl PaneGroup {
             | IPaneType::NetworkLog
             | IPaneType::DeferredPlaceholder => TypedPane::Other,
             #[cfg(test)]
-            IPaneType::Dummy => TypedPane::Other,
-        }
+            IPaneType::Dummy => TypedPane::Other}
     }
 }
 
@@ -4411,8 +4289,7 @@ fn cloud_agent_working_directory_and_env(
         (Some(env), None, Some(wd)) => Some(format!("{env} · {wd}")),
         (Some(env), None, None) => Some(env),
         (None, Some(status), _) => Some(status.to_string()),
-        (None, None, _) => None,
-    }
+        (None, None, _) => None}
 }
 
 fn render_terminal_row_content(
@@ -4556,15 +4433,13 @@ fn chip_entrypoint_for_granularity(
 ) -> VerticalTabsChipEntrypoint {
     match granularity {
         VerticalTabsDisplayGranularity::Panes => VerticalTabsChipEntrypoint::Pane,
-        VerticalTabsDisplayGranularity::Tabs => VerticalTabsChipEntrypoint::Tab,
-    }
+        VerticalTabsDisplayGranularity::Tabs => VerticalTabsChipEntrypoint::Tab}
 }
 
 fn branch_label_display(git_branch: Option<&str>, fallback: &str) -> (String, bool) {
     match git_branch.filter(|branch| !branch.trim().is_empty()) {
         Some(branch) => (branch.to_string(), true),
-        None => (fallback.to_string(), false),
-    }
+        None => (fallback.to_string(), false)}
 }
 
 fn compact_branch_subtitle_display(
@@ -4611,8 +4486,7 @@ fn render_git_branch_text(
 
 enum MetadataLeftContent {
     GitBranch(Option<String>),
-    WorkingDirectory(String),
-}
+    WorkingDirectory(String)}
 
 fn render_text_line(
     text: &str,
@@ -4704,8 +4578,7 @@ fn render_pane_title_slot(
     };
     let locator = PaneViewLocator {
         pane_group_id: props.pane_group_id,
-        pane_id: props.pane_id,
-    };
+        pane_id: props.pane_id};
     Hoverable::new(title_mouse_state, move |_| title)
         .on_double_click(move |ctx, _, _| {
             ctx.dispatch_typed_action(WorkspaceAction::RenamePane(locator));
@@ -4938,8 +4811,7 @@ fn render_summary_primary_label_line(
                 .with_height(prefix_slot_size)
                 .finish(),
         ),
-        (None, false) => None,
-    };
+        (None, false) => None};
 
     let Some(prefix) = prefix else {
         return text;
@@ -5117,18 +4989,14 @@ fn ambient_agent_variant(kind: &SummaryPaneKind) -> Option<IconWithStatusVariant
     match kind {
         SummaryPaneKind::OzAgent { is_ambient } => Some(IconWithStatusVariant::OzAgent {
             status: None,
-            is_ambient: *is_ambient,
-        }),
+            is_ambient: *is_ambient}),
         SummaryPaneKind::CLIAgent {
             agent,
-            is_ambient: true,
-        } => Some(IconWithStatusVariant::CLIAgent {
+            is_ambient: true} => Some(IconWithStatusVariant::CLIAgent {
             agent: *agent,
             status: None,
-            is_ambient: true,
-        }),
-        _ => None,
-    }
+            is_ambient: true}),
+        _ => None}
 }
 
 fn summary_pane_kind_icon(
@@ -5164,8 +5032,7 @@ fn summary_pane_kind_icon(
                 WarpIcon::Notebook
             },
             drive_color(DriveObjectType::Notebook {
-                is_ai_document: is_plan,
-            }),
+                is_ai_document: is_plan}),
         ),
         SummaryPaneKind::Workflow { is_ai_prompt } => (
             if is_ai_prompt {
@@ -5189,8 +5056,7 @@ fn summary_pane_kind_icon(
         SummaryPaneKind::AIFact => (WarpIcon::BookOpen, drive_color(DriveObjectType::AIFact)),
         SummaryPaneKind::AIDocument => (WarpIcon::Compass, sub_text),
         SummaryPaneKind::ExecutionProfileEditor => (WarpIcon::Lightning, sub_text),
-        SummaryPaneKind::Other => (WarpIcon::File, sub_text),
-    }
+        SummaryPaneKind::Other => (WarpIcon::File, sub_text)}
 }
 
 fn render_summary_branch_line(
@@ -5339,8 +5205,7 @@ fn render_terminal_primary_line(
         TerminalPrimaryLineData::Text { text, font } => {
             let font_family = match font {
                 TerminalPrimaryLineFont::Ui => appearance.ui_font_family(),
-                TerminalPrimaryLineFont::Monospace => appearance.monospace_font_family(),
-            };
+                TerminalPrimaryLineFont::Monospace => appearance.monospace_font_family()};
             let title_el = Text::new_inline(text, font_family, 12.)
                 .with_clip(ClipConfig::ellipsis())
                 .with_color(text_color.into())
@@ -5386,8 +5251,7 @@ fn render_terminal_metadata_line(
                 .finish(),
         )
         .finish(),
-        _ => Empty::new().finish(),
-    };
+        _ => Empty::new().finish()};
     meta.add_child(left_element);
 
     // Right: wrap badges in a container with left padding equal to the inter-chip gap (4px).
@@ -5481,14 +5345,9 @@ fn render_terminal_diff_stats_badge(
         )
     })
     .on_click(move |ctx, app, _| {
-        send_telemetry_from_app_ctx!(
-            VerticalTabsTelemetryEvent::DiffStatsChipClicked { entrypoint },
-            app
-        );
         let locator = PaneViewLocator {
             pane_group_id,
-            pane_id,
-        };
+            pane_id};
         ctx.dispatch_typed_action(WorkspaceAction::FocusPane(locator));
         ctx.dispatch_typed_action(WorkspaceAction::OpenCodeReviewPanel(locator));
     })
@@ -5514,10 +5373,6 @@ fn render_terminal_pull_request_badge(
         render_badge_container(render_pull_request_badge_content(&label, appearance), bg)
     })
     .on_click(move |ctx, app, _| {
-        send_telemetry_from_app_ctx!(
-            VerticalTabsTelemetryEvent::PrChipClicked { entrypoint },
-            app
-        );
         ctx.dispatch_typed_action(WorkspaceAction::OpenLink(url.clone()));
     })
     .with_cursor(Cursor::PointingHand)
@@ -5630,8 +5485,7 @@ fn compute_tab_group_color_mode(
             Some(color) => TabGroupColorMode::Uniform(
                 color.to_ansi_color(&theme.terminal_colors().normal).into(),
             ),
-            None => TabGroupColorMode::None,
-        };
+            None => TabGroupColorMode::None};
     }
 
     let dir_colors = TabSettings::as_ref(app)
@@ -5738,8 +5592,7 @@ fn default_compact_subtitle(primary: VerticalTabsPrimaryInfo) -> VerticalTabsCom
     match primary {
         VerticalTabsPrimaryInfo::Command => VerticalTabsCompactSubtitle::Branch,
         VerticalTabsPrimaryInfo::WorkingDirectory => VerticalTabsCompactSubtitle::Branch,
-        VerticalTabsPrimaryInfo::Branch => VerticalTabsCompactSubtitle::Command,
-    }
+        VerticalTabsPrimaryInfo::Branch => VerticalTabsCompactSubtitle::Command}
 }
 
 fn subtitle_options_for_primary(
@@ -5769,8 +5622,7 @@ fn subtitle_options_for_primary(
                 VerticalTabsCompactSubtitle::WorkingDirectory,
                 "Working Directory",
             ),
-        ],
-    }
+        ]}
 }
 
 pub(super) fn render_settings_popup(
@@ -6106,8 +5958,7 @@ pub(super) fn render_settings_popup(
             let pr_link_info_tooltip = if show_pr_link && pr_validation_suppressed {
                 Some(ShowToggleInfoTooltip {
                     mouse_state: state.show_pr_link_info_tooltip_mouse_state.clone(),
-                    tooltip_text: "Requires the GitHub CLI to be installed and authenticated",
-                })
+                    tooltip_text: "Requires the GitHub CLI to be installed and authenticated"})
             } else {
                 None
             };
@@ -6323,8 +6174,7 @@ fn render_primary_info_option(
 
 struct ShowToggleInfoTooltip {
     mouse_state: MouseStateHandle,
-    tooltip_text: &'static str,
-}
+    tooltip_text: &'static str}
 
 fn render_show_toggle_option(
     label: &str,
@@ -6513,8 +6363,7 @@ fn pane_ids_for_display_granularity(
             .find(|pane_id| *pane_id == focused_pane_id)
             .or_else(|| visible_pane_ids.first().copied())
             .into_iter()
-            .collect(),
-    }
+            .collect()}
 }
 
 fn detail_sidecar_offset_and_max_height(
@@ -6551,8 +6400,7 @@ fn detail_sidecar_offset_and_max_height(
                 ChildAnchor::BottomRight,
             ),
             -DETAIL_SIDECAR_HORIZONTAL_GAP,
-        ),
-    };
+        )};
 
     let Some(window) = app.windows().platform_window(window_id) else {
         return (
@@ -6634,8 +6482,7 @@ fn detail_sidecar_width_and_bounds(available_width: f32) -> (f32, PositionedElem
 struct DetailSidecarTextColors {
     main: WarpThemeFill,
     sub: WarpThemeFill,
-    disabled: WarpThemeFill,
-}
+    disabled: WarpThemeFill}
 
 fn detail_sidecar_background(theme: &WarpTheme) -> ColorU {
     theme
@@ -6655,8 +6502,7 @@ fn detail_sidecar_text_colors(theme: &WarpTheme) -> DetailSidecarTextColors {
     DetailSidecarTextColors {
         main: theme.main_text_color(bg),
         sub: theme.sub_text_color(bg),
-        disabled: theme.disabled_text_color(bg),
-    }
+        disabled: theme.disabled_text_color(bg)}
 }
 
 fn render_detail_badge(
@@ -6749,9 +6595,7 @@ fn render_terminal_detail_primary_line(
         TerminalPrimaryLineData::StatusText { .. } => appearance.ui_font_family(),
         TerminalPrimaryLineData::Text { font, .. } => match font {
             TerminalPrimaryLineFont::Ui => appearance.ui_font_family(),
-            TerminalPrimaryLineFont::Monospace => appearance.monospace_font_family(),
-        },
-    };
+            TerminalPrimaryLineFont::Monospace => appearance.monospace_font_family()}};
 
     Text::new(primary_line.text().to_string(), font_family, 12.)
         .soft_wrap(true)
@@ -6784,8 +6628,7 @@ fn detail_pane_props<'a>(
             mouse_state: MouseStateHandle::default(),
             title_mouse_state: None,
             pane_color: None,
-            badge_mouse_states,
-        },
+            badge_mouse_states},
         state.detail_hover_state(workspace.window_id),
         *TabSettings::as_ref(app)
             .vertical_tabs_display_granularity
@@ -7029,17 +6872,14 @@ fn code_detail_kind_label(file_name: &str) -> Option<String> {
 fn typed_pane_warp_drive_object_type(typed: &TypedPane<'_>) -> Option<DriveObjectType> {
     match typed {
         TypedPane::Notebook { is_plan } => Some(DriveObjectType::Notebook {
-            is_ai_document: *is_plan,
-        }),
+            is_ai_document: *is_plan}),
         TypedPane::Workflow { is_ai_prompt: true } => Some(DriveObjectType::AgentModeWorkflow),
         TypedPane::Workflow {
-            is_ai_prompt: false,
-        } => Some(DriveObjectType::Workflow),
+            is_ai_prompt: false} => Some(DriveObjectType::Workflow),
         TypedPane::EnvVarCollection => Some(DriveObjectType::EnvVarCollection),
         TypedPane::AIFact => Some(DriveObjectType::AIFact),
         TypedPane::AIDocument => Some(DriveObjectType::Notebook {
-            is_ai_document: true,
-        }),
+            is_ai_document: true}),
         TypedPane::Terminal(_)
         | TypedPane::Code(_)
         | TypedPane::CodeDiff
@@ -7047,8 +6887,7 @@ fn typed_pane_warp_drive_object_type(typed: &TypedPane<'_>) -> Option<DriveObjec
         | TypedPane::Settings
         | TypedPane::EnvironmentManagement
         | TypedPane::ExecutionProfileEditor
-        | TypedPane::Other => None,
-    }
+        | TypedPane::Other => None}
 }
 
 fn render_detail_section(
@@ -7074,8 +6913,7 @@ fn render_detail_section(
         | TypedPane::Settings
         | TypedPane::EnvironmentManagement
         | TypedPane::ExecutionProfileEditor
-        | TypedPane::Other => Empty::new().finish(),
-    }
+        | TypedPane::Other => Empty::new().finish()}
 }
 pub(super) struct DetailSidecarOverlay {
     pub(super) anchor_position_id: String,
@@ -7083,8 +6921,7 @@ pub(super) struct DetailSidecarOverlay {
     pub(super) bounds: PositionedElementOffsetBounds,
     pub(super) parent_anchor: PositionedElementAnchor,
     pub(super) child_anchor: ChildAnchor,
-    pub(super) sidecar: Box<dyn Element>,
-}
+    pub(super) sidecar: Box<dyn Element>}
 
 pub(super) fn render_detail_sidecar(
     state: &VerticalTabsPanelState,
@@ -7243,8 +7080,7 @@ pub(super) fn render_detail_sidecar(
         bounds,
         parent_anchor,
         child_anchor,
-        sidecar: ConstrainedBox::new(sidecar).with_width(width).finish(),
-    })
+        sidecar: ConstrainedBox::new(sidecar).with_width(width).finish()})
 }
 
 fn render_compact_pane_row(props: PaneProps<'_>, app: &AppContext) -> Box<dyn Element> {
@@ -7306,9 +7142,7 @@ fn render_compact_pane_row(props: PaneProps<'_>, app: &AppContext) -> Box<dyn El
                         (fallback_text, false) => Text::new_inline(fallback_text, font_family, 12.)
                             .with_clip(ClipConfig::start())
                             .with_color(main_text_color.into())
-                            .finish(),
-                    },
-                },
+                            .finish()}},
                 12.,
                 main_text_color,
                 ClipConfig::ellipsis(),

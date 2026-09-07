@@ -15,7 +15,6 @@ pub use view::{CloseReason, InlineSlashCommandView, SlashCommandsEvent};
 #[cfg(not(target_family = "wasm"))]
 use warp_cli::agent::Harness;
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::AnsiColorIdentifier;
 use warp_errors::report_error;
@@ -33,14 +32,12 @@ use crate::ai::agent_management::telemetry::AgentManagementTelemetryEvent;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 use crate::ai::ambient_agents::telemetry::HandoffEntryPoint;
 use crate::ai::blocklist::agent_view::{
-    AgentViewEntryOrigin, DismissalStrategy, ENTER_OR_EXIT_CONFIRMATION_WINDOW, EphemeralMessage,
-};
+    AgentViewEntryOrigin, DismissalStrategy, ENTER_OR_EXIT_CONFIRMATION_WINDOW, EphemeralMessage};
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 use crate::ai::blocklist::handoff::PendingCloudLaunch;
 use crate::ai::blocklist::{
     BlocklistAIHistoryModel, InputTypeAutoDetectionSource, PendingAttachment, QueuedQuery,
-    QueuedQueryId, QueuedQueryModel, QueuedQueryOrigin, SlashCommandRequest,
-};
+    QueuedQueryId, QueuedQueryModel, QueuedQueryOrigin, SlashCommandRequest};
 use crate::ai::conversation_rename::rename_conversation;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
@@ -58,11 +55,9 @@ use crate::terminal::input::inline_menu::{InlineMenuAction, InlineMenuType};
 use crate::terminal::input::message_bar::Message;
 use crate::terminal::input::models::InlineModelSelectorTab;
 use crate::terminal::input::slash_command_model::{
-    SlashCommandEntryState, UpdatedSlashCommandModel,
-};
+    SlashCommandEntryState, UpdatedSlashCommandModel};
 use crate::terminal::input::{
-    CompletionsTrigger, Event, Input, InputAction, InputSuggestionsMode, UserQueryMenuAction,
-};
+    CompletionsTrigger, Event, Input, InputAction, InputSuggestionsMode, UserQueryMenuAction};
 #[cfg(feature = "local_fs")]
 use crate::terminal::model::session::Session;
 use crate::terminal::view::{AIQueryRouting, TerminalAction, resolve_ai_query_routing};
@@ -75,17 +70,13 @@ use crate::workspace::{ForkedConversationDestination, ToastStack, WorkspaceActio
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AcceptSlashCommandOrSavedPrompt {
     SlashCommand {
-        id: SlashCommandId,
-    },
+        id: SlashCommandId},
     SavedPrompt {
-        id: SyncId,
-    },
+        id: SyncId},
     /// A skill selected from browse or search. Contains name (for display/insertion) and path/bundled_skill_id (for execution).
     Skill {
         reference: SkillReference,
-        name: String,
-    },
-}
+        name: String}}
 impl InlineMenuAction for AcceptSlashCommandOrSavedPrompt {
     const MENU_TYPE: InlineMenuType = InlineMenuType::SlashCommands;
 }
@@ -93,8 +84,7 @@ impl InlineMenuAction for AcceptSlashCommandOrSavedPrompt {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SlashCommandSelectionBehavior {
     InsertCommandText(String),
-    Execute,
-}
+    Execute}
 
 /// Shared menu-selection policy for static slash commands.
 ///
@@ -132,15 +122,6 @@ pub fn record_static_slash_command_accepted(
     is_in_agent_view: bool,
     ctx: &mut AppContext,
 ) {
-    send_telemetry_from_ctx!(
-        TelemetryEvent::SlashCommandAccepted {
-            command_details: SlashCommandAcceptedDetails::StaticCommand {
-                command_name: command_name.to_owned(),
-            },
-            is_in_agent_view,
-        },
-        ctx
-    );
 }
 
 /// Records an input auto-detection setting toggle triggered from a TUI slash
@@ -152,24 +133,10 @@ pub fn record_autodetection_toggle_from_slash_command(
     is_autodetection_enabled: bool,
     ctx: &mut AppContext,
 ) {
-    send_telemetry_from_ctx!(
-        TelemetryEvent::AgentModeToggleAutoDetectionSetting {
-            is_autodetection_enabled,
-            origin: AgentModeAutoDetectionSettingOrigin::SlashCommand,
-        },
-        ctx
-    );
 }
 
 /// Records a saved prompt accepted from either the GUI or TUI slash menu.
 pub fn record_saved_prompt_accepted(is_in_agent_view: bool, ctx: &mut AppContext) {
-    send_telemetry_from_ctx!(
-        TelemetryEvent::SlashCommandAccepted {
-            command_details: SlashCommandAcceptedDetails::SavedPrompt,
-            is_in_agent_view,
-        },
-        ctx
-    );
 }
 
 pub fn saved_prompt_text_for_id(id: &SyncId, ctx: &AppContext) -> Option<String> {
@@ -182,20 +149,17 @@ pub fn saved_prompt_text_for_id(id: &SyncId, ctx: &AppContext) -> Option<String>
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SlashCommandTrigger {
     Input { cmd_or_ctrl_enter: bool },
-    Keybinding,
-}
+    Keybinding}
 
 impl SlashCommandTrigger {
     fn cmd_or_ctrl_enter() -> Self {
         Self::Input {
-            cmd_or_ctrl_enter: true,
-        }
+            cmd_or_ctrl_enter: true}
     }
 
     pub fn input() -> Self {
         Self::Input {
-            cmd_or_ctrl_enter: false,
-        }
+            cmd_or_ctrl_enter: false}
     }
 
     pub(super) fn keybinding() -> Self {
@@ -424,16 +388,14 @@ impl Input {
             }
             SlashCommandsEvent::SelectedStaticCommand {
                 id,
-                cmd_or_ctrl_enter,
-            } => {
+                cmd_or_ctrl_enter} => {
                 let Some(command) = COMMAND_REGISTRY.get_command(id) else {
                     return;
                 };
                 self.select_slash_command(
                     command,
                     SlashCommandTrigger::Input {
-                        cmd_or_ctrl_enter: *cmd_or_ctrl_enter,
-                    },
+                        cmd_or_ctrl_enter: *cmd_or_ctrl_enter},
                     ctx,
                 );
             }
@@ -516,8 +478,7 @@ impl Input {
                         ctx,
                     ) {
                         AIQueryRouting::RetainedSetupFailureDebug { task_id } => Some(task_id),
-                        _ => None,
-                    }
+                        _ => None}
                 };
                 if let Some(task_id) = retained_setup_failure_debug_task_id {
                     let prompt = argument
@@ -586,8 +547,7 @@ impl Input {
                 ctx.emit(Event::EnterAgentView {
                     initial_prompt: prompt,
                     conversation_id: None,
-                    origin: AgentViewEntryOrigin::SlashCommand { trigger },
-                });
+                    origin: AgentViewEntryOrigin::SlashCommand { trigger }});
             }
             SlashCommandKind::CloudAgent => {
                 let prompt = argument.and_then(|argument| {
@@ -600,8 +560,7 @@ impl Input {
                 });
 
                 ctx.emit(Event::EnterCloudAgentView {
-                    initial_prompt: prompt,
-                });
+                    initial_prompt: prompt});
             }
             SlashCommandKind::CreateDockerSandbox => {
                 ctx.emit(Event::CreateDockerSandbox);
@@ -774,8 +733,7 @@ impl Input {
                                 ctx.dispatch_typed_action(&TerminalAction::OpenCodeInWarp {
                                     path: file_path,
                                     layout: external_editor::settings::EditorLayout::SplitPane,
-                                    line_col,
-                                });
+                                    line_col});
                             }
                             Ok(_) => {
                                 show_error_toast(
@@ -798,8 +756,7 @@ impl Input {
                         use crate::server::telemetry::PaletteSource;
 
                         ctx.emit(Event::OpenFilesPalette {
-                            source: PaletteSource::Keybinding,
-                        });
+                            source: PaletteSource::Keybinding});
                     }
                 }
                 #[cfg(not(feature = "local_fs"))]
@@ -865,8 +822,7 @@ impl Input {
                     None => show_error_toast(
                         "No debugging ID available for this conversation yet.".to_owned(),
                         ctx,
-                    ),
-                }
+                    )}
             }
             SlashCommandKind::ExportToFile => {
                 #[cfg(not(target_family = "wasm"))]
@@ -902,8 +858,7 @@ impl Input {
             }
             SlashCommandKind::OpenCodeReview => {
                 ctx.dispatch_typed_action(&TerminalAction::ToggleCodeReviewPane {
-                    entrypoint: CodeReviewPaneEntrypoint::SlashCommand,
-                });
+                    entrypoint: CodeReviewPaneEntrypoint::SlashCommand});
             }
             SlashCommandKind::OpenMcpServers | SlashCommandKind::Mcp => {
                 ctx.dispatch_typed_action(&TerminalAction::OpenViewMCPPane);
@@ -1087,14 +1042,12 @@ impl Input {
                     let attachments = self.collect_cloud_launch_attachments(ctx);
                     let launch = PendingCloudLaunch {
                         prompt,
-                        attachments,
-                    };
+                        attachments};
                     ctx.dispatch_typed_action_deferred(
                         WorkspaceAction::OpenLocalToCloudHandoffPane {
                             launch: Some(launch),
                             environment_id: None,
-                            entry_point: HandoffEntryPoint::SlashCommand,
-                        },
+                            entry_point: HandoffEntryPoint::SlashCommand},
                     );
                 } else if self.source_conversation_has_content(ctx) {
                     // Empty `/handoff` with a non-empty source conversation:
@@ -1105,8 +1058,7 @@ impl Input {
                         WorkspaceAction::OpenLocalToCloudHandoffPane {
                             launch: None,
                             environment_id: None,
-                            entry_point: HandoffEntryPoint::SlashCommand,
-                        },
+                            entry_point: HandoffEntryPoint::SlashCommand},
                     );
                 } else {
                     // Empty `/handoff` with no source content — surface a toast
@@ -1146,8 +1098,7 @@ impl Input {
                     summarization_prompt: None,
                     initial_prompt: argument.cloned(),
                     initial_attachments,
-                    destination,
-                });
+                    destination});
             }
             SlashCommandKind::ForkFrom => {
                 self.open_user_query_menu(UserQueryMenuAction::ForkFrom, ctx);
@@ -1178,11 +1129,6 @@ impl Input {
                 let destination =
                     ForkedConversationDestination::for_fork_trigger(trigger.is_cmd_or_ctrl_enter());
 
-                send_telemetry_from_ctx!(
-                    AgentManagementTelemetryEvent::SlashCommandContinueLocally,
-                    ctx
-                );
-
                 // Move any pending attachments out of the source input so they travel with the
                 // initial prompt into the continued local pane and no longer linger on the
                 // original input. Only drain them when a non-empty prompt will actually be sent;
@@ -1198,8 +1144,7 @@ impl Input {
                     summarization_prompt: None,
                     initial_prompt: argument.cloned(),
                     initial_attachments,
-                    destination,
-                });
+                    destination});
             }
             SlashCommandKind::ForkAndCompact => {
                 let Some(conversation_id) = self
@@ -1224,8 +1169,7 @@ impl Input {
                     summarization_prompt: None,
                     initial_prompt: argument.cloned(),
                     initial_attachments: vec![],
-                    destination,
-                });
+                    destination});
             }
             SlashCommandKind::CompactAnd => {
                 let conversation_id = if is_queued_prompt {
@@ -1263,8 +1207,7 @@ impl Input {
                 } else {
                     let summarize = WorkspaceAction::SummarizeAIConversation {
                         prompt: None,
-                        initial_prompt: argument.cloned(),
-                    };
+                        initial_prompt: argument.cloned()};
                     ctx.dispatch_typed_action(&summarize);
                 }
             }
@@ -1352,8 +1295,7 @@ impl Input {
             #[cfg(any(not(feature = "local_fs"), target_family = "wasm"))]
             SlashCommandKind::MoveToCloud => return false,
             #[cfg(target_family = "wasm")]
-            SlashCommandKind::ContinueLocally => return false,
-        }
+            SlashCommandKind::ContinueLocally => return false}
 
         // Leave the buffer alone when re-sending a queued prompt (the user may have typed
         // new input while the agent was busy).
@@ -1373,8 +1315,7 @@ impl Input {
                 let _ = controller.try_enter_agent_view(
                     None,
                     AgentViewEntryOrigin::SlashCommand {
-                        trigger: SlashCommandTrigger::input(),
-                    },
+                        trigger: SlashCommandTrigger::input()},
                     ctx,
                 );
             });
@@ -1440,8 +1381,7 @@ impl Input {
                 let user_query = detected_skill.argument.clone();
                 self.execute_skill_command(reference, user_query, None, None, ctx)
             }
-            SlashCommandEntryState::None | SlashCommandEntryState::Composing { .. } => false,
-        }
+            SlashCommandEntryState::None | SlashCommandEntryState::Composing { .. } => false}
     }
 
     fn apply_v2_slash_section_filter(
@@ -1539,8 +1479,7 @@ impl Input {
                 let user_query = detected_skill.argument.clone();
                 self.execute_skill_command(reference, user_query, None, None, ctx)
             }
-            SlashCommandEntryState::None | SlashCommandEntryState::Composing { .. } => false,
-        }
+            SlashCommandEntryState::None | SlashCommandEntryState::Composing { .. } => false}
     }
 
     /// Drains pending attachments from the input's context model, but only when `argument`
@@ -1642,8 +1581,7 @@ pub(crate) fn conversation_is_cloud_oz_for_slash_command(
         .and_then(|s| s.harness.as_ref())
     {
         Some(config) => config.harness_type == Harness::Oz,
-        None => true,
-    }
+        None => true}
 }
 
 /// Tooltip and slash command name for the fork button, returned as a unit so
@@ -1651,8 +1589,7 @@ pub(crate) fn conversation_is_cloud_oz_for_slash_command(
 #[cfg(not(target_family = "wasm"))]
 pub(crate) struct ForkButtonAction {
     pub tooltip: &'static str,
-    pub command_name: &'static str,
-}
+    pub command_name: &'static str}
 
 /// Returns the tooltip and slash command for the fork button given an optional
 /// conversation ID. Uses `/continue-locally` for Oz conversations when `/fork`
@@ -1668,13 +1605,11 @@ pub(crate) fn fork_button_action(
     {
         ForkButtonAction {
             tooltip: "Continue locally",
-            command_name: commands::CONTINUE_LOCALLY.name,
-        }
+            command_name: commands::CONTINUE_LOCALLY.name}
     } else {
         ForkButtonAction {
             tooltip: "Fork conversation",
-            command_name: commands::FORK.name,
-        }
+            command_name: commands::FORK.name}
     }
 }
 

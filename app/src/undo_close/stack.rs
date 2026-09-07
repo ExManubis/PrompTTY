@@ -3,15 +3,13 @@ use warp_errors::report_error;
 use warpui::r#async::SpawnedFutureHandle;
 use warpui::{
     AppContext, ClosedWindowData, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity,
-    ViewHandle, WeakViewHandle, WindowId,
-};
+    ViewHandle, WeakViewHandle, WindowId};
 
 use super::UndoCloseSettings;
 use super::settings::UndoCloseSettingsChangedEvent;
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::pane_group::{PaneGroup, PaneId};
-use crate::send_telemetry_from_app_ctx;
 use crate::server::telemetry::{TelemetryEvent, UndoCloseItemType};
 use crate::tab::TabData;
 use crate::workspace::Workspace;
@@ -30,14 +28,12 @@ impl ItemId {
 /// Data for an item in the undo close stack.
 struct UndoData {
     closed_item: ClosedItem,
-    expiry_data: ExpiryData,
-}
+    expiry_data: ExpiryData}
 
 /// Data needed to handle expiration for items in the undo close stack.
 struct ExpiryData {
     id: ItemId,
-    task_handle: SpawnedFutureHandle,
-}
+    task_handle: SpawnedFutureHandle}
 
 impl std::ops::Drop for ExpiryData {
     fn drop(&mut self) {
@@ -51,8 +47,7 @@ pub(super) struct PaneData {
     /// The pane ID - content is retrieved from the pane group during restoration
     pane_id: PaneId,
     /// Reference to the pane group that contained this pane
-    pane_group: WeakViewHandle<PaneGroup>,
-}
+    pane_group: WeakViewHandle<PaneGroup>}
 
 /// An item in the undo close stack which can be re-opened.
 pub enum ClosedItem {
@@ -60,12 +55,9 @@ pub enum ClosedItem {
     Tab {
         workspace: WeakViewHandle<Workspace>,
         tab_index: usize,
-        data: TabData,
-    },
+        data: TabData},
     Pane {
-        data: PaneData,
-    },
-}
+        data: PaneData}}
 
 impl ClosedItem {
     fn discard(self, ctx: &mut ModelContext<UndoCloseStack>) {
@@ -151,13 +143,11 @@ impl ClosedItem {
 }
 
 pub enum UndoCloseStackEvent {
-    DiscardPane(PaneId),
-}
+    DiscardPane(PaneId)}
 
 /// A stack of closed items which can be re-opened in LIFO order.
 pub struct UndoCloseStack {
-    stack: Vec<UndoData>,
-}
+    stack: Vec<UndoData>}
 
 impl UndoCloseStack {
     /// Constructs a new undo close stack.
@@ -167,8 +157,7 @@ impl UndoCloseStack {
         });
 
         Self {
-            stack: Default::default(),
-        }
+            stack: Default::default()}
     }
 
     /// Returns whether or not the stack is empty.
@@ -196,8 +185,7 @@ impl UndoCloseStack {
             .position(|undo_data| match &undo_data.closed_item {
                 ClosedItem::Tab { data, .. } => data.pane_group.id() == pane_group_id,
                 ClosedItem::Pane { data } => data.pane_group.id() == pane_group_id,
-                _ => false,
-            })
+                _ => false})
         {
             let removed_item = self.stack.remove(pos);
             removed_item.expiry_data.task_handle.abort();
@@ -224,8 +212,7 @@ impl UndoCloseStack {
             ClosedItem::Tab {
                 workspace,
                 tab_index,
-                data,
-            },
+                data},
             ctx,
         );
     }
@@ -239,8 +226,7 @@ impl UndoCloseStack {
     ) {
         let pane_data = PaneData {
             pane_id,
-            pane_group,
-        };
+            pane_group};
 
         self.push_item(ClosedItem::Pane { data: pane_data }, ctx);
     }
@@ -253,12 +239,6 @@ impl UndoCloseStack {
 
         match closed_item {
             ClosedItem::Window(data) => {
-                send_telemetry_from_app_ctx!(
-                    TelemetryEvent::UndoClose {
-                        item_type: UndoCloseItemType::Window,
-                    },
-                    ctx
-                );
 
                 let window_id = data.window_id;
                 ctx.reopen_closed_window(*data);
@@ -276,15 +256,8 @@ impl UndoCloseStack {
             ClosedItem::Tab {
                 workspace,
                 tab_index,
-                data,
-            } => {
+                data} => {
                 if let Some(workspace) = workspace.upgrade(ctx) {
-                    send_telemetry_from_app_ctx!(
-                        TelemetryEvent::UndoClose {
-                            item_type: UndoCloseItemType::Tab,
-                        },
-                        ctx
-                    );
                     workspace.update(ctx, |workspace, ctx| {
                         workspace.restore_closed_tab(tab_index, data, ctx);
                     });
@@ -305,12 +278,6 @@ impl UndoCloseStack {
                     });
 
                     if restored {
-                        send_telemetry_from_app_ctx!(
-                            TelemetryEvent::UndoClose {
-                                item_type: UndoCloseItemType::Pane,
-                            },
-                            ctx
-                        );
 
                         // Focus the window first
                         ctx.windows().show_window_and_focus_app(window_id);
@@ -320,8 +287,7 @@ impl UndoCloseStack {
                             workspace.update(ctx, |workspace, ctx| {
                                 let locator = crate::workspace::PaneViewLocator {
                                     pane_group_id,
-                                    pane_id,
-                                };
+                                    pane_id};
                                 workspace.focus_pane(locator, ctx);
                             });
                         }
@@ -384,8 +350,7 @@ impl UndoCloseStack {
 
         self.stack.push(UndoData {
             closed_item,
-            expiry_data: ExpiryData { id, task_handle },
-        })
+            expiry_data: ExpiryData { id, task_handle }})
     }
 }
 

@@ -9,19 +9,15 @@ use session_sharing_protocol::common::{
     ActivePrompt, AgentPromptFailureReason, AgentPromptRequest, CLIAgentSessionState,
     CommandExecutionFailureReason, ControlAction, ControlActionFailureReason,
     LongRunningCommandAgentInteraction, ParticipantId, SelectedAgentModel,
-    UniversalDeveloperInputContextUpdate, WriteToPtyFailureReason,
-};
+    UniversalDeveloperInputContextUpdate, WriteToPtyFailureReason};
 #[cfg(not(any(test, feature = "integration_tests")))]
 use session_sharing_protocol::common::{
-    LongRunningCommandAgentInteractionState, SelectedConversation, UniversalDeveloperInputContext,
-};
+    LongRunningCommandAgentInteractionState, SelectedConversation, UniversalDeveloperInputContext};
 use session_sharing_protocol::sharer::{
     AddGuestsResponse, FailedToInitializeSessionReason, Lifetime, LinkAccessLevelUpdateResponse,
     QuotaType, RemoveGuestResponse, SessionEndedReason, SessionSourceType,
-    TeamAccessLevelUpdateResponse, UpdatePendingUserRoleResponse,
-};
+    TeamAccessLevelUpdateResponse, UpdatePendingUserRoleResponse};
 use warp_core::execution_mode::AppExecutionMode;
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warpui::{AppContext, ModelHandle, SingletonEntity, ViewContext, ViewHandle, WindowId};
 
@@ -33,8 +29,7 @@ use crate::ai::agent_conversations_model::AgentConversationsModel;
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewControllerEvent};
 use crate::ai::blocklist::{
     BlocklistAIContextEvent, BlocklistAIContextModel, BlocklistAIControllerEvent,
-    BlocklistAIHistoryEvent, BlocklistAIHistoryModel, InputConfig, SerializedBlockListItem,
-};
+    BlocklistAIHistoryEvent, BlocklistAIHistoryModel, InputConfig, SerializedBlockListItem};
 use crate::ai::llms::{LLMPreferences, LLMPreferencesEvent};
 use crate::context_chips::current_prompt::CurrentPrompt;
 use crate::context_chips::prompt_snapshot::PromptSnapshot;
@@ -47,8 +42,7 @@ use crate::persistence::ModelEvent;
 use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::{TelemetryAgentViewEntryOrigin, TelemetryEvent};
 use crate::terminal::cli_agent_sessions::{
-    CLIAgentInputState, CLIAgentSessionsModel, CLIAgentSessionsModelEvent,
-};
+    CLIAgentInputState, CLIAgentSessionsModel, CLIAgentSessionsModelEvent};
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::terminal::session_settings::{SessionSettings, SessionSettingsChangedEvent};
 use crate::terminal::shared_session::manager::Manager;
@@ -59,16 +53,13 @@ use crate::terminal::shared_session::settings::SharedSessionSettings;
 use crate::terminal::shared_session::shared_handlers::{
     RemoteUpdateGuard, apply_auto_approve_agent_actions_update, apply_cli_agent_state_update,
     apply_input_mode_update, apply_selected_agent_model_update, apply_selected_conversation_update,
-    build_selected_conversation_update,
-};
+    build_selected_conversation_update};
 use crate::terminal::shared_session::sharer::network::{
     Network, NetworkEvent, failed_to_add_guests_user_error,
-    failed_to_initialize_session_user_error, session_terminated_reason_string,
-};
+    failed_to_initialize_session_user_error, session_terminated_reason_string};
 use crate::terminal::shared_session::{
     SharedSessionActionSource, SharedSessionScrollbackType, SharedSessionSource,
-    SharedSessionStatus, max_session_size,
-};
+    SharedSessionStatus, max_session_size};
 use crate::terminal::view::{ConversationRestorationInNewPaneType, Event as TerminalViewEvent};
 use crate::terminal::writeable_pty::terminal_manager_util::wire_up_remote_server_controller_with_view;
 use crate::terminal::{TerminalManager as TerminalManagerTrait, TerminalModel, TerminalView};
@@ -167,8 +158,7 @@ pub(crate) struct TerminalViewSurfaceConfig {
     pub(crate) has_conversation_restoration: bool,
     pub(crate) is_historical: bool,
     pub(crate) should_use_live_appearance: bool,
-    pub(crate) has_restored_command_blocks: bool,
-}
+    pub(crate) has_restored_command_blocks: bool}
 
 /// Resolves the block list used by the GUI `TerminalView` surface.
 pub(crate) fn terminal_view_restored_blocks(
@@ -192,8 +182,7 @@ pub(crate) fn terminal_view_restored_blocks(
                 items.sort_by_key(|item| item.start_ts());
                 if items.is_empty() { None } else { Some(items) }
             }
-            _ => None,
-        })
+            _ => None})
 }
 
 /// Creates the GUI terminal surface and its manager-owned post-wiring closure.
@@ -212,8 +201,7 @@ pub(crate) fn create_terminal_view_surface(
         sessions,
         size_info,
         colors,
-        inactive_pty_reads_rx,
-    } = surface_init;
+        inactive_pty_reads_rx} = surface_init;
     let TerminalViewSurfaceConfig {
         resources,
         model_event_sender,
@@ -223,8 +211,7 @@ pub(crate) fn create_terminal_view_surface(
         has_conversation_restoration,
         is_historical,
         should_use_live_appearance,
-        has_restored_command_blocks,
-    } = config;
+        has_restored_command_blocks} = config;
     let current_prompt = ctx.add_model(|ctx| {
         CurrentPrompt::new_with_model_events(
             sessions.clone(),
@@ -306,8 +293,7 @@ pub(crate) fn create_terminal_view_surface(
                 window_id,
                 ctx,
             );
-        },
-    }
+        }}
 }
 
 /// Wires up `TerminalView`-specific session sharing: the local sharer (`Network`),
@@ -499,13 +485,6 @@ fn wire_up_terminal_view_session_sharing(
                             ctx,
                         );
                     }
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::AgentViewExited {
-                            origin: TelemetryAgentViewEntryOrigin::from(origin.clone()),
-                            was_empty: *final_exchange_count == 0,
-                        },
-                        ctx
-                    );
                 }
                 AgentViewControllerEvent::ExitConfirmed { .. } => {}
             },
@@ -601,8 +580,7 @@ fn wire_up_terminal_view_session_sharing(
                     );
                 }
                 BlocklistAIHistoryEvent::UpdatedAutoexecuteOverride {
-                    terminal_surface_id,
-                } => {
+                    terminal_surface_id} => {
                     if *terminal_surface_id != view_id_for_stream_init {
                         return;
                     }
@@ -641,8 +619,7 @@ fn wire_up_terminal_view_session_sharing(
                 // reconnect.
                 BlocklistAIHistoryEvent::ConversationServerTokenAssigned {
                     terminal_surface_id,
-                    conversation_id,
-                } => {
+                    conversation_id} => {
                     if *terminal_surface_id != view_id_for_stream_init {
                         return;
                     }
@@ -894,8 +871,7 @@ impl TerminalManager<TerminalView> {
                             Some(state),
                             Some(LongRunningCommandAgentInteraction {
                                 block_id: active_block.id().clone().into(),
-                                state,
-                            }),
+                                state}),
                         )
                     } else {
                         (Some(LongRunningCommandAgentInteractionState::NotInteracting), None)
@@ -910,10 +886,8 @@ impl TerminalManager<TerminalView> {
                     match sessions_model.session(terminal_view_id) {
                         Some(session) => CLIAgentSessionState::Active {
                             cli_agent: session.agent.to_serialized_name(),
-                            is_rich_input_open: sessions_model.is_input_open(terminal_view_id),
-                        },
-                        None => CLIAgentSessionState::Inactive,
-                    }
+                            is_rich_input_open: sessions_model.is_input_open(terminal_view_id)},
+                        None => CLIAgentSessionState::Inactive}
                 };
 
                 let universal_developer_input_context = UniversalDeveloperInputContext {
@@ -923,8 +897,7 @@ impl TerminalManager<TerminalView> {
                     selected_model: None,
                     long_running_command_agent_interaction_state,
                     long_running_command_agent_interaction,
-                    cli_agent_session,
-                };
+                    cli_agent_session};
 
                 let team_uid = ResolvedTeamScope::from_scope(
                     &UserWorkspaces::as_ref(ctx).team_context_for_window(window_id),
@@ -966,8 +939,7 @@ impl TerminalManager<TerminalView> {
             NetworkEvent::SharedSessionCreatedSuccessfully {
                 session_id,
                 sharer_id,
-                sharer_firebase_uid,
-            } => {
+                sharer_firebase_uid} => {
                 // Change the status of the session to reflect that the share is now active.
                 model
                     .lock()
@@ -1007,8 +979,7 @@ impl TerminalManager<TerminalView> {
                     BlocklistAIHistoryModel::handle(ctx).update(ctx, |_, ctx| {
                         ctx.emit(BlocklistAIHistoryEvent::LocalSharedSessionEstablished {
                             conversation_id,
-                            session_id: *session_id,
-                        });
+                            session_id: *session_id});
                     });
                 }
 
@@ -1042,8 +1013,7 @@ impl TerminalManager<TerminalView> {
             }
             NetworkEvent::FailedToCreateSharedSession {
                 reason,
-                cause,
-            } => {
+                cause} => {
                 log::warn!("Failed to create shared session: reason={reason:?}, cause={cause:?}");
 
                 model
@@ -1071,8 +1041,7 @@ impl TerminalManager<TerminalView> {
 
                     ctx.emit(TerminalViewEvent::FailedToShareSession {
                         reason: reason_string,
-                        cause: cause.clone(),
-                    });
+                        cause: cause.clone()});
                 });
 
                 // Drop the network so we can create a new one when trying again.
@@ -1128,8 +1097,7 @@ impl TerminalManager<TerminalView> {
             NetworkEvent::ControlActionRequested {
                 participant_id,
                 request_id,
-                action,
-            } => {
+                action} => {
                 if !FeatureFlag::AgentSharedSessions.is_enabled() {
                     return;
                 }
@@ -1157,8 +1125,7 @@ impl TerminalManager<TerminalView> {
 
                 match action {
                     ControlAction::CancelConversation {
-                        server_conversation_token,
-                    } => {
+                        server_conversation_token} => {
                         terminal_view.update(ctx, |view, ctx| {
                             view.ai_controller().update(ctx, |controller, ctx| {
                                 controller
@@ -1227,8 +1194,7 @@ impl TerminalManager<TerminalView> {
             NetworkEvent::RoleRequested {
                 participant_id,
                 role_request_id,
-                role,
-            } => {
+                role} => {
                 terminal_view.update(ctx, |view, ctx| {
                     view.on_role_requested(
                         participant_id.clone(),
@@ -1240,8 +1206,7 @@ impl TerminalManager<TerminalView> {
             }
             NetworkEvent::RoleRequestCancelled {
                 participant_id,
-                role_request_id,
-            } => {
+                role_request_id} => {
                 terminal_view.update(ctx, |view, ctx| {
                     view.on_role_request_cancelled(
                         participant_id.clone(),
@@ -1252,16 +1217,14 @@ impl TerminalManager<TerminalView> {
             }
             NetworkEvent::ParticipantRoleChanged {
                 participant_id,
-                role,
-            } => {
+                role} => {
                 terminal_view.update(ctx, |view, ctx| {
                     view.on_participant_role_changed(participant_id, *role, ctx);
                 });
             }
             NetworkEvent::InputUpdated {
                 block_id,
-                operations,
-            } => {
+                operations} => {
                 // For the sharer, we're always up to speed so if this block ID
                 // is not the latest, then it's an old block ID and we don't need
                 // these operations.
@@ -1280,8 +1243,7 @@ impl TerminalManager<TerminalView> {
                 id,
                 participant_id,
                 block_id,
-                command,
-            } => {
+                command} => {
                 let (is_block_id_latest, is_currently_long_running) = {
                     let model = model.lock();
                     let active_block = model.block_list().active_block();
@@ -1385,8 +1347,7 @@ impl TerminalManager<TerminalView> {
             NetworkEvent::AgentPromptRequested {
                 id,
                 participant_id,
-                request,
-            } => {
+                request} => {
                 if !FeatureFlag::AgentSharedSessions.is_enabled() {
                     return;
                 }
@@ -1611,8 +1572,7 @@ impl TerminalManager<TerminalView> {
                 }
             }
             NetworkEvent::ViewerTerminalSizeReported {
-                window_size,
-            } => {
+                window_size} => {
                 if !*SharedSessionSettings::as_ref(ctx).viewer_driven_sizing_enabled {
                     return;
                 }
@@ -1690,7 +1650,7 @@ impl TerminalManager<TerminalView> {
                     } else if let Some(interaction_state) =
                         context_update.long_running_command_agent_interaction_state
                     {
-                        // TODO (roland): this is kept around for backward compatibility. Remove after 6 weeks (around Jul 23, 2026) 
+                        // TODO (roland): this is kept around for backward compatibility. Remove after 6 weeks (around Jul 23, 2026)
                         // once clients have updated to use context_update.long_running_command_agent_interaction above
                         terminal_view.update(ctx, |view, ctx| {
                             view.apply_long_running_command_agent_interaction_state(
@@ -1721,15 +1681,13 @@ impl TerminalManager<TerminalView> {
                 Some(source) => {
                     let source_type = match &source.source_type {
                         SessionSourceType::User => "user",
-                        SessionSourceType::AmbientAgent { .. } => "ambient_agent",
-                    };
+                        SessionSourceType::AmbientAgent { .. } => "ambient_agent"};
                     (
                         source_type,
                         source.orchestrator_task_id().map(str::to_owned),
                     )
                 }
-                None => ("unknown", None),
-            }
+                None => ("unknown", None)}
         };
         log::info!(
             "Shared session local lifecycle: event={event} session_id={session_id:?} source_type={source_type} source_task_id={source_task_id:?} {details}"
@@ -1831,8 +1789,7 @@ impl TerminalManager<TerminalView> {
         ctx.subscribe_to_view(terminal_view, move |view, event, ctx| match event {
             TerminalViewEvent::StartSharingCurrentSession {
                 scrollback_type,
-                source,
-            } if FeatureFlag::CreatingSharedSessions.is_enabled() => {
+                source} if FeatureFlag::CreatingSharedSessions.is_enabled() => {
                 Self::start_sharing_session(
                     view.clone(),
                     prompt_type.clone(),
@@ -1874,8 +1831,7 @@ impl TerminalManager<TerminalView> {
             }
             TerminalViewEvent::UpdateRole {
                 participant_id,
-                role,
-            } => {
+                role} => {
                 if let Some(network) = session_sharer.borrow().as_ref() {
                     network.update(ctx, |network, _| {
                         network.send_role_update(participant_id.clone(), *role);
@@ -1927,8 +1883,7 @@ impl TerminalManager<TerminalView> {
             TerminalViewEvent::RespondToRoleRequest {
                 participant_id,
                 role_request_id,
-                response,
-            } => {
+                response} => {
                 if let Some(network) = session_sharer.borrow().as_ref() {
                     network.update(ctx, |network, _| {
                         network.send_role_request_response(
@@ -1941,8 +1896,7 @@ impl TerminalManager<TerminalView> {
             }
             TerminalViewEvent::InputEditorUpdated {
                 block_id,
-                operations,
-            } => {
+                operations} => {
                 // If the block ID has become stale by the time we get here,
                 // we don't need to send this update to the server.
                 if model.lock().block_list().active_block_id() != block_id {
@@ -1979,8 +1933,7 @@ impl TerminalManager<TerminalView> {
             }
             TerminalViewEvent::LongRunningCommandAgentInteractionStateChanged {
                 state,
-                block_id,
-            } => {
+                block_id} => {
                 if !sharer_remote_update_guard.should_broadcast() {
                     return;
                 }
@@ -1991,8 +1944,7 @@ impl TerminalManager<TerminalView> {
                             .clone()
                             .map(|block_id| LongRunningCommandAgentInteraction {
                                 block_id: block_id.into(),
-                                state: *state,
-                            });
+                                state: *state});
                     network.update(ctx, |network, _| {
                         network.send_universal_developer_input_context_update(
                             UniversalDeveloperInputContextUpdate {
@@ -2004,8 +1956,7 @@ impl TerminalManager<TerminalView> {
                     });
                 }
             }
-            _ => (),
-        });
+            _ => ()});
 
         // Broadcast CLI agent session lifecycle events to viewers.
         let session_sharer_for_cli = shared_session_model.clone();
@@ -2023,8 +1974,7 @@ impl TerminalManager<TerminalView> {
                     UniversalDeveloperInputContextUpdate {
                         cli_agent_session: Some(CLIAgentSessionState::Active {
                             cli_agent: agent.to_serialized_name(),
-                            is_rich_input_open: false,
-                        }),
+                            is_rich_input_open: false}),
                         ..Default::default()
                     }
                 }
@@ -2038,8 +1988,7 @@ impl TerminalManager<TerminalView> {
                         is_rich_input_open: matches!(
                             new_input_state,
                             &CLIAgentInputState::Open { .. }
-                        ),
-                    }),
+                        )}),
                     ..Default::default()
                 },
                 CLIAgentSessionsModelEvent::Ended { .. } => UniversalDeveloperInputContextUpdate {
@@ -2048,8 +1997,7 @@ impl TerminalManager<TerminalView> {
                 },
                 // StatusChanged / SessionUpdated are enriched by OSC events;
                 // no protocol send needed.
-                _ => return,
-            };
+                _ => return};
             network.update(ctx, |network, _| {
                 network.send_universal_developer_input_context_update(update);
             });
@@ -2131,8 +2079,7 @@ impl TerminalManagerTrait for TerminalManager<TerminalView> {
                 // We still need to call this in order to emit a telemetry event.
                 terminal_view.stop_sharing_session(
                     SharedSessionActionSource::Closed {
-                        is_confirm_close_session,
-                    },
+                        is_confirm_close_session},
                     ctx,
                 )
             });

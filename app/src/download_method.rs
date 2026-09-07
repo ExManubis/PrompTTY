@@ -3,7 +3,6 @@ use std::sync::Arc;
 use warpui::r#async::executor::Background;
 
 use crate::auth::auth_state::AuthState;
-use crate::send_telemetry_on_executor;
 use crate::server::telemetry::{DownloadSource, TelemetryEvent};
 
 /// Determine the Warp download method (if possible) and send a telemetry event reporting that
@@ -14,11 +13,6 @@ pub fn determine_and_report(auth_state: Arc<AuthState>, executor: Arc<Background
         .spawn(async move {
             let download_source = check_download_source().await;
 
-            send_telemetry_on_executor!(
-                auth_state,
-                TelemetryEvent::DownloadSource(download_source),
-                telemetry_executor
-            );
         })
         .detach();
 }
@@ -65,8 +59,7 @@ async fn check_download_source() -> DownloadSource {
 
     match result {
         Ok(status) if status.success() => DownloadSource::Homebrew,
-        _ => DownloadSource::Website,
-    }
+        _ => DownloadSource::Website}
 }
 
 #[cfg(not(target_os = "macos"))]

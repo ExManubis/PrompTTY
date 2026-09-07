@@ -13,8 +13,6 @@ use crate::ai::blocklist::action_model::RecordingTelemetryEvent;
 use crate::ai::blocklist::action_model::recording_controller::RecordingController;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::blocklist::action_model::recording_finalize::spawn_recording_exit_watcher;
-use crate::send_telemetry_from_ctx;
-
 pub struct StartRecordingExecutor;
 
 impl StartRecordingExecutor {
@@ -41,8 +39,7 @@ impl StartRecordingExecutor {
     ) -> impl Into<AnyActionExecution> + use<> {
         let ExecuteActionInput {
             action,
-            conversation_id,
-        } = input;
+            conversation_id} = input;
         let AIAgentActionType::StartRecording {
             frame_rate,
             max_duration,
@@ -50,8 +47,7 @@ impl StartRecordingExecutor {
             summary,
             description,
             playback_speed_multiplier,
-            window,
-        } = action.action.clone()
+            window} = action.action.clone()
         else {
             return ActionExecution::InvalidAction;
         };
@@ -97,8 +93,7 @@ impl StartRecordingExecutor {
                     max_duration: max_duration.unwrap_or(defaults.max_duration),
                     max_size_bytes: max_size_bytes.unwrap_or(defaults.max_size_bytes),
                     playback_speed_multiplier,
-                    target,
-                };
+                    target};
                 // Carry the resolved frame rate to the completion callback so the
                 // controller can store it for the post-stop smart cut's one-frame
                 // minimum, even though it is not echoed back to the server.
@@ -110,17 +105,6 @@ impl StartRecordingExecutor {
                     let started_at = SystemTime::now();
                     let width_px = handle.width() as i32;
                     let height_px = handle.height() as i32;
-                    send_telemetry_from_ctx!(
-                        RecordingTelemetryEvent::Started {
-                            recording_id: recording_id.clone(),
-                            capture_target: match target {
-                                computer_use::Target::Screen => "screen",
-                                computer_use::Target::Window { .. } => "window",
-                            }
-                            .to_string(),
-                        },
-                        ctx
-                    );
                     let controller = RecordingController::handle(ctx);
                     controller.update(ctx, |controller, _| {
                         controller.finish_start(
@@ -142,8 +126,7 @@ impl StartRecordingExecutor {
                             recording_id,
                             started_at,
                             width_px,
-                            height_px,
-                        },
+                            height_px},
                     ))
                 }
                 Err(error) => {

@@ -21,16 +21,14 @@ use warpui::clipboard::ClipboardContent;
 use warpui::elements::{
     Align, Container, CrossAxisAlignment, DispatchEventResult, Empty, EventHandler, Flex,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, SavePosition, Shrinkable,
-    Stack, Text,
-};
+    Stack, Text};
 use warpui::keymap::EditableBinding;
 use warpui::presenter::ChildView;
 use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle,
-};
+    ViewHandle};
 
 use super::context_menu::{ContextMenuAction, ContextMenuState, show_rich_editor_context_menu};
 use super::editor::view::{EditorViewEvent, RichTextEditorConfig, RichTextEditorView};
@@ -48,8 +46,7 @@ use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::view;
 use crate::pane_group::pane::view::header::components::{
     CenteredHeaderEdgeWidth, render_pane_header_buttons, render_pane_header_title_text,
-    render_three_column_header,
-};
+    render_three_column_header};
 use crate::pane_group::{BackingView, PaneConfiguration, PaneEvent};
 use crate::server::telemetry::{NotebookActionEvent, NotebookTelemetryMetadata, TelemetryEvent};
 use crate::settings::FontSettings;
@@ -67,14 +64,13 @@ pub use crate::util::openable_file_type::{is_jupyter_notebook_file, is_markdown_
 use crate::view_components::{MarkdownToggleEvent, MarkdownToggleView};
 use crate::workflows::{WorkflowSource, WorkflowType};
 use crate::workspace::ActiveSession;
-use crate::{cmd_or_ctrl_shift, safe_warn, send_telemetry_from_ctx};
+use crate::{cmd_or_ctrl_shift, safe_warn};
 
 /// Display mode for markdown files shown via the header segmented control.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MarkdownDisplayMode {
     Rendered,
-    Raw,
-}
+    Raw}
 
 /// View for a read-only notebook backed by a file, rather than Warp Drive.
 pub struct FileNotebookView {
@@ -101,15 +97,13 @@ pub struct FileNotebookView {
     header_title_mouse_state: MouseStateHandle,
     /// Vertical scroll fraction (`0..=1`) to restore once the file content is first loaded,
     /// captured before a markdown raw->rendered toggle. Consumed on the first `set_content`.
-    pending_scroll_fraction: Option<f32>,
-}
+    pending_scroll_fraction: Option<f32>}
 
 #[derive(Debug, Clone)]
 pub enum FileNotebookEvent {
     RunWorkflow {
         workflow: Arc<WorkflowType>,
-        source: WorkflowSource,
-    },
+        source: WorkflowSource},
     TitleUpdated,
     FileLoaded,
     Pane(PaneEvent),
@@ -117,9 +111,7 @@ pub enum FileNotebookEvent {
     OpenFileWithTarget {
         path: PathBuf,
         target: FileTarget,
-        line_col: Option<warp_util::path::LineAndColumnArg>,
-    },
-}
+        line_col: Option<warp_util::path::LineAndColumnArg>}}
 
 impl From<PaneEvent> for FileNotebookEvent {
     fn from(event: PaneEvent) -> Self {
@@ -141,8 +133,7 @@ pub enum FileNotebookAction {
     OpenAsCode,
     ContextMenu(ContextMenuAction),
     ToggleMarkdownDisplayMode(MarkdownDisplayMode),
-    ToggleMaximized,
-}
+    ToggleMaximized}
 
 impl From<ContextMenuAction> for FileNotebookAction {
     fn from(action: ContextMenuAction) -> Self {
@@ -156,18 +147,15 @@ enum SourceFile {
     FileBased {
         path: LocalOrRemotePath,
         /// Only meaningful for local paths; remote paths carry their own host information.
-        session: Option<Arc<Session>>,
-    },
+        session: Option<Arc<Session>>},
     /// Static content provided inline (not backed by a file on disk).
-    Static { title: String },
-}
+    Static { title: String }}
 
 impl SourceFile {
     fn path(&self) -> Option<&LocalOrRemotePath> {
         match self {
             SourceFile::FileBased { path, .. } => Some(path),
-            SourceFile::Static { .. } => None,
-        }
+            SourceFile::Static { .. } => None}
     }
 
     fn local_path(&self) -> Option<&Path> {
@@ -177,8 +165,7 @@ impl SourceFile {
     fn display_name(&self) -> String {
         match self {
             SourceFile::FileBased { path, .. } => path.display_path(),
-            SourceFile::Static { title } => title.clone(),
-        }
+            SourceFile::Static { title } => title.clone()}
     }
 }
 
@@ -187,8 +174,7 @@ enum FileState {
     NoFile,
     Loading(SourceFile),
     Error(SourceFile),
-    Loaded(SourceFile),
-}
+    Loaded(SourceFile)}
 
 impl FileState {
     fn path(&self) -> Option<&LocalOrRemotePath> {
@@ -297,8 +283,7 @@ impl FileNotebookView {
             #[cfg(feature = "local_fs")]
             code_source: None,
             header_title_mouse_state: Default::default(),
-            pending_scroll_fraction: None,
-        }
+            pending_scroll_fraction: None}
     }
 
     #[cfg(feature = "local_fs")]
@@ -404,8 +389,7 @@ impl FileNotebookView {
                 links.set_session_source(
                     SessionSource::Target {
                         session,
-                        base_directory: parent.to_path_buf(),
-                    },
+                        base_directory: parent.to_path_buf()},
                     ctx,
                 )
             })
@@ -460,8 +444,7 @@ impl FileNotebookView {
 
         self.file_state = FileState::Loading(SourceFile::FileBased {
             path: LocalOrRemotePath::Local(local_path.clone()),
-            session: session.clone(),
-        });
+            session: session.clone()});
 
         #[cfg(feature = "local_fs")]
         {
@@ -483,18 +466,13 @@ impl FileNotebookView {
                     match event {
                         FileModelEvent::FileLoaded { content, .. } => {
                             me.set_content(content, ctx);
-                            send_telemetry_from_ctx!(
-                                TelemetryEvent::OpenNotebook(me.open_telemetry_metadata(ctx)),
-                                ctx
-                            );
 
                             // Record the canonical path instead of the input path when available.
                             if let Some(canonical_path) = file_model.as_ref(ctx).file_path(file_id)
                             {
                                 me.file_state = FileState::Loaded(SourceFile::FileBased {
                                     path: LocalOrRemotePath::Local(canonical_path),
-                                    session: session.clone(),
-                                });
+                                    session: session.clone()});
                             }
 
                             me.pane_configuration.update(ctx, |pane_config, ctx| {
@@ -516,8 +494,7 @@ impl FileNotebookView {
                                     FileState::NoFile => FileState::NoFile,
                                     FileState::Loading(source)
                                     | FileState::Loaded(source)
-                                    | FileState::Error(source) => FileState::Error(source),
-                                };
+                                    | FileState::Error(source) => FileState::Error(source)};
                             ctx.notify();
                         }
                         FileModelEvent::FileUpdated { content, .. } => {
@@ -538,8 +515,7 @@ impl FileNotebookView {
             );
             self.file_state = FileState::Error(SourceFile::FileBased {
                 path: LocalOrRemotePath::Local(local_path),
-                session,
-            });
+                session});
             ctx.notify();
         }
     }
@@ -585,18 +561,6 @@ impl FileNotebookView {
     }
 
     fn send_telemetry_action(&self, action: NotebookTelemetryAction, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(
-            TelemetryEvent::NotebookAction(NotebookActionEvent {
-                action,
-                metadata: NotebookTelemetryMetadata::new(
-                    None,
-                    None,
-                    NotebookLocation::LocalFile,
-                    None
-                )
-            }),
-            ctx
-        );
     }
 
     /// Reload the file that was most recently opened (or attempted to open).
@@ -608,8 +572,7 @@ impl FileNotebookView {
             FileState::Loading(source) | FileState::Error(source) | FileState::Loaded(source) => {
                 match source {
                     SourceFile::FileBased { path, session } => (path, session),
-                    SourceFile::Static { .. } => return,
-                }
+                    SourceFile::Static { .. } => return}
             }
         };
         self.open(path, session, ctx);
@@ -630,8 +593,7 @@ impl FileNotebookView {
         let lor_path = LocalOrRemotePath::Remote(remote_path.clone());
         self.file_state = FileState::Loading(SourceFile::FileBased {
             path: lor_path,
-            session: None,
-        });
+            session: None});
 
         let host_id = remote_path.host_id.clone();
         let manager = remote_server::manager::RemoteServerManager::handle(ctx);
@@ -653,11 +615,9 @@ impl FileNotebookView {
         let request = remote_server::proto::ReadFileContextRequest {
             files: vec![remote_server::proto::ReadFileContextFile {
                 path: path_str,
-                line_ranges: vec![],
-            }],
+                line_ranges: vec![]}],
             max_file_bytes: None,
-            max_batch_bytes: None,
-        };
+            max_batch_bytes: None};
 
         let handle = manager.as_ref(ctx).host_request_handle(&host_id);
         ctx.spawn(
@@ -671,13 +631,11 @@ impl FileNotebookView {
                                     text,
                                 ),
                             ) => text.as_str(),
-                            _ => "",
-                        };
+                            _ => ""};
                         me.set_content(text, ctx);
                         me.file_state = match mem::replace(&mut me.file_state, FileState::NoFile) {
                             FileState::Loading(source) => FileState::Loaded(source),
-                            other => other,
-                        };
+                            other => other};
                         me.pane_configuration.update(ctx, |pane_config, ctx| {
                             pane_config.refresh_pane_header_overflow_menu_items(ctx);
                         });
@@ -695,8 +653,7 @@ impl FileNotebookView {
                         );
                         me.file_state = match mem::replace(&mut me.file_state, FileState::NoFile) {
                             FileState::Loading(source) => FileState::Error(source),
-                            other => other,
-                        };
+                            other => other};
                         ctx.notify();
                     }
                 }
@@ -707,8 +664,7 @@ impl FileNotebookView {
                     );
                     me.file_state = match mem::replace(&mut me.file_state, FileState::NoFile) {
                         FileState::Loading(source) => FileState::Error(source),
-                        other => other,
-                    };
+                        other => other};
                     ctx.notify();
                 }
             },
@@ -722,8 +678,7 @@ impl FileNotebookView {
             ctx.emit(FileNotebookEvent::Pane(PaneEvent::ReplaceWithCodePane {
                 path,
                 source: self.code_source.clone(),
-                scroll_fraction,
-            }));
+                scroll_fraction}));
         }
     }
 
@@ -795,12 +750,10 @@ impl FileNotebookView {
                 let source = workflow.source.unwrap_or(WorkflowSource::Notebook {
                     notebook_id: None,
                     team_uid: None,
-                    location: NotebookLocation::LocalFile,
-                });
+                    location: NotebookLocation::LocalFile});
                 ctx.emit(FileNotebookEvent::RunWorkflow {
                     workflow: workflow_type,
-                    source,
-                });
+                    source});
             }
             EditorViewEvent::OpenedBlockInsertionMenu(source) => self.send_telemetry_action(
                 NotebookTelemetryAction::OpenBlockInsertionMenu { source: *source },
@@ -817,8 +770,7 @@ impl FileNotebookView {
             EditorViewEvent::CopiedBlock { block, entrypoint } => self.send_telemetry_action(
                 NotebookTelemetryAction::CopyBlock {
                     block: *block,
-                    entrypoint: *entrypoint,
-                },
+                    entrypoint: *entrypoint},
                 ctx,
             ),
             EditorViewEvent::NavigatedCommands => {
@@ -988,8 +940,7 @@ impl FileNotebookView {
             FileState::NoFile => self.render_no_file(appearance),
             FileState::Loading(source) => self.render_loading(source, appearance),
             FileState::Error(source) => self.render_error(source, appearance),
-            FileState::Loaded(_) => ChildView::new(&self.editor).finish(),
-        };
+            FileState::Loaded(_) => ChildView::new(&self.editor).finish()};
 
         #[cfg(not(target_family = "wasm"))]
         if matches!(self.file_state, FileState::Loaded(_)) && self.is_remote_disconnected(_app) {
@@ -1089,8 +1040,7 @@ impl TypedActionView for FileNotebookView {
                     ctx.emit(FileNotebookEvent::OpenFileWithTarget {
                         path: local_path,
                         target,
-                        line_col: None,
-                    });
+                        line_col: None});
                 } else if let Some(path) = self.file_state.path().cloned() {
                     // For remote files, open as a code editor pane.
                     let scroll_fraction =
@@ -1098,8 +1048,7 @@ impl TypedActionView for FileNotebookView {
                     ctx.emit(FileNotebookEvent::Pane(PaneEvent::ReplaceWithCodePane {
                         path,
                         source: None,
-                        scroll_fraction,
-                    }));
+                        scroll_fraction}));
                 }
             }
             #[cfg(feature = "local_fs")]
@@ -1133,8 +1082,7 @@ impl TypedActionView for FileNotebookView {
                                 ctx.emit(FileNotebookEvent::Pane(PaneEvent::ReplaceWithCodePane {
                                     path,
                                     source: self.code_source.clone(),
-                                    scroll_fraction,
-                                }));
+                                    scroll_fraction}));
                             }
                         }
                     }
@@ -1266,8 +1214,7 @@ impl BackingView for FileNotebookView {
                     use pathfinder_geometry::vector::vec2f;
                     use warpui::elements::{
                         ChildAnchor, Hoverable, OffsetPositioning, ParentAnchor,
-                        ParentOffsetBounds, Stack,
-                    };
+                        ParentOffsetBounds, Stack};
                     Hoverable::new(self.header_title_mouse_state.clone(), move |hover_state| {
                         let mut stack = Stack::new();
                         stack.add_child(title_text);
@@ -1301,13 +1248,11 @@ impl BackingView for FileNotebookView {
                     right_row.finish(),
                     CenteredHeaderEdgeWidth {
                         min: buttons_width,
-                        max: 220.0,
-                    },
+                        max: 220.0},
                     ctx.header_left_inset,
                     is_pane_dragging,
                 ),
-                has_custom_draggable_behavior: false,
-            }
+                has_custom_draggable_behavior: false}
         } else {
             view::HeaderContent::Standard(view::StandardHeader {
                 title,
@@ -1318,8 +1263,7 @@ impl BackingView for FileNotebookView {
                 left_of_title: None,
                 right_of_title: None,
                 left_of_overflow: None,
-                options: Default::default(),
-            })
+                options: Default::default()})
         }
     }
 
@@ -1332,8 +1276,7 @@ impl BackingView for FileNotebookView {
 /// Location information for a file, used to show its title and context.
 struct FileLocation {
     breadcrumbs: String,
-    name: String,
-}
+    name: String}
 
 impl FileLocation {
     fn new(path: &Path, home_directory: Option<&str>) -> Self {
@@ -1342,8 +1285,7 @@ impl FileLocation {
                 user_friendly_path(directory.to_string_lossy().as_ref(), home_directory)
                     .into_owned()
             }
-            None => String::new(),
-        };
+            None => String::new()};
         let name = path
             .file_name()
             .map(|name| name.to_string_lossy().into_owned())

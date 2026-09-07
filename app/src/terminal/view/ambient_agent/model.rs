@@ -6,7 +6,6 @@ use instant::Instant;
 use session_sharing_protocol::common::SessionId;
 use warp_cli::agent::Harness;
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warp_terminal::model::BlockId;
 use warpui::r#async::{SpawnedFutureHandle, Timer};
@@ -28,14 +27,12 @@ use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::blocklist::handoff::{HandoffCommitFailure, HandoffCreated, handoff_dispatch_error};
 use crate::ai::cloud_environments::CloudAmbientAgentEnvironment;
 use crate::ai::execution_profiles::{
-    CloudAgentComputerUseState, resolve_cloud_agent_computer_use_state,
-};
+    CloudAgentComputerUseState, resolve_cloud_agent_computer_use_state};
 use crate::ai::harness_availability::HarnessAvailabilityModel;
 use crate::ai::llms::{LLMId, LLMPreferences};
 use crate::ai::orchestration::{
     CloudAgentStartupBlocker, CloudAgentStartupFailure, CloudAgentStartupIssue,
-    classify_cloud_agent_startup_error, should_disable_snapshot,
-};
+    classify_cloud_agent_startup_error, should_disable_snapshot};
 use crate::cloud_object::CloudObjectLookup as _;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::server::cloud_objects::update_manager::UpdateManager;
@@ -43,8 +40,7 @@ use crate::server::ids::{ServerId, SyncId};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::ai::{
     AgentConfigSnapshot, AmbientAgentTaskState, AttachmentInput, RunFollowupRequest,
-    SpawnAgentRequest,
-};
+    SpawnAgentRequest};
 use crate::terminal::view::ambient_agent::{SetupCommandGroupId, SetupCommandState};
 use crate::terminal::{CLIAgent, TerminalView};
 use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
@@ -59,8 +55,7 @@ pub struct AgentProgress {
     /// When the agent harness began executing.
     pub harness_started_at: Option<Instant>,
     /// When the agent stopped.
-    pub stopped_at: Option<Instant>,
-}
+    pub stopped_at: Option<Instant>}
 
 impl AgentProgress {
     fn new() -> Self {
@@ -68,8 +63,7 @@ impl AgentProgress {
             spawned_at: Instant::now(),
             claimed_at: None,
             harness_started_at: None,
-            stopped_at: None,
-        }
+            stopped_at: None}
     }
 
     pub fn setup_status_text(&self) -> &'static str {
@@ -87,8 +81,7 @@ impl AgentProgress {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SessionStartupKind {
     InitialRun,
-    Followup,
-}
+    Followup}
 
 /// Status of the ambient agent run.
 #[derive(Debug, Clone)]
@@ -100,31 +93,26 @@ pub enum Status {
     /// Waiting for the ambient agent run to be ready.
     WaitingForSession {
         progress: AgentProgress,
-        kind: SessionStartupKind,
-    },
+        kind: SessionStartupKind},
     /// The agent is running and the session is ready.
     AgentRunning,
     /// The agent failed.
     Failed {
         progress: AgentProgress,
-        error_message: String,
-    },
+        error_message: String},
     /// The user needs to authenticate with GitHub.
     NeedsGithubAuth {
         progress: AgentProgress,
         error_message: String,
-        auth_url: String,
-    },
+        auth_url: String},
     /// The agent was cancelled.
-    Cancelled { progress: AgentProgress },
-}
+    Cancelled { progress: AgentProgress }}
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 enum LocalToCloudHandoffState {
     Preparing { cancel: oneshot::Sender<()> },
     Monitoring,
     Cancelled,
-    Finished,
-}
+    Finished}
 
 /// Model to track the state of an ambient agent run.
 pub struct AmbientAgentViewModel {
@@ -193,8 +181,7 @@ pub struct AmbientAgentViewModel {
     pending_followup_prompt: Option<String>,
 
     #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
-    local_to_cloud_handoff_state: Option<LocalToCloudHandoffState>,
-}
+    local_to_cloud_handoff_state: Option<LocalToCloudHandoffState>}
 
 impl AmbientAgentViewModel {
     pub fn new(
@@ -266,8 +253,7 @@ impl AmbientAgentViewModel {
             last_ended_execution_session_id: None,
             pending_followup_prompt: None,
             #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
-            local_to_cloud_handoff_state: None,
-        }
+            local_to_cloud_handoff_state: None}
     }
 
     pub fn request(&self) -> Option<&SpawnAgentRequest> {
@@ -377,8 +363,7 @@ impl AmbientAgentViewModel {
                     }
                 }
             }
-            _ => (),
-        }
+            _ => ()}
     }
 
     /// Validates the environment ID after Warp Drive initial load completes.
@@ -406,8 +391,7 @@ impl AmbientAgentViewModel {
             | Status::Failed { progress, .. }
             | Status::NeedsGithubAuth { progress, .. }
             | Status::Cancelled { progress } => Some(progress),
-            _ => None,
-        }
+            _ => None}
     }
 
     /// Returns the currently selected environment ID.
@@ -527,8 +511,7 @@ impl AmbientAgentViewModel {
         self.source = None;
         self.status = Status::WaitingForSession {
             progress: AgentProgress::new(),
-            kind: SessionStartupKind::InitialRun,
-        };
+            kind: SessionStartupKind::InitialRun};
         self.start_progress_timer(ctx);
         if self.selected_harness() != previous_harness {
             ctx.emit(AmbientAgentViewModelEvent::HarnessSelected);
@@ -557,17 +540,10 @@ impl AmbientAgentViewModel {
                 return;
             }
         }
-        send_telemetry_from_ctx!(
-            CloudAgentTelemetryEvent::HandoffSnapshotPrepared {
-                derived_workspace_had_content: created.derived_workspace_had_content,
-            },
-            ctx
-        );
         if created.snapshot_failed {
             ctx.emit(AmbientAgentViewModelEvent::HandoffSnapshotUploadFailed {
                 error_message: "Workspace changes could not be uploaded; continuing without them."
-                    .to_owned(),
-            });
+                    .to_owned()});
         }
         self.request = Some(created.request);
         self.source = None;
@@ -604,27 +580,18 @@ impl AmbientAgentViewModel {
             }
         }
         let error = handoff_dispatch_error(&failure.issue);
-        send_telemetry_from_ctx!(CloudAgentTelemetryEvent::DispatchFailed { error }, ctx);
         if let Some(derived_workspace_had_content) = failure.derived_workspace_had_content {
-            send_telemetry_from_ctx!(
-                CloudAgentTelemetryEvent::HandoffSnapshotPrepared {
-                    derived_workspace_had_content,
-                },
-                ctx
-            );
         }
         if failure.snapshot_failed {
             ctx.emit(AmbientAgentViewModelEvent::HandoffSnapshotUploadFailed {
                 error_message: "Workspace changes could not be uploaded; continuing without them."
-                    .to_owned(),
-            });
+                    .to_owned()});
         }
         self.request = failure.request;
         match failure.issue {
             CloudAgentStartupIssue::Blocked(CloudAgentStartupBlocker::GitHubAuthRequired {
                 message,
-                auth_url,
-            }) => self.handle_needs_github_auth(auth_url, message, ctx),
+                auth_url}) => self.handle_needs_github_auth(auth_url, message, ctx),
             CloudAgentStartupIssue::Failed(CloudAgentStartupFailure::Capacity { message }) => {
                 self.handle_spawn_error(message, ctx);
                 ctx.emit(AmbientAgentViewModelEvent::ShowCloudAgentCapacityModal);
@@ -636,8 +603,7 @@ impl AmbientAgentViewModel {
             CloudAgentStartupIssue::Failed(
                 CloudAgentStartupFailure::ServerOverloaded { message }
                 | CloudAgentStartupFailure::Other { message },
-            ) => self.handle_spawn_error(message, ctx),
-        }
+            ) => self.handle_spawn_error(message, ctx)}
     }
 
     /// Whether the harness CLI has started running. Only meaningful for non-oz runs.
@@ -771,24 +737,21 @@ impl AmbientAgentViewModel {
     pub fn error_message(&self) -> Option<&str> {
         match &self.status {
             Status::Failed { error_message, .. } => Some(error_message),
-            _ => None,
-        }
+            _ => None}
     }
 
     /// Returns the GitHub auth URL if the agent needs GitHub authentication.
     pub fn github_auth_url(&self) -> Option<&str> {
         match &self.status {
             Status::NeedsGithubAuth { auth_url, .. } => Some(auth_url),
-            _ => None,
-        }
+            _ => None}
     }
 
     /// Returns the error message for GitHub authentication failures.
     pub fn github_auth_error_message(&self) -> Option<&str> {
         match &self.status {
             Status::NeedsGithubAuth { error_message, .. } => Some(error_message),
-            _ => None,
-        }
+            _ => None}
     }
 
     /// Enter the setup state for first-time environment creation.
@@ -958,8 +921,7 @@ impl AmbientAgentViewModel {
 
         let ai_client = ServerApiProvider::as_ref(ctx).get_ai_client();
         let request = RunFollowupRequest {
-            message: prompt.clone(),
-        };
+            message: prompt.clone()};
         self.pending_followup_prompt = Some(prompt);
         ctx.emit(AmbientAgentViewModelEvent::FollowupDispatched);
 
@@ -970,8 +932,7 @@ impl AmbientAgentViewModel {
                 if let Err(err) = result {
                     log::warn!("Failed to submit setup-failure debug follow-up: {err}");
                     ctx.emit(AmbientAgentViewModelEvent::FollowupSubmissionFailed {
-                        error_message: err.to_string(),
-                    });
+                        error_message: err.to_string()});
                 }
                 ctx.notify();
             },
@@ -999,8 +960,7 @@ impl AmbientAgentViewModel {
         self.pending_followup_prompt = Some(prompt);
         self.status = Status::WaitingForSession {
             progress: AgentProgress::new(),
-            kind: SessionStartupKind::Followup,
-        };
+            kind: SessionStartupKind::Followup};
         self.start_progress_timer(ctx);
         ctx.emit(AmbientAgentViewModelEvent::FollowupDispatched);
 
@@ -1094,8 +1054,7 @@ impl AmbientAgentViewModel {
         let third_party_harness = (selected_harness != Harness::Oz).then(|| HarnessConfig {
             harness_type: selected_harness,
             model_id: self.harness_model_id.clone(),
-            reasoning_level: self.harness_reasoning_level.clone(),
-        });
+            reasoning_level: self.harness_reasoning_level.clone()});
 
         let harness_auth_secrets =
             self.harness_auth_secret_name
@@ -1103,14 +1062,11 @@ impl AmbientAgentViewModel {
                 .and_then(|name| match selected_harness {
                     Harness::Claude => Some(HarnessAuthSecretsConfig {
                         claude_auth_secret_name: Some(name.clone()),
-                        codex_auth_secret_name: None,
-                    }),
+                        codex_auth_secret_name: None}),
                     Harness::Codex => Some(HarnessAuthSecretsConfig {
                         claude_auth_secret_name: None,
-                        codex_auth_secret_name: Some(name.clone()),
-                    }),
-                    _ => None,
-                });
+                        codex_auth_secret_name: Some(name.clone())}),
+                    _ => None});
 
         AgentConfigSnapshot {
             environment_id: self.environment_id.as_ref().map(|id| id.to_string()),
@@ -1150,8 +1106,7 @@ impl AmbientAgentViewModel {
             conversation_id: None,
             initial_snapshot_token: None,
             snapshot_disabled: should_disable_snapshot(ctx).then_some(true),
-            orchestration_handoff: None,
-        };
+            orchestration_handoff: None};
 
         self.spawn_internal(request, ctx);
     }
@@ -1211,8 +1166,7 @@ impl AmbientAgentViewModel {
         self.start_spawn_stream(request, ctx);
         self.status = Status::WaitingForSession {
             progress: AgentProgress::new(),
-            kind: SessionStartupKind::InitialRun,
-        };
+            kind: SessionStartupKind::InitialRun};
         self.start_progress_timer(ctx);
         ctx.emit(AmbientAgentViewModelEvent::DispatchedAgent);
     }
@@ -1278,8 +1232,7 @@ impl AmbientAgentViewModel {
             }
             AmbientAgentEvent::StateChanged {
                 state,
-                status_message,
-            } => {
+                status_message} => {
                 if ignore_events {
                     return;
                 }
@@ -1333,23 +1286,20 @@ impl AmbientAgentViewModel {
                             kind: SessionStartupKind::InitialRun,
                             ..
                         } => AmbientAgentViewModelEvent::SessionReady {
-                            session_id: event_session_id,
-                        },
+                            session_id: event_session_id},
                         Status::WaitingForSession {
                             kind: SessionStartupKind::Followup,
                             ..
                         }
                         | Status::AgentRunning => {
                             AmbientAgentViewModelEvent::ExecutionSessionReady {
-                                session_id: event_session_id,
-                            }
+                                session_id: event_session_id}
                         }
                         Status::Setup
                         | Status::Composing
                         | Status::Failed { .. }
                         | Status::NeedsGithubAuth { .. }
-                        | Status::Cancelled { .. } => return,
-                    };
+                        | Status::Cancelled { .. } => return};
                     self.active_execution_session_id = Some(session_id);
                     self.last_ended_execution_session_id = None;
                     self.pending_followup_prompt = None;
@@ -1376,18 +1326,11 @@ impl AmbientAgentViewModel {
         ctx: &mut ModelContext<Self>,
     ) {
         let error_message = err.to_string();
-        send_telemetry_from_ctx!(
-            CloudAgentTelemetryEvent::DispatchFailed {
-                error: error_message.clone()
-            },
-            ctx
-        );
 
         match classify_cloud_agent_startup_error(&err) {
             CloudAgentStartupIssue::Blocked(CloudAgentStartupBlocker::GitHubAuthRequired {
                 message,
-                auth_url,
-            }) => self.handle_needs_github_auth(auth_url, message, ctx),
+                auth_url}) => self.handle_needs_github_auth(auth_url, message, ctx),
             CloudAgentStartupIssue::Failed(CloudAgentStartupFailure::Capacity { message }) => {
                 self.handle_spawn_error(message, ctx);
                 ctx.emit(AmbientAgentViewModelEvent::ShowCloudAgentCapacityModal);
@@ -1399,8 +1342,7 @@ impl AmbientAgentViewModel {
             CloudAgentStartupIssue::Failed(
                 CloudAgentStartupFailure::ServerOverloaded { message }
                 | CloudAgentStartupFailure::Other { message },
-            ) => self.handle_spawn_error(message, ctx),
-        }
+            ) => self.handle_spawn_error(message, ctx)}
     }
 
     /// Starts the periodic timer that updates the progress UI while waiting for a session.
@@ -1452,14 +1394,12 @@ impl AmbientAgentViewModel {
                 spawned_at: now,
                 claimed_at: None,
                 harness_started_at: None,
-                stopped_at: Some(now),
-            }
+                stopped_at: Some(now)}
         };
 
         self.status = Status::Failed {
             progress,
-            error_message: error_message.clone(),
-        };
+            error_message: error_message.clone()};
         self.pending_followup_prompt = None;
         ctx.emit(AmbientAgentViewModelEvent::Failed { error_message });
     }
@@ -1488,8 +1428,7 @@ impl AmbientAgentViewModel {
                     spawned_at: now,
                     claimed_at: None,
                     harness_started_at: None,
-                    stopped_at: Some(now),
-                },
+                    stopped_at: Some(now)},
                 None,
             )
         };
@@ -1501,8 +1440,7 @@ impl AmbientAgentViewModel {
         self.status = Status::NeedsGithubAuth {
             progress,
             error_message,
-            auth_url,
-        };
+            auth_url};
         self.pending_followup_prompt = None;
 
         ctx.emit(AmbientAgentViewModelEvent::NeedsGithubAuth);
@@ -1538,8 +1476,7 @@ impl AmbientAgentViewModel {
                 spawned_at: now,
                 claimed_at: None,
                 harness_started_at: None,
-                stopped_at: Some(now),
-            }
+                stopped_at: Some(now)}
         };
 
         self.status = Status::Cancelled { progress };
@@ -1554,8 +1491,7 @@ impl AmbientAgentViewModel {
                 Some(LocalToCloudHandoffState::Monitoring) => {
                     Some(LocalToCloudHandoffState::Finished)
                 }
-                state => state,
-            };
+                state => state};
         }
 
         ctx.emit(AmbientAgentViewModelEvent::Cancelled);
@@ -1615,24 +1551,20 @@ pub enum AmbientAgentViewModelEvent {
     ProgressUpdated,
     /// The ambient agent has started sharing its session.
     SessionReady {
-        session_id: SessionId,
-    },
+        session_id: SessionId},
     /// An execution has started sharing a session for an already-canonical ambient pane.
     ExecutionSessionReady {
-        session_id: SessionId,
-    },
+        session_id: SessionId},
     /// An environment was selected.
     EnvironmentSelected,
     /// The ambient agent failed.
     Failed {
-        error_message: String,
-    },
+        error_message: String},
     /// A retained-setup-failure debug follow-up (REMOTE-2661) failed to submit. Distinct from
     /// `Failed`: the run's failure state is expected to persist, so this is just a lightweight
     /// signal that this one message didn't go through.
     FollowupSubmissionFailed {
-        error_message: String,
-    },
+        error_message: String},
     /// Request to show the cloud agent concurrency/capacity modal.
     ShowCloudAgentCapacityModal,
     /// Request to show the cloud agent AI credits modal.
@@ -1653,15 +1585,13 @@ pub enum AmbientAgentViewModelEvent {
     /// Fires once per run and signals the transition out of the pre-first-exchange phase
     /// for claude / gemini / other third-party harnesses.
     HarnessCommandStarted {
-        block_id: BlockId,
-    },
+        block_id: BlockId},
     /// The pane's `pending_handoff` was updated.
     PendingHandoffChanged,
     /// The async handoff snapshot upload failed. The input layer subscribes to
     /// surface the error as a toast.
     HandoffSnapshotUploadFailed {
-        error_message: String,
-    },
+        error_message: String},
 
     UpdatedSetupCommandVisibility,
     /// The selected harness auth secret changed.
@@ -1670,8 +1600,7 @@ pub enum AmbientAgentViewModelEvent {
     /// may affect lock-dependent UI (e.g. the model selector). Fired when
     /// a task is attached to the view (transcript restore) or when an
     /// execution ends.
-    RunLifecycleChanged,
-}
+    RunLifecycleChanged}
 
 impl Entity for AmbientAgentViewModel {
     type Event = AmbientAgentViewModelEvent;

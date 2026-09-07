@@ -32,11 +32,9 @@ pub use execute::{
     RequestFileEditsTelemetryEvent, RunAgentsExecutor, RunAgentsExecutorEvent,
     RunAgentsSpawningSnapshot, ShellCommandExecutor, ShellCommandExecutorEvent, StartAgentExecutor,
     StartAgentExecutorEvent, StartAgentOutcome, StartAgentRequest, StartAgentRequestId,
-    read_local_file_context,
-};
+    read_local_file_context};
 pub(crate) use execute::{
-    FileReadResult, MalformedFinalLineProxyEvent, apply_edits, coerce_integer_args,
-};
+    FileReadResult, MalformedFinalLineProxyEvent, apply_edits, coerce_integer_args};
 #[cfg(test)]
 pub(crate) use execute::{compose_run_agents_child_prompt, run_agents_to_start_agent_mode};
 use futures::future::{BoxFuture, join_all};
@@ -49,20 +47,17 @@ use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonE
 use self::execute::search_codebase::SearchCodebaseExecutor;
 use self::execute::{
     BlocklistAIActionExecutor, BlocklistAIActionExecutorEvent, NotExecutedReason,
-    RunningActionPhase, TryExecuteResult,
-};
+    RunningActionPhase, TryExecuteResult};
 #[cfg(not(target_family = "wasm"))]
 use self::recording_finalize::{FinalizeReason, finalize_recording_for_conversation};
 use super::BlocklistAIHistoryModel;
 use crate::ai::agent::conversation::{
-    AIConversation, AIConversationId, ConversationStatus, RecordingSpanInfo,
-};
+    AIConversation, AIConversationId, ConversationStatus, RecordingSpanInfo};
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionId, AIAgentActionResult, AIAgentActionResultType,
     AIAgentActionType, AIAgentActionTypeDiscriminants, AIAgentExchange, AIAgentInput,
     CancellationOutcome, CancellationReason, CreateDocumentsResult, EditDocumentsResult,
-    RequestCommandOutputResult,
-};
+    RequestCommandOutputResult};
 use crate::ai::blocklist::action_model::execute::suggest_new_conversation::SuggestNewConversationExecutor;
 use crate::ai::blocklist::telemetry::send_run_agents_completed_telemetry;
 use crate::ai::document::ai_document_model::AIDocumentModel;
@@ -71,7 +66,7 @@ use crate::terminal::TerminalModel;
 use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model_events::ModelEventDispatcher;
 use crate::workspaces::user_workspaces::TeamContextResolver;
-use crate::{TelemetryEvent, send_telemetry_from_ctx};
+use crate::{TelemetryEvent};
 
 /// The status of an action from an AI output.
 #[derive(Clone, Debug)]
@@ -93,8 +88,7 @@ pub enum AIActionStatus {
     RunningAsync,
 
     /// The action has either been cancelled or completed.
-    Finished(Arc<AIAgentActionResult>),
-}
+    Finished(Arc<AIAgentActionResult>)}
 
 impl AIActionStatus {
     /// Returns whether the action is currently preprocessing.
@@ -166,15 +160,13 @@ struct RunningActions {
     /// For parallel phases, there can be several action IDs present at once,
     /// or there can be 0 or 1 actions; actions are added and removed as
     /// they are produced and completed, respectively.
-    action_ids: Vec<AIAgentActionId>,
-}
+    action_ids: Vec<AIAgentActionId>}
 
 impl RunningActions {
     fn new(phase: RunningActionPhase, action_id: AIAgentActionId) -> Self {
         Self {
             phase,
-            action_ids: vec![action_id],
-        }
+            action_ids: vec![action_id]}
     }
 
     fn add_action(&mut self, action_id: AIAgentActionId) {
@@ -201,8 +193,7 @@ impl RunningActions {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StartedAction {
     Sync,
-    Async { phase: RunningActionPhase },
-}
+    Async { phase: RunningActionPhase }}
 
 /// Returns whether another action may join the currently running phase.
 ///
@@ -254,8 +245,7 @@ pub struct BlocklistAIActionModel {
     is_view_only: bool,
 
     /// The ID of the ambient agent task which owns this action model, if any.
-    ambient_agent_task_id: Option<crate::ai::ambient_agents::AmbientAgentTaskId>,
-}
+    ambient_agent_task_id: Option<crate::ai::ambient_agents::AmbientAgentTaskId>}
 
 impl BlocklistAIActionModel {
     pub fn new(
@@ -285,8 +275,7 @@ impl BlocklistAIActionModel {
             BlocklistAIActionExecutorEvent::FinishedAction {
                 result,
                 conversation_id,
-                cancellation_reason,
-            } => {
+                cancellation_reason} => {
                 me.handle_action_result(*conversation_id, result.clone(), *cancellation_reason, ctx)
             }
             BlocklistAIActionExecutorEvent::InitProject(id) => {
@@ -299,14 +288,12 @@ impl BlocklistAIActionModel {
                 action_id,
                 repo_path,
                 comments,
-                base_branch,
-            } => {
+                base_branch} => {
                 ctx.emit(BlocklistAIActionEvent::InsertCodeReviewComments {
                     action_id: action_id.clone(),
                     repo_path: repo_path.clone(),
                     comments: comments.clone(),
-                    base_branch: base_branch.clone(),
-                });
+                    base_branch: base_branch.clone()});
             }
         });
 
@@ -321,8 +308,7 @@ impl BlocklistAIActionModel {
             terminal_view_id,
             pending_preprocessed_actions: Default::default(),
             is_view_only: false,
-            ambient_agent_task_id: None,
-        }
+            ambient_agent_task_id: None}
     }
 
     /// Enable or disable view-only mode (for use in agent session sharing).
@@ -775,14 +761,12 @@ impl BlocklistAIActionModel {
         };
         let result =
             AIAgentActionResultType::RunAgents(ai::agent::action_result::RunAgentsResult::Denied {
-                reason,
-            });
+                reason});
         send_run_agents_completed_telemetry(conversation_id, &action.action, &result, ctx);
         let result = Arc::new(AIAgentActionResult {
             id: action.id,
             task_id: action.task_id,
-            result,
-        });
+            result});
         self.handle_action_result(conversation_id, result, None, ctx);
     }
 
@@ -861,8 +845,7 @@ impl BlocklistAIActionModel {
                     self.terminal_view_id,
                     conversation_id,
                     ConversationStatus::Blocked {
-                        blocked_action: format!("{blocked_action_user_friendly_str:?}"),
-                    },
+                        blocked_action: format!("{blocked_action_user_friendly_str:?}")},
                     ctx,
                 );
             });
@@ -1152,8 +1135,7 @@ impl BlocklistAIActionModel {
                 conversation_id,
                 &action_id,
                 CancellationReason::FollowUpSubmitted {
-                    is_for_same_conversation: true,
-                },
+                    is_for_same_conversation: true},
                 ctx,
             );
         }
@@ -1249,14 +1231,6 @@ impl BlocklistAIActionModel {
                 .conversation(&conversation_id)
                 .and_then(|c| c.server_conversation_token())
                 .map(|t| t.as_str().to_string());
-            send_telemetry_from_ctx!(
-                TelemetryEvent::ComputerUseCancelled {
-                    client_conversation_id: conversation_id,
-                    server_conversation_id,
-                    ambient_agent_task_id: self.ambient_agent_task_id,
-                },
-                ctx
-            );
         }
 
         let cancelled_result = pending_action.action.cancelled_result();
@@ -1269,8 +1243,7 @@ impl BlocklistAIActionModel {
         let result = Arc::new(AIAgentActionResult {
             id: pending_action.id,
             task_id: pending_action.task_id,
-            result: cancelled_result,
-        });
+            result: cancelled_result});
         self.handle_action_result(conversation_id, result, reason, ctx);
     }
 
@@ -1394,8 +1367,7 @@ impl BlocklistAIActionModel {
         ctx.emit(BlocklistAIActionEvent::FinishedAction {
             action_id,
             conversation_id,
-            cancellation_reason,
-        });
+            cancellation_reason});
         if self
             .running_actions
             .get(&conversation_id)
@@ -1467,8 +1439,7 @@ impl BlocklistAIActionModel {
 
         match &mut result.result {
             AIAgentActionResultType::CreateDocuments(CreateDocumentsResult::Success {
-                created_documents,
-            }) => {
+                created_documents}) => {
                 let history = BlocklistAIHistoryModel::handle(ctx);
                 let Some(conversation) = history.as_ref(ctx).conversation(&conversation_id) else {
                     return;
@@ -1500,8 +1471,7 @@ impl BlocklistAIActionModel {
                 });
             }
             AIAgentActionResultType::EditDocuments(EditDocumentsResult::Success {
-                updated_documents,
-            }) => {
+                updated_documents}) => {
                 let doc_model = AIDocumentModel::handle(ctx);
                 doc_model.update(ctx, |doc_model, doc_ctx| {
                     for doc_context in updated_documents.iter_mut() {
@@ -1543,17 +1513,14 @@ pub enum BlocklistAIActionEvent {
     FinishedAction {
         action_id: AIAgentActionId,
         conversation_id: AIConversationId,
-        cancellation_reason: Option<CancellationReason>,
-    },
+        cancellation_reason: Option<CancellationReason>},
     InitProject(AIAgentActionId),
     ToggleCodeReview(AIAgentActionId),
     InsertCodeReviewComments {
         action_id: AIAgentActionId,
         repo_path: PathBuf,
         comments: Vec<ai::agent::action::InsertReviewComment>,
-        base_branch: Option<String>,
-    },
-}
+        base_branch: Option<String>}}
 
 impl BlocklistAIActionEvent {
     pub fn action_id(&self) -> &AIAgentActionId {
@@ -1564,8 +1531,7 @@ impl BlocklistAIActionEvent {
             BlocklistAIActionEvent::FinishedAction { action_id, .. } => action_id,
             BlocklistAIActionEvent::InitProject(action_id) => action_id,
             BlocklistAIActionEvent::ToggleCodeReview(action_id) => action_id,
-            BlocklistAIActionEvent::InsertCodeReviewComments { action_id, .. } => action_id,
-        }
+            BlocklistAIActionEvent::InsertCodeReviewComments { action_id, .. } => action_id}
     }
 }
 

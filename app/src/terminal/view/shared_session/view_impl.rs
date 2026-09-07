@@ -4,8 +4,7 @@ use chrono::{DateTime, Local};
 use itertools::Itertools;
 use session_sharing_protocol::common::{
     ParticipantId, ParticipantList, ParticipantPresenceUpdate, Role, RoleRequestId,
-    RoleRequestResponse, SessionId, WindowSize,
-};
+    RoleRequestResponse, SessionId, WindowSize};
 use session_sharing_protocol::sharer::{RoleUpdateReason, SessionEndedReason, SessionSourceType};
 use session_sharing_protocol::viewer::RoleUpdatedReason;
 use settings::Setting as _;
@@ -25,8 +24,7 @@ use warpui::{AppContext, Element, ModelHandle, SingletonEntity, ViewContext};
 use super::adapter::{Adapter, Kind, Participant};
 use super::cloud_conversation_continuation::{
     CloudConversationContinuationUiState, TombstoneCta, conversation_failed_before_task_creation,
-    resolve_cloud_conversation_continuation_ui_state,
-};
+    resolve_cloud_conversation_continuation_ui_state};
 use super::sharer::Sharer;
 use super::sharer::inactivity_modal::InactivityModalEvent;
 use super::viewer::Viewer;
@@ -49,26 +47,21 @@ use crate::terminal::model::terminal_model::WithinBlock;
 use crate::terminal::session_settings::SessionSettings;
 use crate::terminal::shared_session::manager::Manager;
 use crate::terminal::shared_session::participant_avatar_view::{
-    ParticipantAvatarEvent, ParticipantAvatarView,
-};
+    ParticipantAvatarEvent, ParticipantAvatarView};
 use crate::terminal::shared_session::presence_manager::{
-    Event as PresenceManagerEvent, PresenceManager,
-};
+    Event as PresenceManagerEvent, PresenceManager};
 use crate::terminal::shared_session::role_change_modal::{
-    RoleChangeCloseSource, RoleChangeOpenSource,
-};
+    RoleChangeCloseSource, RoleChangeOpenSource};
 use crate::terminal::shared_session::settings::SharedSessionSettings;
 use crate::terminal::shared_session::{
     COPY_LINK_TEXT, SharedSessionActionSource, SharedSessionScrollbackType, SharedSessionSource,
-    SharedSessionStatus, join_link,
-};
+    SharedSessionStatus, join_link};
 use crate::terminal::view::{
     ContextMenuAction, Event, InlineBannerItem, InlineBannerType, PendingUserQueryKind,
     RichContentInsertionPosition, SharedSessionBanners, SizeUpdateBuilder, TerminalAction,
-    TerminalView,
-};
+    TerminalView};
 use crate::view_components::{DismissibleToast, ToastFlavor};
-use crate::{TelemetryEvent, send_telemetry_from_ctx};
+use crate::{TelemetryEvent};
 
 impl TerminalView {
     pub fn sharer_session_kind(&self) -> Option<&Kind> {
@@ -153,8 +146,7 @@ impl TerminalView {
             Ok(state) => Some(state),
             Err(error) => error
                 .should_fallback_to_tombstone()
-                .then_some(CloudConversationContinuationUiState::Tombstone { cta: None }),
-        }
+                .then_some(CloudConversationContinuationUiState::Tombstone { cta: None })}
     }
 
     pub(in crate::terminal::view) fn blocks_cloud_followups_for_ambient_agent_session_from_model(
@@ -299,8 +291,7 @@ impl TerminalView {
             }
             ParticipantAvatarEvent::UpdateRole {
                 participant_id,
-                role,
-            } => {
+                role} => {
                 let Some(shared_session) = self.shared_session.as_mut() else {
                     return;
                 };
@@ -325,8 +316,7 @@ impl TerminalView {
                     shared_session.update_participant_role(participant_id, *role, ctx);
                     ctx.emit(Event::UpdateRole {
                         participant_id: participant_id.clone(),
-                        role: *role,
-                    });
+                        role: *role});
                 } else {
                     // Otherwise we're changing to an executor and there should be a confirmation.
                     let show_accent_border = self
@@ -336,9 +326,7 @@ impl TerminalView {
                     self.set_show_pane_accent_border(show_accent_border, ctx);
                     ctx.emit(Event::OpenSharedSessionRoleChangeModal {
                         source: RoleChangeOpenSource::SharerGrant {
-                            participant_id: participant_id.clone(),
-                        },
-                    })
+                            participant_id: participant_id.clone()}})
                 }
             }
             ParticipantAvatarEvent::MenuOpened { participant_id } => {
@@ -387,8 +375,7 @@ impl TerminalView {
         self.on_participant_role_changed(&participant_id, role, ctx);
         ctx.emit(Event::UpdateRole {
             participant_id,
-            role,
-        });
+            role});
     }
 
     pub fn update_role_for_user(
@@ -466,8 +453,7 @@ impl TerminalView {
                 Some(ShareableObject::Session {
                     handle: self_handle,
                     session_id: *shared_session.session_id(),
-                    started_at: *shared_session.started_at(),
-                }),
+                    started_at: *shared_session.started_at()}),
                 ctx,
             );
             ctx.notify();
@@ -506,9 +492,7 @@ impl TerminalView {
             source: RoleChangeOpenSource::SharerResponse {
                 participant_id: participant_id.clone(),
                 role_request_id: role_request_id.clone(),
-                role,
-            },
-        });
+                role}});
     }
 
     pub fn on_role_request_cancelled(
@@ -625,19 +609,8 @@ impl TerminalView {
 
         ctx.emit(Event::StartSharingCurrentSession {
             scrollback_type,
-            source,
-        });
+            source});
         if let Some(action_source) = action_source {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::StartedSharingCurrentSession {
-                    includes_scrollback: !matches!(
-                        scrollback_type,
-                        SharedSessionScrollbackType::None
-                    ),
-                    source: action_source,
-                },
-                ctx
-            );
         }
     }
 
@@ -692,8 +665,7 @@ impl TerminalView {
                 Some(ShareableObject::Session {
                     handle: self_handle,
                     session_id,
-                    started_at,
-                }),
+                    started_at}),
                 ctx,
             );
             if !skip_sharing_dialog {
@@ -732,10 +704,6 @@ impl TerminalView {
         );
         ctx.emit(Event::StopSharingCurrentSession { reason });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::StoppedSharingCurrentSession { source, reason },
-            ctx
-        );
     }
 
     // TODO: why do we need to pass through input replica ID as a separate argument?
@@ -808,8 +776,7 @@ impl TerminalView {
                 Some(ShareableObject::Session {
                     handle: self_handle,
                     session_id,
-                    started_at,
-                }),
+                    started_at}),
                 ctx,
             );
             pane_config.notify_header_content_changed(ctx);
@@ -844,13 +811,6 @@ impl TerminalView {
             self.maybe_auto_open_conversation_details_panel(ctx);
         }
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::JoinedSharedSession {
-                session_id,
-                source_type,
-            },
-            ctx
-        );
     }
 
     pub fn rejoin_session_share(&mut self, ctx: &mut ViewContext<Self>) {
@@ -900,8 +860,7 @@ impl TerminalView {
                 .map(|session| ShareableObject::Session {
                     handle: ctx.handle(),
                     session_id: *session.session_id(),
-                    started_at: *session.started_at(),
-                })
+                    started_at: *session.started_at()})
         } else {
             None
         };
@@ -1022,8 +981,7 @@ impl TerminalView {
             InactivityModalEvent::StopSharing => {
                 self.stop_sharing_session(SharedSessionActionSource::InactivityModal, ctx)
             }
-            InactivityModalEvent::ContinueSharing => self.reset_sharer_inactivity_timer(ctx),
-        }
+            InactivityModalEvent::ContinueSharing => self.reset_sharer_inactivity_timer(ctx)}
     }
 
     fn end_session_on_inactivity_period_expired(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1153,8 +1111,7 @@ impl TerminalView {
             .collect_vec();
         if !selected_block_ids.is_empty() {
             return session_sharing_protocol::common::Selection::Blocks {
-                block_ids: selected_block_ids,
-            };
+                block_ids: selected_block_ids};
         }
 
         // Then check if we have selected text in the alt screen or block list.
@@ -1165,8 +1122,7 @@ impl TerminalView {
                 return session_sharing_protocol::common::Selection::AltScreenText {
                     start: (*selection_range.start()).into(),
                     end: (*selection_range.end()).into(),
-                    is_reversed: selection_range.is_reversed(),
-                };
+                    is_reversed: selection_range.is_reversed()};
             }
         } else if let Some((start, end, is_reversed)) = model_lock
             .block_list()
@@ -1183,8 +1139,7 @@ impl TerminalView {
             return session_sharing_protocol::common::Selection::BlockText {
                 start,
                 end,
-                is_reversed,
-            };
+                is_reversed};
         }
         session_sharing_protocol::common::Selection::None
     }
@@ -1328,15 +1283,13 @@ impl TerminalView {
             self.update_scroll_position_locking(
                 ScrollPositionUpdate::ScrollToTopOfBlockWithBuffer {
                     block_index,
-                    buffer_lines: 2.into_lines(),
-                },
+                    buffer_lines: 2.into_lines()},
                 ctx,
             );
         } else if let session_sharing_protocol::common::Selection::BlockText {
             start,
             end,
-            is_reversed,
-        } = &participant.info.selection
+            is_reversed} = &participant.info.selection
         {
             let cursor_point = if *is_reversed { start } else { end };
             let Some(within_block_point) = WithinBlock::<Point>::from_session_sharing_block_point(
@@ -1351,20 +1304,13 @@ impl TerminalView {
             );
             self.update_scroll_position_locking(
                 ScrollPositionUpdate::ScrollToBlocklistRowIfNotVisible {
-                    row: block_list_point.row.into_lines(),
-                },
+                    row: block_list_point.row.into_lines()},
                 ctx,
             );
         } else {
             return;
         }
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::JumpToSharedSessionParticipant {
-                jumped_to: participant_id.clone()
-            },
-            ctx
-        );
     }
 
     // If open, ensure that participant avatar context menu is not triggered
@@ -1447,8 +1393,7 @@ impl TerminalView {
         self.set_show_pane_accent_border(show_accent_border, ctx);
 
         ctx.emit(Event::OpenSharedSessionRoleChangeModal {
-            source: RoleChangeOpenSource::ViewerRequest { role },
-        });
+            source: RoleChangeOpenSource::ViewerRequest { role }});
         if let Some(viewer) = self.shared_session_viewer_mut() {
             viewer.pending_role_request = true;
         }
@@ -1493,7 +1438,6 @@ impl TerminalView {
             }
         }
 
-        send_telemetry_from_ctx!(TelemetryEvent::WebSessionOpenedOnDesktop { source }, ctx);
     }
 
     // Called when viewer receives acknowledgment from server
@@ -1537,8 +1481,7 @@ impl TerminalView {
         ctx.emit(Event::RespondToRoleRequest {
             participant_id,
             role_request_id,
-            response,
-        });
+            response});
     }
 
     /// Updates view state when our own role was changed.
@@ -1619,7 +1562,6 @@ impl TerminalView {
             toast_stack.add_ephemeral_toast(toast, window_id, ctx);
         });
 
-        send_telemetry_from_ctx!(TelemetryEvent::CopiedSharedSessionLink { source }, ctx);
     }
 
     pub fn open_shared_session_qr_code(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1659,8 +1601,7 @@ impl TerminalView {
         self.inline_banners_state.shared_session_banner_state = SharedSessionBanners::ActiveShare {
             started_banner_id: banner_id,
             started_at,
-            is_remote_control,
-        };
+            is_remote_control};
 
         model.block_list_mut().insert_inline_banner_before_block(
             block_index,
@@ -1711,8 +1652,7 @@ impl TerminalView {
         let is_self_role_updated = participant_id == &presence_manager.as_ref(ctx).id();
         let is_new_role_reader = match presence_manager.as_ref(ctx).role() {
             Some(old_role) => old_role.can_execute() && matches!(new_role, Role::Reader),
-            None => false,
-        };
+            None => false};
 
         if is_self_role_updated
             && is_new_role_reader
@@ -1795,8 +1735,7 @@ impl TerminalView {
         if let SharedSessionBanners::ActiveShare {
             started_banner_id,
             started_at,
-            is_remote_control,
-        } = self.inline_banners_state.shared_session_banner_state
+            is_remote_control} = self.inline_banners_state.shared_session_banner_state
         {
             self.inline_banners_state.shared_session_banner_state =
                 SharedSessionBanners::LastShared {
@@ -1804,8 +1743,7 @@ impl TerminalView {
                     started_at,
                     is_remote_control,
                     ended_at: Local::now(),
-                    ended_banner_id: banner_id,
-                };
+                    ended_banner_id: banner_id};
         }
 
         let mut model = self.model.lock();
@@ -1857,8 +1795,7 @@ impl TerminalView {
             .pending_user_query_view_id
             .map(RichContentInsertionPosition::AfterRichContent)
             .unwrap_or(RichContentInsertionPosition::Append {
-                insert_below_long_running_block: true,
-            });
+                insert_below_long_running_block: true});
         self.insert_rich_content(None, tombstone_view_handle, None, insertion_position, ctx);
         self.conversation_ended_tombstone_view_id = Some(tombstone_view_id);
     }
@@ -1978,8 +1915,7 @@ impl TerminalView {
             items.push(
                 MenuItemFields::new("Copy session sharing link")
                     .with_on_select_action(TerminalAction::CopySharedSessionLink {
-                        source: SharedSessionActionSource::RightClickMenu,
-                    })
+                        source: SharedSessionActionSource::RightClickMenu})
                     .with_disabled(!has_session_link)
                     .into_item(),
             );

@@ -12,8 +12,7 @@ use chrono::Utc;
 use cloud_object_models::folder::persistence as folder_persistence;
 use cloud_object_models::folder::persistence::upsert_folders;
 use cloud_object_models::json_model::persistence::{
-    self as generic_string_persistence, PersistedGenericStringObject,
-};
+    self as generic_string_persistence, PersistedGenericStringObject};
 use cloud_object_models::notebook::persistence as notebook_persistence;
 use cloud_object_models::notebook::persistence::upsert_notebooks;
 use cloud_object_models::workflow::persistence as workflow_persistence;
@@ -23,15 +22,13 @@ use cloud_object_persistence::{
     increment_retry_count, load_cloud_object_read_context, mark_object_as_synced,
     read_time_of_next_force_object_refresh, record_time_of_next_refresh,
     update_object_after_server_creation, update_object_metadata,
-    upsert_generic_string_objects as upsert_generic_string_object_rows,
-};
+    upsert_generic_string_objects as upsert_generic_string_object_rows};
 use diesel::connection::{DefaultLoadingMode, SimpleConnection};
 use diesel::result::Error;
 use diesel::sqlite::SqliteConnection;
 use diesel::{
     BelongingToDsl, BoolExpressionMethods, Connection, ExpressionMethods, GroupedBy,
-    OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper,
-};
+    OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper};
 use diesel_migrations::MigrationHarness;
 use itertools::Itertools;
 use libsqlite3_sys as sqlite3;
@@ -49,24 +46,20 @@ use warpui::{AppContext, SingletonEntity};
 
 use super::agent::{
     backfill_conversation_summaries, delete_agent_conversations, read_agent_conversation_metadata,
-    upsert_agent_conversation,
-};
+    upsert_agent_conversation};
 use super::block_list::{
     delete_ai_conversation, delete_blocks, save_block, update_block_agent_view_visibility,
-    upsert_ai_query,
-};
+    upsert_ai_query};
 use super::model::{
     self, AI_DOCUMENT_PANE_KIND, AI_FACT_PANE_KIND, ActiveMCPServer, CODE_PANE_KIND,
     CurrentUserInformation, ENV_VAR_COLLECTION_PANE_KIND, EXECUTION_PROFILE_EDITOR_PANE_KIND,
     MCP_SERVER_PANE_KIND, MCPEnvironmentVariables, NOTEBOOK_PANE_KIND, NewActiveMCPServer, NewApp,
     NewCommand, NewServerExperiment, NewTab, NewTabGroup, NewTeam, NewWindow, NewWorkspace,
     NewWorkspaceMetadata, NewWorkspaceTeam, Project, SETTINGS_PANE_KIND, TERMINAL_PANE_KIND, Tab,
-    TabGroup, WORKFLOW_PANE_KIND, Window, WorkspaceMetadata as WorkspaceMetadataModel,
-};
+    TabGroup, WORKFLOW_PANE_KIND, Window, WorkspaceMetadata as WorkspaceMetadataModel};
 use super::{
     BlockCompleted, FinishedCommandMetadata, ModelEvent, PersistedData, PersistedDataScope,
-    PersistenceScope, StartedCommandMetadata, WriterHandles, schema,
-};
+    PersistenceScope, StartedCommandMetadata, WriterHandles, schema};
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::mcp::templatable_installation::VariableValue;
@@ -77,14 +70,12 @@ use crate::app_state::{
     CodePaneTabSnapshot, CodeReviewPaneSnapshot, EnvVarCollectionPaneSnapshot, LeafContents,
     LeafSnapshot, LeftPanelSnapshot, NotebookPaneSnapshot, PaneFlex, PaneNodeSnapshot,
     RightPanelSnapshot, SettingsPaneSnapshot, SplitDirection, TabGroupSnapshot, TabSnapshot,
-    TerminalPaneSnapshot, WindowSnapshot, WorkflowPaneSnapshot,
-};
+    TerminalPaneSnapshot, WindowSnapshot, WorkflowPaneSnapshot};
 use crate::auth::UserUid;
 use crate::auth::auth_manager::PersistedCurrentUserInformation;
 use crate::auth::auth_state::AuthStateProvider;
 use crate::cloud_object::model::actions::{
-    ObjectAction, ObjectActionSubtype, object_action_from_persisted,
-};
+    ObjectAction, ObjectActionSubtype, object_action_from_persisted};
 use crate::cloud_object::model::generic_string_model::{CloudStringObject, GenericStringObjectId};
 use crate::cloud_object::{CloudObject, ObjectIdType};
 use crate::code::editor_management::CodeSource;
@@ -92,12 +83,10 @@ use crate::drive::OpenWarpDriveObjectSettings;
 use crate::notebooks::NotebookId;
 use crate::persistence::block_list::{
     get_all_restored_blocks, process_ai_queries_for_nld_history_match,
-    process_ai_queries_for_uparrow_prompt, read_recent_ai_queries,
-};
+    process_ai_queries_for_uparrow_prompt, read_recent_ai_queries};
 use crate::persistence::model::{
     CODE_REVIEW_PANE_KIND, GET_STARTED_PANE_KIND, NewPersistedObjectAction, NewTeamSettings,
-    ProjectRules, UserProfile,
-};
+    ProjectRules, UserProfile};
 use crate::server::experiments::ServerExperiment;
 use crate::server::ids::{ClientId, HashableId, ServerId, SyncId};
 use crate::server::telemetry::TelemetryEvent;
@@ -112,7 +101,7 @@ use crate::workspace::tab_group::TabGroupId;
 use crate::workspaces::team::Team as TeamMetadata;
 use crate::workspaces::user_profiles::{UserProfileWithUID, user_profile_from_persistence};
 use crate::workspaces::workspace::{Workspace as WorkspaceMetadata, WorkspaceUid};
-use crate::{safe_info, send_telemetry_from_app_ctx};
+use crate::{safe_info};
 
 diesel::define_sql_function! {
     fn json_extract(target: diesel::sql_types::Text, path: diesel::sql_types::Text) -> diesel::sql_types::Text;
@@ -145,10 +134,6 @@ pub fn initialize(
             let writer_handles = match start_writer(conn, database_path.clone()) {
                 Ok(writer_handles) => Some(writer_handles),
                 Err(err) => {
-                    send_telemetry_from_app_ctx!(
-                        TelemetryEvent::DatabaseWriteError(err.to_string()),
-                        ctx
-                    );
                     report_db_error("starting writer", err, &database_path);
                     None
                 }
@@ -174,10 +159,6 @@ pub fn initialize(
             (persisted_data, writer_handles)
         }
         Err(err) => {
-            send_telemetry_from_app_ctx!(
-                TelemetryEvent::DatabaseStartUpError(err.to_string()),
-                ctx
-            );
             report_db_error("initialization", err, &database_path);
             (None, None)
         }
@@ -193,7 +174,6 @@ fn read_persisted_data(
     match read_sqlite_data(conn, user_uid, data_scope) {
         Ok(app_state) => Some(Box::new(app_state)),
         Err(err) => {
-            send_telemetry_from_app_ctx!(TelemetryEvent::DatabaseReadError(err.to_string()), ctx);
             report_error!(anyhow::Error::new(err).context("Failed to read persisted data"));
             None
         }
@@ -264,8 +244,7 @@ unsafe fn init_logging() {
                 // This is mostly outside of Warp's control (e.g. the user or some system program is
                 // moving around files in the user data directory), so downgrade to a warning.
                 (_, sqlite3::SQLITE_READONLY_DBMOVED) => log::Level::Warn,
-                _ => log::Level::Error,
-            };
+                _ => log::Level::Error};
 
             // Safety: the message pointer came from the SQLite library, which promises that it's a
             // valid C string pointer.
@@ -636,8 +615,7 @@ fn handle_model_event(event: ModelEvent, connection: &mut SqliteConnection) -> a
         ModelEvent::SaveBlock(BlockCompleted {
             pane_id,
             block,
-            is_local,
-        }) => save_block(connection, pane_id, &block, is_local).context("error saving block"),
+            is_local}) => save_block(connection, pane_id, &block, is_local).context("error saving block"),
         ModelEvent::DeleteBlocks(pane_id) => {
             // Delete the blocks even if the setting is off so users can still remove
             // panes and have their data deleted locally.
@@ -675,8 +653,7 @@ fn handle_model_event(event: ModelEvent, connection: &mut SqliteConnection) -> a
         ModelEvent::MarkObjectAsSynced {
             revision_and_editor,
             metadata_ts,
-            hashed_sqlite_id,
-        } => mark_object_as_synced(
+            hashed_sqlite_id} => mark_object_as_synced(
             connection,
             hashed_sqlite_id,
             revision_and_editor,
@@ -691,8 +668,7 @@ fn handle_model_event(event: ModelEvent, connection: &mut SqliteConnection) -> a
         }
         ModelEvent::UpdateObjectAfterServerCreation {
             client_id,
-            server_creation_info,
-        } => update_object_after_server_creation(connection, client_id, server_creation_info)
+            server_creation_info} => update_object_after_server_creation(connection, client_id, server_creation_info)
             .context("error executing object creation succeeded callback"),
         ModelEvent::UpsertCodebaseIndexMetadata { index_metadata } => {
             save_codebase_index_metadata(connection, *index_metadata)
@@ -741,8 +717,7 @@ fn handle_model_event(event: ModelEvent, connection: &mut SqliteConnection) -> a
             insert_object_action(connection, object_action).context("error inserting object action")
         }
         ModelEvent::SyncObjectActions {
-            actions_to_sync: objects_to_sync,
-        } => {
+            actions_to_sync: objects_to_sync} => {
             sync_object_actions(connection, objects_to_sync).context("error syncing object actions")
         }
         ModelEvent::SaveExperiments { experiments } => {
@@ -758,8 +733,7 @@ fn handle_model_event(event: ModelEvent, connection: &mut SqliteConnection) -> a
         ModelEvent::UpdateMultiAgentConversation {
             conversation_id,
             updated_tasks,
-            conversation_data,
-        } => upsert_agent_conversation(
+            conversation_data} => upsert_agent_conversation(
             connection,
             &conversation_id,
             &updated_tasks,
@@ -782,8 +756,7 @@ fn handle_model_event(event: ModelEvent, connection: &mut SqliteConnection) -> a
         }
         ModelEvent::UpsertMCPServerEnvironmentVariables {
             mcp_server_uuid,
-            environment_variables,
-        } => upsert_mcp_server_environment_variables(
+            environment_variables} => upsert_mcp_server_environment_variables(
             connection,
             mcp_server_uuid,
             environment_variables,
@@ -798,17 +771,14 @@ fn handle_model_event(event: ModelEvent, connection: &mut SqliteConnection) -> a
         }
         ModelEvent::AddIgnoredSuggestion {
             suggestion,
-            suggestion_type,
-        } => add_ignored_suggestion(connection, suggestion, suggestion_type)
+            suggestion_type} => add_ignored_suggestion(connection, suggestion, suggestion_type)
             .context("error adding ignored suggestion"),
         ModelEvent::RemoveIgnoredSuggestion {
             suggestion,
-            suggestion_type,
-        } => remove_ignored_suggestion(connection, suggestion, suggestion_type)
+            suggestion_type} => remove_ignored_suggestion(connection, suggestion, suggestion_type)
             .context("error removing ignored suggestion"),
         ModelEvent::UpsertMCPServerInstallation {
-            mcp_server_installation,
-        } => upsert_mcp_server_installation(connection, mcp_server_installation),
+            mcp_server_installation} => upsert_mcp_server_installation(connection, mcp_server_installation),
         ModelEvent::DeleteMCPServerInstallations { installation_uuids } => {
             delete_mcp_server_installations(connection, installation_uuids)
         }
@@ -817,28 +787,23 @@ fn handle_model_event(event: ModelEvent, connection: &mut SqliteConnection) -> a
         }
         ModelEvent::UpdateMCPInstallationRunning {
             installation_uuid,
-            running,
-        } => update_mcp_server_running(connection, installation_uuid, running)
+            running} => update_mcp_server_running(connection, installation_uuid, running)
             .context("Error updating running field for MCP installation"),
         ModelEvent::UpsertWorkspaceLanguageServer {
             workspace_path,
             lsp_type,
-            enabled,
-        } => upsert_workspace_language_server(connection, &workspace_path, lsp_type, enabled)
+            enabled} => upsert_workspace_language_server(connection, &workspace_path, lsp_type, enabled)
             .context("error upserting workspace language server"),
         ModelEvent::UpdateBlockAgentViewVisibility {
             block_id,
-            agent_view_visibility,
-        } => update_block_agent_view_visibility(connection, &block_id, &agent_view_visibility)
+            agent_view_visibility} => update_block_agent_view_visibility(connection, &block_id, &agent_view_visibility)
             .context("error updating block agent view visibility"),
         ModelEvent::SaveAIDocumentContent {
             document_id,
             content,
             version,
-            title,
-        } => save_ai_document_content(connection, &document_id, &content, version, &title)
-            .context("error saving AI document content"),
-    }
+            title} => save_ai_document_content(connection, &document_id, &content, version, &title)
+            .context("error saving AI document content")}
 }
 
 /// Report a database error and additional context for debugging.
@@ -898,19 +863,16 @@ fn deduplicate_events(events: Vec<ModelEvent>) -> Vec<ModelEvent> {
             .enumerate()
             .filter_map(|(index, event)| match event {
                 ModelEvent::Snapshot(_) if index < last_snapshot_index => None,
-                event => Some(event),
-            })
+                event => Some(event)})
             .collect(),
-        None => events,
-    }
+        None => events}
 }
 
 // Used in the save_app_state function to help make the code more readable.
 struct SaveAppStateNodeTraversal<'a> {
     node: &'a PaneNodeSnapshot,
     flex: Option<f32>,
-    parent_pane_node_id: Option<i32>,
-}
+    parent_pane_node_id: Option<i32>}
 
 // Saves the app state snapshot in the sqlite database. Removes any old app state.
 // Does so in a transaction so we're never in a partial state.
@@ -963,8 +925,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                         Some(rect.origin().y()),
                     )
                 }
-                _ => (None, None, None, None),
-            };
+                _ => (None, None, None, None)};
 
             let new_window = NewWindow {
                 active_tab_index,
@@ -984,8 +945,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                     .agent_management_filters
                     .as_ref()
                     .and_then(|f| serde_json::to_string(f).ok()),
-                team_uid: window.team_uid.map(Into::into),
-            };
+                team_uid: window.team_uid.map(Into::into)};
             diesel::insert_into(schema::windows::dsl::windows)
                 .values(new_window)
                 .execute(conn)?;
@@ -1017,11 +977,9 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                         name: group.name.clone(),
                         color: match group.color {
                             SelectedTabColor::Unset => None,
-                            _ => serde_yaml::to_string(&group.color).ok(),
-                        },
+                            _ => serde_yaml::to_string(&group.color).ok()},
                         collapsed: group.collapsed,
-                        pinned: group.pinned,
-                    })
+                        pinned: group.pinned})
                     .collect();
                 diesel::insert_into(schema::tab_groups::dsl::tab_groups)
                     .values(new_tab_groups)
@@ -1050,13 +1008,11 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                     color: match tab.selected_color {
                         // Keep the column NULL for the common no-override case
                         SelectedTabColor::Unset => None,
-                        _ => serde_yaml::to_string(&tab.selected_color).ok(),
-                    },
+                        _ => serde_yaml::to_string(&tab.selected_color).ok()},
                     tab_group_id: tab
                         .group_id
                         .and_then(|group_id| tab_group_row_ids.get(&group_id).copied()),
-                    pinned: tab.pinned,
-                })
+                    pinned: tab.pinned})
                 .collect();
 
             diesel::insert_into(schema::tabs::dsl::tabs)
@@ -1077,8 +1033,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                 pane_nodes.push_back(SaveAppStateNodeTraversal {
                     node: &tab.root,
                     flex: None,
-                    parent_pane_node_id: None,
-                });
+                    parent_pane_node_id: None});
 
                 if tab.left_panel.is_some() || tab.right_panel.is_some() {
                     let new_panel = model::NewPanel {
@@ -1090,8 +1045,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                         right_panel: tab
                             .right_panel
                             .as_ref()
-                            .and_then(|p| serde_json::to_string(p).ok()),
-                    };
+                            .and_then(|p| serde_json::to_string(p).ok())};
                     diesel::insert_into(schema::panels::dsl::panels)
                         .values(new_panel)
                         .execute(conn)?;
@@ -1101,8 +1055,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                     let SaveAppStateNodeTraversal {
                         node: pane_node,
                         flex,
-                        parent_pane_node_id,
-                    } = pane_nodes.pop_front().expect("Should have node");
+                        parent_pane_node_id} = pane_nodes.pop_front().expect("Should have node");
 
                     // Skip leaves whose content types don't get a
                     // corresponding `pane_leaves` row on save. Otherwise the
@@ -1122,8 +1075,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                         tab_id: *tab_id,
                         parent_pane_node_id,
                         flex,
-                        is_leaf,
-                    };
+                        is_leaf};
 
                     diesel::insert_into(schema::pane_nodes::dsl::pane_nodes)
                         .values(new_pane_node)
@@ -1138,8 +1090,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                         PaneNodeSnapshot::Branch(pane_group) => {
                             let new_pane_branch = model::NewPaneBranch {
                                 pane_node_id,
-                                horizontal: pane_group.direction == SplitDirection::Horizontal,
-                            };
+                                horizontal: pane_group.direction == SplitDirection::Horizontal};
                             diesel::insert_into(schema::pane_branches::dsl::pane_branches)
                                 .values(new_pane_branch)
                                 .execute(conn)?;
@@ -1148,8 +1099,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
                                 pane_nodes.push_back(SaveAppStateNodeTraversal {
                                     node: child_pane_node,
                                     flex: Some(flex.0),
-                                    parent_pane_node_id: Some(pane_node_id),
-                                });
+                                    parent_pane_node_id: Some(pane_node_id)});
                             }
                         }
                         PaneNodeSnapshot::Leaf(pane) => {
@@ -1171,8 +1121,7 @@ fn save_app_state(conn: &mut SqliteConnection, app_state: &AppState) -> Result<(
             .running_mcp_servers
             .iter()
             .map(|uuid| NewActiveMCPServer {
-                mcp_server_uuid: uuid.to_string(),
-            })
+                mcp_server_uuid: uuid.to_string()})
             .collect();
 
         if !active_mcp_servers.is_empty() {
@@ -1228,8 +1177,7 @@ fn save_pane_state(
         pane_node_id: id,
         kind: kind.into(),
         is_focused: snapshot.is_focused,
-        custom_vertical_tabs_title: snapshot.custom_vertical_tabs_title.clone(),
-    };
+        custom_vertical_tabs_title: snapshot.custom_vertical_tabs_title.clone()};
 
     diesel::insert_into(schema::pane_leaves::dsl::pane_leaves)
         .values(leaf)
@@ -1269,8 +1217,7 @@ fn save_pane_state(
                 conversation_ids,
                 active_conversation_id: terminal_snapshot
                     .active_conversation_id
-                    .map(|id| id.to_string()),
-            };
+                    .map(|id| id.to_string())};
 
             diesel::insert_into(schema::terminal_panes::dsl::terminal_panes)
                 .values(terminal)
@@ -1280,8 +1227,7 @@ fn save_pane_state(
             let (notebook_id, local_path) = match notebook_snapshot {
                 NotebookPaneSnapshot::CloudNotebook {
                     notebook_id,
-                    settings: _,
-                } => (
+                    settings: _} => (
                     notebook_id.map(|id| id.sqlite_uid_hash(ObjectIdType::Notebook)),
                     None,
                 ),
@@ -1293,8 +1239,7 @@ fn save_pane_state(
             let notebook = model::NewNotebookPane {
                 id,
                 notebook_id,
-                local_path,
-            };
+                local_path};
 
             diesel::insert_into(schema::notebook_panes::dsl::notebook_panes)
                 .values(notebook)
@@ -1304,16 +1249,14 @@ fn save_pane_state(
             let CodePaneSnapShot::Local {
                 tabs,
                 active_tab_index,
-                source,
-            } = code_snapshot;
+                source} = code_snapshot;
 
             let serialized_source = source.as_ref().and_then(|s| serde_json::to_string(s).ok());
 
             let code = model::NewCodePane {
                 id,
                 active_tab_index: *active_tab_index as i32,
-                source_data: serialized_source,
-            };
+                source_data: serialized_source};
 
             diesel::insert_into(schema::code_panes::dsl::code_panes)
                 .values(code)
@@ -1324,8 +1267,7 @@ fn save_pane_state(
                 let tab_row = model::NewCodePaneTab {
                     code_pane_id: id,
                     tab_index: tab_idx as i32,
-                    local_path: tab.path.clone().map(encode_path),
-                };
+                    local_path: tab.path.clone().map(encode_path)};
                 diesel::insert_into(schema::code_pane_tabs::dsl::code_pane_tabs)
                     .values(tab_row)
                     .execute(conn)?;
@@ -1334,15 +1276,12 @@ fn save_pane_state(
         LeafContents::EnvVarCollection(env_var_collection_snapshot) => {
             let env_var_collection_id = match env_var_collection_snapshot {
                 EnvVarCollectionPaneSnapshot::CloudEnvVarCollection {
-                    env_var_collection_id,
-                } => env_var_collection_id
-                    .map(|id| id.sqlite_uid_hash(ObjectIdType::GenericStringObject)),
-            };
+                    env_var_collection_id} => env_var_collection_id
+                    .map(|id| id.sqlite_uid_hash(ObjectIdType::GenericStringObject))};
 
             let env_var_collection = model::NewEnvVarCollectionPane {
                 id,
-                env_var_collection_id,
-            };
+                env_var_collection_id};
 
             diesel::insert_into(schema::env_var_collection_panes::dsl::env_var_collection_panes)
                 .values(env_var_collection)
@@ -1352,9 +1291,7 @@ fn save_pane_state(
             let workflow_id = match workflow_pane_snapshot {
                 WorkflowPaneSnapshot::CloudWorkflow {
                     workflow_id,
-                    settings: _,
-                } => workflow_id.map(|id| id.sqlite_uid_hash(ObjectIdType::Workflow)),
-            };
+                    settings: _} => workflow_id.map(|id| id.sqlite_uid_hash(ObjectIdType::Workflow))};
 
             let workflow = model::NewWorkflowPane { id, workflow_id };
 
@@ -1367,13 +1304,11 @@ fn save_pane_state(
         }
         LeafContents::Settings(settings_pane_snapshot) => {
             let current_page = match settings_pane_snapshot {
-                SettingsPaneSnapshot::Local { current_page, .. } => current_page,
-            };
+                SettingsPaneSnapshot::Local { current_page, .. } => current_page};
 
             let settings_pane = model::NewSettingsPane {
                 id,
-                current_page: current_page.slug().to_owned(),
-            };
+                current_page: current_page.slug().to_owned()};
 
             diesel::insert_into(schema::settings_panes::dsl::settings_panes)
                 .values(settings_pane)
@@ -1389,13 +1324,11 @@ fn save_pane_state(
         LeafContents::CodeReview(code_review_pane_snapshot) => {
             let CodeReviewPaneSnapshot::Local {
                 terminal_uuid,
-                repo_path,
-            } = code_review_pane_snapshot;
+                repo_path} = code_review_pane_snapshot;
             let code_review = model::NewCodeReviewPane {
                 id,
                 terminal_uuid: terminal_uuid.clone(),
-                repo_path: repo_path.to_string_lossy().into_owned(),
-            };
+                repo_path: repo_path.to_string_lossy().into_owned()};
 
             diesel::insert_into(schema::code_review_panes::dsl::code_review_panes)
                 .values(code_review)
@@ -1412,15 +1345,13 @@ fn save_pane_state(
                 document_id,
                 version,
                 content,
-                title,
-            } => {
+                title} => {
                 let ai_document_pane = model::NewAIDocumentPane {
                     id,
                     document_id: document_id.clone(),
                     version: *version,
                     content: content.clone(),
-                    title: title.clone(),
-                };
+                    title: title.clone()};
 
                 diesel::insert_into(schema::ai_document_panes::dsl::ai_document_panes)
                     .values(ai_document_pane)
@@ -1431,8 +1362,7 @@ fn save_pane_state(
             let ambient_agent_pane = model::NewAmbientAgentPane {
                 id,
                 uuid: snapshot.uuid.clone(),
-                task_id: snapshot.task_id.map(|t| t.to_string()),
-            };
+                task_id: snapshot.task_id.map(|t| t.to_string())};
 
             diesel::insert_into(schema::ambient_agent_panes::dsl::ambient_agent_panes)
                 .values(ambient_agent_pane)
@@ -1610,8 +1540,7 @@ fn upsert_workspace_language_server(
         let new_language_server = model::NewWorkspaceLanguageServer {
             workspace_id: ws_id,
             language_server_name: server_name,
-            enabled: enablement_str.to_string(),
-        };
+            enabled: enablement_str.to_string()};
 
         diesel::insert_into(workspace_language_server)
             .values(&new_language_server)
@@ -1670,10 +1599,8 @@ fn get_all_project_rules(
         .filter_map(|item| match item {
             Ok(rule) => Some(ProjectRulePath {
                 path: PathBuf::from(rule.path),
-                project_root: PathBuf::from(rule.project_root),
-            }),
-            Err(_) => None,
-        })
+                project_root: PathBuf::from(rule.project_root)}),
+            Err(_) => None})
         .collect_vec())
 }
 
@@ -1687,8 +1614,7 @@ fn upsert_project_rules(
     for rule in new_project_rules {
         let new_rule = model::NewProjectRules {
             path: rule.path.to_string_lossy().to_string(),
-            project_root: rule.project_root.to_string_lossy().to_string(),
-        };
+            project_root: rule.project_root.to_string_lossy().to_string()};
 
         diesel::insert_into(project_rules)
             .values(&new_rule)
@@ -1750,13 +1676,11 @@ fn get_all_mcp_server_installations(
             let vars: HashMap<String, VariableValue> =
                 match serde_json::from_str::<HashMap<String, VariableValue>>(&vars_json) {
                     Ok(map) => map,
-                    Err(_) => return None,
-                };
+                    Err(_) => return None};
 
             let mcp_server = match serde_json::from_str::<TemplatableMCPServer>(&templ_mcp) {
                 Ok(map) => map,
-                Err(_) => return None,
-            };
+                Err(_) => return None};
 
             Some((
                 uuid,
@@ -1790,8 +1714,7 @@ fn upsert_mcp_server_installation(
         template_version_ts: Utc::now().naive_utc(),
         variable_values: serde_json::to_string(mcp_server_installation.variable_values())?,
         restore_running: false,
-        last_modified_at: Utc::now().naive_utc(),
-    };
+        last_modified_at: Utc::now().naive_utc()};
 
     conn.transaction::<_, Error, _>(|conn| {
         diesel::insert_into(mcp_server_installations)
@@ -1874,8 +1797,7 @@ fn add_ignored_suggestion(
 
     let new_suggestion = model::NewIgnoredSuggestion {
         suggestion: suggestion_text,
-        suggestion_type: suggestion_type_param.as_str().to_string(),
-    };
+        suggestion_type: suggestion_type_param.as_str().to_string()};
 
     diesel::insert_into(ignored_suggestions)
         .values(&new_suggestion)
@@ -1917,8 +1839,7 @@ fn save_workspace(conn: &mut SqliteConnection, workspace: WorkspaceMetadata) -> 
         name: workspace.name,
         server_uid: workspace.uid.into(),
         is_selected: true,
-        feature_model_choice_json: serde_json::to_string(&workspace.feature_model_choice).ok(),
-    };
+        feature_model_choice_json: serde_json::to_string(&workspace.feature_model_choice).ok()};
 
     diesel::insert_into(workspaces)
         .values(&new_workspace)
@@ -1936,8 +1857,7 @@ fn save_workspace(conn: &mut SqliteConnection, workspace: WorkspaceMetadata) -> 
             name: team.name,
             server_uid: team.uid.into(),
             billing_metadata_json: serde_json::to_string(&team.billing_metadata).ok(),
-            feature_model_choice_json: serde_json::to_string(&team.feature_model_choice).ok(),
-        };
+            feature_model_choice_json: serde_json::to_string(&team.feature_model_choice).ok()};
         diesel::insert_into(teams)
             .values(&new_team)
             .on_conflict(server_uid)
@@ -1963,8 +1883,7 @@ fn save_workspace(conn: &mut SqliteConnection, workspace: WorkspaceMetadata) -> 
                 user_uid: member.uid.as_string(),
                 email: member.email.clone(),
                 role: serde_json::to_string(&member.role).unwrap_or_default(),
-                is_disabled: member.is_disabled,
-            };
+                is_disabled: member.is_disabled};
             diesel::insert_into(schema::team_members::dsl::team_members)
                 .values(&new_member)
                 .execute(conn)?;
@@ -1972,8 +1891,7 @@ fn save_workspace(conn: &mut SqliteConnection, workspace: WorkspaceMetadata) -> 
 
         let new_workspace_team = NewWorkspaceTeam {
             workspace_server_uid: workspace.uid.into(),
-            team_server_uid: team.uid.into(),
-        };
+            team_server_uid: team.uid.into()};
         diesel::insert_into(workspace_teams)
             .values(&new_workspace_team)
             .on_conflict((workspace_server_uid, team_server_uid))
@@ -2020,8 +1938,7 @@ fn save_workspaces(
             is_selected: current_workspace_uid
                 .map(|current_uid| workspace.uid == current_uid)
                 .unwrap_or(false),
-            feature_model_choice_json: serde_json::to_string(&workspace.feature_model_choice).ok(),
-        })
+            feature_model_choice_json: serde_json::to_string(&workspace.feature_model_choice).ok()})
         .collect();
     diesel::insert_or_ignore_into(workspaces)
         .values(&new_workspace_values)
@@ -2040,8 +1957,7 @@ fn save_workspaces(
                     name: team.name.clone(),
                     billing_metadata_json: serde_json::to_string(&team.billing_metadata).ok(),
                     feature_model_choice_json: serde_json::to_string(&team.feature_model_choice)
-                        .ok(),
-                })
+                        .ok()})
                 .collect::<Vec<NewTeam>>()
         })
         .collect();
@@ -2070,8 +1986,7 @@ fn save_workspaces(
                 .into_iter()
                 .map(|team| NewWorkspaceTeam {
                     workspace_server_uid: workspace.uid.into(),
-                    team_server_uid: team.uid.into(),
-                })
+                    team_server_uid: team.uid.into()})
                 .collect::<Vec<NewWorkspaceTeam>>()
         })
         .collect();
@@ -2089,8 +2004,7 @@ fn save_workspaces(
                 let team_id_match = teams_by_server_uid.get(&team.uid.uid())?;
                 Some(NewTeamSettings {
                     team_id: *team_id_match,
-                    settings_json: serialized_settings_json,
-                })
+                    settings_json: serialized_settings_json})
             })
         })
         .collect();
@@ -2111,8 +2025,7 @@ fn save_workspaces(
                         user_uid: member.uid.as_string(),
                         email: member.email,
                         role: serde_json::to_string(&member.role).unwrap_or_default(),
-                        is_disabled: member.is_disabled,
-                    })
+                        is_disabled: member.is_disabled})
                 })
             })
         })
@@ -2170,8 +2083,7 @@ fn upsert_generic_string_objects(
             format: object.generic_string_object_format(),
             metadata: object.metadata().clone(),
             permissions: object.permissions().clone(),
-            data: object.serialized().take(),
-        })
+            data: object.serialized().take()})
         .collect();
     upsert_generic_string_object_rows(conn, objects)
 }
@@ -2250,8 +2162,7 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                         llm_model_override: terminal_pane.llm_model_override,
                         active_profile_id,
                         conversation_ids_to_restore,
-                        active_conversation_id,
-                    })
+                        active_conversation_id})
                 }
                 NOTEBOOK_PANE_KIND => {
                     let notebook_pane = schema::notebook_panes::dsl::notebook_panes
@@ -2276,9 +2187,7 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                         Some(path) => NotebookPaneSnapshot::LocalFileNotebook { path: Some(path) },
                         None => NotebookPaneSnapshot::CloudNotebook {
                             notebook_id,
-                            settings: OpenWarpDriveObjectSettings::default(),
-                        },
-                    })
+                            settings: OpenWarpDriveObjectSettings::default()}})
                 }
                 WORKFLOW_PANE_KIND => {
                     let workflow_pane = schema::workflow_panes::dsl::workflow_panes
@@ -2294,8 +2203,7 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
 
                     LeafContents::Workflow(WorkflowPaneSnapshot::CloudWorkflow {
                         workflow_id,
-                        settings: OpenWarpDriveObjectSettings::default(),
-                    })
+                        settings: OpenWarpDriveObjectSettings::default()})
                 }
                 CODE_PANE_KIND => {
                     let code_pane = schema::code_panes::dsl::code_panes
@@ -2314,8 +2222,7 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                     let tabs: Vec<CodePaneTabSnapshot> = tab_rows
                         .into_iter()
                         .map(|row| CodePaneTabSnapshot {
-                            path: row.local_path.map(decode_path),
-                        })
+                            path: row.local_path.map(decode_path)})
                         .collect();
                     let active_tab_index = code_pane.active_tab_index as usize;
 
@@ -2327,8 +2234,7 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                     LeafContents::Code(CodePaneSnapShot::Local {
                         tabs,
                         active_tab_index,
-                        source,
-                    })
+                        source})
                 }
                 ENV_VAR_COLLECTION_PANE_KIND => {
                     let env_var_collection_pane =
@@ -2348,8 +2254,7 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
 
                     LeafContents::EnvVarCollection(
                         EnvVarCollectionPaneSnapshot::CloudEnvVarCollection {
-                            env_var_collection_id,
-                        },
+                            env_var_collection_id},
                     )
                 }
                 SETTINGS_PANE_KIND => {
@@ -2362,8 +2267,7 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                         SettingsSection::from_slug(&settings_pane.current_page).unwrap_or_default();
                     LeafContents::Settings(SettingsPaneSnapshot::Local {
                         current_page,
-                        search_query: None,
-                    })
+                        search_query: None})
                 }
                 AI_FACT_PANE_KIND => LeafContents::AIFact(AIFactPaneSnapshot::Personal),
                 MCP_SERVER_PANE_KIND => {
@@ -2380,14 +2284,12 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                     match code_review_pane {
                         Some(pane) => LeafContents::CodeReview(CodeReviewPaneSnapshot::Local {
                             terminal_uuid: pane.terminal_uuid,
-                            repo_path: PathBuf::from(pane.repo_path),
-                        }),
+                            repo_path: PathBuf::from(pane.repo_path)}),
                         None => {
                             // Return empty fields; will be skipped during restoration
                             LeafContents::CodeReview(CodeReviewPaneSnapshot::Local {
                                 terminal_uuid: Vec::new(),
-                                repo_path: PathBuf::from(""),
-                            })
+                                repo_path: PathBuf::from("")})
                         }
                     }
                 }
@@ -2402,8 +2304,7 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
                         document_id: ai_document_pane.document_id,
                         version: ai_document_pane.version,
                         content: ai_document_pane.content,
-                        title: ai_document_pane.title,
-                    })
+                        title: ai_document_pane.title})
                 }
                 AMBIENT_AGENT_PANE_KIND => {
                     let pane = schema::ambient_agent_panes::dsl::ambient_agent_panes
@@ -2417,17 +2318,14 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
 
                     LeafContents::AmbientAgent(AmbientAgentPaneSnapshot {
                         uuid: pane.uuid,
-                        task_id,
-                    })
+                        task_id})
                 }
-                other => bail!("Unrecognized pane kind: {other}"),
-            };
+                other => bail!("Unrecognized pane kind: {other}")};
 
             Ok(PaneNodeSnapshot::Leaf(LeafSnapshot {
                 is_focused: pane.is_focused,
                 custom_vertical_tabs_title: pane.custom_vertical_tabs_title,
-                contents,
-            }))
+                contents}))
         }
         false => {
             let pane_branch = schema::pane_branches::dsl::pane_branches
@@ -2449,12 +2347,10 @@ fn read_node(conn: &mut SqliteConnection, node: model::PaneNode) -> Result<PaneN
 
             let direction = match pane_branch.horizontal {
                 true => SplitDirection::Horizontal,
-                false => SplitDirection::Vertical,
-            };
+                false => SplitDirection::Vertical};
             Ok(PaneNodeSnapshot::Branch(BranchSnapshot {
                 direction,
-                children,
-            }))
+                children}))
         }
     }
 }
@@ -2471,8 +2367,7 @@ fn box_persisted_generic_string_object(
         PersistedGenericStringObject::TemplatableMCPServer(object) => Box::new(object),
         PersistedGenericStringObject::AIExecutionProfile(object) => Box::new(object),
         PersistedGenericStringObject::CloudEnvironment(object) => Box::new(object),
-        PersistedGenericStringObject::ScheduledAmbientAgent(object) => Box::new(object),
-    }
+        PersistedGenericStringObject::ScheduledAmbientAgent(object) => Box::new(object)}
 }
 
 /// This is not in a transaction. The interface for a transaction is a bit awkward,
@@ -2510,8 +2405,7 @@ fn read_sqlite_data(
             ignored_suggestions: Default::default(),
             mcp_server_installations: Default::default(),
             mcp_servers_to_restore: Default::default(),
-            conversation_summary_backfills: Default::default(),
-        });
+            conversation_summary_backfills: Default::default()});
     }
 
     let app_state = if data_scope.session_restoration() {
@@ -2568,8 +2462,7 @@ fn read_sqlite_data(
                             name: group.name,
                             color,
                             collapsed: group.collapsed,
-                            pinned: group.pinned,
-                        });
+                            pinned: group.pinned});
                     }
                     let saved_tabs: Vec<_> = tabs_for_window
                         .into_iter()
@@ -2609,8 +2502,7 @@ fn read_sqlite_data(
                                 left_panel,
                                 right_panel,
                                 group_id,
-                                pinned: tab.pinned,
-                            })
+                                pinned: tab.pinned})
                         })
                         .collect();
 
@@ -2658,24 +2550,21 @@ fn read_sqlite_data(
                                 Vector2F::new(width, height),
                             ))
                         }
-                        _ => None,
-                    };
+                        _ => None};
 
                     let left_panel_width: Option<f32> =
                         saved_tabs
                             .get(tab_index)
                             .and_then(|tab| match tab.left_panel.as_ref() {
                                 Some(LeftPanelSnapshot { width, .. }) => Some(*width as f32),
-                                _ => None,
-                            });
+                                _ => None});
 
                     let right_panel_width: Option<f32> =
                         saved_tabs
                             .get(tab_index)
                             .and_then(|tab| match tab.right_panel.as_ref() {
                                 Some(RightPanelSnapshot { width, .. }) => Some(*width as f32),
-                                _ => None,
-                            });
+                                _ => None});
 
                     let window_left_panel_open = window.left_panel_open.unwrap_or_else(|| {
                         saved_tabs
@@ -2704,8 +2593,7 @@ fn read_sqlite_data(
                         agent_management_filters: window
                             .agent_management_filters
                             .and_then(|s| serde_json::from_str(&s).ok()),
-                        tab_groups: tab_groups_snapshots,
-                    }
+                        tab_groups: tab_groups_snapshots}
                 },
             )
             .collect();
@@ -2719,8 +2607,7 @@ fn read_sqlite_data(
             windows: saved_windows,
             active_window_index,
             block_lists: Arc::new(restored_blocks),
-            running_mcp_servers,
-        })
+            running_mcp_servers})
     } else {
         None
     };
@@ -2761,8 +2648,7 @@ fn read_sqlite_data(
                     email: row.email,
                     role: serde_json::from_str(&row.role)
                         .unwrap_or(crate::workspaces::team::MembershipRole::User),
-                    is_disabled: row.is_disabled,
-                };
+                    is_disabled: row.is_disabled};
                 acc.entry(row.team_id).or_default().push(member);
                 acc
             });
@@ -2936,8 +2822,7 @@ fn read_sqlite_data(
         ignored_suggestions,
         mcp_server_installations,
         mcp_servers_to_restore,
-        conversation_summary_backfills,
-    })
+        conversation_summary_backfills})
 }
 
 impl From<StartedCommandMetadata> for model::NewCommand {
@@ -2967,8 +2852,7 @@ impl From<StartedCommandMetadata> for model::NewCommand {
                 .cloud_workflow_id
                 .map(|id| id.sqlite_uid_hash(ObjectIdType::Workflow)),
             workflow_command: metadata.workflow_command,
-            is_agent_executed: Some(metadata.is_agent_executed),
-        }
+            is_agent_executed: Some(metadata.is_agent_executed)}
     }
 }
 
@@ -3036,8 +2920,7 @@ fn upsert_user_profiles(
                 firebase_uid: profile.firebase_uid.to_string(),
                 photo_url: profile.photo_url,
                 display_name: profile.display_name,
-                email: profile.email,
-            };
+                email: profile.email};
             diesel::insert_into(schema::user_profiles::dsl::user_profiles)
                 .values(new_user_profile)
                 .execute(conn)?;
@@ -3056,8 +2939,7 @@ fn save_experiments(
         let new_experiments = experiments
             .into_iter()
             .map(|experiment| NewServerExperiment {
-                experiment: experiment.to_string(),
-            })
+                experiment: experiment.to_string()})
             .collect_vec();
 
         diesel::insert_into(schema::server_experiments::dsl::server_experiments)
@@ -3085,8 +2967,7 @@ fn upsert_current_user_information(
 
         diesel::insert_into(schema::current_user_information::dsl::current_user_information)
             .values(CurrentUserInformation {
-                email: user_information.email,
-            })
+                email: user_information.email})
             .execute(conn)?;
         Ok(())
     })
@@ -3100,8 +2981,7 @@ fn upsert_mcp_server_environment_variables(
     conn.transaction::<(), Error, _>(|conn| {
         let env_vars = MCPEnvironmentVariables {
             mcp_server_uuid,
-            environment_variables,
-        };
+            environment_variables};
         diesel::insert_into(schema::mcp_environment_variables::dsl::mcp_environment_variables)
             .values(&env_vars)
             .on_conflict(schema::mcp_environment_variables::dsl::mcp_server_uuid)
@@ -3132,8 +3012,7 @@ fn new_persisted_object_action_from_object_action(
             timestamp,
             data,
             pending,
-            processed_at_timestamp,
-        } => model::NewPersistedObjectAction {
+            processed_at_timestamp} => model::NewPersistedObjectAction {
             hashed_object_id: action.hashed_sqlite_id,
             timestamp: Some(timestamp.naive_utc()),
             action: action.action_type.to_string(),
@@ -3142,14 +3021,12 @@ fn new_persisted_object_action_from_object_action(
             oldest_timestamp: None,
             latest_timestamp: None,
             pending: Some(pending),
-            processed_at_timestamp: processed_at_timestamp.map(|t| t.naive_utc()),
-        },
+            processed_at_timestamp: processed_at_timestamp.map(|t| t.naive_utc())},
         ObjectActionSubtype::BundledActions {
             count,
             oldest_timestamp,
             latest_timestamp,
-            latest_processed_at_timestamp,
-        } => model::NewPersistedObjectAction {
+            latest_processed_at_timestamp} => model::NewPersistedObjectAction {
             hashed_object_id: action.hashed_sqlite_id,
             timestamp: None,
             action: action.action_type.to_string(),
@@ -3158,9 +3035,7 @@ fn new_persisted_object_action_from_object_action(
             oldest_timestamp: Some(oldest_timestamp.naive_utc()),
             latest_timestamp: Some(latest_timestamp.naive_utc()),
             pending: None,
-            processed_at_timestamp: Some(latest_processed_at_timestamp.naive_utc()),
-        },
-    }
+            processed_at_timestamp: Some(latest_processed_at_timestamp.naive_utc())}}
 }
 
 fn insert_object_action(
@@ -3234,8 +3109,7 @@ fn delete_objects(
                     sync_id,
                     object_id_type,
                     Box::new(delete_generic_string_object),
-                )?,
-            }
+                )?}
         }
         Ok(())
     })

@@ -1,5 +1,4 @@
 use ui_components::{Component as _, Options as _, button};
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::icons::Icon;
 use warp_core::ui::theme::Fill;
@@ -7,8 +6,7 @@ use warp_core::ui::theme::color::internal_colors;
 use warpui_core::elements::{
     Border, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Empty, Flex, FormattedTextElement, Hoverable, MainAxisAlignment, MainAxisSize,
-    MouseStateHandle, ParentElement, Radius, Stack,
-};
+    MouseStateHandle, ParentElement, Radius, Stack};
 use warpui_core::fonts::Weight;
 use warpui_core::keymap::Keystroke;
 use warpui_core::platform::Cursor;
@@ -17,8 +15,7 @@ use warpui_core::text_layout::TextAlignment;
 use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
 use warpui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
-    ViewContext,
-};
+    ViewContext};
 
 use super::OnboardingSlide;
 use super::upgrade_auth_prompt::render_upgrade_auth_prompt_bar;
@@ -29,15 +26,13 @@ use crate::telemetry::OnboardingEvent;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OfferVariant {
     HeadStart,
-    ChooseHowToStart,
-}
+    ChooseHowToStart}
 
 impl OfferVariant {
     pub(crate) fn title(self) -> &'static str {
         match self {
             OfferVariant::HeadStart => "You've got a head start",
-            OfferVariant::ChooseHowToStart => "Choose how to start",
-        }
+            OfferVariant::ChooseHowToStart => "Choose how to start"}
     }
 
     pub(crate) fn primary_badge_label(self, pricing_promotion_message: Option<&str>) -> &str {
@@ -62,8 +57,7 @@ impl OfferVariant {
     pub(crate) fn primary_label(self) -> &'static str {
         match self {
             OfferVariant::HeadStart => "Unlock the full AI experience",
-            OfferVariant::ChooseHowToStart => "Use Warp with AI",
-        }
+            OfferVariant::ChooseHowToStart => "Use Warp with AI"}
     }
 
     pub(crate) fn primary_description(self) -> &'static str {
@@ -80,8 +74,7 @@ impl OfferVariant {
     pub(crate) fn secondary_label(self) -> &'static str {
         match self {
             OfferVariant::HeadStart => "Start with included AI",
-            OfferVariant::ChooseHowToStart => "Set up AI later",
-        }
+            OfferVariant::ChooseHowToStart => "Set up AI later"}
     }
 
     pub(crate) fn secondary_description(self) -> &'static str {
@@ -109,22 +102,19 @@ impl OfferVariant {
                 "Access to premium and open-source models",
                 "Use the Warp Agent locally and in the cloud",
             ],
-            OfferVariant::ChooseHowToStart => &[],
-        }
+            OfferVariant::ChooseHowToStart => &[]}
     }
 
     pub(crate) fn slide_name(self) -> &'static str {
         match self {
             OfferVariant::HeadStart => "head_start",
-            OfferVariant::ChooseHowToStart => "choose_how_to_start",
-        }
+            OfferVariant::ChooseHowToStart => "choose_how_to_start"}
     }
 
     pub(crate) fn account_class(self) -> &'static str {
         match self {
             OfferVariant::HeadStart => "free_icp",
-            OfferVariant::ChooseHowToStart => "free_standard",
-        }
+            OfferVariant::ChooseHowToStart => "free_standard"}
     }
 
     fn primary_action(self) -> &'static str {
@@ -132,8 +122,7 @@ impl OfferVariant {
             OfferVariant::HeadStart => "get_more_ai",
             // Telemetry identifier, not user-facing copy: kept stable across the
             // card's copy changes so existing dashboards don't lose continuity.
-            OfferVariant::ChooseHowToStart => "use_warp_with_ai",
-        }
+            OfferVariant::ChooseHowToStart => "use_warp_with_ai"}
     }
 }
 
@@ -144,22 +133,19 @@ pub enum OfferSlideAction {
     Back,
     GetWarping,
     CopyUpgradeUrl,
-    PasteAuthTokenFromClipboard,
-}
+    PasteAuthTokenFromClipboard}
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 enum OfferChoice {
     #[default]
     Primary,
-    SetUpLater,
-}
+    SetUpLater}
 
 #[derive(Clone, Debug)]
 pub enum OfferSlideEvent {
     SetUpLaterSelected { variant: OfferVariant },
     CopyUpgradeUrlRequested,
-    PasteAuthTokenFromClipboardRequested,
-}
+    PasteAuthTokenFromClipboardRequested}
 
 pub struct OfferSlide {
     onboarding_state: ModelHandle<OnboardingStateModel>,
@@ -171,8 +157,7 @@ pub struct OfferSlide {
     scroll_state: ClippedScrollStateHandle,
     show_auth_prompt_bar: bool,
     copy_url_mouse_state: MouseStateHandle,
-    paste_token_mouse_state: MouseStateHandle,
-}
+    paste_token_mouse_state: MouseStateHandle}
 
 impl OfferSlide {
     pub(crate) const VISUAL_IMAGE_PATHS: &'static [&'static str] =
@@ -189,8 +174,7 @@ impl OfferSlide {
             scroll_state: ClippedScrollStateHandle::new(),
             show_auth_prompt_bar: false,
             copy_url_mouse_state: MouseStateHandle::default(),
-            paste_token_mouse_state: MouseStateHandle::default(),
-        }
+            paste_token_mouse_state: MouseStateHandle::default()}
     }
 
     fn variant(&self, app: &AppContext) -> Option<OfferVariant> {
@@ -344,8 +328,7 @@ impl OfferSlide {
                         ctx.dispatch_typed_action(OfferSlideAction::Back);
                     })),
                     ..button::Options::default(appearance)
-                },
-            },
+                }},
         );
         let enter = Keystroke::parse("enter").unwrap_or_default();
         let get_warping = self.get_warping_button.render(
@@ -359,8 +342,7 @@ impl OfferSlide {
                         ctx.dispatch_typed_action(OfferSlideAction::GetWarping);
                     })),
                     ..button::Options::default(appearance)
-                },
-            },
+                }},
         );
 
         Flex::row()
@@ -469,14 +451,6 @@ impl OfferSlide {
     }
 
     fn send_action(&self, variant: OfferVariant, action: &str, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(
-            OnboardingEvent::OnboardingAction {
-                slide_name: variant.slide_name().to_string(),
-                action: action.to_string(),
-                account_class: Some(variant.account_class().to_string()),
-            },
-            ctx
-        );
     }
 
     fn request_upgrade(&mut self, ctx: &mut ViewContext<Self>) {
@@ -522,8 +496,7 @@ impl OfferSlide {
     fn get_warping(&mut self, ctx: &mut ViewContext<Self>) {
         match self.selected_choice {
             OfferChoice::Primary => self.request_upgrade(ctx),
-            OfferChoice::SetUpLater => self.set_up_later(ctx),
-        }
+            OfferChoice::SetUpLater => self.set_up_later(ctx)}
     }
 
     fn back(&mut self, ctx: &mut ViewContext<Self>) {

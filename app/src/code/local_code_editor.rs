@@ -7,16 +7,14 @@ use std::{
     path::{Path, PathBuf},
     rc::Rc,
     sync::Arc,
-    time::Duration,
-};
+    time::Duration};
 
 use ai::diff_validation::DiffType;
 use futures::stream::AbortHandle;
 use lsp::types::FileLocation;
 use lsp::{
     LanguageId, LanguageServerId, LspEvent, LspManagerModel, LspManagerModelEvent, LspServerModel,
-    ReferenceLocation,
-};
+    ReferenceLocation};
 use lsp_types::FormattingOptions;
 use markdown_parser::FormattedText;
 use num_traits::SaturatingSub;
@@ -46,8 +44,7 @@ use warpui::elements::{
     Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, DropShadow, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius,
-    Rect, Shrinkable, Stack, Text,
-};
+    Rect, Shrinkable, Stack, Text};
 use warpui::keymap::FixedBinding;
 use warpui::keymap::macros::*;
 use warpui::platform::SaveFilePickerConfiguration;
@@ -56,8 +53,7 @@ use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WindowId,
-};
+    ViewHandle, WindowId};
 
 use crate::ai::persisted_workspace::{PersistedWorkspace, PersistedWorkspaceEvent};
 use crate::code::buffer_location::LocalOrRemotePath as BufferFileLocation;
@@ -76,16 +72,13 @@ const DROP_SHADOW_COLOR: ColorU = ColorU {
     r: 0,
     g: 0,
     b: 0,
-    a: 48,
-};
+    a: 48};
 
 const HOVER_DEBOUNCE_PERIOD: Duration = Duration::from_millis(500);
 
 /// How long to wait after the user stops typing before triggering a debounced
 /// auto-save. Mirrors VS Code's default `files.autoSaveDelay` of 1000ms.
 const AUTO_SAVE_DEBOUNCE_PERIOD: Duration = Duration::from_millis(1000);
-
-use warp_core::send_telemetry_from_ctx;
 
 use super::ImmediateSaveError;
 use super::diff_viewer::DiffViewer;
@@ -109,16 +102,13 @@ pub fn init(app: &mut AppContext) {
 pub enum LocalCodeEditorEvent {
     FileLoaded,
     FailedToLoad {
-        error: Rc<FileLoadError>,
-    },
+        error: Rc<FileLoadError>},
     FileSaved {
         /// Whether the save was triggered by auto-save. Used to suppress the
         /// "File saved." toast, which should only appear for manual (cmd-s) saves.
-        auto_saved: bool,
-    },
+        auto_saved: bool},
     FailedToSave {
-        error: Arc<FileSaveError>,
-    },
+        error: Arc<FileSaveError>},
     DiffAccepted,
     DiffRejected,
     /// Emitted when a user presses Escape in Vim Normal mode inside the embedded editor.
@@ -132,28 +122,23 @@ pub enum LocalCodeEditorEvent {
         /// 1-indexed line range of the selection: `[start, end]` both inclusive.
         line_range: Range<LineCount>,
         /// Literal text content of the selection.
-        selected_text: String,
-    },
+        selected_text: String},
     DiscardUnsavedChanges {
-        path: PathBuf,
-    },
+        path: PathBuf},
     GotoDefinition {
         path: PathBuf,
         line: usize,
         column: usize,
         /// The ID of the LSP server that produced this definition.
         /// Used to register external files with the correct server.
-        source_server_id: LanguageServerId,
-    },
+        source_server_id: LanguageServerId},
     /// Emitted when a comment is saved. This propagates the comment content
     /// changes to the CodeReviewView, which will update the comment model.
     CommentSaved {
-        comment: EditorReviewComment,
-    },
+        comment: EditorReviewComment},
     RequestOpenComment(CommentId),
     DeleteComment {
-        id: CommentId,
-    },
+        id: CommentId},
     /// Emitted when the viewport is updated after layout
     ViewportUpdated,
     /// Emitted when the render state layout has been updated.
@@ -161,20 +146,16 @@ pub enum LocalCodeEditorEvent {
     /// Request to open LSP logs for the given file path.
     /// The workspace will handle opening a terminal with `tail -f` on the log file.
     OpenLspLogs {
-        log_path: PathBuf,
-    },
+        log_path: PathBuf},
     RunTabConfigSkill {
-        path: PathBuf,
-    },
-    DelayedRenderingFlushed,
-}
+        path: PathBuf},
+    DelayedRenderingFlushed}
 
 /// Metadata about a file that is opened in the code view.
 #[derive(Debug, Clone)]
 struct LoadedFileMetadata {
     id: FileId,
-    location: BufferFileLocation,
-}
+    location: BufferFileLocation}
 
 use warp_errors::report_error;
 
@@ -184,8 +165,7 @@ type TerminalTargetFn = dyn Fn(WindowId, &AppContext) -> Option<ViewHandle<Termi
 
 struct SelectionAsContextTooltip {
     mouse_state: MouseStateHandle,
-    terminal_target_fn: Box<TerminalTargetFn>,
-}
+    terminal_target_fn: Box<TerminalTargetFn>}
 
 #[derive(Debug, Clone)]
 pub enum LocalCodeEditorAction {
@@ -200,29 +180,24 @@ pub enum LocalCodeEditorAction {
     /// This is the fallback when go-to-definition has no different location to navigate to.
     FetchAndShowFindReferences {
         lsp_position: lsp::types::Location,
-        anchor_offset: CharOffset,
-    },
-}
+        anchor_offset: CharOffset}}
 
 #[derive(Default)]
 struct ConflictResolutionBannerMouseStates {
     discard_mouse_state: MouseStateHandle,
-    overwrite_mouse_state: MouseStateHandle,
-}
+    overwrite_mouse_state: MouseStateHandle}
 
 #[derive(Default)]
 struct ContextMenuState {
     mouse_state: MouseStateHandle,
-    is_open: bool,
-}
+    is_open: bool}
 
 /// A hover content segment - either plain text/markdown or a code block.
 pub(super) enum HoverContentSegment {
     /// Plain text/markdown content (rendered with FormattedTextElement).
     Text(FormattedText),
     /// Code block with syntax highlighting (rendered with CodeEditorView).
-    CodeBlock { view: ViewHandle<CodeEditorView> },
-}
+    CodeBlock { view: ViewHandle<CodeEditorView> }}
 
 /// State for the LSP hover tooltip.
 pub(super) enum LspHoverState {
@@ -237,9 +212,7 @@ pub(super) enum LspHoverState {
         hovered_offset_range: Range<CharOffset>,
         /// Scroll state for the tooltip content.
         scroll_state: ClippedScrollStateHandle,
-        mouse_state: MouseStateHandle,
-    },
-}
+        mouse_state: MouseStateHandle}}
 
 impl LspHoverState {
     pub(super) fn clear(&mut self) -> bool {
@@ -316,8 +289,7 @@ pub struct LocalCodeEditorView {
     /// Decorations for LSP diagnostics (errors and warnings).
     pub(super) diagnostic_decorations: Vec<Decoration>,
     /// View for the find references feature.
-    find_references_view: Option<ViewHandle<FindReferencesView>>,
-}
+    find_references_view: Option<ViewHandle<FindReferencesView>>}
 
 impl LocalCodeEditorView {
     pub fn new(
@@ -386,8 +358,7 @@ impl LocalCodeEditorView {
                 offset,
                 cmd,
                 clamped,
-                is_covered,
-            } => {
+                is_covered} => {
                 // If the mouse location is clamped (meaning it's not hovering on an actual buffer text),
                 // or if the event is covered by an element above the editor,
                 // we should clear the hovered range and symbol.
@@ -454,8 +425,7 @@ impl LocalCodeEditorView {
             }
             CodeEditorEvent::CommentSaved { comment } => {
                 ctx.emit(LocalCodeEditorEvent::CommentSaved {
-                    comment: comment.clone(),
-                });
+                    comment: comment.clone()});
             }
             CodeEditorEvent::DeleteComment { id } => {
                 ctx.emit(LocalCodeEditorEvent::DeleteComment { id: *id });
@@ -482,8 +452,7 @@ impl LocalCodeEditorView {
                     CodeEditorEvent::VimGotoDefinition => me.goto_definition_at_cursor(ctx),
                     CodeEditorEvent::VimFindReferences => me.find_references_at_cursor(ctx),
                     CodeEditorEvent::VimShowHover => me.show_hover_at_cursor(ctx),
-                    _ => unreachable!(),
-                }
+                    _ => unreachable!()}
             }
             _ => {}
         });
@@ -537,8 +506,7 @@ impl LocalCodeEditorView {
             pending_scroll_on_load: None,
             processed_diagnostics: Vec::new(),
             diagnostic_decorations: Vec::new(),
-            find_references_view: None,
-        };
+            find_references_view: None};
 
         if let Some(display_mode) = display_mode {
             model.set_display_mode(display_mode, ctx);
@@ -678,8 +646,7 @@ impl LocalCodeEditorView {
                             range.start.saturating_sub(&CharOffset::from(1))
                                 ..range.end.saturating_sub(&CharOffset::from(1))
                         })
-                        .unwrap_or_else(|| offset..offset + 1),
-                };
+                        .unwrap_or_else(|| offset..offset + 1)};
 
                 // Get the LSP position of the hovered offset for comparison
                 let hovered_lsp_line = editor.offset_to_lsp_position(offset, ctx).line;
@@ -712,8 +679,7 @@ impl LocalCodeEditorView {
                             view_id,
                             &LocalCodeEditorAction::FetchAndShowFindReferences {
                                 lsp_position: lsp_position_for_references.clone(),
-                                anchor_offset,
-                            },
+                                anchor_offset},
                         );
                     })
                 };
@@ -780,13 +746,6 @@ impl LocalCodeEditorView {
         ctx: &mut ViewContext<Self>,
     ) {
         if let Some(server) = &self.lsp_server {
-            send_telemetry_from_ctx!(
-                LspTelemetryEvent::FindReferencesShown {
-                    server_type: server.as_ref(ctx).server_name(),
-                    num_references: references.len(),
-                },
-                ctx
-            );
         }
 
         // Get workspace root for relative path display from the LSP server
@@ -819,8 +778,7 @@ impl LocalCodeEditorView {
                         path: reference.file_path.clone(),
                         line: reference.line_number.saturating_sub(1), // Convert 1-based to 0-based
                         column: reference.column,
-                        source_server_id,
-                    });
+                        source_server_id});
                     // Close the card after navigation
                     me.find_references_view = None;
                     me.editor.update(ctx, |editor, _ctx| {
@@ -892,8 +850,7 @@ impl LocalCodeEditorView {
                 hovered_offset_range,
                 ..
             } => hovered_offset_range.start,
-            _ => return None,
-        };
+            _ => return None};
 
         self.compute_card_positioning(offset_start, HOVER_TOOLTIP_MAX_HEIGHT, app)
     }
@@ -1023,8 +980,7 @@ impl LocalCodeEditorView {
                         ctx.notify();
                     }
                 }
-                _ => (),
-            }
+                _ => ()}
         });
     }
 
@@ -1069,8 +1025,7 @@ impl LocalCodeEditorView {
 
         let (tab_size, insert_spaces) = match self.editor.as_ref(ctx).indent_unit(ctx) {
             IndentUnit::Tab => (1, false),
-            IndentUnit::Space(num) => (num, true),
-        };
+            IndentUnit::Space(num) => (num, true)};
 
         // Create default formatting options
         let formatting_options = FormattingOptions {
@@ -1080,8 +1035,7 @@ impl LocalCodeEditorView {
             // TODO: These should eventually come from user settings.
             trim_trailing_whitespace: Some(true),
             insert_final_newline: Some(true),
-            trim_final_newlines: Some(true),
-        };
+            trim_final_newlines: Some(true)};
 
         let format_future = match lsp_server
             .as_ref(ctx)
@@ -1175,8 +1129,7 @@ impl LocalCodeEditorView {
                 GlobalBufferModel::handle(ctx).update(ctx, move |model, ctx| {
                     model.save(file_id, content.into_string(), buffer_version, ctx)
                 })
-            }),
-        };
+            })};
 
         if let Err(err) = result {
             // A synchronous save failure means no async `FileSaved` will arrive,
@@ -1184,8 +1137,7 @@ impl LocalCodeEditorView {
             self.auto_save_in_flight = false;
             report_error!(&err);
             ctx.emit(LocalCodeEditorEvent::FailedToSave {
-                error: Arc::new(err),
-            });
+                error: Arc::new(err)});
         }
     }
 
@@ -1353,8 +1305,7 @@ impl LocalCodeEditorView {
 
         local_editor.metadata = Some(LoadedFileMetadata {
             id: file_id,
-            location,
-        });
+            location});
 
         Self::subscribe_to_global_buffer_events(file_id, ctx);
 
@@ -1419,8 +1370,7 @@ impl LocalCodeEditorView {
     ) -> Self {
         self.selection_as_context_tooltip = Some(SelectionAsContextTooltip {
             mouse_state: Default::default(),
-            terminal_target_fn,
-        });
+            terminal_target_fn});
         self
     }
 
@@ -1586,8 +1536,7 @@ impl LocalCodeEditorView {
                 .and_then(|r| PathBuf::try_from(r).ok())
             {
                 Some(root) => Some(root),
-                None => path.parent().map(|s| s.to_path_buf()),
-            }
+                None => path.parent().map(|s| s.to_path_buf())}
         };
 
         let Some(repo_root) = repo_root else {
@@ -1600,8 +1549,7 @@ impl LocalCodeEditorView {
                 LspTask::Install {
                     file_path: path,
                     repo_root,
-                    server_type: lsp_server_type,
-                },
+                    server_type: lsp_server_type},
                 ctx,
             );
         });
@@ -1677,8 +1625,7 @@ impl LocalCodeEditorView {
                     me.is_new_file = true;
                     me.on_file_loaded(ctx);
                     ctx.emit(LocalCodeEditorEvent::FailedToLoad {
-                        error: error.clone(),
-                    });
+                        error: error.clone()});
                 }
                 GlobalBufferModelEvent::BufferUpdatedFromFileEvent {
                     success,
@@ -1705,8 +1652,7 @@ impl LocalCodeEditorView {
                     me.auto_save_in_flight = false;
                     me.base_content_version = GlobalBufferModel::as_ref(ctx).base_version(file_id);
                     ctx.emit(LocalCodeEditorEvent::FailedToSave {
-                        error: error.clone(),
-                    });
+                        error: error.clone()});
                 }
                 GlobalBufferModelEvent::RemoteBufferConflict { .. } => {
                     me.has_remote_conflict = true;
@@ -1810,8 +1756,7 @@ impl LocalCodeEditorView {
         let file_id = buffer_state.file_id;
         me.metadata = Some(LoadedFileMetadata {
             id: file_id,
-            location: BufferFileLocation::Local(path.clone()),
-        });
+            location: BufferFileLocation::Local(path.clone())});
 
         me.set_new_file(false);
 
@@ -1829,8 +1774,7 @@ impl LocalCodeEditorView {
             Err(err) => {
                 report_error!(&err);
                 ctx.emit(LocalCodeEditorEvent::FailedToSave {
-                    error: Arc::new(err),
-                });
+                    error: Arc::new(err)});
                 SaveOutcome::Failed
             }
             _ => {
@@ -1857,8 +1801,7 @@ impl LocalCodeEditorView {
                 deltas.sort_by_key(|delta| delta.replacement_line_range.start);
                 deltas
             }
-            DiffType::Delete { delta } => vec![delta],
-        };
+            DiffType::Delete { delta } => vec![delta]};
 
         // Early return if the pending diff itself is empty.
         let first_line_start = deltas
@@ -1904,8 +1847,7 @@ impl LocalCodeEditorView {
         let file_id = buffer_state.file_id;
         self.metadata = Some(LoadedFileMetadata {
             id: file_id,
-            location: BufferFileLocation::Local(new_path.to_path_buf()),
-        });
+            location: BufferFileLocation::Local(new_path.to_path_buf())});
 
         self.editor.update(ctx, |editor, ctx| {
             editor.set_language_with_local_path(new_path, ctx);
@@ -2094,8 +2036,7 @@ impl LocalCodeEditorView {
         ctx.emit(LocalCodeEditorEvent::SelectionAddedAsContext {
             relative_file_path,
             line_range,
-            selected_text,
-        });
+            selected_text});
         self.editor.update(ctx, |editor, ctx| {
             editor.clear_selection(ctx);
         });
@@ -2165,13 +2106,6 @@ impl LocalCodeEditorView {
                 let had_result = matches!(&result, Ok(locations) if !locations.is_empty());
 
                 if let Some(server_type) = server_type_name {
-                    send_telemetry_from_ctx!(
-                        LspTelemetryEvent::GotoDefinition {
-                            server_type,
-                            had_result,
-                        },
-                        ctx
-                    );
                 }
 
                 match result {
@@ -2181,8 +2115,7 @@ impl LocalCodeEditorView {
                                 path: location.target.path.clone(),
                                 line: location.target.location.line,
                                 column: location.target.location.column,
-                                source_server_id,
-                            });
+                                source_server_id});
                         }
                     }
                     Err(e) => {
@@ -2403,8 +2336,7 @@ impl View for LocalCodeEditorView {
                 Some(line_location) => {
                     provider.should_show_find_references_card(line_location, app)
                 }
-                None => true,
-            };
+                None => true};
 
             if should_show {
                 // Compute positioning fresh from the stable CharOffset each frame.
@@ -2453,8 +2385,7 @@ impl TypedActionView for LocalCodeEditorView {
                 if let Err(ImmediateSaveError::FailedToSave(err)) = self.save_local(ctx) {
                     report_error!(&err);
                     ctx.emit(LocalCodeEditorEvent::FailedToSave {
-                        error: Arc::new(err),
-                    });
+                        error: Arc::new(err)});
                 };
             }
             LocalCodeEditorAction::DiscardUnsavedChanges => {
@@ -2484,8 +2415,7 @@ impl TypedActionView for LocalCodeEditorView {
                     path: location.path.clone(),
                     line: location.location.line,
                     column: location.location.column,
-                    source_server_id,
-                });
+                    source_server_id});
             }
             LocalCodeEditorAction::GotoDefinition => {
                 self.context_menu_state.is_open = false;
@@ -2510,8 +2440,7 @@ impl TypedActionView for LocalCodeEditorView {
             }
             LocalCodeEditorAction::FetchAndShowFindReferences {
                 lsp_position,
-                anchor_offset,
-            } => {
+                anchor_offset} => {
                 // Lazily fetch find-references as fallback when at the definition.
                 // This is triggered on cmd-click when go-to-definition has no different location.
                 self.fetch_find_references_and_show(lsp_position.clone(), *anchor_offset, ctx);
@@ -2720,8 +2649,7 @@ pub struct ShowFindReferencesCard {
     /// Optional: position ID of parent scrollable container (e.g., code review list).
     /// If None, card is in standalone LocalCodeEditorView - visibility is determined
     /// by whether the anchor gutter element is rendered (cached position exists).
-    pub parent_scrollable_position_id: Option<String>,
-}
+    pub parent_scrollable_position_id: Option<String>}
 
 impl ShowFindReferencesCardProvider for ShowFindReferencesCard {
     fn should_show_find_references_card(

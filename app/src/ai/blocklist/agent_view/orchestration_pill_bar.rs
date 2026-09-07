@@ -11,7 +11,6 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use warp_cli::agent::Harness;
 use warp_core::channel::ChannelState;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::color::blend::Blend;
 use warp_core::ui::color::coloru_with_opacity;
@@ -24,38 +23,30 @@ use warpui::elements::{
     Fill as ElementFill, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, OffsetType, ParentAnchor, ParentElement, ParentOffsetBounds,
     PositionedElementOffsetBounds, PositioningAxis, Radius, SavePosition, ScrollbarWidth, Stack,
-    Text, XAxisAnchor, YAxisAnchor,
-};
+    Text, XAxisAnchor, YAxisAnchor};
 use warpui::fonts::{Properties, Weight};
 use warpui::platform::{Cursor, LineStyle};
 use warpui::text_layout::{
-    ClipConfig, ClipDirection, ClipStyle, DEFAULT_TOP_BOTTOM_RATIO, StyleAndFont, TextStyle,
-};
+    ClipConfig, ClipDirection, ClipStyle, DEFAULT_TOP_BOTTOM_RATIO, StyleAndFont, TextStyle};
 use warpui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle,
-};
+    ViewHandle};
 
 use crate::ai::agent::conversation::{
-    AIConversation, AIConversationId, ConversationStatus, StatusColorStyle,
-};
+    AIConversation, AIConversationId, ConversationStatus, StatusColorStyle};
 use crate::ai::artifacts::Artifact;
 use crate::ai::blocklist::agent_view::orchestration_conversation_links::{
     is_conversation_open_in_other_visible_view, pane_group_id_containing_terminal_view,
-    parent_conversation_id,
-};
+    parent_conversation_id};
 use crate::ai::blocklist::agent_view::orchestration_pill_bar_model::{
-    OrchestrationPillBarEvent, OrchestrationPillBarModel,
-};
+    OrchestrationPillBarEvent, OrchestrationPillBarModel};
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewControllerEvent};
 use crate::ai::blocklist::orchestration_topology::{
     LoadedSubtreeRollup, aggregated_orchestrator_status, child_conversations_in_pill_order,
-    loaded_subtree_rollup, orchestration_root_conversation_id,
-};
+    loaded_subtree_rollup, orchestration_root_conversation_id};
 use crate::ai::blocklist::telemetry::{
     BlocklistOrchestrationTelemetryEvent, PillBarActionKind, PillBarInteractionEvent,
-    PillBarPillKind, PillSwitchOutcome,
-};
+    PillBarPillKind, PillSwitchOutcome};
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};
 use crate::ai::harness_display;
 use crate::features::FeatureFlag;
@@ -64,8 +55,7 @@ use crate::pane_group::pane::view::PaneHeaderAction;
 use crate::terminal::view::TerminalAction;
 use crate::ui_components::icon_with_status::{
     BadgeInnerShape, IconWithStatusVariant, StatusBadgeStyle,
-    render_icon_with_status_with_badge_style,
-};
+    render_icon_with_status_with_badge_style};
 use crate::ui_components::icons::Icon;
 use crate::workspace::WorkspaceAction;
 
@@ -167,15 +157,13 @@ pub(crate) fn render_agent_avatar_disc(
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum PillKind {
     Orchestrator,
-    Child,
-}
+    Child}
 
 impl PillKind {
     fn telemetry_kind(self) -> PillBarPillKind {
         match self {
             Self::Orchestrator => PillBarPillKind::Orchestrator,
-            Self::Child => PillBarPillKind::Child,
-        }
+            Self::Child => PillBarPillKind::Child}
     }
 }
 
@@ -183,8 +171,7 @@ impl PillKind {
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum PillPinState {
     Unpinned,
-    Pinned,
-}
+    Pinned}
 
 /// Pre-computed data for one pill in the bar.
 struct PillSpec {
@@ -200,8 +187,7 @@ struct PillSpec {
     is_remote_child: bool,
     /// Present when this child is itself an orchestrator: rolled-up state of
     /// its subtree, rendered as a trailing "group" badge on the pill.
-    subtree_rollup: Option<LoadedSubtreeRollup>,
-}
+    subtree_rollup: Option<LoadedSubtreeRollup>}
 
 /// Everything `pill_specs` computes for one render of the bar. The bar is a
 /// drill-down view: it anchors on one conversation and renders only that
@@ -216,14 +202,12 @@ struct PillBarContents {
     /// covered by the root breadcrumb (i.e. the anchor sits 2+ levels below
     /// the root); rendered after the root breadcrumb.
     breadcrumb_parent_id: Option<AIConversationId>,
-    specs: Vec<PillSpec>,
-}
+    specs: Vec<PillSpec>}
 
 #[derive(Clone, Copy)]
 enum AvatarGlyph {
     Letter(char),
-    Icon(Icon),
-}
+    Icon(Icon)}
 
 /// Width of the per-pill 3-dot overflow menu when expanded.
 const OVERFLOW_MENU_WIDTH: f32 = 200.;
@@ -268,8 +252,7 @@ fn pill_label_width(
             font_size,
             line_height_ratio: DEFAULT_UI_LINE_HEIGHT_RATIO,
             baseline_ratio: DEFAULT_TOP_BOTTOM_RATIO,
-            fixed_width_tab_size: None,
-        },
+            fixed_width_tab_size: None},
         &[(
             0..label.chars().count(),
             StyleAndFont::new(
@@ -330,9 +313,7 @@ pub enum OrchestrationPillBarAction {
         /// Set for the leading breadcrumb pills so telemetry can tell
         /// drill-up navigation apart from same-level pill switches
         /// (navigation itself only depends on `pill_kind`).
-        is_breadcrumb: bool,
-    },
-}
+        is_breadcrumb: bool}}
 
 /// Renders the pill bar above the agent view: one pill for the orchestrator
 /// and one per child agent. Clicking a non-active pill switches to its pane.
@@ -351,8 +332,7 @@ pub struct OrchestrationPillBar {
     /// `Some(id)` when the 3-dot menu is open targeting that child.
     menu_open_for: Option<AIConversationId>,
     /// `Some(id)` when the cursor is hovering that pill (drives the details card).
-    hovered_pill: Option<AIConversationId>,
-}
+    hovered_pill: Option<AIConversationId>}
 
 impl Entity for OrchestrationPillBar {
     type Event = ();
@@ -451,8 +431,7 @@ impl OrchestrationPillBar {
         // Re-render whenever any pane toggles a pin so the bars stay in sync.
         let pill_bar_model = OrchestrationPillBarModel::handle(ctx);
         ctx.subscribe_to_model(&pill_bar_model, |_, _, event, ctx| match event {
-            OrchestrationPillBarEvent::PinSetChanged => ctx.notify(),
-        });
+            OrchestrationPillBarEvent::PinSetChanged => ctx.notify()});
 
         Self {
             agent_view_controller,
@@ -461,8 +440,7 @@ impl OrchestrationPillBar {
             pin_button_mouse_states: RefCell::new(HashMap::new()),
             menu,
             menu_open_for: None,
-            hovered_pill: None,
-        }
+            hovered_pill: None}
     }
 
     /// Rebuilds menu items for the given child and opens the menu.
@@ -678,8 +656,7 @@ impl OrchestrationPillBar {
             kind: PillKind::Orchestrator,
             pin_state: PillPinState::Unpinned,
             is_remote_child: anchor.is_remote_child(),
-            subtree_rollup: None,
-        });
+            subtree_rollup: None});
 
         // Stamp each child's current pin state; partitioning happens at render.
         let pill_bar_model = OrchestrationPillBarModel::as_ref(app);
@@ -706,16 +683,14 @@ impl OrchestrationPillBar {
                 kind: PillKind::Child,
                 pin_state,
                 is_remote_child: child.is_remote_child(),
-                subtree_rollup,
-            });
+                subtree_rollup});
         }
 
         Some(PillBarContents {
             anchor_id,
             breadcrumb_root_id,
             breadcrumb_parent_id,
-            specs,
-        })
+            specs})
     }
 }
 
@@ -889,19 +864,6 @@ impl OrchestrationPillBar {
         else {
             return;
         };
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::PillBarInteraction(PillBarInteractionEvent {
-                action,
-                pill_kind,
-                total_pills,
-                total_pinned,
-                source_conversation_id,
-                root_conversation_id,
-                target_conversation_id,
-                switch_outcome,
-            }),
-            ctx
-        );
     }
 
     /// Dispatches the focus-existing-pane navigation. Pulled out of
@@ -948,8 +910,7 @@ impl OrchestrationPillBar {
             ctx.dispatch_typed_action(
                 &PaneHeaderAction::<TerminalAction, TerminalAction>::CustomAction(
                     TerminalAction::SwitchAgentViewToConversation {
-                        conversation_id: id,
-                    },
+                        conversation_id: id},
                 ),
             );
             return;
@@ -962,14 +923,12 @@ impl OrchestrationPillBar {
             ctx.dispatch_typed_action(
                 &PaneHeaderAction::<TerminalAction, TerminalAction>::CustomAction(
                     TerminalAction::RevealChildAgent {
-                        conversation_id: id,
-                    },
+                        conversation_id: id},
                 ),
             );
         } else {
             ctx.dispatch_typed_action(&WorkspaceAction::FocusTerminalViewInWorkspace {
-                terminal_view_id: conversation_view_id,
-            });
+                terminal_view_id: conversation_view_id});
         }
     }
 }
@@ -1005,8 +964,7 @@ impl TypedActionView for OrchestrationPillBar {
                 ctx.dispatch_typed_action(
                     &PaneHeaderAction::<TerminalAction, TerminalAction>::CustomAction(
                         TerminalAction::OpenChildAgentInNewPane {
-                            conversation_id: *id,
-                        },
+                            conversation_id: *id},
                     ),
                 );
             }
@@ -1021,8 +979,7 @@ impl TypedActionView for OrchestrationPillBar {
                 ctx.dispatch_typed_action(
                     &PaneHeaderAction::<TerminalAction, TerminalAction>::CustomAction(
                         TerminalAction::OpenChildAgentInNewTab {
-                            conversation_id: *id,
-                        },
+                            conversation_id: *id},
                     ),
                 );
             }
@@ -1049,8 +1006,7 @@ impl TypedActionView for OrchestrationPillBar {
                 ctx.dispatch_typed_action(
                     &PaneHeaderAction::<TerminalAction, TerminalAction>::CustomAction(
                         TerminalAction::StopAgentConversation {
-                            conversation_id: *id,
-                        },
+                            conversation_id: *id},
                     ),
                 );
             }
@@ -1065,8 +1021,7 @@ impl TypedActionView for OrchestrationPillBar {
                 ctx.dispatch_typed_action(
                     &PaneHeaderAction::<TerminalAction, TerminalAction>::CustomAction(
                         TerminalAction::KillAgentConversation {
-                            conversation_id: *id,
-                        },
+                            conversation_id: *id},
                     ),
                 );
             }
@@ -1094,8 +1049,7 @@ impl TypedActionView for OrchestrationPillBar {
             OrchestrationPillBarAction::PillClicked {
                 conversation_id,
                 pill_kind,
-                is_breadcrumb,
-            } => {
+                is_breadcrumb} => {
                 let id = *conversation_id;
                 let self_terminal_view_id =
                     self.agent_view_controller.as_ref(ctx).terminal_view_id();
@@ -1152,8 +1106,7 @@ impl View for OrchestrationPillBar {
             anchor_id,
             breadcrumb_root_id,
             breadcrumb_parent_id,
-            specs,
-        }) = self.pill_specs(app)
+            specs}) = self.pill_specs(app)
         else {
             return Empty::new().finish();
         };
@@ -1281,8 +1234,7 @@ impl View for OrchestrationPillBar {
                 // the scrollbar since it sits outside the scrollbar's track.
                 child: Container::new(row.finish())
                     .with_padding_bottom(PILL_BAR_SCROLLBAR_GUTTER)
-                    .finish(),
-            },
+                    .finish()},
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
             ElementFill::None,
@@ -1401,8 +1353,7 @@ impl View for OrchestrationPillBar {
                 );
                 stack.finish()
             }
-            None => bar,
-        }
+            None => bar}
     }
 }
 
@@ -1414,9 +1365,7 @@ enum MenuOrCard {
     Menu(AIConversationId),
     Card {
         id: AIConversationId,
-        card: Box<dyn Element>,
-    },
-}
+        card: Box<dyn Element>}}
 
 /// Builds the hover details card overlay for the given conversation, or
 /// returns `None` if there's no conversation to summarise (e.g. the id
@@ -1537,8 +1486,7 @@ fn render_hover_card(
             .with_color(main_text)
             .with_clip(ClipConfig {
                 direction: ClipDirection::Start,
-                style: ClipStyle::Ellipsis,
-            })
+                style: ClipStyle::Ellipsis})
             .soft_wrap(false)
             .finish()
         });
@@ -1592,8 +1540,7 @@ fn render_hover_card(
             url: _,
             branch,
             repo,
-            number,
-        } = artifact
+            number} = artifact
         {
             if !branch.is_empty() {
                 chips.push(render_chip(
@@ -1777,8 +1724,7 @@ fn navigation_action_for_pill(kind: PillKind, conversation_id: AIConversationId)
         // harness session, CLI listener, ambient-agent session state, and PTY
         // output attached to the real owner instead of trying to recreate the
         // child transcript in the current pane.
-        PillKind::Child => TerminalAction::RevealChildAgent { conversation_id },
-    }
+        PillKind::Child => TerminalAction::RevealChildAgent { conversation_id }}
 }
 
 /// Leading breadcrumb pill shown while the bar is drilled into a sub-level
@@ -1810,8 +1756,7 @@ fn render_breadcrumb_pill(
                 .agent_name()
                 .filter(|name| !name.is_empty())
                 .unwrap_or("Agent")
-                .to_string(),
-        })
+                .to_string()})
         .unwrap_or_else(|| "Orchestrator".to_string());
 
     Hoverable::new(mouse_state, move |hover_state| {
@@ -1861,8 +1806,7 @@ fn render_breadcrumb_pill(
         ctx.dispatch_typed_action(OrchestrationPillBarAction::PillClicked {
             conversation_id: target_id,
             pill_kind,
-            is_breadcrumb: true,
-        });
+            is_breadcrumb: true});
     })
     .finish()
 }
@@ -2133,8 +2077,7 @@ fn render_pill(
                     theme,
                     appearance,
                 ),
-                None => render_pill_avatar(avatar_color, avatar_glyph, theme, appearance),
-            },
+                None => render_pill_avatar(avatar_color, avatar_glyph, theme, appearance)},
             PillKind::Child => {
                 if show_pin_glyph {
                     // Hovered: the leading slot becomes the clickable pin
@@ -2278,8 +2221,7 @@ fn render_pill(
         ctx.dispatch_typed_action(OrchestrationPillBarAction::PillClicked {
             conversation_id,
             pill_kind: kind,
-            is_breadcrumb: false,
-        });
+            is_breadcrumb: false});
     })
     .on_right_click(move |ctx, _app, _| {
         // Right-clicking a child pill should expose the same overflow
@@ -2393,8 +2335,7 @@ const PILL_BADGE_ICON_SIZE: f32 = 9.;
 const PILL_BADGE_STYLE: StatusBadgeStyle = StatusBadgeStyle {
     ring_ratio: PILL_BADGE_RING_SIZE / AVATAR_WITH_STATUS_TOTAL_SIZE,
     icon_ratio: PILL_BADGE_ICON_SIZE / AVATAR_WITH_STATUS_TOTAL_SIZE,
-    inner_shape: BadgeInnerShape::RoundedSquare { radius_px: 2.0 },
-};
+    inner_shape: BadgeInnerShape::RoundedSquare { radius_px: 2.0 }};
 
 /// Extra overhang of the status badge past the avatar circle's bottom-right
 /// edge, as a signed fraction of [`AVATAR_WITH_STATUS_TOTAL_SIZE`] added to
@@ -2495,8 +2436,7 @@ fn render_avatar_with_status_overlay(
         IconWithStatusVariant::CustomAvatar {
             avatar,
             status: Some(status),
-            is_ambient: is_remote_child,
-        },
+            is_ambient: is_remote_child},
         AVATAR_WITH_STATUS_TOTAL_SIZE,
         PILL_BADGE_OVERHANG_RATIO,
         PILL_BADGE_STYLE,
@@ -2573,8 +2513,7 @@ struct CrumbSpec {
     /// `true` for the trailing crumb (the conversation currently being
     /// viewed). The trailing crumb is rendered with a brighter text color
     /// and is non-interactive.
-    is_active: bool,
-}
+    is_active: bool}
 
 const CRUMB_HEIGHT: f32 = 24.;
 const CRUMB_RADIUS: f32 = 4.;
@@ -2666,8 +2605,7 @@ pub fn render_orchestration_breadcrumbs(
         label: parent_label,
         avatar_color: theme.ansi_fg_cyan(),
         avatar_glyph: AvatarGlyph::Icon(Icon::Agent),
-        is_active: false,
-    };
+        is_active: false};
 
     // Child crumb uses the same deterministic colored disc + initial letter
     // we render in the pill bar.
@@ -2676,8 +2614,7 @@ pub fn render_orchestration_breadcrumbs(
         label: child_label,
         avatar_color: pill_avatar_color(child_name, theme),
         avatar_glyph: AvatarGlyph::Letter(pill_initial(child_name)),
-        is_active: true,
-    };
+        is_active: true};
 
     let chevron_color = internal_colors::text_sub(theme, theme.background());
     let chevron = ConstrainedBox::new(
@@ -2721,8 +2658,7 @@ pub fn render_orchestration_breadcrumbs(
     let scrollable = NewScrollable::horizontal(
         SingleAxisConfig::Clipped {
             handle: horizontal_scroll_state,
-            child: row.finish(),
-        },
+            child: row.finish()},
         theme.nonactive_ui_detail().into(),
         theme.active_ui_detail().into(),
         ElementFill::None,
@@ -2846,8 +2782,7 @@ fn render_crumb(
                 return;
             }
             ctx.dispatch_typed_action(WorkspaceAction::FocusTerminalViewInWorkspace {
-                terminal_view_id: conversation_view_id,
-            });
+                terminal_view_id: conversation_view_id});
             return;
         }
         ctx.dispatch_typed_action(

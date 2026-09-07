@@ -4,7 +4,6 @@ use std::ops::Range;
 use string_offset::CharOffset;
 #[cfg(not(target_family = "wasm"))]
 use warp_core::channel::ChannelState;
-use warp_core::send_telemetry_from_ctx;
 #[cfg(not(target_family = "wasm"))]
 use warp_editor::content::find::SearchConfig;
 #[cfg(not(target_family = "wasm"))]
@@ -24,20 +23,17 @@ use crate::view_components::find::{FindDirection, FindEvent, FindModel};
 pub struct SearchMatch {
     pub editor_id: EntityId,
     pub start_offset: CharOffset,
-    pub end_offset: CharOffset,
-}
+    pub end_offset: CharOffset}
 
 #[derive(Debug, Clone)]
 pub struct MultiEditorSelectedResult {
     pub editor_id: EntityId,
-    pub selected_result: SelectedResult,
-}
+    pub selected_result: SelectedResult}
 
 #[cfg_attr(target_family = "wasm", expect(dead_code))]
 pub struct MultiEditorSearchMatches {
     editor_id: EntityId,
-    matches: Vec<SearchMatch>,
-}
+    matches: Vec<SearchMatch>}
 
 impl RestorableSearchResults for MultiEditorSearchMatches {
     fn valid_matches(&self) -> impl Iterator<Item = (usize, CharOffset)> {
@@ -54,8 +50,7 @@ pub struct SelectedMatchInfo {
     pub editor_id: EntityId,
     pub index_within_editor: usize,
     pub start_offset: CharOffset,
-    pub end_offset: CharOffset,
-}
+    pub end_offset: CharOffset}
 
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
 pub struct CodeReviewFindModel {
@@ -66,8 +61,7 @@ pub struct CodeReviewFindModel {
     selected_match: Option<MultiEditorSelectedResult>,
     search_handle: Option<SpawnedFutureHandle>,
     is_find_bar_open: bool,
-    weak_view_handle: WeakViewHandle<CodeReviewView>,
-}
+    weak_view_handle: WeakViewHandle<CodeReviewView>}
 
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
 impl CodeReviewFindModel {
@@ -83,8 +77,7 @@ impl CodeReviewFindModel {
             search_handle: None,
             is_find_bar_open: false,
             selected_match: None,
-            weak_view_handle,
-        }
+            weak_view_handle}
     }
 
     pub fn is_find_bar_open(&self) -> bool {
@@ -122,14 +115,6 @@ impl CodeReviewFindModel {
         ctx: &mut ModelContext<Self>,
     ) {
         self.case_sensitive = case_sensitive;
-        send_telemetry_from_ctx!(
-            CodeReviewTelemetryEvent::FindBarModeChanged {
-                is_local: self.repo_is_local(ctx),
-                case_sensitive: self.case_sensitive,
-                regex: self.regex,
-            },
-            ctx
-        );
         self.run_search(editor_handles, ctx);
     }
 
@@ -140,14 +125,6 @@ impl CodeReviewFindModel {
         ctx: &mut ModelContext<Self>,
     ) {
         self.regex = regex;
-        send_telemetry_from_ctx!(
-            CodeReviewTelemetryEvent::FindBarModeChanged {
-                is_local: self.repo_is_local(ctx),
-                case_sensitive: self.case_sensitive,
-                regex: self.regex,
-            },
-            ctx
-        );
         self.run_search(editor_handles, ctx);
     }
 
@@ -165,14 +142,6 @@ impl CodeReviewFindModel {
         if results.is_empty() {
             return;
         }
-
-        send_telemetry_from_ctx!(
-            CodeReviewTelemetryEvent::FindNavigated {
-                is_local: self.repo_is_local(ctx),
-                direction,
-            },
-            ctx
-        );
 
         let next_index = if let Some(selected) = &self.selected_match {
             match direction {
@@ -206,8 +175,7 @@ impl CodeReviewFindModel {
             });
             self.selected_match = Some(MultiEditorSelectedResult {
                 editor_id: search_match.editor_id,
-                selected_result,
-            });
+                selected_result});
         }
 
         ctx.emit(FindEvent::UpdatedFocusedMatch);
@@ -229,8 +197,7 @@ impl CodeReviewFindModel {
             editor_id: selected.editor_id,
             index_within_editor,
             start_offset: selected_match.start_offset,
-            end_offset: selected_match.end_offset,
-        })
+            end_offset: selected_match.end_offset})
     }
 
     #[cfg(not(target_family = "wasm"))]
@@ -288,16 +255,14 @@ impl CodeReviewFindModel {
         {
             let candidates = MultiEditorSearchMatches {
                 editor_id: selected.editor_id,
-                matches: all_matches.clone(),
-            };
+                matches: all_matches.clone()};
 
             if let Some(restored_result) = searcher.update(ctx, |searcher, ctx| {
                 searcher.restore_selected_result(selected.selected_result, candidates, ctx)
             }) {
                 self.selected_match = Some(MultiEditorSelectedResult {
                     editor_id: selected.editor_id,
-                    selected_result: restored_result,
-                });
+                    selected_result: restored_result});
             }
         }
 
@@ -310,8 +275,7 @@ impl CodeReviewFindModel {
                 });
                 self.selected_match = Some(MultiEditorSelectedResult {
                     editor_id: first_match.editor_id,
-                    selected_result,
-                });
+                    selected_result});
             }
         }
 
@@ -383,8 +347,7 @@ impl CodeReviewFindModel {
                         all_matches.push(SearchMatch {
                             editor_id,
                             start_offset: match_result.start,
-                            end_offset: match_result.end,
-                        });
+                            end_offset: match_result.end});
                     }
                 }
 

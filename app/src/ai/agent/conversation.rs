@@ -11,7 +11,6 @@ use warp_cli::agent::Harness;
 use warp_core::command::ExitCode;
 use warp_core::execution_mode::AppExecutionMode;
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::WarpTheme;
 use warp_core::ui::theme::color::internal_colors;
@@ -27,36 +26,30 @@ use super::task::helper::*;
 use super::task::transaction::{SavedTask, Transaction};
 use super::task::{
     ExtractMessagesError, Task, TaskId, TaskMessageContext, UpdateTaskError,
-    UpgradeOptimisticTaskError, derive_todo_lists_from_root_task,
-};
+    UpgradeOptimisticTaskError, derive_todo_lists_from_root_task};
 use super::task_store::TaskStore;
 use super::{
     AIAgentAction, AIAgentActionId, AIAgentActionResultType, AIAgentActionType, AIAgentContext,
     AIAgentExchange, AIAgentExchangeId, AIAgentInput, AIAgentOutput, AIAgentOutputStatus,
     AIAgentTodo, AIAgentTodoId, FinishedAIAgentOutput, MessageId, OutputModelInfo,
     RenderableAIError, RequestCost, ServerOutputId, Shared, StartRecordingResult,
-    StopRecordingResult, SuggestedLoggingId, Suggestions,
-};
+    StopRecordingResult, SuggestedLoggingId, Suggestions};
 use crate::ai::agent::api::convert_conversation::{
     ConvertToExchanges, compute_time_to_first_token_ms_from_messages,
-    proto_timestamp_to_local_datetime,
-};
+    proto_timestamp_to_local_datetime};
 use crate::ai::agent::comment::CodeReview;
 use crate::ai::agent::icons::{
-    failed_icon, gray_stop_icon, in_progress_icon, succeeded_icon, yellow_stop_icon,
-};
+    failed_icon, gray_stop_icon, in_progress_icon, succeeded_icon, yellow_stop_icon};
 use crate::ai::agent::linearization::compute_task_depths;
 use crate::ai::agent::todos::AIAgentTodoList;
 use crate::ai::agent::{
     AIAgentOutputMessage, AIAgentOutputMessageType, AIIdentifiers, CancellationOutcome,
-    CancellationReason, MessageToAIAgentOutputMessageError, SummarizationType,
-};
+    CancellationReason, MessageToAIAgentOutputMessageError, SummarizationType};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::artifacts::Artifact;
 use crate::ai::blocklist::{
     BlocklistAIHistoryEvent, ConversationStatusUpdate, RequestInput, ResponseStreamId,
-    SerializedBlockListItem,
-};
+    SerializedBlockListItem};
 use crate::ai::llms::LLMPreferences;
 use crate::ai::skills::SkillDescriptor;
 use crate::code_review::CodeReviewTelemetryEvent;
@@ -64,13 +57,11 @@ use crate::notebooks::NotebookId;
 use crate::persistence::ModelEvent;
 use crate::persistence::model::{
     AgentConversationData, ChargedUsageTotals, ContextWindowSegment, ConversationUsageMetadata,
-    ModelTokenUsage, PersistedAutoexecuteMode, ToolUsageMetadata,
-};
+    ModelTokenUsage, PersistedAutoexecuteMode, ToolUsageMetadata};
 use crate::server::ids::ServerId;
 use crate::terminal::general_settings::GeneralSettings;
 use crate::terminal::model::block::{
-    AgentInteractionMetadata, AgentViewVisibility, BlockId, SerializedAIMetadata, SerializedBlock,
-};
+    AgentInteractionMetadata, AgentViewVisibility, BlockId, SerializedAIMetadata, SerializedBlock};
 use crate::ui_components::icons::Icon;
 use crate::workspaces::user_profiles::UserProfileWithUID;
 use crate::{BlocklistAIHistoryModel, GlobalResourceHandlesProvider};
@@ -86,8 +77,7 @@ pub enum TaskSyncMode {
     /// conversation ID is still reported, but its status must never construct a new task
     /// status message — the original failure record is preserved. Defense in depth: the
     /// server independently guards this by comparing the active execution ID.
-    PreserveTerminalSetupFailure,
-}
+    PreserveTerminalSetupFailure}
 
 impl TaskSyncMode {
     /// Whether conversation status updates should be suppressed from constructing a new task
@@ -103,8 +93,7 @@ pub enum TodoStatus {
     InProgress,
     Completed,
     Cancelled,
-    Stopped,
-}
+    Stopped}
 
 impl TodoStatus {
     pub fn is_cancelled(&self) -> bool {
@@ -115,14 +104,12 @@ impl TodoStatus {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecordingSpanInfo {
     pub recording_id: String,
-    pub status: RecordingSpanStatus,
-}
+    pub status: RecordingSpanStatus}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RecordingSpanStatus {
     Active,
-    Captured,
-}
+    Captured}
 
 /// The wire counters are `uint64` while the persisted and displayed usage rows
 /// are `u32`, so an oversized count saturates instead of wrapping to a small
@@ -233,8 +220,7 @@ pub struct ConversationUsageTotals {
     /// conversation so far, from `ConversationUsageMetadata.total_charges`.
     /// `None` when the server didn't provide it (flag off, or a legacy
     /// conversation).
-    pub charged_usage: Option<ChargedUsageTotals>,
-}
+    pub charged_usage: Option<ChargedUsageTotals>}
 
 impl ConversationUsageTotals {
     /// Returns the summed total of the tracked usage
@@ -279,21 +265,18 @@ pub(crate) struct CommandBlockInfo {
     /// Estimated timestamp when the command finished.
     /// Note that this may not be perfectly accurate, because it may come from the tool call result timestamp
     /// which is when the server receives the result, after the command actually finished.
-    pub(crate) completed_ts: Option<DateTime<Local>>,
-}
+    pub(crate) completed_ts: Option<DateTime<Local>>}
 
 #[derive(Debug, Clone)]
 struct AddedExchange {
     #[allow(dead_code)]
     task_id: TaskId,
-    exchange_id: AIAgentExchangeId,
-}
+    exchange_id: AIAgentExchangeId}
 
 #[derive(thiserror::Error, Debug)]
 pub enum RestoreConversationError {
     #[error("Restored conversation has no root task")]
-    NoRootTask,
-}
+    NoRootTask}
 
 #[derive(thiserror::Error, Debug)]
 #[error("Subagent task not found")]
@@ -445,8 +428,7 @@ pub struct AIConversation {
     /// How this conversation's status synchronizes to the server task row. Not persisted: it
     /// only matters for the live process that bootstrapped the conversation, and a restored
     /// conversation resumes ordinary synchronization.
-    task_sync_mode: TaskSyncMode,
-}
+    task_sync_mode: TaskSyncMode}
 
 pub(crate) fn artifact_from_fork_proto(
     proto_artifact: &api::message::artifact_event::ConversationArtifact,
@@ -458,8 +440,7 @@ pub(crate) fn artifact_from_fork_proto(
         Some(ProtoArtifact::Screenshot(ss)) => Some(Artifact::from(ss.clone())),
         Some(ProtoArtifact::Plan(plan)) => Some(Artifact::from(plan.clone())),
         Some(ProtoArtifact::File(file)) => Some(Artifact::from(file.clone())),
-        None => None,
-    }
+        None => None}
 }
 
 impl AIConversation {
@@ -502,8 +483,7 @@ impl AIConversation {
             last_event_sequence: None,
             orchestration_configs: HashMap::new(),
             pinned: false,
-            task_sync_mode: TaskSyncMode::default(),
-        }
+            task_sync_mode: TaskSyncMode::default()}
     }
 
     /// Strict restore: returns `Err(NoRootTask)` if `tasks` is empty. Use
@@ -755,8 +735,7 @@ impl AIConversation {
             last_event_sequence,
             orchestration_configs: HashMap::new(),
             pinned,
-            task_sync_mode: TaskSyncMode::default(),
-        })
+            task_sync_mode: TaskSyncMode::default()})
     }
 
     pub fn id(&self) -> AIConversationId {
@@ -974,8 +953,7 @@ impl AIConversation {
             .and_then(|contexts| {
                 contexts.iter().find_map(|context| match context {
                     AIAgentContext::CurrentTime { current_time } => Some(*current_time),
-                    _ => None,
-                })
+                    _ => None})
             })
     }
 
@@ -990,11 +968,9 @@ impl AIConversation {
         if let Some(last_exchange) = root_task.last_exchange() {
             match &last_exchange.output_status {
                 AIAgentOutputStatus::Finished {
-                    finished_output: FinishedAIAgentOutput::Cancelled { .. },
-                } => return ConversationStatus::Cancelled,
+                    finished_output: FinishedAIAgentOutput::Cancelled { .. }} => return ConversationStatus::Cancelled,
                 AIAgentOutputStatus::Finished {
-                    finished_output: FinishedAIAgentOutput::Error { .. },
-                } => return ConversationStatus::Error,
+                    finished_output: FinishedAIAgentOutput::Error { .. }} => return ConversationStatus::Error,
                 _ => {}
             }
         }
@@ -1133,8 +1109,7 @@ impl AIConversation {
             conversation_id: self.id,
             terminal_surface_id,
             update: ConversationStatusUpdate::Changed { prev_status },
-            new_status,
-        });
+            new_status});
     }
 
     pub fn is_processing_response_stream(&self, stream_id: &ResponseStreamId) -> bool {
@@ -1652,8 +1627,7 @@ impl AIConversation {
             exchange_id,
             terminal_surface_id,
             conversation_id: self.id,
-            is_hidden,
-        });
+            is_hidden});
     }
 
     /// Returns an iterator over all exchanges in all tasks in this conversation.
@@ -1801,8 +1775,7 @@ impl AIConversation {
         ctx.emit(BlocklistAIHistoryEvent::UpdatedConversationArtifacts {
             terminal_surface_id,
             conversation_id: self.id,
-            artifact,
-        });
+            artifact});
     }
 
     /// Updates the notebook_uid for a plan artifact when it's synced to Warp Drive.
@@ -1829,8 +1802,7 @@ impl AIConversation {
                     ctx.emit(BlocklistAIHistoryEvent::UpdatedConversationArtifacts {
                         terminal_surface_id,
                         conversation_id: self.id,
-                        artifact: updated_artifact,
-                    });
+                        artifact: updated_artifact});
                 }
                 return;
             }
@@ -1993,8 +1965,7 @@ impl AIConversation {
                             }
                             active_span = Some(RecordingSpanInfo {
                                 recording_id: started.recording_id.clone(),
-                                status: RecordingSpanStatus::Active,
-                            });
+                                status: RecordingSpanStatus::Active});
                             buffered_action_ids = vec![action.id.clone()];
                         }
                     }
@@ -2139,8 +2110,7 @@ impl AIConversation {
                 computer_use_model_id: computer_use_model_id.clone(),
                 request_cost: None,
                 // This will be None for non-shared sessions
-                response_initiator: shared_session_response_initiator.clone(),
-            };
+                response_initiator: shared_session_response_initiator.clone()};
 
             let new_exchange_id = new_exchange.id;
             self.append_exchange_to_task(&task_id, new_exchange)?;
@@ -2149,8 +2119,7 @@ impl AIConversation {
                 stream_id.clone(),
                 Vec1::new(AddedExchange {
                     task_id: task_id.clone(),
-                    exchange_id: new_exchange_id,
-                }),
+                    exchange_id: new_exchange_id}),
             );
 
             if should_hide {
@@ -2163,8 +2132,7 @@ impl AIConversation {
                 terminal_surface_id,
                 conversation_id: self.id,
                 is_hidden: should_hide,
-                response_stream_id: Some(stream_id.clone()),
-            });
+                response_stream_id: Some(stream_id.clone())});
         }
         Ok(())
     }
@@ -2184,15 +2152,13 @@ impl AIConversation {
             {
                 added_exchanges.push(AddedExchange {
                     task_id: root_task_id.clone(),
-                    exchange_id,
-                });
+                    exchange_id});
             } else {
                 self.added_exchanges_by_response.insert(
                     response_stream_id.clone(),
                     Vec1::new(AddedExchange {
                         task_id: root_task_id.clone(),
-                        exchange_id,
-                    }),
+                        exchange_id}),
                 );
             }
         }
@@ -2203,8 +2169,7 @@ impl AIConversation {
             exchange_id,
             terminal_surface_id,
             new_task_id: root_task_id,
-            new_conversation_id: self.id,
-        });
+            new_conversation_id: self.id});
         Ok(())
     }
 
@@ -2294,8 +2259,7 @@ impl AIConversation {
                 conversation_id: self.id,
                 is_hidden: self
                     .hidden_exchanges
-                    .contains(&new_exchange_info.exchange_id),
-            });
+                    .contains(&new_exchange_info.exchange_id)});
         }
 
         self.server_conversation_token =
@@ -2329,8 +2293,7 @@ impl AIConversation {
                     output: 0,
                     input_cache_read: 0,
                     input_cache_write: 0,
-                    cost_in_cents: 0.0,
-                });
+                    cost_in_cents: 0.0});
 
             entry.total_input += usage.total_input;
             entry.output += usage.output;
@@ -2430,8 +2393,7 @@ impl AIConversation {
         let mut has_new_actions = false;
         for AddedExchange {
             exchange_id,
-            task_id,
-        } in new_exchanges.into_iter()
+            task_id} in new_exchanges.into_iter()
         {
             let completed_exchange = self.mark_exchange_completed(&task_id, exchange_id)?;
             let output = completed_exchange
@@ -2458,8 +2420,7 @@ impl AIConversation {
                 exchange_id,
                 terminal_surface_id,
                 conversation_id: self.id,
-                is_hidden: self.is_exchange_hidden(exchange_id),
-            });
+                is_hidden: self.is_exchange_hidden(exchange_id)});
         }
         self.write_updated_conversation_state(ctx);
 
@@ -2482,8 +2443,7 @@ impl AIConversation {
         if let Some(added_exchanges) = self.added_exchanges_by_response.remove(stream_id) {
             for AddedExchange {
                 exchange_id,
-                task_id,
-            } in added_exchanges.into_iter()
+                task_id} in added_exchanges.into_iter()
             {
                 let completed_exchange = self.mark_exchange_completed(&task_id, exchange_id)?;
                 let output = completed_exchange
@@ -2509,8 +2469,7 @@ impl AIConversation {
                     exchange_id,
                     terminal_surface_id,
                     conversation_id: self.id,
-                    is_hidden: self.is_exchange_hidden(exchange_id),
-                });
+                    is_hidden: self.is_exchange_hidden(exchange_id)});
             }
         }
         self.write_updated_conversation_state(ctx);
@@ -2537,8 +2496,7 @@ impl AIConversation {
 
         for AddedExchange {
             exchange_id,
-            task_id,
-        } in added_exchanges.into_iter()
+            task_id} in added_exchanges.into_iter()
         {
             let is_viewing_shared_session = self.is_viewing_shared_session;
             let task = self
@@ -2555,9 +2513,7 @@ impl AIConversation {
             exchange.output_status = AIAgentOutputStatus::Finished {
                 finished_output: FinishedAIAgentOutput::Cancelled {
                     output: output.as_ref().map(Shared::get_owned),
-                    reason,
-                },
-            };
+                    reason}};
 
             let finish_time = Self::finish_time_from_exchange_messages(&task, exchange)
                 .unwrap_or_else(Local::now);
@@ -2585,8 +2541,7 @@ impl AIConversation {
                 exchange_id,
                 terminal_surface_id,
                 conversation_id: self.id,
-                is_hidden,
-            });
+                is_hidden});
         }
 
         self.write_updated_conversation_state(ctx);
@@ -2653,23 +2608,11 @@ impl AIConversation {
             server_conversation_id: self.server_conversation_token.clone().map(Into::into),
             client_conversation_id: Some(self.id),
             client_exchange_id: Some(*initial_exchange_id),
-            model_id: None,
-        };
-
-        send_telemetry_from_ctx!(
-            crate::TelemetryEvent::AgentModeError {
-                identifiers,
-                error: error.to_string(),
-                is_user_visible: true,
-                will_attempt_to_resume: recovery_pending,
-            },
-            ctx
-        );
+            model_id: None};
 
         for AddedExchange {
             exchange_id,
-            task_id,
-        } in added_exchanges.into_iter()
+            task_id} in added_exchanges.into_iter()
         {
             let is_viewing_shared_session = self.is_viewing_shared_session;
             let task = self
@@ -2684,9 +2627,7 @@ impl AIConversation {
             exchange.output_status = AIAgentOutputStatus::Finished {
                 finished_output: FinishedAIAgentOutput::Error {
                     output: output.as_ref().map(Shared::get_owned),
-                    error: error.clone(),
-                },
-            };
+                    error: error.clone()}};
 
             let finish_time = Self::finish_time_from_exchange_messages(&task, exchange)
                 .unwrap_or_else(Local::now);
@@ -2714,8 +2655,7 @@ impl AIConversation {
                 exchange_id,
                 terminal_surface_id,
                 conversation_id: self.id,
-                is_hidden,
-            });
+                is_hidden});
         }
 
         self.write_updated_conversation_state(ctx);
@@ -2741,16 +2681,14 @@ impl AIConversation {
         let is_viewing_shared_session = self.is_viewing_shared_session;
         let exchange = self.get_exchange_to_update(exchange_id)?;
         let AIAgentOutputStatus::Streaming {
-            output: Some(output),
-        } = &exchange.output_status
+            output: Some(output)} = &exchange.output_status
         else {
             return Err(UpdateConversationError::OutputAlreadyFinished);
         };
 
         let output = output.get_owned();
         exchange.output_status = AIAgentOutputStatus::Finished {
-            finished_output: FinishedAIAgentOutput::Success { output },
-        };
+            finished_output: FinishedAIAgentOutput::Success { output }};
 
         // Record finish time for this exchange based on the latest message timestamp associated
         // with this exchange. Fallback to `Local::now()` if no timestamps are present so that
@@ -2869,8 +2807,7 @@ impl AIConversation {
                         ctx.emit(BlocklistAIHistoryEvent::UpgradedTask {
                             optimistic_id: optimistic_id.clone(),
                             server_id: server_subtask.id().clone(),
-                            terminal_surface_id,
-                        });
+                            terminal_surface_id});
 
                         for new_exchange in self
                             .added_exchanges_by_response
@@ -2956,8 +2893,7 @@ impl AIConversation {
                             new_exchanges.extend(subtask.exchanges().map(|exchange| {
                                 AddedExchange {
                                     task_id: task_id.clone(),
-                                    exchange_id: exchange.id,
-                                }
+                                    exchange_id: exchange.id}
                             }));
                         }
 
@@ -2965,8 +2901,7 @@ impl AIConversation {
                         ctx.emit(BlocklistAIHistoryEvent::CreatedSubtask {
                             conversation_id: self.id,
                             terminal_surface_id,
-                            task_id: task_id.clone(),
-                        });
+                            task_id: task_id.clone()});
 
                         for exchange_id in initial_exchange_ids {
                             let is_hidden = self.is_exchange_hidden(exchange_id);
@@ -2976,8 +2911,7 @@ impl AIConversation {
                                 terminal_surface_id,
                                 conversation_id: self.id,
                                 is_hidden,
-                                response_stream_id: Some(response_stream_id.clone()),
-                            });
+                                response_stream_id: Some(response_stream_id.clone())});
                         }
                     }
                 } else {
@@ -2994,8 +2928,7 @@ impl AIConversation {
                         ctx.emit(BlocklistAIHistoryEvent::UpgradedTask {
                             optimistic_id: old_id,
                             server_id: root_task.id().clone(),
-                            terminal_surface_id,
-                        });
+                            terminal_surface_id});
 
                         for AddedExchange { task_id, .. } in self
                             .added_exchanges_by_response
@@ -3013,8 +2946,7 @@ impl AIConversation {
             }
             Action::UpdateTaskDescription(UpdateTaskDescription {
                 task_id,
-                description,
-            }) => {
+                description}) => {
                 let task_id = TaskId::new(task_id);
                 self.checkpoint_task(&task_id);
                 self.task_store
@@ -3031,8 +2963,7 @@ impl AIConversation {
                                     todos_op.clone(),
                                 );
                                 ctx.emit(BlocklistAIHistoryEvent::UpdatedTodoList {
-                                    terminal_surface_id,
-                                });
+                                    terminal_surface_id});
                             }
                         }
                         Some(api::message::Message::UpdateReviewComments(comments)) => {
@@ -3043,12 +2974,6 @@ impl AIConversation {
                                         comments_op.clone(),
                                     );
                                     if resolved_count > 0 {
-                                        send_telemetry_from_ctx!(
-                                            CodeReviewTelemetryEvent::CommentResolved {
-                                                resolved_count
-                                            },
-                                            ctx
-                                        );
                                     }
                                 } else {
                                     report_error!(
@@ -3128,8 +3053,7 @@ impl AIConversation {
                                         ctx.emit(
                                             BlocklistAIHistoryEvent::OrchestrationConfigUpdated {
                                                 conversation_id: self.id,
-                                                from_restore: false,
-                                            },
+                                                from_restore: false},
                                         );
                                     }
                                 }
@@ -3177,8 +3101,7 @@ impl AIConversation {
                                     model_id: model_used.model_id.clone().into(),
                                     display_name: model_used.model_display_name.clone(),
                                     is_fallback: model_used.is_fallback,
-                                    prompt_cache_expires_at,
-                                });
+                                    prompt_cache_expires_at});
                             }
                         }
                         _ => {}
@@ -3235,8 +3158,7 @@ impl AIConversation {
                     TaskMessageContext {
                         current_todo_list: current_todo_list.as_ref(),
                         active_code_review: current_comment_state.as_ref(),
-                        skill_path_origin,
-                    },
+                        skill_path_origin},
                     // In shared-session viewers, we have to reconstruct what the original user input
                     // was using subsequent conversation messages (as the original input was not
                     // sent on this client). Once we reconstruct these inputs, we will insert them
@@ -3255,8 +3177,7 @@ impl AIConversation {
                         .ok_or(UpdateConversationError::NoPendingRequest)?
                         .push(AddedExchange {
                             task_id: task_id.clone(),
-                            exchange_id,
-                        });
+                            exchange_id});
                     let is_hidden = self.hidden_exchanges.contains(&exchange_id);
                     ctx.emit(BlocklistAIHistoryEvent::AppendedExchange {
                         response_stream_id: Some(response_stream_id.clone()),
@@ -3264,20 +3185,17 @@ impl AIConversation {
                         task_id: task_id.clone(),
                         terminal_surface_id,
                         conversation_id: self.id,
-                        is_hidden,
-                    });
+                        is_hidden});
                 }
                 ctx.emit(BlocklistAIHistoryEvent::UpdatedStreamingExchange {
                     exchange_id,
                     terminal_surface_id,
                     conversation_id: self.id,
-                    is_hidden: self.is_exchange_hidden(exchange_id),
-                });
+                    is_hidden: self.is_exchange_hidden(exchange_id)});
             }
             Action::UpdateTaskServerData(UpdateTaskServerData {
                 task_id,
-                server_data,
-            }) => {
+                server_data}) => {
                 let task_id = TaskId::new(task_id);
                 self.task_store
                     .modify_task(&task_id, |task| task.update_task_server_data(server_data))
@@ -3286,8 +3204,7 @@ impl AIConversation {
             Action::UpdateTaskMessage(UpdateTaskMessage {
                 task_id,
                 message: Some(message),
-                mask: Some(mask),
-            }) => {
+                mask: Some(mask)}) => {
                 // Process OrchestrationConfigSnapshot if the updated
                 // message carries one (e.g. create_orchestration_config
                 // tool call result updating a single message in place).
@@ -3307,8 +3224,7 @@ impl AIConversation {
                     ) {
                         ctx.emit(BlocklistAIHistoryEvent::OrchestrationConfigUpdated {
                             conversation_id: self.id,
-                            from_restore: false,
-                        });
+                            from_restore: false});
                     }
                 }
 
@@ -3344,8 +3260,7 @@ impl AIConversation {
                             TaskMessageContext {
                                 current_todo_list: current_todo_list.as_ref(),
                                 active_code_review: current_comment_state.as_ref(),
-                                skill_path_origin,
-                            },
+                                skill_path_origin},
                             mask,
                             is_viewing_shared_session,
                         )
@@ -3356,21 +3271,18 @@ impl AIConversation {
                 if let Some(todos_op) = todos_op {
                     update_todo_list_from_todo_op(&mut self.todo_lists, todos_op);
                     ctx.emit(BlocklistAIHistoryEvent::UpdatedTodoList {
-                        terminal_surface_id,
-                    });
+                        terminal_surface_id});
                 }
                 ctx.emit(BlocklistAIHistoryEvent::UpdatedStreamingExchange {
                     exchange_id,
                     terminal_surface_id,
                     conversation_id: self.id,
-                    is_hidden: self.is_exchange_hidden(exchange_id),
-                });
+                    is_hidden: self.is_exchange_hidden(exchange_id)});
             }
             Action::AppendToMessageContent(AppendToMessageContent {
                 task_id,
                 message: Some(message),
-                mask: Some(mask),
-            }) => {
+                mask: Some(mask)}) => {
                 let task_id = TaskId::new(task_id);
                 let exchange_id = self
                     .added_exchanges_by_response
@@ -3394,8 +3306,7 @@ impl AIConversation {
                             TaskMessageContext {
                                 current_todo_list: current_todo_list.as_ref(),
                                 active_code_review: current_comment_state.as_ref(),
-                                skill_path_origin,
-                            },
+                                skill_path_origin},
                             mask,
                         )
                         .map(|msg| msg.todos_op().cloned())
@@ -3405,15 +3316,13 @@ impl AIConversation {
                 if let Some(todos_op) = todos_op {
                     update_todo_list_from_todo_op(&mut self.todo_lists, todos_op);
                     ctx.emit(BlocklistAIHistoryEvent::UpdatedTodoList {
-                        terminal_surface_id,
-                    });
+                        terminal_surface_id});
                 }
                 ctx.emit(BlocklistAIHistoryEvent::UpdatedStreamingExchange {
                     exchange_id,
                     terminal_surface_id,
                     conversation_id: self.id,
-                    is_hidden: self.is_exchange_hidden(exchange_id),
-                });
+                    is_hidden: self.is_exchange_hidden(exchange_id)});
             }
             Action::ShowSuggestions(suggestions) => {
                 let exchange_id = self
@@ -3428,8 +3337,7 @@ impl AIConversation {
                     exchange_id,
                     terminal_surface_id,
                     conversation_id: self.id,
-                    is_hidden: self.is_exchange_hidden(exchange_id),
-                });
+                    is_hidden: self.is_exchange_hidden(exchange_id)});
             }
             Action::MoveMessagesToNewTask(MoveMessagesToNewTask {
                 source_task_id,
@@ -3437,8 +3345,7 @@ impl AIConversation {
                 first_message_id,
                 last_message_id,
                 expected_message_count,
-                replacement_messages,
-            }) => {
+                replacement_messages}) => {
                 let source_task_id = TaskId::new(source_task_id);
                 self.checkpoint_task(&source_task_id);
 
@@ -3545,8 +3452,7 @@ impl AIConversation {
         ctx.emit(BlocklistAIHistoryEvent::CreatedSubtask {
             conversation_id: self.id,
             terminal_surface_id,
-            task_id: new_task_id.clone(),
-        });
+            task_id: new_task_id.clone()});
         new_task_id
     }
 
@@ -3776,9 +3682,7 @@ impl AIConversation {
                 run_id: self.task_id.map(|id| id.to_string()),
                 autoexecute_override: Some(self.autoexecute_override.into()),
                 last_event_sequence: self.last_event_sequence,
-                pinned: self.pinned,
-            },
-        };
+                pinned: self.pinned}};
         ctx.spawn(
             async move {
                 if let Err(e) = sqlite_sender.send(event) {
@@ -3909,8 +3813,7 @@ impl AIConversation {
             credits_spent: self.inference_credits_spent() + self.platform_credits_spent(),
             cost_in_cents: self.total_provider_cost_in_cents,
             has_usage: self.has_usage_metadata,
-            charged_usage: self.conversation_usage_metadata.total_charged_usage,
-        }
+            charged_usage: self.conversation_usage_metadata.total_charged_usage}
     }
 
     /// Normalize all newlines to CRLF so restored blocks render lines starting at column 0,
@@ -4043,8 +3946,7 @@ impl AIConversation {
                                 exit_code,
                                 command_id: finished_command_id,
                                 start_ts: proto_start_ts,
-                                finish_ts: proto_finish_ts,
-                            },
+                                finish_ts: proto_finish_ts},
                         )) = &cmd_result.result
                     {
                         // Track the command_id so attachment/context blocks for the
@@ -4088,8 +3990,7 @@ impl AIConversation {
                                     }
                                     (Some(proto_ts), None) => Some(proto_ts),
                                     (None, Some(exchange_ts)) => Some(exchange_ts),
-                                    (None, None) => None,
-                                }
+                                    (None, None) => None}
                             });
 
                         command_blocks.push(CommandBlockInfo {
@@ -4111,8 +4012,7 @@ impl AIConversation {
                             // and the start_ts fallback.
                             message_id: message_id.clone(),
                             start_ts,
-                            completed_ts,
-                        });
+                            completed_ts});
                     }
                 }
             }
@@ -4127,8 +4027,7 @@ impl AIConversation {
                     // SystemQuery doesn't have attachments currently.
                     vec![]
                 }
-                _ => vec![],
-            };
+                _ => vec![]};
 
             let msg_ts = message
                 .timestamp
@@ -4162,8 +4061,7 @@ impl AIConversation {
                         ai_metadata: None,
                         message_id: message_id.clone(),
                         start_ts,
-                        completed_ts,
-                    });
+                        completed_ts});
                 }
             }
 
@@ -4173,8 +4071,7 @@ impl AIConversation {
                 Some(api::message::Message::SystemQuery(system_query)) => {
                     system_query.context.as_ref()
                 }
-                _ => None,
-            };
+                _ => None};
 
             if let Some(context) = context_blocks {
                 #[allow(deprecated)]
@@ -4203,8 +4100,7 @@ impl AIConversation {
                             ai_metadata: None,
                             message_id: message_id.clone(),
                             start_ts,
-                            completed_ts,
-                        });
+                            completed_ts});
                     }
                 }
             }
@@ -4280,11 +4176,9 @@ impl AIConversation {
                 is_local: None,
                 agent_view_visibility: Some(
                     AgentViewVisibility::new_from_conversation(self.id).into(),
-                ),
-            };
+                )};
             serialized_blocks.push(SerializedBlockListItem::Command {
-                block: Box::new(serialized_block),
-            });
+                block: Box::new(serialized_block)});
         }
 
         serialized_blocks
@@ -4619,8 +4513,7 @@ pub enum UpdateConversationError {
     #[error("No active task")]
     NoActiveTask,
     #[error("No pending request.")]
-    NoPendingRequest,
-}
+    NoPendingRequest}
 
 pub use ai_types::AIConversationId;
 
@@ -4631,14 +4524,12 @@ pub enum AIAgentHarness {
     ClaudeCode,
     Gemini,
     Codex,
-    Unknown,
-}
+    Unknown}
 
 /// Describes the format of the conversation transcript data.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AIAgentSerializedBlockFormat {
-    JsonV1,
-}
+    JsonV1}
 
 /// Describes the format capabilities of a conversation.
 #[derive(Debug, Clone)]
@@ -4646,8 +4537,7 @@ pub struct AIAgentConversationFormat {
     /// Whether there is a Warp MAA task list available for this conversation.
     pub has_task_list: bool,
     /// The format of the TUI serialized block, if available.
-    pub block_snapshot: Option<AIAgentSerializedBlockFormat>,
-}
+    pub block_snapshot: Option<AIAgentSerializedBlockFormat>}
 
 /// Metadata for an AI conversation, containing all information from the GraphQL API
 /// except the full task list data.
@@ -4680,8 +4570,7 @@ pub struct ServerAIConversationMetadata {
     pub server_conversation_token: ServerConversationToken,
 
     /// Artifacts (plans, PRs) created during this conversation.
-    pub artifacts: Vec<Artifact>,
-}
+    pub artifacts: Vec<Artifact>}
 
 /// Returns an iterator over `AIAgentContext`s attached to inputs in the given `exchanges`, in the
 /// same order in which they appeared.
@@ -4718,19 +4607,16 @@ impl AIAgentExchange {
                         suggestions: None,
                         telemetry_events: vec![],
                         model_info: None,
-                        request_cost: None,
-                    }));
+                        request_cost: None}));
                 }
                 Ok(())
             }
-            AIAgentOutputStatus::Finished { .. } => Err(UpdateTaskError::OutputAlreadyFinished),
-        }
+            AIAgentOutputStatus::Finished { .. } => Err(UpdateTaskError::OutputAlreadyFinished)}
     }
 
     fn update_suggestions(&self, suggestions: api::Suggestions) {
         if let AIAgentOutputStatus::Streaming {
-            output: Some(output),
-        } = &self.output_status
+            output: Some(output)} = &self.output_status
         {
             let mut output = output.get_mut();
             output.suggestions = Some(suggestions.into());
@@ -4742,8 +4628,7 @@ impl AIAgentExchange {
 pub enum AIConversationAutoexecuteMode {
     #[default]
     RespectUserSettings,
-    RunToCompletion,
-}
+    RunToCompletion}
 
 impl AIConversationAutoexecuteMode {
     pub fn is_autoexecute_any_action(&self) -> bool {
@@ -4755,8 +4640,7 @@ impl From<PersistedAutoexecuteMode> for AIConversationAutoexecuteMode {
     fn from(value: PersistedAutoexecuteMode) -> Self {
         match value {
             PersistedAutoexecuteMode::RespectUserSettings => Self::RespectUserSettings,
-            PersistedAutoexecuteMode::RunToCompletion => Self::RunToCompletion,
-        }
+            PersistedAutoexecuteMode::RunToCompletion => Self::RunToCompletion}
     }
 }
 
@@ -4764,8 +4648,7 @@ impl From<AIConversationAutoexecuteMode> for PersistedAutoexecuteMode {
     fn from(value: AIConversationAutoexecuteMode) -> Self {
         match value {
             AIConversationAutoexecuteMode::RespectUserSettings => Self::RespectUserSettings,
-            AIConversationAutoexecuteMode::RunToCompletion => Self::RunToCompletion,
-        }
+            AIConversationAutoexecuteMode::RunToCompletion => Self::RunToCompletion}
     }
 }
 
@@ -4774,8 +4657,7 @@ pub enum StatusColorStyle {
     /// Foreground-blend colors (`ansi_fg`) used by the regular status badge.
     Standard,
     /// Background-blend colors (`ansi_bg`) used by the cloud overlay badge.
-    Cloud,
-}
+    Cloud}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ConversationStatus {
@@ -4801,8 +4683,7 @@ pub enum ConversationStatus {
 
     /// Agent yielded via wait_for_events and is listening for inbound
     /// input. Quiescent but not terminal.
-    WaitingForEvents,
-}
+    WaitingForEvents}
 
 impl std::fmt::Display for ConversationStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -4813,8 +4694,7 @@ impl std::fmt::Display for ConversationStatus {
             ConversationStatus::TransientError => write!(f, "Reconnecting"),
             ConversationStatus::Cancelled => write!(f, "Cancelled"),
             ConversationStatus::Blocked { .. } => write!(f, "Blocked"),
-            ConversationStatus::WaitingForEvents => write!(f, "Waiting"),
-        }
+            ConversationStatus::WaitingForEvents => write!(f, "Waiting")}
     }
 }
 
@@ -4828,8 +4708,7 @@ impl ConversationStatus {
             // Recovery pending: keep the in-progress treatment rather than an error one.
             ConversationStatus::TransientError => in_progress_icon(appearance),
             ConversationStatus::Cancelled => gray_stop_icon(appearance),
-            ConversationStatus::WaitingForEvents => in_progress_icon(appearance),
-        }
+            ConversationStatus::WaitingForEvents => in_progress_icon(appearance)}
     }
 
     pub fn status_icon_and_color(
@@ -4842,46 +4721,39 @@ impl ConversationStatus {
                 Icon::ClockLoader,
                 match color_style {
                     StatusColorStyle::Standard => theme.ansi_fg_magenta(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_magenta(),
-                },
+                    StatusColorStyle::Cloud => theme.ansi_bg_magenta()},
             ),
             ConversationStatus::Success => (
                 Icon::Check,
                 match color_style {
                     StatusColorStyle::Standard => theme.ansi_fg_green(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_green(),
-                },
+                    StatusColorStyle::Cloud => theme.ansi_bg_green()},
             ),
             ConversationStatus::Error => (
                 Icon::Triangle,
                 match color_style {
                     StatusColorStyle::Standard => theme.ansi_fg_red(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_red(),
-                },
+                    StatusColorStyle::Cloud => theme.ansi_bg_red()},
             ),
             ConversationStatus::TransientError => (
                 Icon::ClockLoader,
                 match color_style {
                     StatusColorStyle::Standard => theme.ansi_fg_yellow(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_yellow(),
-                },
+                    StatusColorStyle::Cloud => theme.ansi_bg_yellow()},
             ),
             ConversationStatus::Cancelled => (Icon::StopFilled, internal_colors::neutral_5(theme)),
             ConversationStatus::Blocked { .. } => (
                 Icon::StopFilled,
                 match color_style {
                     StatusColorStyle::Standard => theme.ansi_fg_yellow(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_yellow(),
-                },
+                    StatusColorStyle::Cloud => theme.ansi_bg_yellow()},
             ),
             ConversationStatus::WaitingForEvents => (
                 Icon::ClockLoader,
                 match color_style {
                     StatusColorStyle::Standard => theme.ansi_fg_magenta(),
-                    StatusColorStyle::Cloud => theme.ansi_bg_magenta(),
-                },
-            ),
-        }
+                    StatusColorStyle::Cloud => theme.ansi_bg_magenta()},
+            )}
     }
 
     pub fn is_in_progress(&self) -> bool {

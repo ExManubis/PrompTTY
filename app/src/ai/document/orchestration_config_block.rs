@@ -6,43 +6,35 @@ use ai::agent::action::RunAgentsExecutionMode;
 use ai::agent::orchestration_config::OrchestrationConfigStatus;
 use pathfinder_geometry::vector::vec2f;
 use warp_cli::agent::Harness;
-use warp_core::send_telemetry_from_ctx;
 use warp_graphql::queries::get_runners::RunnerSortBy;
 use warpui::elements::{
     ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
     Flex, Hoverable, MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement,
-    ParentOffsetBounds, Radius, Stack, Text,
-};
+    ParentOffsetBounds, Radius, Stack, Text};
 use warpui::fonts::{Properties, Weight};
 use warpui::platform::Cursor;
 use warpui::ui_components::components::UiComponent;
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{
-    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
-};
+    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::BlocklistAIHistoryModel;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::BlocklistAIHistoryEvent;
 use crate::ai::blocklist::inline_action::create_environment_modal::{
-    CreateEnvironmentModal, CreateEnvironmentModalEvent,
-};
+    CreateEnvironmentModal, CreateEnvironmentModalEvent};
 use crate::ai::blocklist::inline_action::host_picker::{HostPicker, HostPickerEvent};
 use crate::ai::blocklist::inline_action::orchestration_controls::{
     self as oc, AuthSecretSelection, OrchestrationConfigState, OrchestrationControlAction,
-    OrchestrationEditState, OrchestrationPickerHandles,
-};
+    OrchestrationEditState, OrchestrationPickerHandles};
 use crate::ai::blocklist::telemetry::{
     AgentProposedConfigEvent, BlocklistOrchestrationTelemetryEvent, OrchestrationApprovalStatus,
-    OrchestrationExecutionModeKind, OrchestrationHarnessKind, PlanConfigApprovalToggledEvent,
-};
+    OrchestrationExecutionModeKind, OrchestrationHarnessKind, PlanConfigApprovalToggledEvent};
 use crate::ai::connected_self_hosted_workers::{
-    ConnectedSelfHostedWorkersEvent, ConnectedSelfHostedWorkersModel,
-};
+    ConnectedSelfHostedWorkersEvent, ConnectedSelfHostedWorkersModel};
 use crate::ai::document::ai_document_model::AIDocumentModel;
 use crate::ai::harness_availability::{
-    AuthSecretFetchState, HarnessAvailabilityEvent, HarnessAvailabilityModel,
-};
+    AuthSecretFetchState, HarnessAvailabilityEvent, HarnessAvailabilityModel};
 use crate::ai::llms::{LLMPreferences, LLMPreferencesEvent};
 use crate::appearance::Appearance;
 use crate::server::experiments::{ServerExperiments, ServerExperimentsEvent};
@@ -79,30 +71,22 @@ pub enum OrchestrationConfigBlockAction {
     ToggleApproval,
     ToggleDetails,
     ExecutionModeToggled {
-        is_remote: bool,
-    },
+        is_remote: bool},
     ModelChanged {
-        model_id: String,
-    },
+        model_id: String},
     HarnessChanged {
-        harness_type: String,
-    },
+        harness_type: String},
     EnvironmentChanged {
-        environment_id: String,
-    },
+        environment_id: String},
     CreateEnvironmentRequested,
     RunnerChanged {
-        runner_id: String,
-    },
+        runner_id: String},
     WorkerHostChanged {
-        worker_host: String,
-    },
+        worker_host: String},
     AuthSecretChanged {
-        auth_secret_name: Option<String>,
-    },
+        auth_secret_name: Option<String>},
     /// User picked the "New API key…" item; opens the workspace create modal.
-    CreateNewAuthSecretRequested,
-}
+    CreateNewAuthSecretRequested}
 
 impl OrchestrationControlAction for OrchestrationConfigBlockAction {
     fn execution_mode_toggled(is_remote: bool) -> Self {
@@ -161,8 +145,7 @@ pub struct OrchestrationConfigBlockView {
     /// Runners fetched via `getRunners` for the Runner picker: (uid, name).
     runners: Vec<(String, String)>,
     /// True while the `getRunners` fetch is in flight.
-    runners_loading: bool,
-}
+    runners_loading: bool}
 
 impl OrchestrationConfigBlockView {
     pub fn new(
@@ -334,8 +317,7 @@ impl OrchestrationConfigBlockView {
             has_auto_opened_create_modal: false,
             user_has_interacted: false,
             runners: Vec::new(),
-            runners_loading: false,
-        };
+            runners_loading: false};
         if view.is_approved {
             view.ensure_pickers(ctx);
             // Skip auto-open here: construction is also the restore code
@@ -514,8 +496,7 @@ impl OrchestrationConfigBlockView {
                 environment_id,
                 ..
             } => (worker_host.is_empty(), environment_id.is_empty()),
-            RunAgentsExecutionMode::Local => (false, false),
-        };
+            RunAgentsExecutionMode::Local => (false, false)};
         let mut filled_defaults = false;
         if needs_host {
             // Prefer the workspace default (or the dev env-var override)
@@ -545,8 +526,7 @@ impl OrchestrationConfigBlockView {
             .execution_mode
         {
             RunAgentsExecutionMode::Remote { environment_id, .. } => environment_id.as_str(),
-            RunAgentsExecutionMode::Local => "",
-        };
+            RunAgentsExecutionMode::Local => ""};
         let env_handle = oc::create_environment_picker(initial_env, &styles, ctx);
         env_handle.update(ctx, |d, c| d.set_use_overlay_layer(true, c));
         self.pickers.environment_picker = Some(env_handle);
@@ -559,8 +539,7 @@ impl OrchestrationConfigBlockView {
             .execution_mode
         {
             RunAgentsExecutionMode::Remote { worker_host, .. } => worker_host.as_str(),
-            RunAgentsExecutionMode::Local => oc::ORCHESTRATION_WARP_WORKER_HOST,
-        };
+            RunAgentsExecutionMode::Local => oc::ORCHESTRATION_WARP_WORKER_HOST};
         let host_handle = ctx.add_typed_action_view(HostPicker::new);
         // Paint the open menu in the overlay layer so it doesn't get covered
         // by sibling pickers, matching the other pickers in this view.
@@ -576,8 +555,7 @@ impl OrchestrationConfigBlockView {
             }
             HostPickerEvent::HostChanged { slug } => {
                 ctx.dispatch_typed_action(&OrchestrationConfigBlockAction::WorkerHostChanged {
-                    worker_host: slug.clone(),
-                });
+                    worker_host: slug.clone()});
             }
             HostPickerEvent::Closed => {}
         });
@@ -695,8 +673,7 @@ impl OrchestrationConfigBlockView {
             .execution_mode
         {
             RunAgentsExecutionMode::Remote { runner_id, .. } => runner_id.clone(),
-            RunAgentsExecutionMode::Local => String::new(),
-        };
+            RunAgentsExecutionMode::Local => String::new()};
         let runner_handle = oc::create_runner_picker(
             &initial_runner,
             &self.runners,
@@ -738,8 +715,7 @@ impl OrchestrationConfigBlockView {
                     .execution_mode
                 {
                     RunAgentsExecutionMode::Remote { runner_id, .. } => runner_id.clone(),
-                    RunAgentsExecutionMode::Local => String::new(),
-                };
+                    RunAgentsExecutionMode::Local => String::new()};
                 if let Some(handle) = me.pickers.runner_picker.clone() {
                     oc::populate_runner_picker(&handle, &me.runners, &current, false, ctx);
                 }
@@ -759,8 +735,7 @@ impl OrchestrationConfigBlockView {
             .execution_mode
         {
             RunAgentsExecutionMode::Remote { runner_id, .. } => runner_id.clone(),
-            RunAgentsExecutionMode::Local => String::new(),
-        };
+            RunAgentsExecutionMode::Local => String::new()};
         if let Some(handle) = self.pickers.runner_picker.clone() {
             oc::populate_runner_picker(&handle, &self.runners, &current, self.runners_loading, ctx);
         }
@@ -1097,8 +1072,7 @@ impl TypedActionView for OrchestrationConfigBlockView {
                         .harness_type,
                 ) {
                     ctx.dispatch_typed_action(&WorkspaceAction::OpenCreateAuthSecretModal {
-                        harness,
-                    });
+                        harness});
                 }
                 ctx.notify();
             }
@@ -1112,90 +1086,8 @@ impl OrchestrationConfigBlockView {
         status: OrchestrationApprovalStatus,
         ctx: &mut ViewContext<Self>,
     ) {
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::PlanConfigApprovalToggled(
-                PlanConfigApprovalToggledEvent {
-                    conversation_id: self.conversation_id,
-                    plan_id: (!self.plan_id.is_empty()).then(|| self.plan_id.clone()),
-                    status,
-                    execution_mode: OrchestrationExecutionModeKind::from_run_agents(
-                        &self
-                            .orchestration_edit_state
-                            .orchestration_config_state
-                            .execution_mode,
-                    ),
-                    harness: OrchestrationHarnessKind::from_str(
-                        &self
-                            .orchestration_edit_state
-                            .orchestration_config_state
-                            .harness_type
-                    ),
-                    has_model: !self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .model_id
-                        .trim()
-                        .is_empty(),
-                    has_environment: env_presence(
-                        &self
-                            .orchestration_edit_state
-                            .orchestration_config_state
-                            .execution_mode
-                    ),
-                    has_worker_host: host_presence(
-                        &self
-                            .orchestration_edit_state
-                            .orchestration_config_state
-                            .execution_mode
-                    ),
-                    has_auth_secret: self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .auth_secret_name()
-                        .is_some(),
-                }
-            ),
-            ctx
-        );
     }
 
     fn emit_agent_proposed_config(&self, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::AgentProposedConfig(AgentProposedConfigEvent {
-                conversation_id: self.conversation_id,
-                plan_id: (!self.plan_id.is_empty()).then(|| self.plan_id.clone()),
-                harness: OrchestrationHarnessKind::from_str(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .harness_type
-                ),
-                execution_mode: OrchestrationExecutionModeKind::from_run_agents(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .execution_mode,
-                ),
-                has_model: !self
-                    .orchestration_edit_state
-                    .orchestration_config_state
-                    .model_id
-                    .trim()
-                    .is_empty(),
-                has_environment: env_presence(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .execution_mode
-                ),
-                has_worker_host: host_presence(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .execution_mode
-                ),
-            }),
-            ctx
-        );
     }
 }

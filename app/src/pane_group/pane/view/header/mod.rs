@@ -11,13 +11,11 @@ use warpui::elements::{
     CornerRadius, CrossAxisAlignment, Dismiss, Draggable, DraggableState, Empty, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, PositionedElementAnchor, PositionedElementOffsetBounds,
-    Radius, SavePosition, Shrinkable, Stack, Text,
-};
+    Radius, SavePosition, Shrinkable, Stack, Text};
 use warpui::presenter::ChildView;
 use warpui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle,
-};
+    ViewContext, ViewHandle};
 
 use super::PaneDropTargetData;
 use super::header_content::{HeaderContent, HeaderRenderContext, StandardHeaderOptions};
@@ -27,12 +25,9 @@ use crate::pane_group::focus_state::{PaneFocusHandle, PaneGroupFocusEvent};
 use crate::pane_group::pane::view::StandardHeader;
 use crate::pane_group::pane::{
     ActionOrigin, PaneConfiguration, PaneConfigurationEvent, PaneStack, PaneStackEvent,
-    ToolbeltButton,
-};
+    ToolbeltButton};
 use crate::pane_group::{
-    BackingView, Direction, PaneDragDropLocation, PaneId, TabBarAxis, TabBarHoverIndex,
-};
-use crate::send_telemetry_from_ctx;
+    BackingView, Direction, PaneDragDropLocation, PaneId, TabBarAxis, TabBarHoverIndex};
 use crate::server::telemetry::{SharingDialogSource, TelemetryEvent};
 use crate::settings::CodeSettings;
 use crate::tab::tab_position_id;
@@ -63,8 +58,7 @@ pub enum Event<A: ActionPayload, B: ActionPayload> {
     /// This header has been dragged over the pane with target_id at the location
     MovePaneWithinPaneGroup {
         target_id: PaneId,
-        direction: Direction,
-    },
+        direction: Direction},
     /// A pane or file tab was dragged over the workspace tab bar.
     DraggedOverTabBar {
         origin: ActionOrigin,
@@ -72,8 +66,7 @@ pub enum Event<A: ActionPayload, B: ActionPayload> {
         hidden_pane_preview_direction: Direction,
         /// Drag cursor rect, forwarded to the workspace so it can resolve which
         /// tab group a `BeforeTab` insertion lands in.
-        drag_position: RectF,
-    },
+        drag_position: RectF},
     /// The pane header was dragged over some part of the terminal that is not the pane group
     /// or tab bar
     PaneDraggedOutsideTabBarOrPaneGroup,
@@ -81,8 +74,7 @@ pub enum Event<A: ActionPayload, B: ActionPayload> {
     PaneDroppedWithinPaneGroup,
     /// A pane or file tab was dropped on the workspace tab bar.
     DroppedOnTabBar {
-        origin: ActionOrigin,
-    },
+        origin: ActionOrigin},
     // This header was dropped on a place outside of the pane group or tab bar
     PaneDroppedOutsideofTabBarOrPaneGroup,
     // This header was clicked and the pane should be focused
@@ -91,8 +83,7 @@ pub enum Event<A: ActionPayload, B: ActionPayload> {
     /// bool is passed to indicate if menu is open
     PaneHeaderOverflowMenuToggled(bool),
     /// One of the pane header's overlay elements was closed.
-    OverlayClosed,
-}
+    OverlayClosed}
 
 #[derive(Clone, Debug)]
 pub enum PaneHeaderAction<A: ActionPayload, B: ActionPayload> {
@@ -109,14 +100,12 @@ pub enum PaneHeaderAction<A: ActionPayload, B: ActionPayload> {
         /// Axis for a tab-bar drag, so the header derives the hover index from
         /// cursor geometry along the right axis. `None` for non-tab-bar drag
         /// locations.
-        tab_bar_axis: Option<TabBarAxis>,
-    },
+        tab_bar_axis: Option<TabBarAxis>},
     PaneHeaderDropped {
         origin: ActionOrigin,
         drop_location: PaneDragDropLocation, // Represents what kind of drop target the pane was dropped over
     },
-    PaneHeaderClicked,
-}
+    PaneHeaderClicked}
 
 impl<P: BackingView> Entity for PaneHeader<P> {
     type Event = Event<P::PaneHeaderOverflowMenuAction, P::CustomAction>;
@@ -134,8 +123,7 @@ pub struct PaneHeader<P: BackingView> {
     shared_content: SharedPaneContent,
     open_overlay: OpenOverlay,
     is_visible_in_pane_group: bool, // If this pane header is being dragged along the tab bar, then it is not visible in the pane group
-    toolbelt_feature_popup: ViewHandle<FeaturePopup>,
-}
+    toolbelt_feature_popup: ViewHandle<FeaturePopup>}
 
 impl<P: BackingView> PaneHeader<P> {
     pub fn new(
@@ -172,8 +160,7 @@ impl<P: BackingView> PaneHeader<P> {
             open_overlay: Default::default(),
             toolbelt_buttons: Default::default(),
             is_visible_in_pane_group: true,
-            toolbelt_feature_popup,
-        }
+            toolbelt_feature_popup}
     }
 
     fn handle_pane_stack_event(
@@ -346,8 +333,7 @@ impl<P: BackingView> PaneHeader<P> {
                     return if is_vertical {
                         TabBarHoverIndex::BeforeTab {
                             index: *idx,
-                            group: None,
-                        }
+                            group: None}
                     } else {
                         TabBarHoverIndex::OverTab(*idx)
                     };
@@ -373,22 +359,18 @@ impl<P: BackingView> PaneHeader<P> {
                 if drag < tab_quarter {
                     TabBarHoverIndex::BeforeTab {
                         index: *idx,
-                        group: None,
-                    }
+                        group: None}
                 } else if drag < tab_three_quarters {
                     TabBarHoverIndex::OverTab(*idx)
                 } else {
                     TabBarHoverIndex::BeforeTab {
                         index: *idx + 1,
-                        group: None,
-                    }
+                        group: None}
                 }
             }
             TabBarLocation::AfterTabIndex(tab_count) => TabBarHoverIndex::BeforeTab {
                 index: *tab_count,
-                group: None,
-            },
-        }
+                group: None}}
     }
 }
 
@@ -398,16 +380,14 @@ struct MouseStateHandles {
     overflow_button_handle: MouseStateHandle,
     draggable_state: DraggableState,
     header_click_handle: MouseStateHandle,
-    header_hover_handle: MouseStateHandle,
-}
+    header_hover_handle: MouseStateHandle}
 
 #[derive(Default, Debug, PartialEq, Eq)]
 enum OpenOverlay {
     OverflowMenu,
     SharingDialog,
     #[default]
-    None,
-}
+    None}
 
 impl<P: BackingView> PaneHeader<P> {
     fn overflow_button_position_id(&self) -> String {
@@ -589,8 +569,7 @@ impl<P: BackingView> PaneHeader<P> {
             left_of_title,
             right_of_title,
             left_of_overflow,
-            options,
-        } = header;
+            options} = header;
         let appearance = Appearance::as_ref(app);
         let header_icon_color = appearance
             .theme()
@@ -771,8 +750,7 @@ impl<P: BackingView> View for PaneHeader<P> {
                 let mut row = Flex::row();
                 self.render_sharing_controls(&mut row, appearance, icon_color, button_size, app);
                 Some(row.finish())
-            }),
-        };
+            })};
         let header_content = self
             .pane_stack
             .as_ref(app)
@@ -800,8 +778,7 @@ impl<P: BackingView> View for PaneHeader<P> {
                     .with_height(PANE_HEADER_HEIGHT)
                     .finish(),
             )
-            .finish(),
-        };
+            .finish()};
 
         let element = if self.pane_configuration.as_ref(app).has_open_modal {
             Container::new(element)
@@ -912,14 +889,12 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
                 self.share_pane_contents(SharingDialogSource::PaneHeader, ctx)
             }
             PaneHeaderAction::PaneHeaderDragStarted => {
-                send_telemetry_from_ctx!(TelemetryEvent::PaneDragInitiated, ctx);
             }
             PaneHeaderAction::PaneHeaderDragged {
                 origin,
                 drag_location,
                 drag_position,
-                tab_bar_axis,
-            } => match drag_location {
+                tab_bar_axis} => match drag_location {
                 PaneDragDropLocation::TabBar(tab_bar_location) => {
                     if matches!(origin, ActionOrigin::Pane) {
                         self.is_visible_in_pane_group = false;
@@ -936,10 +911,8 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
                         tab_hover_index,
                         hidden_pane_preview_direction: match axis {
                             TabBarAxis::Vertical => Direction::Up,
-                            TabBarAxis::Horizontal => Direction::Left,
-                        },
-                        drag_position: *drag_position,
-                    });
+                            TabBarAxis::Horizontal => Direction::Left},
+                        drag_position: *drag_position});
                 }
                 PaneDragDropLocation::PaneGroup(target_id) => {
                     self.is_visible_in_pane_group = true;
@@ -949,8 +922,7 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
                         {
                             ctx.emit(Event::MovePaneWithinPaneGroup {
                                 target_id: *target_id,
-                                direction,
-                            });
+                                direction});
                         }
                     } else {
                         report_error!(
@@ -966,8 +938,7 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
             },
             PaneHeaderAction::PaneHeaderDropped {
                 origin,
-                drop_location,
-            } => {
+                drop_location} => {
                 match drop_location {
                     PaneDragDropLocation::TabBar(_) => {
                         self.is_visible_in_pane_group = true;
@@ -980,15 +951,8 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
                         ctx.emit(Event::PaneDroppedOutsideofTabBarOrPaneGroup)
                     }
                 }
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::PaneDropped {
-                        drop_location: *drop_location
-                    },
-                    ctx
-                );
             }
-            PaneHeaderAction::PaneHeaderClicked => ctx.emit(Event::PaneHeaderClicked),
-        }
+            PaneHeaderAction::PaneHeaderClicked => ctx.emit(Event::PaneHeaderClicked)}
     }
 }
 
@@ -1044,8 +1008,7 @@ pub fn render_pane_header_draggable<P: BackingView>(
                     origin: ActionOrigin::Pane,
                     drag_location: PaneDragDropLocation::PaneGroup(pane_drop_data.id),
                     drag_position,
-                    tab_bar_axis: None,
-                });
+                    tab_bar_axis: None});
             } else if let Some(data) =
                 data.and_then(|data| data.as_any().downcast_ref::<TabBarDropTargetData>())
             {
@@ -1056,8 +1019,7 @@ pub fn render_pane_header_draggable<P: BackingView>(
                     origin: ActionOrigin::Pane,
                     drag_location: PaneDragDropLocation::TabBar(data.tab_bar_location),
                     drag_position,
-                    tab_bar_axis: Some(TabBarAxis::Horizontal),
-                })
+                    tab_bar_axis: Some(TabBarAxis::Horizontal)})
             } else if let Some(data) = data.and_then(|data| {
                 data.as_any()
                     .downcast_ref::<VerticalTabsPaneDropTargetData>()
@@ -1069,8 +1031,7 @@ pub fn render_pane_header_draggable<P: BackingView>(
                     origin: ActionOrigin::Pane,
                     drag_location: PaneDragDropLocation::TabBar(data.tab_bar_location),
                     drag_position,
-                    tab_bar_axis: Some(TabBarAxis::Vertical),
-                })
+                    tab_bar_axis: Some(TabBarAxis::Vertical)})
             } else {
                 ctx.dispatch_typed_action(PaneHeaderAction::<
                     P::PaneHeaderOverflowMenuAction,
@@ -1079,8 +1040,7 @@ pub fn render_pane_header_draggable<P: BackingView>(
                     origin: ActionOrigin::Pane,
                     drag_location: PaneDragDropLocation::Other,
                     drag_position,
-                    tab_bar_axis: None,
-                })
+                    tab_bar_axis: None})
             }
         })
         .on_drop(move |ctx, _, _, data| {
@@ -1092,8 +1052,7 @@ pub fn render_pane_header_draggable<P: BackingView>(
                     P::CustomAction,
                 >::PaneHeaderDropped {
                     origin: ActionOrigin::Pane,
-                    drop_location: PaneDragDropLocation::TabBar(data.tab_bar_location),
-                })
+                    drop_location: PaneDragDropLocation::TabBar(data.tab_bar_location)})
             } else if let Some(data) = data.and_then(|data| {
                 data.as_any()
                     .downcast_ref::<VerticalTabsPaneDropTargetData>()
@@ -1103,8 +1062,7 @@ pub fn render_pane_header_draggable<P: BackingView>(
                     P::CustomAction,
                 >::PaneHeaderDropped {
                     origin: ActionOrigin::Pane,
-                    drop_location: PaneDragDropLocation::TabBar(data.tab_bar_location),
-                })
+                    drop_location: PaneDragDropLocation::TabBar(data.tab_bar_location)})
             } else if let Some(data) =
                 data.and_then(|data| data.as_any().downcast_ref::<PaneDropTargetData>())
             {
@@ -1113,16 +1071,14 @@ pub fn render_pane_header_draggable<P: BackingView>(
                     P::CustomAction,
                 >::PaneHeaderDropped {
                     origin: ActionOrigin::Pane,
-                    drop_location: PaneDragDropLocation::PaneGroup(data.id),
-                })
+                    drop_location: PaneDragDropLocation::PaneGroup(data.id)})
             } else {
                 ctx.dispatch_typed_action(PaneHeaderAction::<
                     P::PaneHeaderOverflowMenuAction,
                     P::CustomAction,
                 >::PaneHeaderDropped {
                     origin: ActionOrigin::Pane,
-                    drop_location: PaneDragDropLocation::Other,
-                })
+                    drop_location: PaneDragDropLocation::Other})
             }
         })
         .with_alternate_drag_element(render_draggable_placeholder_element(

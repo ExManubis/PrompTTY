@@ -1,23 +1,20 @@
 use pathfinder_color::ColorU;
 use ui_components::{Component as _, Options as _, button};
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::WarpTheme;
 use warp_core::ui::theme::color::internal_colors;
 use warpui_core::elements::{
     Border, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Empty, Flex, FormattedTextElement, Hoverable, MainAxisAlignment, MainAxisSize,
-    MouseStateHandle, ParentElement, Radius, Text,
-};
+    MouseStateHandle, ParentElement, Radius, Text};
 use warpui_core::fonts::{Properties, Weight};
 use warpui_core::keymap::Keystroke;
 use warpui_core::platform::Cursor;
 use warpui_core::text_layout::TextAlignment;
 use warpui_core::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui_core::{
-    AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-};
+    AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext};
 
 use super::OnboardingSlide;
 use crate::OnboardingIntention;
@@ -28,37 +25,31 @@ use crate::telemetry::OnboardingEvent;
 #[derive(Debug, Clone)]
 pub enum ThemePickerSlideEvent {
     ThemeSelected {
-        theme_name: String,
-    },
+        theme_name: String},
     SyncWithOsToggled {
-        enabled: bool,
-    },
+        enabled: bool},
     /// Emitted when the user clicks the "Privacy Settings" link on the terminal
     /// intention theme slide. The parent orchestrator is expected to open the
     /// privacy settings (e.g. via a LoginSlideView in privacy-only mode).
-    PrivacySettingsRequested,
-}
+    PrivacySettingsRequested}
 
 #[derive(Debug, Clone)]
 pub enum ThemePickerSlideAction {
     SelectTheme {
-        index: usize,
-    },
+        index: usize},
     ToggleSyncWithOs,
     BackClicked,
     NextClicked,
     /// Dispatched when the user clicks the "Privacy Settings" link in the
     /// terminal-intention disclaimer block below the theme options.
-    PrivacySettingsClicked,
-}
+    PrivacySettingsClicked}
 
 const TOS_URL: &str = "https://www.warp.dev/terms-of-service";
 
 #[derive(Debug, Clone)]
 struct ThemeOption {
     theme: WarpTheme,
-    mouse_state: MouseStateHandle,
-}
+    mouse_state: MouseStateHandle}
 
 pub struct ThemePickerSlide {
     onboarding_state: ModelHandle<OnboardingStateModel>,
@@ -70,8 +61,7 @@ pub struct ThemePickerSlide {
     privacy_settings_mouse_state: MouseStateHandle,
     back_button: button::Button,
     next_button: button::Button,
-    scroll_state: ClippedScrollStateHandle,
-}
+    scroll_state: ClippedScrollStateHandle}
 
 impl ThemePickerSlide {
     pub(crate) fn new(
@@ -81,8 +71,7 @@ impl ThemePickerSlide {
     ) -> Self {
         let theme_options = themes.map(|theme| ThemeOption {
             theme,
-            mouse_state: MouseStateHandle::default(),
-        });
+            mouse_state: MouseStateHandle::default()});
 
         ctx.subscribe_to_model(&onboarding_state, |_me, _model, event, ctx| {
             if matches!(event, OnboardingStateEvent::IntentionChanged) {
@@ -119,8 +108,7 @@ impl ThemePickerSlide {
             privacy_settings_mouse_state: MouseStateHandle::default(),
             back_button: button::Button::default(),
             next_button: button::Button::default(),
-            scroll_state: ClippedScrollStateHandle::new(),
-        }
+            scroll_state: ClippedScrollStateHandle::new()}
     }
 
     fn theme_display_name(&self, index: usize) -> String {
@@ -266,8 +254,7 @@ impl ThemePickerSlide {
                         ctx.dispatch_typed_action(ThemePickerSlideAction::BackClicked);
                     })),
                     ..button::Options::default(appearance)
-                },
-            },
+                }},
         );
 
         let account_first = FeatureFlag::AccountFirstOnboarding.is_enabled();
@@ -285,8 +272,7 @@ impl ThemePickerSlide {
                         ctx.dispatch_typed_action(ThemePickerSlideAction::NextClicked);
                     })),
                     ..button::Options::default(appearance)
-                },
-            },
+                }},
         );
 
         let (step_index, step_count) = if account_first {
@@ -416,8 +402,7 @@ impl ThemePickerSlide {
                 .with_cursor(Cursor::PointingHand)
                 .on_click(move |ctx, _, _| {
                     ctx.dispatch_typed_action(ThemePickerSlideAction::SelectTheme {
-                        index: selected_index_for_action,
-                    });
+                        index: selected_index_for_action});
                 })
                 .finish()
         } else {
@@ -454,16 +439,14 @@ impl ThemePickerSlide {
         let vertical = state.ui_customization().use_vertical_tabs;
         let intention_dir = match state.intention() {
             OnboardingIntention::AgentDrivenDevelopment => "agent_intention",
-            OnboardingIntention::Terminal => "terminal_intention",
-        };
+            OnboardingIntention::Terminal => "terminal_intention"};
         let theme_name = self.theme_display_name(self.selected_theme_index);
         let name_key = match theme_name.as_str() {
             "Phenomenon" => "phenomenon",
             "Dark" => "dark",
             "Light" => "light",
             "Adeberry" => "adeberry",
-            _ => "dark",
-        };
+            _ => "dark"};
         let orientation = if vertical { "vertical" } else { "horizontal" };
         // Safety: all combinations are in VISUAL_IMAGE_PATHS.
         Self::VISUAL_IMAGE_PATHS
@@ -621,13 +604,6 @@ impl ThemePickerSlide {
         self.sync_with_os = false;
         self.selected_theme_index = index;
         let theme_name = self.theme_display_name(index);
-        send_telemetry_from_ctx!(
-            OnboardingEvent::SettingChanged {
-                setting: "theme".to_string(),
-                value: theme_name.clone(),
-            },
-            ctx
-        );
         ctx.emit(ThemePickerSlideEvent::ThemeSelected { theme_name });
         ctx.notify();
     }
@@ -689,16 +665,8 @@ impl TypedActionView for ThemePickerSlide {
             }
             ThemePickerSlideAction::ToggleSyncWithOs => {
                 self.sync_with_os = !self.sync_with_os;
-                send_telemetry_from_ctx!(
-                    OnboardingEvent::SettingChanged {
-                        setting: "sync_with_os".to_string(),
-                        value: self.sync_with_os.to_string(),
-                    },
-                    ctx
-                );
                 ctx.emit(ThemePickerSlideEvent::SyncWithOsToggled {
-                    enabled: self.sync_with_os,
-                });
+                    enabled: self.sync_with_os});
                 ctx.notify();
             }
             ThemePickerSlideAction::BackClicked => {

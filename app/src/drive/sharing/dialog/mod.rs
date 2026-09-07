@@ -16,8 +16,7 @@ use warpui::elements::{
     CrossAxisAlignment, Dismiss, Empty, Fill, Flex, Highlight, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement, PositionedElementAnchor,
     PositionedElementOffsetBounds, Radius, SavePosition, ScrollStateHandle, Scrollable,
-    ScrollableElement, ScrollbarWidth, Shrinkable, Stack, UniformList, UniformListState,
-};
+    ScrollableElement, ScrollbarWidth, Shrinkable, Stack, UniformList, UniformListState};
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::FixedBinding;
 use warpui::platform::{Cursor, SaveFilePickerConfiguration};
@@ -25,14 +24,12 @@ use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlign
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakViewHandle,
-};
+    ViewHandle, WeakViewHandle};
 
 use super::qr_code::{QUIET_ZONE_MODULES, QrMatrix, qr_matrix_for_url, qr_png_for_url};
 use super::{
     ContentEditability, LinkSharingSubjectType, ShareableObject, SharingAccessLevel, Subject,
-    SubjectExt, TeamKind, UserKind, style,
-};
+    SubjectExt, TeamKind, UserKind, style};
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};
 use crate::auth::AuthStateProvider;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
@@ -41,27 +38,23 @@ use crate::cloud_object::{CloudObject, Owner, ServerGuestSubject};
 use crate::editor::PropagateAndNoOpNavigationKeys;
 use crate::menu::{self, Menu, MenuItem, MenuItemFields};
 use crate::server::cloud_objects::update_manager::{
-    ObjectOperation, UpdateManager, UpdateManagerEvent,
-};
+    ObjectOperation, UpdateManager, UpdateManagerEvent};
 use crate::server::ids::ServerId;
 use crate::server::telemetry::{
-    CloudObjectTelemetryMetadata, OpenedSharingDialogEvent, SharingDialogSource,
-};
+    CloudObjectTelemetryMetadata, OpenedSharingDialogEvent, SharingDialogSource};
 use crate::terminal::TerminalView;
 use crate::terminal::shared_session::SharedSessionActionSource;
 use crate::terminal::shared_session::permissions_manager::{
-    SessionPermissionsEvent, SessionPermissionsManager,
-};
+    SessionPermissionsEvent, SessionPermissionsManager};
 use crate::ui_components::buttons::icon_button_with_color;
 use crate::ui_components::icons::Icon;
 use crate::view_components::DismissibleToast;
 use crate::word_block_editor::{
     WordBlockEditorStyles, WordBlockEditorView, WordBlockEditorViewEvent, WordBlockLayout,
-    WordBlockStyles,
-};
+    WordBlockStyles};
 use crate::workspace::{ToastStack, WorkspaceAction};
 use crate::workspaces::user_workspaces::{TeamContext, UserWorkspaces, UserWorkspacesEvent};
-use crate::{TelemetryEvent, send_telemetry_from_ctx};
+use crate::{TelemetryEvent};
 
 mod inheritance;
 
@@ -95,15 +88,13 @@ struct UiStateHandles {
     qr_download_button: MouseStateHandle,
     qr_close_button: MouseStateHandle,
     guest_list_state: UniformListState,
-    guest_scroll_state: ScrollStateHandle,
-}
+    guest_scroll_state: ScrollStateHandle}
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 enum SharingDialogMode {
     #[default]
     Access,
-    QrCode,
-}
+    QrCode}
 
 /// State for which menu is currently open.
 ///
@@ -117,8 +108,7 @@ enum OpenMenuState {
     LinkSharing,
     TeamSharing,
     InviteAccessLevel,
-    Guest(usize),
-}
+    Guest(usize)}
 
 struct InviteFormValidationState {
     /// Invitees with invalid email addresses.
@@ -126,8 +116,7 @@ struct InviteFormValidationState {
     /// Invitees that are already guests on the object.
     duplicate_guests: Vec<String>,
     /// All invitees
-    invitee_emails: Vec<String>,
-}
+    invitee_emails: Vec<String>}
 
 impl InviteFormValidationState {
     pub fn is_valid(&self) -> bool {
@@ -143,16 +132,14 @@ struct GuestState {
     tooltip_handle: MouseStateHandle,
     current_access_level: SharingAccessLevel,
     subject: Subject,
-    inheritance: Option<InheritanceState>,
-}
+    inheritance: Option<InheritanceState>}
 
 /// UI state for link sharing.
 #[derive(Default)]
 struct LinkSharingState {
     access_level: Option<SharingAccessLevel>,
     tooltip_handle: MouseStateHandle,
-    inheritance: Option<InheritanceState>,
-}
+    inheritance: Option<InheritanceState>}
 
 /// UI state for team sharing.
 #[derive(Default)]
@@ -160,15 +147,13 @@ struct TeamSharingState {
     team: Option<TeamKind>,
     access_level: Option<SharingAccessLevel>,
     tooltip_handle: MouseStateHandle,
-    inheritance: Option<InheritanceState>,
-}
+    inheritance: Option<InheritanceState>}
 
 /// Container for fields related to the invite-by-email form.
 struct EmailInviteForm {
     email_editor: ViewHandle<WordBlockEditorView>,
     selected_access_level: SharingAccessLevel,
-    access_level_menu: ViewHandle<Menu<SharingDialogAction>>,
-}
+    access_level_menu: ViewHandle<Menu<SharingDialogAction>>}
 
 pub struct SharingDialog {
     self_handle: WeakViewHandle<SharingDialog>,
@@ -187,13 +172,11 @@ pub struct SharingDialog {
 
     ui_state_handles: UiStateHandles,
     open_menu_state: OpenMenuState,
-    mode: SharingDialogMode,
-}
+    mode: SharingDialogMode}
 
 #[derive(Debug, Clone)]
 pub enum SharingDialogEvent {
-    Close,
-}
+    Close}
 
 #[derive(Debug, Clone)]
 pub enum SharingDialogAction {
@@ -212,8 +195,7 @@ pub enum SharingDialogAction {
     RemoveGuest,
     SetGuestAccessLevel(SharingAccessLevel),
     SendInvitations,
-    SetTeamPermissions(Option<SharingAccessLevel>),
-}
+    SetTeamPermissions(Option<SharingAccessLevel>)}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -277,15 +259,13 @@ impl SharingDialog {
                     Box::new(EmailAddress::is_valid),
                 )
                 .with_layout(WordBlockLayout::Horizontal {
-                    editor_min_width: EMAIL_EDITOR_WIDTH,
-                })
+                    editor_min_width: EMAIL_EDITOR_WIDTH})
                 .with_styles(ctx, Self::email_invite_form_styles);
                 view.set_propagate_navigation_keys(PropagateAndNoOpNavigationKeys::Always, ctx);
                 view
             }),
             selected_access_level: SharingAccessLevel::View,
-            access_level_menu: Self::build_invite_access_level_menu(ctx),
-        };
+            access_level_menu: Self::build_invite_access_level_menu(ctx)};
         ctx.subscribe_to_view(&invite_form.email_editor, |me, _, event, ctx| {
             me.handle_email_invite_editor_event(event, ctx);
         });
@@ -302,8 +282,7 @@ impl SharingDialog {
             team_sharing_menu,
             ui_state_handles: Default::default(),
             open_menu_state: Default::default(),
-            mode: Default::default(),
-        }
+            mode: Default::default()}
     }
 
     fn handle_user_workspaces_event(
@@ -314,8 +293,7 @@ impl SharingDialog {
         let changes_this_windows_policy = match event {
             UserWorkspacesEvent::TeamsChanged => true,
             UserWorkspacesEvent::WindowTeamChanged { window_id } => *window_id == ctx.window_id(),
-            _ => false,
-        };
+            _ => false};
         if changes_this_windows_policy {
             ctx.notify();
         }
@@ -349,8 +327,7 @@ impl SharingDialog {
                 CloudModelEvent::ObjectForceExpanded { .. } => return,
                 CloudModelEvent::ObjectSynced { .. }
                 | CloudModelEvent::InitialLoadCompleted
-                | CloudModelEvent::EnvironmentLastTaskRunTimestampsUpdated => return,
-            };
+                | CloudModelEvent::EnvironmentLastTaskRunTimestampsUpdated => return};
 
             if event_object_id.sync_id().into_server() == Some(target_server_id) {
                 self.refresh_object_permission_states(ctx);
@@ -367,21 +344,17 @@ impl SharingDialog {
             SessionPermissionsEvent::GuestsUpdated {
                 session_id,
                 guests,
-                pending_guests,
-            } => {
+                pending_guests} => {
                 self.update_session_guests(ctx, session_id, guests, pending_guests);
             }
             SessionPermissionsEvent::LinkPermissionsUpdated {
                 session_id,
-                access_level,
-            } => {
+                access_level} => {
                 self.update_session_link_permissions(*session_id, *access_level, ctx);
             }
             SessionPermissionsEvent::TeamPermissionsUpdated {
                 session_id,
-                team_acl,
-            } => self.update_session_team_permissions(session_id, team_acl.clone(), ctx),
-        }
+                team_acl} => self.update_session_team_permissions(session_id, team_acl.clone(), ctx)}
     }
 
     fn handle_ai_history_event(
@@ -459,8 +432,7 @@ impl SharingDialog {
             Some(ShareableObject::AIConversation(id)) => BlocklistAIHistoryModel::as_ref(app)
                 .get_server_conversation_metadata(id)
                 .map(|m| ServerId::from_string_lossy(m.metadata.uid.uid())),
-            _ => None,
-        }
+            _ => None}
     }
 
     /// The targeted Warp Drive object, or `None` if the target is not a known Warp Drive object.
@@ -484,8 +456,7 @@ impl SharingDialog {
                     .get_by_uid(&server_id.uid())
                     .map(|object| object.display_name()),
                 ShareableObject::Session { .. } => Some("session".to_string()),
-                ShareableObject::AIConversation(_) => Some("conversation".to_string()),
-            })
+                ShareableObject::AIConversation(_) => Some("conversation".to_string())})
             .unwrap_or_else(|| "unknown".to_string())
     }
 
@@ -519,8 +490,7 @@ impl SharingDialog {
             }
             // Always treat AI conversations as "editable," so that the sharing dialog is shown.
             Some(ShareableObject::AIConversation(_)) => ContentEditability::Editable,
-            None => ContentEditability::ReadOnly,
-        }
+            None => ContentEditability::ReadOnly}
     }
 
     /// The current user's access level on the shared object.
@@ -541,8 +511,7 @@ impl SharingDialog {
                             .and_then(|user_uid| {
                                 // Check if user is owner
                                 if let Owner::User {
-                                    user_uid: owner_uid,
-                                } = permissions.space
+                                    user_uid: owner_uid} = permissions.space
                                     && owner_uid == user_uid
                                 {
                                     return Some(SharingAccessLevel::Full);
@@ -631,8 +600,7 @@ impl SharingDialog {
 
                 level
             }
-            None => SharingAccessLevel::Full,
-        }
+            None => SharingAccessLevel::Full}
     }
 
     /// Report a telemetry event for opening this sharing dialog.
@@ -651,27 +619,20 @@ impl SharingDialog {
                             space: Some(object.space(ctx).into()),
                             team_uid: match object.permissions().owner {
                                 Owner::Team { team_uid, .. } => Some(team_uid),
-                                Owner::User { .. } => None,
-                            },
-                        }),
-                        session_id: None,
-                    }),
-                    None => return,
-                }
+                                Owner::User { .. } => None}}),
+                        session_id: None}),
+                    None => return}
             }
             Some(ShareableObject::Session { session_id, .. }) => {
                 TelemetryEvent::OpenedSharingDialog(OpenedSharingDialogEvent {
                     source,
                     object_metadata: None,
-                    session_id: Some(*session_id),
-                })
+                    session_id: Some(*session_id)})
             }
             // Skip telemetry for AI conversations
             Some(ShareableObject::AIConversation(_)) => return,
-            None => return,
-        };
+            None => return};
 
-        send_telemetry_from_ctx!(event, ctx);
     }
 
     fn reset_editable_state(&mut self, ctx: &mut ViewContext<Self>) {
@@ -697,8 +658,7 @@ impl SharingDialog {
                 {
                     return Some(Subject::Team(TeamKind::SharedSessionTeam {
                         team_uid: *team_uid,
-                        name: name.clone(),
-                    }));
+                        name: name.clone()}));
                 }
 
                 // Otherwise, the sharer is the owner.
@@ -746,8 +706,7 @@ impl SharingDialog {
                     return;
                 }
             }
-            _ => return,
-        }
+            _ => return}
 
         let guests_iter = guests.iter().map(|guest| GuestState {
             menu_button_handle: Default::default(),
@@ -756,18 +715,15 @@ impl SharingDialog {
             subject: Subject::User(UserKind::SharedSessionParticipant(
                 guest.profile_data.clone(),
             )),
-            inheritance: None,
-        });
+            inheritance: None});
 
         let pending_guests_iter = pending_guests.iter().map(|guest| GuestState {
             menu_button_handle: Default::default(),
             tooltip_handle: Default::default(),
             current_access_level: guest.direct_acl.into(),
             subject: Subject::PendingUser {
-                email: Some(guest.email.clone()),
-            },
-            inheritance: None,
-        });
+                email: Some(guest.email.clone())},
+            inheritance: None});
 
         self.guest_states = guests_iter.chain(pending_guests_iter).collect();
 
@@ -798,8 +754,7 @@ impl SharingDialog {
         self.link_sharing_state = LinkSharingState {
             access_level,
             tooltip_handle: Default::default(),
-            inheritance: None,
-        };
+            inheritance: None};
         ctx.notify()
     }
 
@@ -819,18 +774,15 @@ impl SharingDialog {
                     return;
                 }
             }
-            _ => return,
-        }
+            _ => return}
 
         self.team_sharing_state = TeamSharingState {
             access_level: team_acl.as_ref().map(|team_acl| team_acl.acl.into()),
             team: team_acl.map(|team_acl| TeamKind::SharedSessionTeam {
                 team_uid: ServerId::from_string_lossy(team_acl.uid),
-                name: team_acl.name,
-            }),
+                name: team_acl.name}),
             tooltip_handle: Default::default(),
-            inheritance: None,
-        };
+            inheritance: None};
         ctx.notify()
     }
 
@@ -863,13 +815,11 @@ impl SharingDialog {
                             }
                             ServerGuestSubject::PendingUser { email } => {
                                 Some(super::Subject::PendingUser {
-                                    email: email.clone(),
-                                })
+                                    email: email.clone()})
                             }
                             ServerGuestSubject::Team { team_uid } => {
                                 Some(super::Subject::Team(super::TeamKind::Team {
-                                    team_uid: *team_uid,
-                                }))
+                                    team_uid: *team_uid}))
                             }
                         }?;
 
@@ -888,10 +838,8 @@ impl SharingDialog {
                     Some(link_sharing) => LinkSharingState {
                         access_level: Some(link_sharing.access_level.into()),
                         tooltip_handle: Default::default(),
-                        inheritance: None,
-                    },
-                    None => Default::default(),
-                };
+                        inheritance: None},
+                    None => Default::default()};
 
                 self.guest_states
                     .sort_by_cached_key(|guest| guest.subject.name(ctx));
@@ -922,8 +870,7 @@ impl SharingDialog {
                         inheritance: InheritanceState::from_object_and_source(
                             &object_id,
                             guest.source.as_ref(),
-                        ),
-                    })
+                        )})
                     .collect();
 
                 self.link_sharing_state = match &object.permissions().anyone_with_link {
@@ -933,10 +880,8 @@ impl SharingDialog {
                         inheritance: InheritanceState::from_object_and_source(
                             &object_id,
                             link_sharing.source.as_ref(),
-                        ),
-                    },
-                    None => Default::default(),
-                }
+                        )},
+                    None => Default::default()}
             }
             None => {
                 self.guest_states.clear();
@@ -967,17 +912,14 @@ impl SharingDialog {
             let event = match self.target {
                 Some(ShareableObject::Session { .. }) => {
                     Some(TelemetryEvent::CopiedSharedSessionLink {
-                        source: SharedSessionActionSource::SharingDialog,
-                    })
+                        source: SharedSessionActionSource::SharingDialog})
                 }
                 Some(ShareableObject::WarpDriveObject(_))
                 | Some(ShareableObject::AIConversation(_)) => {
                     Some(TelemetryEvent::ObjectLinkCopied { link: url.clone() })
                 }
-                None => None,
-            };
+                None => None};
             if let Some(event) = event {
-                send_telemetry_from_ctx!(event, ctx);
             }
 
             ctx.clipboard().write(ClipboardContent::plain_text(url));
@@ -1066,8 +1008,7 @@ impl SharingDialog {
                             }
                         }
                         // Not yet supported, so default to view.
-                        SharingAccessLevel::Full => 0,
-                    },
+                        SharingAccessLevel::Full => 0},
                     ctx,
                 );
             })
@@ -1104,8 +1045,7 @@ impl SharingDialog {
             Some(ShareableObject::AIConversation(conversation_id)) => {
                 self.remove_targeted_guest_for_conversation(idx, *conversation_id, ctx);
             }
-            None => (),
-        }
+            None => ()}
 
         self.set_open_menu(OpenMenuState::None, ctx);
     }
@@ -1172,8 +1112,7 @@ impl SharingDialog {
                     ctx,
                 );
             }
-            None => (),
-        };
+            None => ()};
     }
 
     fn set_targeted_guest_access_for_object(
@@ -1186,10 +1125,8 @@ impl SharingDialog {
         let (guest_email, is_inherited) = match self.guest_states.get(guest_idx) {
             Some(guest) => match guest.subject.email(ctx) {
                 Some(email) => (email.to_owned(), guest.inheritance.is_some()),
-                None => return,
-            },
-            None => return,
-        };
+                None => return},
+            None => return};
 
         UpdateManager::handle(ctx).update(ctx, |update_manager, ctx| {
             // If there's only an inherited guest ACL, we have to add a new guest to the descendant
@@ -1299,10 +1236,8 @@ impl SharingDialog {
         let guest_email = match self.guest_states.get(guest_idx) {
             Some(guest) => match guest.subject.email(ctx) {
                 Some(email) => email.to_owned(),
-                None => return,
-            },
-            None => return,
-        };
+                None => return},
+            None => return};
 
         // Get the conversation's server_id from metadata
         let server_id = match BlocklistAIHistoryModel::as_ref(ctx)
@@ -1430,8 +1365,7 @@ impl SharingDialog {
                             1
                         }
                     }
-                    SharingAccessLevel::Full => 0,
-                },
+                    SharingAccessLevel::Full => 0},
                 ctx,
             );
         });
@@ -1579,13 +1513,10 @@ impl SharingDialog {
             background: style::dialog_background(appearance).into(),
             valid_word_styles: WordBlockStyles {
                 font_color: text_color,
-                background: style::form_chip_background(appearance),
-            },
+                background: style::form_chip_background(appearance)},
             invalid_word_styles: WordBlockStyles {
                 font_color: text_color,
-                background: appearance.theme().ui_error_color().into(),
-            },
-        }
+                background: appearance.theme().ui_error_color().into()}}
     }
 
     fn invite_form_state(&self, app: &AppContext) -> InviteFormValidationState {
@@ -1609,8 +1540,7 @@ impl SharingDialog {
         InviteFormValidationState {
             invalid_emails: invite_editor.get_list_of_invalid_words(app),
             duplicate_guests,
-            invitee_emails: invitees,
-        }
+            invitee_emails: invitees}
     }
 
     fn handle_email_invite_editor_event(
@@ -1631,9 +1561,7 @@ impl SharingDialog {
                 NavigationKey::Tab | NavigationKey::Down => {
                     self.set_open_menu(OpenMenuState::InviteAccessLevel, ctx);
                 }
-                _ => (),
-            },
-        }
+                _ => ()}}
     }
 
     /// Send all pending email invitations.
@@ -1684,8 +1612,7 @@ impl SharingDialog {
                     ctx,
                 );
             }
-            None => return,
-        }
+            None => return}
 
         self.reset_invite_form(ctx);
         ctx.notify();
@@ -1928,8 +1855,7 @@ impl SharingDialog {
 
         let tooltip_text = match owner {
             Subject::Team(_) => "Team objects automatically grant full permissions to team members",
-            _ => "Owners always have full permissions on their objects",
-        };
+            _ => "Owners always have full permissions on their objects"};
         let owner_access_label = render_with_detail_tooltip(
             tooltip_text,
             self.ui_state_handles.owner_tooltip.clone(),
@@ -1977,8 +1903,7 @@ impl SharingDialog {
     ) -> Option<Box<dyn Element>> {
         let link_sharing_subject_type = match self.link_sharing_state.access_level {
             Some(_) => LinkSharingSubjectType::Anyone,
-            None => LinkSharingSubjectType::None,
-        };
+            None => LinkSharingSubjectType::None};
         let can_edit_access = self.can_edit_access(app);
 
         if !can_edit_access && self.link_sharing_state.access_level.is_none() {
@@ -1992,8 +1917,7 @@ impl SharingDialog {
             .map(|inheritance| {
                 let InheritanceDetails {
                     source_label,
-                    tooltip_text,
-                } = inheritance.details(appearance, app);
+                    tooltip_text} = inheritance.details(appearance, app);
                 (source_label, tooltip_text)
             })
             .unzip();
@@ -2014,8 +1938,7 @@ impl SharingDialog {
 
         let menu_button_label = match self.link_sharing_state.access_level {
             Some(access_level) => access_level.label(),
-            None => NO_ACCESS_LABEL,
-        };
+            None => NO_ACCESS_LABEL};
         let mut menu_button = appearance
             .ui_builder()
             .button(
@@ -2048,8 +1971,7 @@ impl SharingDialog {
                 menu_button,
                 appearance,
             ),
-            None => menu_button,
-        });
+            None => menu_button});
 
         Some(
             Container::new(
@@ -2117,8 +2039,7 @@ impl SharingDialog {
                             4
                         }
                     }
-                    Some(SharingAccessLevel::Full) => 3,
-                },
+                    Some(SharingAccessLevel::Full) => 3},
                 ctx,
             );
         })
@@ -2154,8 +2075,7 @@ impl SharingDialog {
             .map(|inheritance| {
                 let InheritanceDetails {
                     source_label,
-                    tooltip_text,
-                } = inheritance.details(appearance, app);
+                    tooltip_text} = inheritance.details(appearance, app);
                 (source_label, tooltip_text)
             })
             .unzip();
@@ -2164,8 +2084,7 @@ impl SharingDialog {
         // to add permissions for.
         let team_kind = if can_edit_access {
             TeamKind::Team {
-                team_uid: self.window_team_uid(app)?,
-            }
+                team_uid: self.window_team_uid(app)?}
         } else {
             self.team_sharing_state.team.clone()?
         };
@@ -2193,8 +2112,7 @@ impl SharingDialog {
         let menu_button = {
             let label = match self.team_sharing_state.access_level {
                 Some(access_level) => access_level.label(),
-                None => NO_ACCESS_LABEL,
-            };
+                None => NO_ACCESS_LABEL};
             let button = appearance
                 .ui_builder()
                 .button(
@@ -2231,8 +2149,7 @@ impl SharingDialog {
                 menu_button,
                 appearance,
             ),
-            None => menu_button,
-        });
+            None => menu_button});
 
         Some(
             Container::new(
@@ -2287,8 +2204,7 @@ impl SharingDialog {
                     Some(SharingAccessLevel::View) => 3,
                     Some(SharingAccessLevel::Edit) => 4,
                     // Not yet supported, so default to view.
-                    Some(SharingAccessLevel::Full) => 3,
-                },
+                    Some(SharingAccessLevel::Full) => 3},
                 ctx,
             );
         })
@@ -2308,8 +2224,7 @@ impl SharingDialog {
             .map(|inheritance| {
                 let InheritanceDetails {
                     source_label,
-                    tooltip_text,
-                } = inheritance.details(appearance, app);
+                    tooltip_text} = inheritance.details(appearance, app);
                 (source_label, tooltip_text)
             })
             .unzip();
@@ -2346,8 +2261,7 @@ impl SharingDialog {
                         access_level_label,
                         appearance,
                     ),
-                    None => access_level_label,
-                },
+                    None => access_level_label},
             ])
             .with_main_axis_size(MainAxisSize::Max)
             .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
@@ -2448,8 +2362,7 @@ impl SharingDialog {
                 .with_main_axis_alignment(MainAxisAlignment::Center)
                 .with_cross_axis_alignment(CrossAxisAlignment::Start)
                 .finish(),
-            None => name_label,
-        };
+            None => name_label};
 
         Flex::row()
             .with_main_axis_alignment(MainAxisAlignment::Start)
@@ -2465,15 +2378,13 @@ impl SharingDialog {
     fn target_session_id(&self) -> Option<SessionId> {
         match self.target {
             Some(ShareableObject::Session { session_id, .. }) => Some(session_id),
-            _ => None,
-        }
+            _ => None}
     }
 
     fn qr_filename(&self) -> String {
         match self.target_session_id() {
             Some(session_id) => format!("warp-session-qr-code-{session_id}.png"),
-            None => "warp-session-qr-code.png".to_string(),
-        }
+            None => "warp-session-qr-code.png".to_string()}
     }
 
     fn show_ephemeral_toast(
@@ -2534,8 +2445,7 @@ impl SharingDialog {
             Err(_) => self.show_ephemeral_toast(
                 DismissibleToast::error("Unable to download QR code.".to_string()),
                 ctx,
-            ),
-        }
+            )}
     }
 
     fn render_footer_icon_button(
@@ -2770,8 +2680,7 @@ impl SharingDialog {
     fn render_object_link(&self, appearance: &Appearance, app: &AppContext) -> Box<dyn Element> {
         let url = match self.target_link(app) {
             Some(url) => url,
-            None => return Empty::new().finish(),
-        };
+            None => return Empty::new().finish()};
 
         let link_text = appearance
             .ui_builder()
@@ -3048,7 +2957,6 @@ impl TypedActionView for SharingDialog {
             SharingDialogAction::SetGuestAccessLevel(level) => {
                 self.set_targeted_guest_access(*level, ctx)
             }
-            SharingDialogAction::RemoveGuest => self.remove_targeted_guest(ctx),
-        }
+            SharingDialogAction::RemoveGuest => self.remove_targeted_guest(ctx)}
     }
 }

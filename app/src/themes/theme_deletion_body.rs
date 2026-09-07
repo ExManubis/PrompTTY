@@ -5,8 +5,7 @@ use std::fs::remove_file;
 use warpui::assets::asset_cache::AssetSource;
 use warpui::elements::{
     Container, CornerRadius, CrossAxisAlignment, Flex, MainAxisSize, MouseStateHandle,
-    ParentElement, Radius, SavePosition, Shrinkable, Text,
-};
+    ParentElement, Radius, SavePosition, Shrinkable, Text};
 use warpui::fonts::Weight;
 use warpui::platform::Cursor;
 use warpui::ui_components::button::ButtonVariant;
@@ -18,7 +17,7 @@ use crate::server::telemetry::TelemetryEvent;
 use crate::settings::{ThemeSettings, active_theme_kind};
 use crate::themes::theme::{ThemeKind, WarpTheme};
 use crate::user_config::util::from_yaml;
-use crate::{send_telemetry_from_ctx, user_config};
+use crate::{user_config};
 
 const BUTTON_PADDING: f32 = 12.;
 const BUTTON_FONT_SIZE: f32 = 14.;
@@ -32,25 +31,21 @@ const DELETE_BUTTON_TEXT: &str = "Delete theme";
 #[derive(Default)]
 struct MouseStateHandles {
     cancel_mouse_state: MouseStateHandle,
-    create_mouse_state: MouseStateHandle,
-}
+    create_mouse_state: MouseStateHandle}
 
 pub struct ThemeDeletionBody {
     button_mouse_states: MouseStateHandles,
-    theme_kind: Option<ThemeKind>,
-}
+    theme_kind: Option<ThemeKind>}
 
 #[derive(Debug)]
 pub enum ThemeDeletionBodyAction {
     Delete,
-    Cancel,
-}
+    Cancel}
 
 pub enum ThemeDeletionBodyEvent {
     Close,
     ShowErrorToast { message: String },
-    DeleteCurrentTheme,
-}
+    DeleteCurrentTheme}
 
 impl Default for ThemeDeletionBody {
     fn default() -> Self {
@@ -62,8 +57,7 @@ impl ThemeDeletionBody {
     pub fn new() -> Self {
         Self {
             button_mouse_states: Default::default(),
-            theme_kind: None,
-        }
+            theme_kind: None}
     }
 
     pub fn close(&mut self, ctx: &mut ViewContext<Self>) {
@@ -103,7 +97,6 @@ impl ThemeDeletionBody {
                     ctx.emit(ThemeDeletionBodyEvent::DeleteCurrentTheme)
                 }
                 errored = false;
-                send_telemetry_from_ctx!(TelemetryEvent::DeleteCustomTheme, ctx);
                 self.close(ctx);
                 ctx.notify();
             }
@@ -119,8 +112,7 @@ impl ThemeDeletionBody {
 
     fn send_error_toast(&self, message: &str, ctx: &mut ViewContext<Self>) {
         ctx.emit(ThemeDeletionBodyEvent::ShowErrorToast {
-            message: message.to_string(),
-        });
+            message: message.to_string()});
     }
 }
 
@@ -277,7 +269,6 @@ impl TypedActionView for ThemeDeletionBody {
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         match action {
             ThemeDeletionBodyAction::Cancel => self.close(ctx),
-            ThemeDeletionBodyAction::Delete => self.delete_theme(ctx),
-        }
+            ThemeDeletionBodyAction::Delete => self.delete_theme(ctx)}
     }
 }

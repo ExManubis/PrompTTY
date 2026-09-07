@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use instant::Instant;
 use remote_server::manager::{RemoteServerManager, RemoteServerManagerEvent};
-use warp_core::{HostId, SessionId, send_telemetry_from_ctx};
+use warp_core::{HostId, SessionId};
 use warp_util::remote_path::RemotePath;
 use warp_util::standardized_path::StandardizedPath;
 use warpui::{ModelContext, SingletonEntity};
@@ -20,8 +20,7 @@ use warpui::{ModelContext, SingletonEntity};
 use super::{
     BackendOrigin, CommitChainMode, DiffMetadata, DiffMode, DiffOperation, DiffState,
     DiffStateError, DiffStateModelEvent, DiffStats, FileDiffAndContent, GitDiffData,
-    GitDiffWithBaseContent,
-};
+    GitDiffWithBaseContent};
 use crate::code_review::telemetry_event::CodeReviewTelemetryEvent;
 use crate::remote_server::diff_state_proto::{try_decode_file_delta, try_decode_snapshot};
 use crate::remote_server::proto;
@@ -38,8 +37,7 @@ enum InternalRemoteDiffState {
     Error(String),
     /// The remote connection was lost. Preserves stale data until the model
     /// can re-establish the server-side subscription.
-    Disconnected,
-}
+    Disconnected}
 
 // ── Model ────────────────────────────────────────────────────────────────────
 
@@ -49,8 +47,7 @@ pub struct RemoteDiffStateModel {
     state: InternalRemoteDiffState,
     metadata: Option<DiffMetadata>,
     /// Start time for the latest caller-tracked full diff snapshot request.
-    tracked_diff_load_start_time: Option<Instant>,
-}
+    tracked_diff_load_start_time: Option<Instant>}
 
 impl warpui::Entity for RemoteDiffStateModel {
     type Event = DiffStateModelEvent;
@@ -103,8 +100,7 @@ impl RemoteDiffStateModel {
             mode,
             state: InternalRemoteDiffState::Loading,
             metadata: None,
-            tracked_diff_load_start_time: None,
-        }
+            tracked_diff_load_start_time: None}
     }
 
     // ── Event handler ───────────────────────────────────────────
@@ -129,8 +125,7 @@ impl RemoteDiffStateModel {
                 host_id,
                 repo_path,
                 mode,
-                snapshot,
-            } => {
+                snapshot} => {
                 if !self.matches_remote_path_and_mode(host_id, repo_path, mode) {
                     return;
                 }
@@ -140,8 +135,7 @@ impl RemoteDiffStateModel {
                 host_id,
                 repo_path,
                 mode,
-                update,
-            } => {
+                update} => {
                 if !self.matches_remote_path_and_mode(host_id, repo_path, mode) {
                     return;
                 }
@@ -151,8 +145,7 @@ impl RemoteDiffStateModel {
                 host_id,
                 repo_path,
                 mode,
-                delta,
-            } => {
+                delta} => {
                 if !self.matches_remote_path_and_mode(host_id, repo_path, mode) {
                     return;
                 }
@@ -166,8 +159,7 @@ impl RemoteDiffStateModel {
                         .iter()
                         .map(|info| BranchEntry {
                             name: info.name.clone(),
-                            is_main: info.is_main,
-                        })
+                            is_main: info.is_main})
                         .collect(),
                     Err(err) => {
                         log::warn!("RemoteDiffStateModel: GetBranches failed: {err}");
@@ -179,37 +171,32 @@ impl RemoteDiffStateModel {
             RemoteServerManagerEvent::CommitChainResponse {
                 host_id,
                 repo_path,
-                result,
-            } if self.remote_path.matches(host_id, repo_path) => {
+                result} if self.remote_path.matches(host_id, repo_path) => {
                 self.handle_git_commit_chain_response(result, ctx);
             }
             RemoteServerManagerEvent::GitPushResponse {
                 host_id,
                 repo_path,
-                result,
-            } if self.remote_path.matches(host_id, repo_path) => {
+                result} if self.remote_path.matches(host_id, repo_path) => {
                 self.handle_git_push_response(result, ctx);
             }
             RemoteServerManagerEvent::CreatePrResponse {
                 host_id,
                 repo_path,
-                result,
-            } if self.remote_path.matches(host_id, repo_path) => {
+                result} if self.remote_path.matches(host_id, repo_path) => {
                 self.handle_create_pr_response(result, ctx);
             }
             RemoteServerManagerEvent::GenerateCommitMessageResponse {
                 host_id,
                 repo_path,
-                result,
-            } if self.remote_path.matches(host_id, repo_path) => {
+                result} if self.remote_path.matches(host_id, repo_path) => {
                 // AI ran on the daemon; just relay the result to the dialog.
                 ctx.emit(DiffStateModelEvent::CommitMessageGenerated(result.clone()));
             }
             RemoteServerManagerEvent::GetCommittedBranchFilesResponse {
                 host_id,
                 repo_path,
-                result,
-            } if self.remote_path.matches(host_id, repo_path) => {
+                result} if self.remote_path.matches(host_id, repo_path) => {
                 self.handle_get_committed_branch_files_response(result, ctx);
             }
             RemoteServerManagerEvent::HostDisconnected { host_id }
@@ -271,8 +258,7 @@ impl RemoteDiffStateModel {
         self.state = InternalRemoteDiffState::Loading;
         ctx.emit(DiffStateModelEvent::NewDiffsComputed {
             diffs: None,
-            load_duration: None,
-        });
+            load_duration: None});
     }
 
     // ── Proto → state conversion helpers ────────────────────────────────────────────────
@@ -392,15 +378,13 @@ impl RemoteDiffStateModel {
                 self.state = InternalRemoteDiffState::NotInRepository;
                 ctx.emit(DiffStateModelEvent::NewDiffsComputed {
                     diffs: None,
-                    load_duration: None,
-                });
+                    load_duration: None});
             }
             DiffState::Loading => {
                 self.state = InternalRemoteDiffState::Loading;
                 ctx.emit(DiffStateModelEvent::NewDiffsComputed {
                     diffs: None,
-                    load_duration: None,
-                });
+                    load_duration: None});
             }
             DiffState::Error(msg) => {
                 let load_duration = self
@@ -409,21 +393,10 @@ impl RemoteDiffStateModel {
                     .map(|start| start.elapsed());
                 let err = DiffStateError::from_message(&msg);
                 err.report_and_log();
-                send_telemetry_from_ctx!(
-                    CodeReviewTelemetryEvent::LoadDiffFailed {
-                        backend_origin: BackendOrigin::ClientRemote,
-                        operation: DiffOperation::RemoteDiff,
-                        mode: self.mode.clone(),
-                        error: err.to_string(),
-                        load_duration,
-                    },
-                    ctx
-                );
                 self.state = InternalRemoteDiffState::Error(msg);
                 ctx.emit(DiffStateModelEvent::NewDiffsComputed {
                     diffs: None,
-                    load_duration: None,
-                });
+                    load_duration: None});
             }
             DiffState::Loaded => {
                 let Some(base_content) = diffs else {
@@ -433,21 +406,10 @@ impl RemoteDiffStateModel {
                         .map(|start| start.elapsed());
                     let err = DiffStateError::empty_diff_data();
                     err.report_and_log();
-                    send_telemetry_from_ctx!(
-                        CodeReviewTelemetryEvent::LoadDiffFailed {
-                            backend_origin: BackendOrigin::ClientRemote,
-                            operation: DiffOperation::RemoteDiff,
-                            mode: self.mode.clone(),
-                            error: err.to_string(),
-                            load_duration,
-                        },
-                        ctx
-                    );
                     self.state = InternalRemoteDiffState::Error(err.to_string());
                     ctx.emit(DiffStateModelEvent::NewDiffsComputed {
                         diffs: None,
-                        load_duration: None,
-                    });
+                        load_duration: None});
                     return;
                 };
                 let diffs = GitDiffData::from(&base_content);
@@ -458,8 +420,7 @@ impl RemoteDiffStateModel {
                 self.state = InternalRemoteDiffState::Loaded(diffs);
                 ctx.emit(DiffStateModelEvent::NewDiffsComputed {
                     diffs: Some(Arc::new(base_content)),
-                    load_duration,
-                });
+                    load_duration});
             }
         }
     }
@@ -514,8 +475,7 @@ impl RemoteDiffStateModel {
         diffs.files_changed = diffs.files.len();
         ctx.emit(DiffStateModelEvent::SingleFileUpdated {
             path: file_path,
-            diff: diff.map(Arc::new),
-        });
+            diff: diff.map(Arc::new)});
     }
 
     // ── Cleanup ──────────────────────────────────────────────────────
@@ -540,8 +500,7 @@ impl RemoteDiffStateModel {
             InternalRemoteDiffState::Loading => DiffState::Loading,
             InternalRemoteDiffState::Loaded(_) => DiffState::Loaded,
             InternalRemoteDiffState::Error(msg) => DiffState::Error(msg.clone()),
-            InternalRemoteDiffState::Disconnected => DiffState::Disconnected,
-        }
+            InternalRemoteDiffState::Disconnected => DiffState::Disconnected}
     }
 
     pub fn diff_mode(&self) -> DiffMode {
@@ -598,8 +557,7 @@ impl RemoteDiffStateModel {
     pub fn upstream_differs_from_main(&self) -> bool {
         match (self.upstream_ref(), self.get_main_branch_name().as_deref()) {
             (Some(upstream), Some(main)) => upstream != main,
-            _ => false,
-        }
+            _ => false}
     }
 
     pub fn has_head(&self) -> bool {
@@ -649,8 +607,7 @@ impl RemoteDiffStateModel {
                 )));
                 Ok(pr_info)
             }
-            Err(msg) => Err(msg.clone()),
-        };
+            Err(msg) => Err(msg.clone())};
         ctx.emit(DiffStateModelEvent::GitOpCompleted(
             super::GitOpResult::CommitChainCompleted(domain_result),
         ));
@@ -666,8 +623,7 @@ impl RemoteDiffStateModel {
                 self.apply_delta_from_proto(delta, ctx);
                 Ok(())
             }
-            Err(msg) => Err(msg.clone()),
-        };
+            Err(msg) => Err(msg.clone())};
         ctx.emit(DiffStateModelEvent::GitOpCompleted(
             super::GitOpResult::PushCompleted(domain_result),
         ));
@@ -680,8 +636,7 @@ impl RemoteDiffStateModel {
     ) {
         let domain_result = match result {
             Ok(proto_pr) => Ok(PrInfo::from(proto_pr)),
-            Err(msg) => Err(msg.clone()),
-        };
+            Err(msg) => Err(msg.clone())};
         ctx.emit(DiffStateModelEvent::GitOpCompleted(
             super::GitOpResult::PrCreated(domain_result),
         ));

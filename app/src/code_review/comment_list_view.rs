@@ -9,22 +9,19 @@ use warp_core::ui::color::blend::Blend;
 use warp_core::ui::theme::Fill;
 use warp_core::ui::theme::color::internal_colors::{
     accent_overlay_2, accent_overlay_3, neutral_1, neutral_3, neutral_4, neutral_6, text_main,
-    text_sub,
-};
+    text_sub};
 use warp_editor::model::CoreEditorModel;
 use warpui::clipboard::ClipboardContent;
 use warpui::elements::new_scrollable::{NewScrollable, ScrollableAppearance, SingleAxisConfig};
 use warpui::elements::resizable::{
-    DragBarSide, Resizable, ResizableStateHandle, resizable_state_handle,
-};
+    DragBarSide, Resizable, ResizableStateHandle, resizable_state_handle};
 use warpui::elements::{
     Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Dismiss, DispatchEventResult, Element, Empty, EventHandler,
     Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, ParentElement, PositionedElementAnchor, PositionedElementOffsetBounds,
     Radius, SavePosition, ScrollTarget, ScrollToPositionMode, ScrollbarWidth, Shrinkable, Stack,
-    Text,
-};
+    Text};
 use warpui::keymap::Keystroke;
 use warpui::platform::Cursor;
 use warpui::ui_components::button::ButtonVariant;
@@ -32,8 +29,7 @@ use warpui::ui_components::components::UiComponent;
 use warpui::units::Pixels;
 use warpui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakViewHandle,
-};
+    ViewHandle, WeakViewHandle};
 
 use crate::ai::request_usage_model::{AIRequestUsageModel, AIRequestUsageModelEvent};
 use crate::appearance::Appearance;
@@ -44,18 +40,15 @@ use crate::code_review::code_review_view::CodeReviewView;
 use crate::code_review::comment_rendering::CommentViewCard;
 use crate::code_review::comments::{
     AttachedReviewComment, AttachedReviewCommentTarget, CommentId, CommentOrigin,
-    ReviewCommentBatch, ReviewCommentBatchEvent,
-};
+    ReviewCommentBatch, ReviewCommentBatchEvent};
 use crate::code_review::telemetry_event::CodeReviewTelemetryEvent;
 use crate::menu::{Event, Menu, MenuItem, MenuItemFields};
 use crate::notebooks::editor::view::{EditorViewEvent, RichTextEditorView};
-use crate::send_telemetry_from_ctx;
 use crate::settings::AISettings;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
     ActionButton, ActionButtonTheme, ButtonSize, KeystrokeSource, NakedTheme, PrimaryTheme,
-    SecondaryTheme,
-};
+    SecondaryTheme};
 use crate::workspace::view::right_panel::ReviewDestination;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
@@ -104,8 +97,7 @@ pub enum CommentListAction {
     ShowOverflow { comment_id: CommentId },
     DeleteComment,
     DismissOverflowMenu,
-    ViewInGitHub { url: String },
-}
+    ViewInGitHub { url: String }}
 
 #[derive(Clone, Debug)]
 pub enum CommentListEvent {
@@ -113,8 +105,7 @@ pub enum CommentListEvent {
     Cancelled,
     DeleteComment { comment_id: CommentId },
     EditComment(CommentId),
-    JumpToCommentLocation(CommentId),
-}
+    JumpToCommentLocation(CommentId)}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommentListDebugState {
@@ -125,16 +116,14 @@ pub struct CommentListDebugState {
     pub is_outdated_section_collapsed: Option<bool>,
     pub ai_available: bool,
     pub ai_enabled: bool,
-    pub send_button_tooltip_text: String,
-}
+    pub send_button_tooltip_text: String}
 
 struct ViewState {
     scroll_state: ClippedScrollStateHandle,
     chevron_mouse_state: MouseStateHandle,
     outdated_chevron_mouse_state: MouseStateHandle,
     cancel_button_mouse_state: MouseStateHandle,
-    resizable_state: ResizableStateHandle,
-}
+    resizable_state: ResizableStateHandle}
 
 impl Default for ViewState {
     fn default() -> Self {
@@ -143,16 +132,14 @@ impl Default for ViewState {
             chevron_mouse_state: Default::default(),
             outdated_chevron_mouse_state: Default::default(),
             cancel_button_mouse_state: Default::default(),
-            resizable_state: resizable_state_handle(300.0),
-        }
+            resizable_state: resizable_state_handle(300.0)}
     }
 }
 
 struct CommentDisplayState {
     card: CommentViewCard,
     icon_button: ViewHandle<ActionButton>,
-    mouse_state: MouseStateHandle,
-}
+    mouse_state: MouseStateHandle}
 
 impl CommentDisplayState {
     fn save_position_id(&self) -> String {
@@ -193,8 +180,7 @@ pub struct CommentListView {
     active_overflow_comment_id: Option<CommentId>,
     pending_scroll_to_comment: Option<CommentId>,
     comments_button: ViewHandle<ActionButton>,
-    send_button: ViewHandle<ActionButton>,
-}
+    send_button: ViewHandle<ActionButton>}
 
 impl CommentListView {
     pub fn new(
@@ -260,8 +246,7 @@ impl CommentListView {
             active_overflow_comment_id: None,
             pending_scroll_to_comment: None,
             comments_button,
-            send_button,
-        }
+            send_button}
     }
 
     fn recompute_comment_button_label(&mut self, ctx: &mut ViewContext<Self>) {
@@ -333,8 +318,7 @@ impl CommentListView {
             is_outdated_section_collapsed: self.is_outdated_section_collapsed,
             ai_available,
             ai_enabled,
-            send_button_tooltip_text,
-        }
+            send_button_tooltip_text}
     }
 
     pub fn set_comment_model(
@@ -427,16 +411,14 @@ impl CommentListView {
                         .with_size(ButtonSize::Small)
                         .on_click(move |ctx| {
                             ctx.dispatch_typed_action(CommentListAction::ShowOverflow {
-                                comment_id,
-                            })
+                                comment_id})
                         });
                     let action_button = ctx.add_view(|_| action_button);
 
                     CommentDisplayState {
                         card,
                         icon_button: action_button,
-                        mouse_state: Default::default(),
-                    }
+                        mouse_state: Default::default()}
                 }
             };
 
@@ -465,8 +447,7 @@ impl CommentListView {
                 .scroll_state
                 .scroll_to_position(ScrollTarget {
                     position_id: CommentDisplayState::comment_position_id_for(comment_id),
-                    mode: ScrollToPositionMode::TopIntoView,
-                });
+                    mode: ScrollToPositionMode::TopIntoView});
         }
 
         self.recompute_comment_button_label(ctx);
@@ -491,8 +472,7 @@ impl CommentListView {
                 .scroll_state
                 .scroll_to_position(ScrollTarget {
                     position_id: CommentDisplayState::comment_position_id_for(comment_id),
-                    mode: ScrollToPositionMode::TopIntoView,
-                });
+                    mode: ScrollToPositionMode::TopIntoView});
             self.pending_scroll_to_comment = None;
         }
 
@@ -615,8 +595,7 @@ impl CommentListView {
                 handle: self.view_state.scroll_state.clone(),
                 child: Container::new(comments_column.finish())
                     .with_uniform_padding(16.)
-                    .finish(),
-            },
+                    .finish()},
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
             warpui::elements::Fill::None,
@@ -1086,8 +1065,7 @@ impl CommentListView {
                 MenuItemFields::new("View in GitHub")
                     .with_icon(Icon::Github)
                     .with_on_select_action(CommentListAction::ViewInGitHub {
-                        url: url.to_string(),
-                    })
+                        url: url.to_string()})
                     .into_item(),
             );
         }
@@ -1181,13 +1159,6 @@ impl TypedActionView for CommentListView {
                     }
 
                     // Telemetry: comment list view expanded.
-                    send_telemetry_from_ctx!(
-                        CodeReviewTelemetryEvent::CommentListExpanded {
-                            is_local: self.repo_is_local(),
-                            comment_count: self.comments_by_id.len(),
-                        },
-                        ctx
-                    );
                 }
                 ctx.notify();
             }
@@ -1220,8 +1191,7 @@ impl TypedActionView for CommentListView {
                                 CommentOrigin::ImportedFromGitHub(details) => {
                                     details.html_url.clone()
                                 }
-                                CommentOrigin::Native => None,
-                            };
+                                CommentOrigin::Native => None};
                             (
                                 matches!(source.target, AttachedReviewCommentTarget::File { .. }),
                                 source.outdated,
@@ -1274,12 +1244,6 @@ impl TypedActionView for CommentListView {
                 self.close_overflow_menu(ctx);
             }
             CommentListAction::JumpToCommentLocation(comment_id) => {
-                send_telemetry_from_ctx!(
-                    CodeReviewTelemetryEvent::CommentListItemClicked {
-                        is_local: self.repo_is_local(),
-                    },
-                    ctx
-                );
                 ctx.emit(CommentListEvent::JumpToCommentLocation(*comment_id));
             }
         }

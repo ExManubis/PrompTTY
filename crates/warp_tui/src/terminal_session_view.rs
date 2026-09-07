@@ -14,8 +14,7 @@ use warp::editor::{CodeEditorModel, CodeEditorModelEvent};
 use warp::settings::TuiVoiceSettings;
 use warp::settings::{
     AISettings, AISettingsChangedEvent, AppEditorSettings, SettingsFileError, TuiStatuslineConfig,
-    TuiTheme, TuiThemeSettings,
-};
+    TuiTheme, TuiThemeSettings};
 #[cfg(feature = "voice_input")]
 use warp::tui_export::slash_commands;
 use warp::tui_export::{
@@ -49,8 +48,7 @@ use warp::tui_export::{
     maybe_build_ai_query_upsert_event, prepare_conversation_block_restoration,
     record_autodetection_toggle_from_slash_command, record_saved_prompt_accepted,
     record_static_slash_command_accepted, saved_prompt_text_for_id,
-    slash_command_selection_behavior, throttle,
-};
+    slash_command_selection_behavior, throttle};
 use warp_core::channel::{Channel, ChannelState};
 use warp_core::features::FeatureFlag;
 use warp_core::settings::Setting;
@@ -64,8 +62,7 @@ use warpui_core::r#async::{SpawnedFutureHandle, Timer};
 use warpui_core::elements::MouseStateHandle;
 use warpui_core::elements::tui::{
     Modifier, TuiChildView, TuiConstrainedBox, TuiContainer, TuiElement, TuiFlex, TuiHoverable,
-    TuiSelectionHandle, TuiSize, TuiStyle, TuiText, TuiViewportedListState,
-};
+    TuiSelectionHandle, TuiSize, TuiStyle, TuiText, TuiViewportedListState};
 #[cfg(feature = "voice_input")]
 use warpui_core::elements::tui::{TuiAnimated, TuiDispatchEventResult, TuiEventHandler};
 use warpui_core::keymap::macros::*;
@@ -74,18 +71,15 @@ use warpui_core::platform::TerminationMode;
 #[cfg(feature = "voice_input")]
 use warpui_core::platform::keyboard::KeyCode;
 use warpui_core::{
-    AppContext, Entity, EntityId, ModelHandle, TuiView, TypedActionView, ViewContext, ViewHandle,
-};
+    AppContext, Entity, EntityId, ModelHandle, TuiView, TypedActionView, ViewContext, ViewHandle};
 
 use crate::alt_screen_view::AltScreenElement;
 use crate::api_keys_menu::{TuiApiKeysMenuEvent, TuiApiKeysMenuModel, render_api_keys_footer};
 use crate::attachment_bar::{
     FOCUS_ATTACHMENTS_BINDING_NAME, TuiAttachmentBar, TuiAttachmentBarEvent, TuiAttachmentModel,
-    TuiAttachmentPasteDisposition,
-};
+    TuiAttachmentPasteDisposition};
 use crate::cli_agent_osc_event_publisher::{
-    CliAgentOscEventPublisher, host_supports_cli_agent_notifications,
-};
+    CliAgentOscEventPublisher, host_supports_cli_agent_notifications};
 use crate::clipboard::copy_to_clipboard;
 use crate::completion_menu::TuiCompletionMenuModel;
 use crate::conversation_menu::{TuiConversationMenuEvent, TuiConversationMenuModel};
@@ -102,12 +96,10 @@ use crate::input_suggestions_mode::{TuiInputSuggestionsMode, TuiInputSuggestions
 use crate::keybindings::{
     ATTACHMENTS_AVAILABLE_FLAG, CONTEXTUAL_PLAN_TOGGLE_BINDING_NAME,
     KEYBOARD_ENHANCEMENT_AVAILABLE_FLAG, PLAN_TOGGLE_AVAILABLE_FLAG, PLAN_TOGGLE_BINDING_NAME,
-    TUI_BINDING_GROUP, binding_hint,
-};
+    TUI_BINDING_GROUP, binding_hint};
 use crate::link::TuiLink;
 use crate::mcp_install_flow::{
-    TuiMcpInstallFlowAction, TuiMcpInstallFlowEvent, TuiMcpInstallFlowModel,
-};
+    TuiMcpInstallFlowAction, TuiMcpInstallFlowEvent, TuiMcpInstallFlowModel};
 use crate::mcp_menu::{TuiMcpMenuEvent, TuiMcpMenuModel};
 use crate::model_menu::{TuiModelMenuEvent, TuiModelMenuModel};
 use crate::orchestration_block::TuiOrchestrationBlock;
@@ -115,12 +107,10 @@ use crate::orchestration_model::{TuiOrchestrationModel, TuiOrchestrationSnapshot
 use crate::orchestration_tab_bar::{
     ORCHESTRATION_TAB_BAR_FOCUSED_FLAG, TuiOrchestrationTabNavigationAction,
     orchestration_tab_bar_config, register_orchestration_surface_bindings,
-    render_orchestration_child_selected_tab_footer, render_orchestration_tab_footer,
-};
+    render_orchestration_child_selected_tab_footer, render_orchestration_tab_footer};
 use crate::platform::reveal_path_in_file_manager;
 use crate::prompt_and_command_history_menu::{
-    TuiPromptAndCommandHistoryMenuEvent, TuiPromptAndCommandHistoryMenuModel,
-};
+    TuiPromptAndCommandHistoryMenuEvent, TuiPromptAndCommandHistoryMenuModel};
 use crate::read_only_menu::{TuiReadOnlyMenu, TuiReadOnlyMenuKind};
 use crate::resume::TuiExitSummaryHandle;
 use crate::root_view::RootTuiView;
@@ -132,14 +122,12 @@ use crate::tab_bar::{TuiTabBarConfig, TuiTabBarEvent, TuiTabBarView};
 use crate::team_menu::{TuiTeamMenuEvent, TuiTeamMenuModel};
 use crate::telemetry::{
     TuiConversationMenuTelemetryEvent, TuiConversationRestoreTelemetryEvent,
-    TuiConversationRestoreTelemetryState, TuiConversationRestoreTelemetryTarget,
-};
+    TuiConversationRestoreTelemetryState, TuiConversationRestoreTelemetryTarget};
 use crate::terminal_background::probed_colors;
 use crate::terminal_content_element::TuiTerminalContentElement;
 use crate::terminal_use::{
     TerminalUseInterruptAction, TuiInputTarget, hide_agent_requested_command_from_top_level,
-    terminal_use_conversation_to_resume, terminal_use_interrupt_action, tui_input_target,
-};
+    terminal_use_conversation_to_resume, terminal_use_interrupt_action, tui_input_target};
 use crate::transcript_view::{TuiTranscriptView, TuiTranscriptViewEvent};
 use crate::transient_hint::TransientHint;
 use crate::tui_ask_question_view::TuiAskQuestionView;
@@ -150,14 +138,12 @@ use crate::ui::{abbreviate_home_prefix, conversation_restore_failed, conversatio
 use crate::usage::UsageToggle;
 #[cfg(feature = "voice_input")]
 use crate::voice_input::{
-    TuiVoiceInputEvent, TuiVoiceInputState, VoiceInputStartSource, configured_hold_key,
-};
+    TuiVoiceInputEvent, TuiVoiceInputState, VoiceInputStartSource, configured_hold_key};
 use crate::warping_indicator::{render_response_summary, render_warping_indicator_row};
 use crate::zero_state::TuiZeroStateView;
 use crate::zero_state_animation::{
     ZeroStateAnimationConfig, ZeroStateAnimationConfigEvent, ZeroStateAnimationLoadFailure,
-    ZeroStateInteractionHandle,
-};
+    ZeroStateInteractionHandle};
 mod completions;
 
 #[path = "handoff/session.rs"]
@@ -173,8 +159,7 @@ use self::completions::CompletionRequestState;
 use self::input_detection::InputDetectionState;
 use self::state::{
     TuiFirstZeroStateState, TuiTerminalSessionState, TuiTerminalSessionStateModel,
-    TuiTerminalSessionStateResolveError,
-};
+    TuiTerminalSessionStateResolveError};
 use self::usage_menu::TuiUsageSnapshot;
 
 /// Width used before the first layout pass pushes the real terminal width into the editor.
@@ -204,8 +189,7 @@ const SETTINGS_INVALID_VALUES_HINT: &str = "Settings failed to load: invalid val
 fn settings_file_error_hint(error: &SettingsFileError) -> &'static str {
     match error {
         SettingsFileError::FileParseFailed(_) => SETTINGS_PARSE_FAILED_HINT,
-        SettingsFileError::InvalidSettings(_) => SETTINGS_INVALID_VALUES_HINT,
-    }
+        SettingsFileError::InvalidSettings(_) => SETTINGS_INVALID_VALUES_HINT}
 }
 
 /// Fallback strings for the /status status menu.
@@ -259,8 +243,7 @@ pub(super) enum BlockingInputSource {
     /// The specialized orchestration configuration request.
     Orchestration(ViewHandle<TuiOrchestrationBlock>),
     /// A local-to-cloud handoff configuration or result card.
-    Handoff(ViewHandle<TuiHandoffBlock>),
-}
+    Handoff(ViewHandle<TuiHandoffBlock>)}
 
 impl BlockingInputSource {
     fn is_interactive(&self) -> bool {
@@ -273,8 +256,7 @@ impl BlockingInputSource {
             Self::AskQuestion(view) => Some(TuiChildView::new(&view).finish()),
             Self::Permission(view) => Some(TuiChildView::new(&view).finish()),
             Self::Orchestration(view) => Some(TuiChildView::new(&view).finish()),
-            Self::Handoff(view) => Some(TuiChildView::new(&view).finish()),
-        }
+            Self::Handoff(view) => Some(TuiChildView::new(&view).finish())}
     }
 }
 
@@ -301,18 +283,14 @@ pub(crate) enum TuiTerminalSessionEvent {
     InterruptPty,
     WriteAgentInput {
         bytes: Cow<'static, [u8]>,
-        mode: AIAgentPtyWriteMode,
-    },
+        mode: AIAgentPtyWriteMode},
     WriteUserInput(Cow<'static, [u8]>),
     Resize(SizeUpdate),
     StartAgentConversation {
         request: Box<StartAgentRequest>,
-        working_directory: Option<PathBuf>,
-    },
+        working_directory: Option<PathBuf>},
     CleanupFailedChildLaunch {
-        conversation_id: AIConversationId,
-    },
-}
+        conversation_id: AIConversationId}}
 
 impl PtyIntentEvent for TuiTerminalSessionEvent {
     fn pty_intent(&self) -> Option<PtyIntent> {
@@ -321,20 +299,17 @@ impl PtyIntentEvent for TuiTerminalSessionEvent {
             Self::InterruptPty => Some(PtyIntent::Interrupt),
             Self::WriteAgentInput { bytes, mode } => Some(PtyIntent::WriteAgentInput {
                 bytes: bytes.clone(),
-                mode: *mode,
-            }),
+                mode: *mode}),
             Self::WriteUserInput(bytes) => Some(PtyIntent::WriteBytes(bytes.clone())),
             Self::Resize(size_update) => Some(PtyIntent::Resize(*size_update)),
-            Self::StartAgentConversation { .. } | Self::CleanupFailedChildLaunch { .. } => None,
-        }
+            Self::StartAgentConversation { .. } | Self::CleanupFailedChildLaunch { .. } => None}
     }
 }
 
 fn zero_state_ascii_load_failure_hint(failure: ZeroStateAnimationLoadFailure) -> &'static str {
     match failure {
         ZeroStateAnimationLoadFailure::InitialLoad => ZERO_STATE_ASCII_INITIAL_LOAD_FAILED_HINT,
-        ZeroStateAnimationLoadFailure::Reload => ZERO_STATE_ASCII_RELOAD_FAILED_HINT,
-    }
+        ZeroStateAnimationLoadFailure::Reload => ZERO_STATE_ASCII_RELOAD_FAILED_HINT}
 }
 
 /// Transient hint shown when a shell command is rejected because the PTY is
@@ -400,8 +375,7 @@ fn log_bundle_success_message(path: &Path) -> String {
 fn tui_cli_shell_command(channel: Channel, arguments: &str) -> String {
     let launcher = match channel {
         Channel::Release => "promptty-tui",
-        Channel::Integration => "promptty-integration",
-    };
+        Channel::Integration => "promptty-integration"};
     format!("{launcher} {arguments}")
 }
 
@@ -420,8 +394,7 @@ fn cost_command_unavailable_hint(
         None => Some(COST_NO_ACTIVE_CONVERSATION_HINT),
         Some((true, _)) => Some(COST_EMPTY_CONVERSATION_HINT),
         Some((false, false)) => Some(COST_CONVERSATION_IN_PROGRESS_HINT),
-        Some((false, true)) => None,
-    }
+        Some((false, true)) => None}
 }
 
 fn attachment_focus_available(is_shell_mode: bool, attachments_should_render: bool) -> bool {
@@ -461,8 +434,7 @@ fn mcp_primary_action_hint(action: TuiMcpAction) -> Option<&'static str> {
         TuiMcpAction::Stop(_) => Some("to stop"),
         TuiMcpAction::Retry(_) => Some("to retry"),
         TuiMcpAction::ReopenAuthorization(_) => Some("to authenticate"),
-        TuiMcpAction::LogOut(_) | TuiMcpAction::ReloadConfig => None,
-    }
+        TuiMcpAction::LogOut(_) | TuiMcpAction::ReloadConfig => None}
 }
 
 fn render_mcp_menu_footer(
@@ -497,8 +469,7 @@ fn render_mcp_menu_footer(
 pub(crate) enum TuiConversationRestoreOrigin {
     Startup,
     ConversationList,
-    Fork,
-}
+    Fork}
 
 impl TuiConversationRestoreOrigin {
     fn agent_view_origin(self) -> AgentViewEntryOrigin {
@@ -506,8 +477,7 @@ impl TuiConversationRestoreOrigin {
             Self::Startup | Self::ConversationList => {
                 AgentViewEntryOrigin::RestoreExistingConversation
             }
-            Self::Fork => AgentViewEntryOrigin::Tui,
-        }
+            Self::Fork => AgentViewEntryOrigin::Tui}
     }
 
     fn records_telemetry(self) -> bool {
@@ -518,15 +488,13 @@ impl TuiConversationRestoreOrigin {
 #[derive(Clone, Debug)]
 pub(crate) enum TuiConversationRestoreTarget {
     Local(AIConversationId),
-    Server(ServerConversationToken),
-}
+    Server(ServerConversationToken)}
 
 impl TuiConversationRestoreTarget {
     fn telemetry_target(&self) -> TuiConversationRestoreTelemetryTarget {
         match self {
             Self::Local(_) => TuiConversationRestoreTelemetryTarget::Local,
-            Self::Server(_) => TuiConversationRestoreTelemetryTarget::Server,
-        }
+            Self::Server(_) => TuiConversationRestoreTelemetryTarget::Server}
     }
 }
 
@@ -538,10 +506,8 @@ enum ConversationRestoreState {
         origin: TuiConversationRestoreOrigin,
         target: TuiConversationRestoreTelemetryTarget,
         request_id: u64,
-        future: Option<SpawnedFutureHandle>,
-    },
-    Failed(String),
-}
+        future: Option<SpawnedFutureHandle>},
+    Failed(String)}
 
 fn export_file_success_message(export: &ConversationFileExport) -> String {
     let path = export.path().display();
@@ -655,8 +621,7 @@ pub(crate) enum TuiTerminalSessionAction {
     /// A drag selection started inside the shared read-only menu.
     ReadOnlyMenuSelectionStarted,
     /// A non-empty read-only menu selection completed.
-    ReadOnlyMenuSelectionEnded(String),
-}
+    ReadOnlyMenuSelectionEnded(String)}
 
 /// The terminal/session surface rendered inside [`RootTuiView`].
 pub(crate) struct TuiTerminalSessionView {
@@ -754,8 +719,7 @@ pub(crate) struct TuiTerminalSessionView {
     /// while armed, and a second ctrl-c within the window kills the child.
     child_kill_armed_conversation: Option<AIConversationId>,
     zero_state_interaction: ZeroStateInteractionHandle,
-    zero_state_view: ViewHandle<TuiZeroStateView>,
-}
+    zero_state_view: ViewHandle<TuiZeroStateView>}
 
 /// Registers the session surface's keybindings. Called once at TUI startup
 /// from `keybindings::init`. Ctrl-c is a fixed (non-remappable) binding,
@@ -827,8 +791,7 @@ pub(crate) fn init(app: &mut AppContext) {
             AUTO_APPROVE_TOGGLE_BINDING_NAME,
             "Toggle auto approve",
             TuiTerminalSessionAction::ToggleAutoApprove {
-                show_feedback: true,
-            },
+                show_feedback: true},
         )
         .with_context_predicate(view_context.clone())
         .with_group(TUI_BINDING_GROUP)
@@ -965,17 +928,7 @@ impl TuiTerminalSessionView {
     fn emit_input_buffer_submitted_telemetry(&self, ctx: &mut ViewContext<Self>) {
         let input_model = self.ai_input_model.as_ref(ctx);
         let block_id = self.terminal_model.lock().active_block_id().clone();
-        warp::send_telemetry_from_ctx!(
-            TelemetryEvent::InputBufferSubmitted {
-                input_type: input_model.input_type(),
-                is_locked: input_model.is_input_type_locked(),
-                input_type_decision_source: input_model.last_ai_autodetection_source(),
-                was_lock_set_with_empty_buffer: input_model.was_lock_set_with_empty_buffer(),
-                block_id,
-            },
-            ctx
-        );
-    }
+        warp::    }
 
     fn emit_block_completed_telemetry(
         &self,
@@ -1000,8 +953,7 @@ impl TuiTerminalSessionView {
             | BlockType::Restored
             | BlockType::InBandCommand
             | BlockType::Background(_)
-            | BlockType::Static => *SessionSettings::as_ref(ctx).honor_ps1,
-        };
+            | BlockType::Static => *SessionSettings::as_ref(ctx).honor_ps1};
         let BlockType::User(user_block) = &completed.block_type else {
             return;
         };
@@ -1009,45 +961,11 @@ impl TuiTerminalSessionView {
             let model = self.terminal_model.lock();
             compute(model.block_list())
         });
-        warp::send_telemetry_from_ctx!(
-            TelemetryEvent::BlockCompleted {
-                block_finished_to_precmd_delay_ms: delay.as_millis() as u64,
-                honor_ps1_enabled,
-                num_secrets_redacted: completed.num_secrets_obfuscated,
-                num_output_lines: user_block.num_output_lines,
-                num_output_lines_truncated: user_block.num_output_lines_truncated,
-                terminal_session_id: serialized_block.session_id,
-                is_udi_enabled: false,
-                is_in_agent_view: true,
-            },
-            ctx
-        );
-        if cfg!(debug_assertions) {
+        warp::        if cfg!(debug_assertions) {
             let duration = match (serialized_block.start_ts, serialized_block.completed_ts) {
                 (Some(start), Some(completed)) => (completed - start).to_std().unwrap_or_default(),
-                (None, _) | (_, None) => Duration::default(),
-            };
-            warp::send_telemetry_from_ctx!(
-                TelemetryEvent::BlockCompletedOnDogfoodOnly {
-                    block_finished_to_precmd_delay_ms: delay.as_millis() as u64,
-                    honor_ps1_enabled,
-                    num_secrets_redacted: completed.num_secrets_obfuscated,
-                    num_output_lines: user_block.num_output_lines,
-                    num_output_lines_truncated: user_block.num_output_lines_truncated,
-                    command: user_block
-                        .command_with_obfuscated_secrets
-                        .get_with(|compute| {
-                            let model = self.terminal_model.lock();
-                            compute(model.block_list())
-                        })
-                        .to_owned(),
-                    duration,
-                    exit_code: serialized_block.exit_code,
-                    terminal_session_id: serialized_block.session_id,
-                },
-                ctx
-            );
-        }
+                (None, _) | (_, None) => Duration::default()};
+            warp::        }
     }
     fn handle_accepted_mcp_install_action(
         &mut self,
@@ -1071,8 +989,7 @@ impl TuiTerminalSessionView {
                         );
                     }
                     Ok(None) => {}
-                    Err(message) => self.show_error_hint(message, ctx),
-                }
+                    Err(message) => self.show_error_hint(message, ctx)}
             }
         }
         ctx.notify();
@@ -1090,8 +1007,7 @@ impl TuiTerminalSessionView {
         });
         match result {
             Ok(_) => self.show_success_hint(format!("{name} installed and starting"), ctx),
-            Err(message) => self.show_error_hint(message, ctx),
-        }
+            Err(message) => self.show_error_hint(message, ctx)}
     }
 
     fn focus_blocking_input_source(source: BlockingInputSource, ctx: &mut ViewContext<Self>) {
@@ -1100,8 +1016,7 @@ impl TuiTerminalSessionView {
             BlockingInputSource::AskQuestion(view) => ctx.focus(&view),
             BlockingInputSource::Permission(view) => ctx.focus(&view),
             BlockingInputSource::Orchestration(view) => ctx.focus(&view),
-            BlockingInputSource::Handoff(view) => ctx.focus(&view),
-        }
+            BlockingInputSource::Handoff(view) => ctx.focus(&view)}
     }
 
     fn focus_current_owner(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1302,8 +1217,7 @@ impl TuiTerminalSessionView {
                 self.cli_subagent_controller.update(ctx, |controller, ctx| {
                     controller.switch_control_to_user(
                         UserTakeOverReason::Stop {
-                            should_auto_resume: true,
-                        },
+                            should_auto_resume: true},
                         ctx,
                     );
                 });
@@ -1549,13 +1463,11 @@ impl TuiTerminalSessionView {
             StartAgentExecutorEvent::CreateAgent(request) => {
                 ctx.emit(TuiTerminalSessionEvent::StartAgentConversation {
                     request: request.clone(),
-                    working_directory: view.current_working_directory(ctx).map(PathBuf::from),
-                });
+                    working_directory: view.current_working_directory(ctx).map(PathBuf::from)});
             }
             StartAgentExecutorEvent::CleanupFailedChildLaunch { conversation_id } => {
                 ctx.emit(TuiTerminalSessionEvent::CleanupFailedChildLaunch {
-                    conversation_id: *conversation_id,
-                });
+                    conversation_id: *conversation_id});
             }
         });
         let ai_controller = ctx.add_model(|ctx| {
@@ -1628,8 +1540,7 @@ impl TuiTerminalSessionView {
                     cli_subagent_controller: cli_subagent_controller.clone(),
                     terminal_view_id: terminal_surface_id,
                     terminal_model: model.clone(),
-                    team_context_resolver: slash_commands_team_context,
-                },
+                    team_context_resolver: slash_commands_team_context},
                 ctx,
             )
         });
@@ -1920,8 +1831,7 @@ impl TuiTerminalSessionView {
             }
             TuiTranscriptViewEvent::PermissionReplacementGuidanceSubmitted {
                 conversation_id,
-                text,
-            } => {
+                text} => {
                 view.ai_controller.update(ctx, |controller, ctx| {
                     controller.send_user_query_in_conversation(
                         text.clone(),
@@ -1976,8 +1886,7 @@ impl TuiTerminalSessionView {
             // updates. The indicator is rendered by this view's render_footer, not
             // by TuiInputView itself, so a notify from TuiInputView alone is not
             // sufficient to update the parent's element tree.
-            TuiInputViewEvent::VimModeChanged => ctx.notify(),
-        });
+            TuiInputViewEvent::VimModeChanged => ctx.notify()});
         ctx.subscribe_to_view(&orchestration_tab_bar, |view, _, event, ctx| match event {
             TuiTabBarEvent::SelectTab(conversation_id) => {
                 view.switch_to_orchestration_tab(
@@ -2021,8 +1930,7 @@ impl TuiTerminalSessionView {
                     | TuiReadOnlyMenuKind::Status
                     | TuiReadOnlyMenuKind::Usage,
                 )
-                | None => None,
-            };
+                | None => None};
             let scroll_top = event
                 .mode
                 .read_only_menu()
@@ -2120,8 +2028,7 @@ impl TuiTerminalSessionView {
             | ModelEvent::Handler(_)
             | ModelEvent::FinishUpdate(_) => ctx.notify(),
             ModelEvent::BackgroundBlockStarted => {
-                warp::send_telemetry_from_ctx!(TelemetryEvent::BackgroundBlockStarted, ctx);
-                ctx.notify();
+                warp::                ctx.notify();
             }
             _ => {}
         });
@@ -2234,8 +2141,7 @@ impl TuiTerminalSessionView {
             &BlocklistAIHistoryModel::handle(ctx),
             |view, _, event, ctx| {
                 if let BlocklistAIHistoryEvent::ConversationUsageMetadataUpdated {
-                    conversation_id,
-                } = event
+                    conversation_id} = event
                 {
                     let selected = view
                         .conversation_selection
@@ -2334,8 +2240,7 @@ impl TuiTerminalSessionView {
             orchestration_tabs_focused: false,
             child_kill_armed_conversation: None,
             zero_state_interaction,
-            zero_state_view,
-        };
+            zero_state_view};
         if let Some(failure) = initial_zero_state_load_failure {
             view.show_zero_state_ascii_load_failure(failure, ctx);
         }
@@ -2548,20 +2453,7 @@ impl TuiTerminalSessionView {
             } else {
                 PillBarPillKind::Child
             };
-            warp::send_telemetry_from_ctx!(
-                BlocklistOrchestrationTelemetryEvent::PillBarInteraction(PillBarInteractionEvent {
-                    action: PillBarActionKind::Switch,
-                    pill_kind,
-                    total_pills: snapshot.children.len() + 1,
-                    total_pinned: 0,
-                    source_conversation_id: snapshot.anchor_conversation_id,
-                    root_conversation_id: snapshot.root_conversation_id,
-                    target_conversation_id: conversation_id,
-                    switch_outcome: Some(PillSwitchOutcome::SwitchedInPlace),
-                }),
-                ctx
-            );
-        }
+            warp::        }
         if session_id.surface_id() == self.terminal_surface_id {
             self.refresh_orchestration_tab_state(ctx);
             self.set_orchestration_tab_focus(keep_tab_focus, ctx);
@@ -2652,20 +2544,7 @@ impl TuiTerminalSessionView {
     /// and returns focus to the root orchestration agent.
     fn kill_child_agent(&mut self, conversation_id: AIConversationId, ctx: &mut ViewContext<Self>) {
         if let Some(snapshot) = self.compute_orchestration_tab_snapshot(ctx) {
-            warp::send_telemetry_from_ctx!(
-                BlocklistOrchestrationTelemetryEvent::PillBarInteraction(PillBarInteractionEvent {
-                    action: PillBarActionKind::Kill,
-                    pill_kind: PillBarPillKind::Child,
-                    total_pills: snapshot.children.len() + 1,
-                    total_pinned: 0,
-                    source_conversation_id: snapshot.anchor_conversation_id,
-                    root_conversation_id: snapshot.root_conversation_id,
-                    target_conversation_id: conversation_id,
-                    switch_outcome: None,
-                }),
-                ctx
-            );
-        }
+            warp::        }
         // Clear any armed kill or exit window.
         self.exit_confirmation.disarm();
         self.child_kill_armed_conversation = None;
@@ -2786,8 +2665,7 @@ impl TuiTerminalSessionView {
             TuiReadOnlyMenuKind::Usage => self
                 .usage_snapshot
                 .as_ref()
-                .map(|snapshot| usage_menu::render(snapshot, builder)),
-        });
+                .map(|snapshot| usage_menu::render(snapshot, builder))});
         if let Some(menu_element) = menu_element {
             let padded_menu = TuiContainer::new(menu_element)
                 .with_padding_top(INLINE_MENU_TOP_PADDING_ROWS)
@@ -2920,8 +2798,7 @@ impl TuiTerminalSessionView {
             conversation_id: format_status_conversation_id(conversation_id),
             working_directory: cwd.unwrap_or_else(|| STATUS_UNAVAILABLE.to_owned()),
             org,
-            email,
-        }
+            email}
     }
 
     /// Whether this view projects the focused session.
@@ -2948,17 +2825,9 @@ impl TuiTerminalSessionView {
             origin,
             target: telemetry_target,
             request_id,
-            future: None,
-        };
+            future: None};
         if origin.records_telemetry() {
-            warp::send_telemetry_from_ctx!(
-                TuiConversationRestoreTelemetryEvent {
-                    state: TuiConversationRestoreTelemetryState::Started,
-                    target: telemetry_target,
-                },
-                ctx
-            );
-        }
+            warp::        }
 
         ctx.notify();
         let future =
@@ -2984,8 +2853,7 @@ impl TuiTerminalSessionView {
             }
             ConversationRestoreState::Idle
             | ConversationRestoreState::Failed(_)
-            | ConversationRestoreState::Loading { .. } => future_handle.abort(),
-        }
+            | ConversationRestoreState::Loading { .. } => future_handle.abort()}
     }
 
     /// Validates a completed load before starting synchronous surface replacement.
@@ -3171,14 +3039,7 @@ impl TuiTerminalSessionView {
         self.refresh_exit_summary(ctx);
         self.reconcile_focus(ctx);
         if origin.records_telemetry() {
-            warp::send_telemetry_from_ctx!(
-                TuiConversationRestoreTelemetryEvent {
-                    state: TuiConversationRestoreTelemetryState::Succeeded,
-                    target: telemetry_target,
-                },
-                ctx
-            );
-        }
+            warp::        }
         ctx.notify();
     }
 
@@ -3216,14 +3077,7 @@ impl TuiTerminalSessionView {
         }
         self.next_restore_request_id = self.next_restore_request_id.wrapping_add(1);
         if origin.records_telemetry() {
-            warp::send_telemetry_from_ctx!(
-                TuiConversationRestoreTelemetryEvent {
-                    state: TuiConversationRestoreTelemetryState::Cancelled,
-                    target,
-                },
-                ctx
-            );
-        }
+            warp::        }
         self.reconcile_focus(ctx);
         ctx.notify();
         true
@@ -3244,22 +3098,14 @@ impl TuiTerminalSessionView {
             } if *active_request_id == request_id => (*origin, *target),
             ConversationRestoreState::Idle
             | ConversationRestoreState::Failed(_)
-            | ConversationRestoreState::Loading { .. } => return,
-        };
+            | ConversationRestoreState::Loading { .. } => return};
         match origin {
             TuiConversationRestoreOrigin::Startup => {
                 self.conversation_restore_state = ConversationRestoreState::Failed(message);
             }
             TuiConversationRestoreOrigin::ConversationList | TuiConversationRestoreOrigin::Fork => {
                 if origin.records_telemetry() {
-                    warp::send_telemetry_from_ctx!(
-                        TuiConversationRestoreTelemetryEvent {
-                            state: TuiConversationRestoreTelemetryState::Failed,
-                            target,
-                        },
-                        ctx
-                    );
-                }
+                    warp::                }
                 self.conversation_restore_state = ConversationRestoreState::Idle;
                 self.show_transient_hint(message, ctx);
                 self.reconcile_focus(ctx);
@@ -3482,8 +3328,7 @@ impl TuiTerminalSessionView {
             TuiAttachmentBarEvent::ShowHint(text) => {
                 self.show_transient_hint(text.clone(), ctx);
             }
-            TuiAttachmentBarEvent::ReturnFocus => self.reconcile_focus(ctx),
-        }
+            TuiAttachmentBarEvent::ReturnFocus => self.reconcile_focus(ctx)}
         ctx.notify();
     }
 
@@ -3707,8 +3552,7 @@ impl TuiTerminalSessionView {
         )
         .on_click(|event_ctx, _| {
             event_ctx.dispatch_typed_action(TuiTerminalSessionAction::ToggleAutoApprove {
-                show_feedback: false,
-            });
+                show_feedback: false});
         })
         .finish();
         render_warping_indicator_row(label, elapsed, auto_approve, ctx)
@@ -3792,8 +3636,7 @@ impl TuiTerminalSessionView {
                 .and_then(AIConversation::active_todo_list)
                 .filter(|todo_list| !todo_list.pending_items().is_empty())
                 .map(|todo_list| todo_list.completed_items().len().saturating_add(1))
-                .unwrap_or_default(),
-        }
+                .unwrap_or_default()}
     }
 
     fn close_todo_menu_if_unavailable(&mut self, ctx: &mut ViewContext<Self>) {
@@ -3995,8 +3838,7 @@ impl TuiTerminalSessionView {
         let (workflow_id, workflow_command) = match linked_workflow_data {
             Some(LinkedWorkflowData::Id(workflow_id)) => (Some(workflow_id), None),
             Some(LinkedWorkflowData::Command(workflow_command)) => (None, Some(workflow_command)),
-            None => (None, None),
-        };
+            None => (None, None)};
         ctx.emit(TuiTerminalSessionEvent::ExecuteCommand(Box::new(
             ExecuteCommandEvent {
                 command: command.to_owned(),
@@ -4004,8 +3846,7 @@ impl TuiTerminalSessionView {
                 workflow_id,
                 workflow_command,
                 should_add_command_to_history: true,
-                source: CommandExecutionSource::User,
-            },
+                source: CommandExecutionSource::User},
         )));
         self.emit_input_buffer_submitted_telemetry(ctx);
 
@@ -4082,8 +3923,7 @@ impl TuiTerminalSessionView {
                 }
                 event_ctx.dispatch_typed_action(TuiTerminalSessionAction::VoiceHoldKeyChanged {
                     key,
-                    state,
-                });
+                    state});
                 TuiDispatchEventResult::StopPropagation
             })
             .finish()
@@ -4158,8 +3998,7 @@ impl TuiTerminalSessionView {
             TuiVoiceInputEvent::Cancelled => {
                 self.show_transient_hint("Voice input cancelled".to_owned(), ctx);
             }
-            TuiVoiceInputEvent::StateChanged(_) => ctx.notify(),
-        }
+            TuiVoiceInputEvent::StateChanged(_) => ctx.notify()}
     }
 
     fn handle_submitted_input(&mut self, input: &str, ctx: &mut ViewContext<Self>) {
@@ -4318,8 +4157,7 @@ impl TuiTerminalSessionView {
             }
         };
 
-        warp::send_telemetry_from_ctx!(TuiConversationMenuTelemetryEvent::ItemSelected, ctx);
-        self.conversation_menu
+        warp::        self.conversation_menu
             .update(ctx, |menu, ctx| menu.dismiss(ctx));
         self.restore_conversation(target, TuiConversationRestoreOrigin::ConversationList, ctx);
     }
@@ -4358,8 +4196,7 @@ impl TuiTerminalSessionView {
                             );
                         }
                     }
-                    Err(message) => self.show_error_hint(message, ctx),
-                }
+                    Err(message) => self.show_error_hint(message, ctx)}
             }
             TuiMcpAction::Start(_)
             | TuiMcpAction::Stop(_)
@@ -4389,8 +4226,7 @@ impl TuiTerminalSessionView {
                     None
                 }
                 TuiUpArrowHistoryItemKind::Command {
-                    linked_workflow_data,
-                } => {
+                    linked_workflow_data} => {
                     input.enter_shell_mode(ctx);
                     linked_workflow_data
                 }
@@ -4924,8 +4760,7 @@ impl TuiTerminalSessionView {
                 self.reconcile_focus(ctx);
                 ctx.notify();
             }
-            TuiStatuslineConfigEvent::LayoutChanged => ctx.notify(),
-        }
+            TuiStatuslineConfigEvent::LayoutChanged => ctx.notify()}
     }
 
     fn persist_statusline_config(
@@ -5103,24 +4938,20 @@ impl TuiTerminalSessionView {
                             metadata: AgentInteractionMetadata::new_hidden(
                                 action_id.clone(),
                                 conversation_id,
-                            ),
-                        },
-                    },
+                            )}},
                 )));
             }
             ShellCommandExecutorEvent::WriteToPty { input, mode } => {
                 ctx.emit(TuiTerminalSessionEvent::WriteAgentInput {
                     bytes: Cow::Owned(input.to_vec()),
-                    mode: *mode,
-                });
+                    mode: *mode});
             }
             ShellCommandExecutorEvent::CancelExecution => {
                 ctx.emit(TuiTerminalSessionEvent::InterruptPty);
             }
             ShellCommandExecutorEvent::TransferControlToUser {
                 action_id: _,
-                reason,
-            } => {
+                reason} => {
                 let reason = reason.clone();
                 self.cli_subagent_controller.update(ctx, |controller, ctx| {
                     controller.switch_control_to_user(

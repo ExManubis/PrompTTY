@@ -16,14 +16,12 @@ use warpui::elements::{
     Dismiss, Fill, Flex, OffsetPositioning, OffsetType, ParentElement, ParentOffsetBounds,
     PositionedElementOffsetBounds, PositioningAxis, Radius, Resizable, ResizableStateHandle,
     SavePosition, ScrollStateHandle, Scrollable, ScrollableElement, Shrinkable, Stack, UniformList,
-    UniformListState, XAxisAnchor, YAxisAnchor, resizable_state_handle,
-};
+    UniformListState, XAxisAnchor, YAxisAnchor, resizable_state_handle};
 use warpui::presenter::ChildView;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle, WeakViewHandle,
-};
+    ViewContext, ViewHandle, WeakViewHandle};
 
 use super::ai_queries::AIQueriesDataSource;
 use super::env_var_collections::EnvVarCollectionDataSource;
@@ -41,7 +39,6 @@ use crate::search::command_search::searcher::{CommandSearchItemAction, CommandSe
 use crate::search::mixer::AddAsyncSourceOptions;
 use crate::search::result_renderer::{QueryResultRenderer, QueryResultRendererStyles};
 use crate::search::search_bar::{SearchBar, SearchBarEvent, SearchBarState, SearchResultOrdering};
-use crate::send_telemetry_from_ctx;
 use crate::server::server_api::ai::AIClient;
 use crate::server::telemetry::TelemetryEvent;
 use crate::settings::AISettings;
@@ -71,18 +68,15 @@ lazy_static! {
 pub enum CommandSearchEvent {
     ItemSelected {
         query: String,
-        payload: Box<CommandSearchItemAction>,
-    },
+        payload: Box<CommandSearchItemAction>},
     Close {
         /// The query when Command Search was closed.
         query: String,
 
         /// The filter when Command Search was closed, if any.
-        filter: Option<QueryFilter>,
-    },
+        filter: Option<QueryFilter>},
     Blur,
-    Resize,
-}
+    Resize}
 
 /// The actions that internal elements (e.g.: `Dismiss`) produce for consumption
 /// by `CommandSearchView` itself.
@@ -90,11 +84,9 @@ pub enum CommandSearchEvent {
 pub enum CommandSearchAction {
     ResultClicked {
         result_index: usize,
-        result_action: Box<CommandSearchItemAction>,
-    },
+        result_action: Box<CommandSearchItemAction>},
     Close,
-    Resize,
-}
+    Resize}
 
 struct CommandSearchViewState {
     list_state: UniformListState,
@@ -102,8 +94,7 @@ struct CommandSearchViewState {
 
     /// Range of indices corresponding to the indices of the query results visible in the results
     /// list.
-    visible_results_range: Option<Range<usize>>,
-}
+    visible_results_range: Option<Range<usize>>}
 
 /// A panel that allows the user to search for a command to execute next.
 pub struct CommandSearchView {
@@ -116,8 +107,7 @@ pub struct CommandSearchView {
     resizable_state_handle: ResizableStateHandle,
     search_bar: ViewHandle<SearchBar<CommandSearchItemAction>>,
     search_bar_state: ModelHandle<SearchBarState<CommandSearchItemAction>>,
-    mixer: ModelHandle<CommandSearchMixer>,
-}
+    mixer: ModelHandle<CommandSearchMixer>}
 
 impl CommandSearchView {
     pub fn new(ai_client: Arc<dyn AIClient>, ctx: &mut ViewContext<Self>) -> Self {
@@ -142,8 +132,7 @@ impl CommandSearchView {
                         |result_index, result_action, event_ctx| {
                             event_ctx.dispatch_typed_action(CommandSearchAction::ResultClicked {
                                 result_index,
-                                result_action: Box::new(result_action),
-                            })
+                                result_action: Box::new(result_action)})
                         },
                         *QUERY_RESULT_RENDERER_STYLES,
                     )
@@ -191,13 +180,11 @@ impl CommandSearchView {
             state: CommandSearchViewState {
                 scroll_state: Default::default(),
                 list_state: Default::default(),
-                visible_results_range: None,
-            },
+                visible_results_range: None},
             resizable_state_handle,
             search_bar,
             search_bar_state,
-            mixer,
-        }
+            mixer}
     }
 
     /// Resets the mixer with the relevant data sources for Command Search registered.
@@ -226,8 +213,7 @@ impl CommandSearchView {
                     AddAsyncSourceOptions {
                         debounce_interval: Some(Duration::from_millis(50)),
                         run_in_zero_state: false,
-                        run_when_unfiltered: false,
-                    },
+                        run_when_unfiltered: false},
                     ctx,
                 );
             }
@@ -249,8 +235,7 @@ impl CommandSearchView {
                     AddAsyncSourceOptions {
                         debounce_interval: Some(Duration::from_millis(50)),
                         run_in_zero_state: true,
-                        run_when_unfiltered: true,
-                    },
+                        run_when_unfiltered: true},
                     ctx,
                 );
 
@@ -280,8 +265,7 @@ impl CommandSearchView {
                     AddAsyncSourceOptions {
                         debounce_interval: Some(Duration::from_millis(50)),
                         run_in_zero_state: true,
-                        run_when_unfiltered: true,
-                    },
+                        run_when_unfiltered: true},
                     ctx,
                 );
             } else {
@@ -297,8 +281,7 @@ impl CommandSearchView {
                                     AddAsyncSourceOptions {
                                         debounce_interval: Some(Duration::from_millis(50)),
                                         run_in_zero_state: true,
-                                        run_when_unfiltered: true,
-                                    },
+                                        run_when_unfiltered: true},
                                     ctx,
                                 );
                                 if let Some(query) = mixer.current_query().cloned() {
@@ -328,8 +311,7 @@ impl CommandSearchView {
         self.reset_command_search_mixer(session_id, session_context, ai_execution_context, ctx);
         let ordering = match menu_positioning {
             MenuPositioning::AboveInputBox => SearchResultOrdering::BottomUp,
-            MenuPositioning::BelowInputBox => SearchResultOrdering::TopDown,
-        };
+            MenuPositioning::BelowInputBox => SearchResultOrdering::TopDown};
 
         self.menu_positioning = menu_positioning;
 
@@ -364,8 +346,7 @@ impl CommandSearchView {
             CommandSearchZeroStateEvent::FilterChipSelected(filter) => self
                 .set_active_query_filter(Some((*filter, filter.filter_atom().primary_text)), ctx),
             CommandSearchZeroStateEvent::SampleQuerySelected(filter) => self
-                .set_active_query_filter(Some((*filter, filter.filter_atom().primary_text)), ctx),
-        }
+                .set_active_query_filter(Some((*filter, filter.filter_atom().primary_text)), ctx)}
     }
 
     fn close(&self, ctx: &mut ViewContext<Self>) {
@@ -376,13 +357,6 @@ impl CommandSearchView {
 
     fn blur(&self, ctx: &mut ViewContext<Self>) {
         let buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
-        send_telemetry_from_ctx!(
-            TelemetryEvent::CommandSearchExited {
-                query_filter: self.active_query_filter(ctx),
-                buffer_length
-            },
-            ctx
-        );
         ctx.emit(CommandSearchEvent::Blur);
     }
 
@@ -395,24 +369,10 @@ impl CommandSearchView {
         match event {
             SearchBarEvent::Close => {
                 let buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::CommandSearchExited {
-                        query_filter: self.active_query_filter(ctx),
-                        buffer_length
-                    },
-                    ctx
-                );
                 self.close(ctx);
             }
             // ctrl-c should close the command search view
             SearchBarEvent::BufferCleared { buffer_len } => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::CommandSearchExited {
-                        query_filter: self.active_query_filter(ctx),
-                        buffer_length: *buffer_len
-                    },
-                    ctx
-                );
                 self.close(ctx);
             }
             SearchBarEvent::ResultAccepted { index, action } => {
@@ -466,8 +426,7 @@ impl CommandSearchView {
                 | OpenWarpAI
                 | AcceptEnvVarCollection(_)
                 | TranslateUsingWarpAI
-                | AcceptAIQuery(_) => false,
-            };
+                | AcceptAIQuery(_) => false};
 
             let (a11y_content, a11y_help_content) = if was_immediately_executed {
                 (
@@ -490,27 +449,15 @@ impl CommandSearchView {
             // uniform list, but what we want is the "distance from first result".
             let result_index = match self.search_bar_state.as_ref(ctx).query_result_renderers() {
                 Some(renderers) => renderers.len() - result_index - 1,
-                None => result_index,
-            };
+                None => result_index};
 
-            send_telemetry_from_ctx!(
-                TelemetryEvent::CommandSearchResultAccepted {
-                    result_index,
-                    result_type: (&result_action).into(),
-                    query_filter: self.search_bar_state.as_ref(ctx).active_query_filter(),
-                    buffer_length: self.search_bar.as_ref(ctx).query(ctx).len(),
-                    was_immediately_executed,
-                },
-                ctx
-            );
         }
 
         let query = self.search_bar.as_ref(ctx).query(ctx);
 
         ctx.emit(CommandSearchEvent::ItemSelected {
             query,
-            payload: Box::new(result_action),
-        });
+            payload: Box::new(result_action)});
         self.close(ctx);
     }
 
@@ -669,8 +616,7 @@ impl CommandSearchView {
                                 .collect_vec()
                                 .into_iter()
                         }
-                        None => Vec::new().into_iter(),
-                    }
+                        None => Vec::new().into_iter()}
                 };
 
                 let mut column = Flex::column();
@@ -721,8 +667,7 @@ impl CommandSearchView {
                     )
                     .finish()
             }
-            _ => self.render_loading_state(appearance),
-        }
+            _ => self.render_loading_state(appearance)}
     }
 
     /// Renders the input editor and surrounding UI.
@@ -816,10 +761,8 @@ impl TypedActionView for CommandSearchView {
             Close => self.blur(ctx),
             ResultClicked {
                 result_index,
-                result_action,
-            } => self.handle_result_selected(*result_index, *result_action.clone(), ctx),
-            Resize => ctx.emit(CommandSearchEvent::Resize),
-        }
+                result_action} => self.handle_result_selected(*result_index, *result_action.clone(), ctx),
+            Resize => ctx.emit(CommandSearchEvent::Resize)}
     }
 }
 

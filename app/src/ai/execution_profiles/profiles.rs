@@ -14,8 +14,7 @@ use warpui::{AppContext, Entity, EntityId, ModelContext, SingletonEntity};
 
 use super::{
     AIExecutionProfile, ActionPermission, CloudAIExecutionProfileModel, ExecutionProfileId,
-    ExecutionProfilesConfig, WriteToPtyPermission,
-};
+    ExecutionProfilesConfig, WriteToPtyPermission};
 use crate::ai::llms::{LLMId, LLMPreferences};
 use crate::ai::mcp::TemplatableMCPServerManager;
 use crate::ai::mcp::templatable_manager::TemplatableMCPServerManagerEvent;
@@ -35,18 +34,16 @@ use crate::settings::cloud_preferences_syncer::CloudPreferencesSyncer;
 #[cfg(not(feature = "agent_mode_evals"))]
 use crate::settings::cloud_preferences_syncer::CloudPreferencesSyncerEvent;
 use crate::settings::{
-    AISettings, AISettingsChangedEvent, AgentModeCommandExecutionPredicate, ExecutionProfiles,
-};
+    AISettings, AISettingsChangedEvent, AgentModeCommandExecutionPredicate, ExecutionProfiles};
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{CloudModel, LaunchMode, TelemetryEvent, send_telemetry_from_ctx};
+use crate::{CloudModel, LaunchMode, TelemetryEvent};
 
 #[derive(Clone, Debug)]
 pub struct AIExecutionProfileInfo {
     id: ExecutionProfileId,
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     sync_id: Option<SyncId>,
-    data: AIExecutionProfile,
-}
+    data: AIExecutionProfile}
 
 impl AIExecutionProfileInfo {
     pub fn id(&self) -> &ExecutionProfileId {
@@ -75,8 +72,7 @@ fn file_backed_execution_profiles_enabled(launch_mode: &LaunchMode) -> bool {
         }
         LaunchMode::CommandLine { .. }
         | LaunchMode::RemoteServerProxy
-        | LaunchMode::RemoteServerDaemon { .. } => false,
-    }
+        | LaunchMode::RemoteServerDaemon { .. } => false}
 }
 
 /// Selects the authoritative persistence backend for execution profiles.
@@ -87,9 +83,7 @@ enum ProfileSource {
     /// One file-backed collection stored in [`AISettings`].
     SettingsCollection {
         /// Whether this launch imports account-owned legacy cloud objects.
-        migrates_legacy_cloud_profiles: bool,
-    },
-}
+        migrates_legacy_cloud_profiles: bool}}
 
 impl ProfileSource {
     /// Resolves the persistence backend for this launch.
@@ -102,8 +96,7 @@ impl ProfileSource {
             migrates_legacy_cloud_profiles: matches!(
                 launch_mode,
                 LaunchMode::App { .. } | LaunchMode::Test { .. }
-            ),
-        }
+            )}
     }
 
     /// Returns whether this source stores profiles in the settings collection.
@@ -160,8 +153,7 @@ enum SettingsMigrationState {
     /// The settings collection is authoritative, but its initial cloud reconciliation is pending.
     PendingExplicitSync,
     /// The collection needs no further migration work during this process.
-    Complete,
-}
+    Complete}
 
 impl SettingsMigrationState {
     /// Selects the initial authority state for a profile source.
@@ -172,8 +164,7 @@ impl SettingsMigrationState {
         ) {
             (true, true) => Self::PendingExplicitSync,
             (true, false) => Self::PendingLegacyImport,
-            (false, _) => Self::Complete,
-        }
+            (false, _) => Self::Complete}
     }
 
     /// Returns whether this state permits reads and writes through [`AISettings`].
@@ -187,27 +178,22 @@ impl SettingsMigrationState {
 pub enum DefaultProfileState {
     Unsynced {
         id: ExecutionProfileId,
-        profile: AIExecutionProfile,
-    },
+        profile: AIExecutionProfile},
     Synced {
-        id: ExecutionProfileId,
-    },
+        id: ExecutionProfileId},
     /// Currently, the behavior of the CLI default is that it
     /// cannot be updated and will never be synced.
     #[allow(dead_code)]
     Cli {
         id: ExecutionProfileId,
-        profile: AIExecutionProfile,
-    },
-}
+        profile: AIExecutionProfile}}
 
 impl std::fmt::Display for DefaultProfileState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DefaultProfileState::Unsynced { .. } => write!(f, "Unsynced"),
             DefaultProfileState::Synced { .. } => write!(f, "Synced"),
-            DefaultProfileState::Cli { .. } => write!(f, "CLI"),
-        }
+            DefaultProfileState::Cli { .. } => write!(f, "CLI")}
     }
 }
 
@@ -216,8 +202,7 @@ impl DefaultProfileState {
         match self {
             DefaultProfileState::Unsynced { id, .. } => id.clone(),
             DefaultProfileState::Synced { id } => id.clone(),
-            DefaultProfileState::Cli { id, .. } => id.clone(),
-        }
+            DefaultProfileState::Cli { id, .. } => id.clone()}
     }
 }
 
@@ -243,8 +228,7 @@ pub struct AIExecutionProfilesModel {
     /// Maps stable profile IDs to legacy cloud-object IDs for the rollback backend.
     profile_id_to_sync_id: HashMap<ExecutionProfileId, SyncId>,
     /// Only contains entries for non-default profiles.
-    active_profiles_per_session: HashMap<EntityId, ExecutionProfileId>,
-}
+    active_profiles_per_session: HashMap<EntityId, ExecutionProfileId>}
 
 impl AIExecutionProfilesModel {
     #[allow(unused_variables)]
@@ -300,8 +284,7 @@ impl AIExecutionProfilesModel {
             if #[cfg(feature = "agent_mode_evals")] {
                 let default_profile_state = DefaultProfileState::Unsynced {
                     id: ExecutionProfileId::new(),
-                    profile: AIExecutionProfile::create_agent_mode_eval_profile(),
-                };
+                    profile: AIExecutionProfile::create_agent_mode_eval_profile()};
                 let profile_id_to_sync_id: HashMap<ExecutionProfileId, SyncId> = HashMap::new();
                 let active_profiles_per_session: HashMap<EntityId, ExecutionProfileId> = HashMap::new();
             } else {
@@ -313,8 +296,7 @@ impl AIExecutionProfilesModel {
                     (
                         DefaultProfileState::Unsynced {
                             id: ExecutionProfileId::default_profile(),
-                            profile: AIExecutionProfile::default(),
-                        },
+                            profile: AIExecutionProfile::default()},
                         HashMap::new(),
                         HashMap::new(),
                     )
@@ -350,21 +332,17 @@ impl AIExecutionProfilesModel {
                                         source.legacy_profile_id(p.id, true);
                                     profile_id_to_sync_id.insert(execution_profile_id.clone(), p.id);
                                     DefaultProfileState::Synced {
-                                        id: execution_profile_id,
-                                    }
+                                        id: execution_profile_id}
                                 }
                                 None => DefaultProfileState::Unsynced {
                                     id: source.default_profile_id(),
-                                    profile: super::create_default_from_legacy_settings(ctx),
-                                },
-                            }
+                                    profile: super::create_default_from_legacy_settings(ctx)}}
                         }
                         // When running as a CLI, we ignore the GUI default and use a more permissive default.
                         LaunchMode::CommandLine { is_sandboxed, computer_use_override, .. } => {
                             DefaultProfileState::Cli {
                                 profile: AIExecutionProfile::create_default_cli_profile(*is_sandboxed, *computer_use_override),
-                                id: ExecutionProfileId::new(),
-                            }
+                                id: ExecutionProfileId::new()}
                         }
                         // RemoteServerProxy and RemoteServerDaemon don't use AI
                         // execution profiles. They never reach this code path
@@ -372,12 +350,10 @@ impl AIExecutionProfilesModel {
                         // exhaustively.
                         LaunchMode::RemoteServerProxy | LaunchMode::RemoteServerDaemon { .. } => DefaultProfileState::Unsynced {
                             id: ExecutionProfileId::new(),
-                            profile: super::create_default_from_legacy_settings(ctx),
-                        },
+                            profile: super::create_default_from_legacy_settings(ctx)},
                         // Settings-backed TUI initialization is handled before the
                         // legacy cloud-object branch.
-                        LaunchMode::Tui { .. } => unreachable!("TUI profiles use settings"),
-                    };
+                        LaunchMode::Tui { .. } => unreachable!("TUI profiles use settings")};
                     (
                         default_profile_state,
                         profile_id_to_sync_id,
@@ -439,8 +415,7 @@ impl AIExecutionProfilesModel {
                                 ..
                             },
                         client_id,
-                        server_id,
-                    } = event
+                        server_id} = event
                     {
                         me.replace_client_id_with_server_id(
                             SyncId::ServerId(*server_id),
@@ -503,8 +478,7 @@ impl AIExecutionProfilesModel {
             last_settings_profiles,
             default_profile_state,
             profile_id_to_sync_id,
-            active_profiles_per_session,
-        };
+            active_profiles_per_session};
 
         if !uses_file_backed_profiles {
             model.maybe_inherit_from_legacy_settings(ctx);
@@ -805,8 +779,7 @@ impl AIExecutionProfilesModel {
     /// field.
     fn maybe_inherit_from_legacy_settings(&mut self, ctx: &mut ModelContext<Self>) {
         let DefaultProfileState::Synced {
-            id: default_profile_id,
-        } = &self.default_profile_state
+            id: default_profile_id} = &self.default_profile_state
         else {
             return;
         };
@@ -845,7 +818,6 @@ impl AIExecutionProfilesModel {
             if !self.activate_pending_settings_collection(profiles, ctx) {
                 return None;
             }
-            send_telemetry_from_ctx!(TelemetryEvent::AIExecutionProfileCreated, ctx);
             return Some(profile_id);
         }
 
@@ -862,7 +834,6 @@ impl AIExecutionProfilesModel {
                 report_error!(error.context("Failed to create execution profile in settings"));
                 return None;
             }
-            send_telemetry_from_ctx!(TelemetryEvent::AIExecutionProfileCreated, ctx);
             return Some(profile_id);
         }
 
@@ -884,8 +855,6 @@ impl AIExecutionProfilesModel {
 
         self.profile_id_to_sync_id
             .insert(profile_id.clone(), SyncId::ClientId(client_id));
-
-        send_telemetry_from_ctx!(TelemetryEvent::AIExecutionProfileCreated, ctx);
 
         ctx.emit(AIExecutionProfilesModelEvent::ProfileCreated);
 
@@ -911,7 +880,6 @@ impl AIExecutionProfilesModel {
             }
             self.active_profiles_per_session
                 .retain(|_, active_profile_id| active_profile_id != profile_id);
-            send_telemetry_from_ctx!(TelemetryEvent::AIExecutionProfileDeleted, ctx);
             return;
         }
         if self.settings_are_authoritative() {
@@ -931,7 +899,6 @@ impl AIExecutionProfilesModel {
             }
             self.active_profiles_per_session
                 .retain(|_, active_profile_id| active_profile_id != profile_id);
-            send_telemetry_from_ctx!(TelemetryEvent::AIExecutionProfileDeleted, ctx);
             return;
         }
 
@@ -955,7 +922,6 @@ impl AIExecutionProfilesModel {
             update_manager.delete_ai_execution_profile(sync_id, ctx);
         });
 
-        send_telemetry_from_ctx!(TelemetryEvent::AIExecutionProfileDeleted, ctx);
         ctx.emit(AIExecutionProfilesModelEvent::ProfileDeleted);
     }
 
@@ -972,8 +938,7 @@ impl AIExecutionProfilesModel {
                         name: "Default".to_string(),
                         is_default_profile: true,
                         ..Default::default()
-                    },
-                };
+                    }};
                 self.profile_id_to_sync_id.clear();
             }
             self.active_profiles_per_session.clear();
@@ -984,8 +949,7 @@ impl AIExecutionProfilesModel {
             profile: AIExecutionProfile {
                 is_default_profile: true,
                 ..Default::default()
-            },
-        };
+            }};
         self.profile_id_to_sync_id.clear();
         self.active_profiles_per_session.clear();
     }
@@ -1031,16 +995,14 @@ impl AIExecutionProfilesModel {
             return AIExecutionProfileInfo {
                 id,
                 sync_id: None,
-                data,
-            };
+                data};
         }
 
         match &self.default_profile_state {
             DefaultProfileState::Unsynced { id, profile } => AIExecutionProfileInfo {
                 id: id.clone(),
                 sync_id: None,
-                data: profile.clone(),
-            },
+                data: profile.clone()},
             DefaultProfileState::Synced { id } => {
                 let Some(sync_id) = self.profile_id_to_sync_id.get(id) else {
                     report_error!(
@@ -1049,8 +1011,7 @@ impl AIExecutionProfilesModel {
                     return AIExecutionProfileInfo {
                         id: id.clone(),
                         sync_id: None,
-                        data: AIExecutionProfile::default(),
-                    };
+                        data: AIExecutionProfile::default()};
                 };
                 let cloud_model = CloudModel::as_ref(ctx);
                 let data = cloud_model
@@ -1063,15 +1024,12 @@ impl AIExecutionProfilesModel {
                 AIExecutionProfileInfo {
                     id: id.clone(),
                     sync_id: Some(*sync_id),
-                    data,
-                }
+                    data}
             }
             DefaultProfileState::Cli { id, profile } => AIExecutionProfileInfo {
                 id: id.clone(),
                 sync_id: None,
-                data: profile.clone(),
-            },
-        }
+                data: profile.clone()}}
     }
 
     /// Sets the active profile for a specific terminal view.
@@ -1102,8 +1060,7 @@ impl AIExecutionProfilesModel {
                 .map(|data| AIExecutionProfileInfo {
                     id: profile_id.clone(),
                     sync_id: None,
-                    data,
-                });
+                    data});
         }
         // Handle an unsynced default profile (including CLI)
         match &self.default_profile_state {
@@ -1113,8 +1070,7 @@ impl AIExecutionProfilesModel {
                     return Some(AIExecutionProfileInfo {
                         id: id.clone(),
                         sync_id: None,
-                        data: profile.clone(),
-                    });
+                        data: profile.clone()});
                 }
             }
             DefaultProfileState::Synced { .. } => {}
@@ -1131,8 +1087,7 @@ impl AIExecutionProfilesModel {
         Some(AIExecutionProfileInfo {
             id: profile_id.clone(),
             sync_id: Some(*sync_id),
-            data,
-        })
+            data})
     }
 
     pub fn get_all_profile_ids(&self) -> Vec<ExecutionProfileId> {
@@ -1235,13 +1190,6 @@ impl AIExecutionProfilesModel {
         );
 
         if let Some(model_id) = &llm_id {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIExecutionProfileModelSelected {
-                    model_type: "base".to_string(),
-                    model_value: model_id.to_string(),
-                },
-                ctx
-            );
         }
     }
 
@@ -1264,13 +1212,6 @@ impl AIExecutionProfilesModel {
         );
 
         if let Some(model_id) = &model_id {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIExecutionProfileModelSelected {
-                    model_type: "coding".to_string(),
-                    model_value: model_id.to_string(),
-                },
-                ctx
-            );
         }
     }
 
@@ -1293,13 +1234,6 @@ impl AIExecutionProfilesModel {
         );
 
         if let Some(model_id) = &model_id {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIExecutionProfileModelSelected {
-                    model_type: "cli_agent".to_string(),
-                    model_value: model_id.to_string(),
-                },
-                ctx
-            );
         }
     }
 
@@ -1322,13 +1256,6 @@ impl AIExecutionProfilesModel {
         );
 
         if let Some(model_id) = &model_id {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIExecutionProfileModelSelected {
-                    model_type: "computer_use".to_string(),
-                    model_value: model_id.to_string(),
-                },
-                ctx
-            );
         }
     }
 
@@ -1367,13 +1294,6 @@ impl AIExecutionProfilesModel {
                 .unwrap_or_else(|| {
                     llm_preferences.get_default_base_model_for_team_uid(team_uid, ctx)
                 });
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIExecutionProfileContextWindowSelected {
-                    tokens: limit,
-                    model_id: model_info.id.to_string(),
-                },
-                ctx
-            );
         }
     }
 
@@ -1395,13 +1315,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileSettingUpdated {
-                setting_type: "apply_code_diffs".to_string(),
-                setting_value: format!("{apply_code_diffs:?}"),
-            },
-            ctx
-        );
     }
 
     pub fn set_read_files(
@@ -1422,13 +1335,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileSettingUpdated {
-                setting_type: "read_files".to_string(),
-                setting_value: format!("{read_files:?}"),
-            },
-            ctx
-        );
     }
 
     pub fn set_execute_commands(
@@ -1449,13 +1355,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileSettingUpdated {
-                setting_type: "execute_commands".to_string(),
-                setting_value: format!("{execute_commands:?}"),
-            },
-            ctx
-        );
     }
 
     pub fn set_write_to_pty(
@@ -1474,13 +1373,6 @@ impl AIExecutionProfilesModel {
                 false
             },
             ctx,
-        );
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileSettingUpdated {
-                setting_type: "write_to_pty".to_string(),
-                setting_value: format!("{write_to_pty:?}"),
-            },
-            ctx
         );
     }
 
@@ -1508,13 +1400,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileSettingUpdated {
-                setting_type: "mcp_permissions".to_string(),
-                setting_value: format!("{mcp_permissions:?}"),
-            },
-            ctx
-        );
     }
 
     pub fn set_computer_use(
@@ -1540,13 +1425,6 @@ impl AIExecutionProfilesModel {
         );
 
         if current_value != Some(*permission) {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIExecutionProfileSettingUpdated {
-                    setting_type: "computer_use".to_string(),
-                    setting_value: format!("{permission:?}"),
-                },
-                ctx
-            );
         }
     }
 
@@ -1573,13 +1451,6 @@ impl AIExecutionProfilesModel {
         );
 
         if current_value != Some(permission) {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIExecutionProfileSettingUpdated {
-                    setting_type: "ask_user_question".to_string(),
-                    setting_value: format!("{permission:?}"),
-                },
-                ctx
-            );
         }
     }
 
@@ -1606,13 +1477,6 @@ impl AIExecutionProfilesModel {
         );
 
         if current_value != Some(permission) {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIExecutionProfileSettingUpdated {
-                    setting_type: "run_agents".to_string(),
-                    setting_value: format!("{permission:?}"),
-                },
-                ctx
-            );
         }
     }
 
@@ -1634,13 +1498,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileSettingUpdated {
-                setting_type: "web_search_enabled".to_string(),
-                setting_value: format!("{enabled}"),
-            },
-            ctx
-        );
     }
 
     pub fn set_autosync_plans_to_warp_drive(
@@ -1661,13 +1518,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileSettingUpdated {
-                setting_type: "plan_auto_sync".to_string(),
-                setting_value: format!("{enabled}"),
-            },
-            ctx
-        );
     }
 
     pub fn set_profile_name(
@@ -1688,13 +1538,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileSettingUpdated {
-                setting_type: "name".to_string(),
-                setting_value: name.to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn add_to_command_allowlist(
@@ -1715,13 +1558,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileAddedToAllowlist {
-                list_type: "command".to_string(),
-                value: predicate.to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn remove_from_command_allowlist(
@@ -1740,13 +1576,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileRemovedFromAllowlist {
-                list_type: "command".to_string(),
-                value: predicate.to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn add_to_directory_allowlist(
@@ -1767,13 +1596,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileAddedToAllowlist {
-                list_type: "directory".to_string(),
-                value: path.to_string_lossy().to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn remove_from_directory_allowlist(
@@ -1792,13 +1614,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileRemovedFromAllowlist {
-                list_type: "directory".to_string(),
-                value: path.to_string_lossy().to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn add_to_command_denylist(
@@ -1819,13 +1634,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileAddedToDenylist {
-                list_type: "command".to_string(),
-                value: predicate.to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn remove_from_command_denylist(
@@ -1844,13 +1652,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileRemovedFromDenylist {
-                list_type: "command".to_string(),
-                value: predicate.to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn add_to_mcp_allowlist(
@@ -1871,13 +1672,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileAddedToAllowlist {
-                list_type: "mcp".to_string(),
-                value: id.to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn remove_from_mcp_allowlist(
@@ -1896,13 +1690,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileRemovedFromAllowlist {
-                list_type: "mcp".to_string(),
-                value: id.to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn add_to_mcp_denylist(
@@ -1923,13 +1710,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileAddedToDenylist {
-                list_type: "mcp".to_string(),
-                value: id.to_string(),
-            },
-            ctx
-        );
     }
 
     pub fn remove_from_mcp_denylist(
@@ -1948,13 +1728,6 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AIExecutionProfileRemovedFromDenylist {
-                list_type: "mcp".to_string(),
-                value: id.to_string(),
-            },
-            ctx
-        );
     }
 
     /// `edit_profile_internal` edits an AIExecutionProfile and upserts the changed profile to the cloud
@@ -2028,8 +1801,7 @@ impl AIExecutionProfilesModel {
                 // For forever on, the default profile state is synced.
                 let sync_id = SyncId::ClientId(client_id);
                 self.default_profile_state = DefaultProfileState::Synced {
-                    id: profile_id.clone(),
-                };
+                    id: profile_id.clone()};
                 self.profile_id_to_sync_id
                     .insert(profile_id.clone(), sync_id);
 
@@ -2046,8 +1818,7 @@ impl AIExecutionProfilesModel {
                 // completed before login.
                 self.default_profile_state = DefaultProfileState::Unsynced {
                     id: profile_id.clone(),
-                    profile: new_profile,
-                };
+                    profile: new_profile};
 
                 log::info!(
                     "Updated local unsynced default execution profile (no personal drive yet): {profile_id:?}"
@@ -2098,9 +1869,7 @@ impl AIExecutionProfilesModel {
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::AIExecutionProfile),
-                        id,
-                    },
-            } => {
+                        id}} => {
                 self.handle_ai_execution_profile_created(*id, ctx);
             }
             CloudModelEvent::ObjectDeleted {
@@ -2108,20 +1877,16 @@ impl AIExecutionProfilesModel {
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::AIExecutionProfile),
-                        id,
-                    },
-                folder_id: _,
-            } => {
+                        id},
+                folder_id: _} => {
                 self.handle_ai_execution_profile_deleted(*id, ctx);
             }
             CloudModelEvent::ObjectDeleted {
                 type_and_id:
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type: GenericStringObjectFormat::Json(JsonObjectType::MCPServer),
-                        id: _,
-                    },
-                folder_id: _,
-            } => {
+                        id: _},
+                folder_id: _} => {
                 // Legacy MCP servers are converted to templatable on startup;
                 // no action needed when a legacy cloud object is deleted.
             }
@@ -2130,10 +1895,8 @@ impl AIExecutionProfilesModel {
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::AIExecutionProfile),
-                        id,
-                    },
-                source,
-            } => {
+                        id},
+                source} => {
                 self.handle_ai_execution_profile_updated(*id, *source, ctx);
             }
             CloudModelEvent::InitialLoadCompleted => {
@@ -2312,8 +2075,7 @@ impl AIExecutionProfilesModel {
                     profile: AIExecutionProfile {
                         is_default_profile: true,
                         ..Default::default()
-                    },
-                };
+                    }};
             }
 
             log::info!("Removed execution profile from map: {sync_id:?}");
@@ -2453,8 +2215,7 @@ pub enum AIExecutionProfilesModelEvent {
     ProfileUpdated(ExecutionProfileId),
     ProfileCreated,
     ProfileDeleted,
-    UpdatedActiveProfile { terminal_view_id: EntityId },
-}
+    UpdatedActiveProfile { terminal_view_id: EntityId }}
 
 impl Entity for AIExecutionProfilesModel {
     type Event = AIExecutionProfilesModelEvent;

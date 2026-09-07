@@ -8,41 +8,35 @@
 
 use std::collections::HashMap;
 
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_errors::report_error;
 use warpui::ViewContext;
 use warpui::elements::{
     Border, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Element, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
-    MouseStateHandle, ParentElement, Radius, ScrollbarWidth, Text,
-};
+    MouseStateHandle, ParentElement, Radius, ScrollbarWidth, Text};
 use warpui::platform::Cursor;
 
 use crate::code::editor::{add_color, remove_color};
 use crate::code_review::git_dialog::{
     GitDialog, GitDialogAction, GitDialogEvent, GitDialogMode, render_branch_section,
-    render_chevron_icon, render_file_list, show_toast, user_facing_git_error,
-};
+    render_chevron_icon, render_file_list, show_toast, user_facing_git_error};
 use crate::code_review::telemetry_event::{
-    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind,
-};
+    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind};
 use crate::ui_components::icons::Icon;
 use crate::util::git::Commit;
 
 /// Push-specific sub-actions, dispatched wrapped in `GitDialogAction::Push`.
 #[derive(Clone, Debug, PartialEq)]
 pub enum PushSubAction {
-    ToggleCommit(String),
-}
+    ToggleCommit(String)}
 
 pub struct PushState {
     pub(super) publish: bool,
     commits: Vec<Commit>,
     expanded: HashMap<String, bool>,
     commit_mouse_states: HashMap<String, MouseStateHandle>,
-    commits_scroll_state: ClippedScrollStateHandle,
-}
+    commits_scroll_state: ClippedScrollStateHandle}
 
 pub(super) fn new_state(publish: bool, commits: Vec<Commit>) -> PushState {
     let commit_mouse_states = commits
@@ -54,8 +48,7 @@ pub(super) fn new_state(publish: bool, commits: Vec<Commit>) -> PushState {
         commits,
         expanded: HashMap::new(),
         commit_mouse_states,
-        commits_scroll_state: ClippedScrollStateHandle::default(),
-    }
+        commits_scroll_state: ClippedScrollStateHandle::default()}
 }
 
 pub(super) fn confirm_label(publish: bool) -> &'static str {
@@ -99,8 +92,7 @@ pub(super) fn handle_sub_action(
 pub(super) fn start_confirm(me: &mut GitDialog, ctx: &mut ViewContext<GitDialog>) {
     let publish = match me.mode() {
         GitDialogMode::Push(state) => state.publish,
-        _ => return,
-    };
+        _ => return};
     let branch = me.branch_name().to_string();
 
     me.set_loading(loading_label(publish), ctx);
@@ -119,8 +111,7 @@ pub(super) fn finish_push(
 ) {
     let (status, error) = match &result {
         Ok(_) => (GitDialogStatus::Succeeded, None),
-        Err(err) => (GitDialogStatus::Failed, Some(err.to_string())),
-    };
+        Err(err) => (GitDialogStatus::Failed, Some(err.to_string()))};
     match result {
         Ok(_) => {
             let toast_msg = if publish {
@@ -135,19 +126,6 @@ pub(super) fn finish_push(
             show_toast(user_facing_git_error(&e.to_string()), ctx);
         }
     }
-    send_telemetry_from_ctx!(
-        CodeReviewTelemetryEvent::GitDialogCompleted {
-            is_local: Some(!me.repo_location().is_remote()),
-            operation: if publish {
-                GitOperationKind::Publish
-            } else {
-                GitOperationKind::Push
-            },
-            status,
-            error,
-        },
-        ctx
-    );
     ctx.emit(GitDialogEvent::Completed);
 }
 

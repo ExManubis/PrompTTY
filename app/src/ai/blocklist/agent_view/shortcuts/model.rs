@@ -1,4 +1,3 @@
-use warp_core::send_telemetry_from_ctx;
 use warpui::{Entity, ModelContext, ModelHandle};
 
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewControllerEvent};
@@ -7,8 +6,7 @@ use crate::terminal::input::buffer_model::InputBufferModel;
 
 /// Model responsible for managing state required to conditionally render the shortcuts view.
 pub struct AgentShortcutViewModel {
-    is_shortcut_view_open: bool,
-}
+    is_shortcut_view_open: bool}
 
 impl AgentShortcutViewModel {
     pub fn new(
@@ -28,8 +26,7 @@ impl AgentShortcutViewModel {
         });
 
         Self {
-            is_shortcut_view_open: false,
-        }
+            is_shortcut_view_open: false}
     }
 
     pub fn is_shortcut_view_open(&self) -> bool {
@@ -50,14 +47,7 @@ impl AgentShortcutViewModel {
         }
         self.is_shortcut_view_open = is_open;
         ctx.emit(AgentShortcutEvent::ToggledViewVisibility {
-            is_visible: is_open,
-        });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AgentShortcutsViewToggled {
-                is_visible: is_open,
-            },
-            ctx
-        );
+            is_visible: is_open});
     }
 }
 
@@ -66,5 +56,4 @@ impl Entity for AgentShortcutViewModel {
 }
 
 pub enum AgentShortcutEvent {
-    ToggledViewVisibility { is_visible: bool },
-}
+    ToggledViewVisibility { is_visible: bool }}

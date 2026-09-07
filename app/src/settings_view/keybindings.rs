@@ -7,35 +7,30 @@ use warpui::elements::{
     Align, Border, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, DispatchEventResult, Empty, EventHandler, Fill, Flex,
     Hoverable, MouseState, MouseStateHandle, ParentElement, Radius, SavePosition, ScrollbarWidth,
-    Shrinkable, Text, Wrap,
-};
+    Shrinkable, Text, Wrap};
 use warpui::fonts::Weight;
 use warpui::keymap::{DescriptionContext, Keystroke, Trigger};
 use warpui::presenter::ChildView;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::units::Pixels;
 use warpui::{
-    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
-};
+    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use super::SettingsSection;
 use super::settings_page::{
     LocalOnlyIconState, MatchData, PageType, SettingsPageMeta, SettingsPageViewHandle,
-    SettingsWidget, render_sub_header,
-};
+    SettingsWidget, render_sub_header};
 use crate::appearance::Appearance;
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
-    TextOptions,
-};
+    TextOptions};
 use crate::keyboard::{UserDefinedKeybinding, write_custom_keybinding};
 use crate::search_bar::SearchBar;
 use crate::settings::CloudPreferencesSettings;
 use crate::util::bindings::{
     CommandBinding, filter_bindings_including_keystroke, reset_keybinding_to_default,
-    set_custom_keybinding,
-};
-use crate::{TelemetryEvent, send_telemetry_from_ctx, themes};
+    set_custom_keybinding};
+use crate::{TelemetryEvent, themes};
 
 const FONT_DELTA: f32 = 2.;
 const CANCEL_SAVE_BUTTONS_SPACING: f32 = 4.0;
@@ -73,9 +68,7 @@ pub enum KeybindingChangedEvent {
     BindingChanged {
         /// Name of the keybinding that is being changed.
         binding_name: String,
-        new_trigger: Option<Keystroke>,
-    },
-}
+        new_trigger: Option<Keystroke>}}
 
 impl Entity for KeybindingChangedNotifier {
     type Event = KeybindingChangedEvent;
@@ -86,15 +79,13 @@ impl SingletonEntity for KeybindingChangedNotifier {}
 #[derive(Clone, Debug)]
 pub struct KeyBindingModifyingState {
     pub current_binding: Option<Keystroke>,
-    pub unsaved_binding: Option<Keystroke>,
-}
+    pub unsaved_binding: Option<Keystroke>}
 
 impl KeyBindingModifyingState {
     pub fn new(state: Option<Keystroke>) -> KeyBindingModifyingState {
         Self {
             current_binding: state.clone(),
-            unsaved_binding: state,
-        }
+            unsaved_binding: state}
     }
 
     pub fn is_dirty(&self) -> bool {
@@ -104,8 +95,7 @@ impl KeyBindingModifyingState {
 
 #[derive(Debug, Clone, Default)]
 struct ConflictMap {
-    map: HashMap<Keystroke, usize>,
-}
+    map: HashMap<Keystroke, usize>}
 
 impl ConflictMap {
     fn update(&mut self, old: &Option<Keystroke>, new: Option<Keystroke>) {
@@ -128,8 +118,7 @@ impl ConflictMap {
                 .get(key)
                 .map(|count| *count > 1)
                 .unwrap_or_default(),
-            None => false,
-        }
+            None => false}
     }
 }
 
@@ -156,8 +145,7 @@ pub struct KeybindingsView {
     pub rows: Option<Vec<KeybindingRow>>,
     // Map between the keystroke and the number of conflicting bindings associated with the keystroke.
     // The bindings could be unsaved.
-    conflict_map: ConflictMap,
-}
+    conflict_map: ConflictMap}
 
 #[derive(Debug)]
 pub enum KeybindingsViewAction {
@@ -166,8 +154,7 @@ pub enum KeybindingsViewAction {
     ResetToDefaultKeyStroke(usize),
     CancelKeyStrokeEditing(usize),
     ConfirmKeyStroke(usize),
-    RemoveKeyStroke(usize),
-}
+    RemoveKeyStroke(usize)}
 
 #[derive(Default, Clone)]
 struct RowMouseStates {
@@ -175,8 +162,7 @@ struct RowMouseStates {
     reset_to_default_mouse_state: MouseStateHandle,
     remove_mouse_state: MouseStateHandle,
     cancel_mouse_state: MouseStateHandle,
-    save_mouse_state: MouseStateHandle,
-}
+    save_mouse_state: MouseStateHandle}
 
 /// Wrapper around the CommandBinding structure that includes the styling/render-specific
 /// attributes (such as MouseStateHandles)
@@ -184,16 +170,14 @@ struct RowMouseStates {
 pub struct KeybindingRow {
     pub binding: CommandBinding,
     mouse_state_handles: RowMouseStates,
-    editor_open: bool,
-}
+    editor_open: bool}
 
 impl From<(Option<Vec<usize>>, &CommandBinding)> for KeybindingRow {
     fn from(orig: (Option<Vec<usize>>, &CommandBinding)) -> Self {
         Self {
             binding: orig.1.clone(),
             mouse_state_handles: Default::default(),
-            editor_open: false,
-        }
+            editor_open: false}
     }
 }
 
@@ -520,8 +504,7 @@ impl KeybindingsView {
             modifying_row: None,
             search_bar,
             search_editor,
-            conflict_map: Default::default(),
-        }
+            conflict_map: Default::default()}
     }
 
     /// Searches for a keybinding as if the user had typed the query into the search
@@ -602,12 +585,6 @@ impl KeybindingsView {
             update_binding_list(&row.binding.name, None, &mut self.bindings);
             row.binding.trigger = None;
 
-            send_telemetry_from_ctx!(
-                TelemetryEvent::KeybindingRemoved {
-                    action: row.binding.name.clone(),
-                },
-                ctx
-            );
             self.modifying_row = None;
             row.editor_open = false;
             ctx.enable_key_bindings_dispatching();
@@ -626,13 +603,6 @@ impl KeybindingsView {
                 &mut self.bindings,
             );
             row.binding.trigger = default_trigger;
-
-            send_telemetry_from_ctx!(
-                TelemetryEvent::KeybindingResetToDefault {
-                    action: row.binding.name.clone(),
-                },
-                ctx
-            );
 
             self.modifying_row = None;
             row.editor_open = false;
@@ -679,13 +649,6 @@ impl KeybindingsView {
                             &mut self.bindings,
                         );
                         row.binding.trigger = Some(key.clone());
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::KeybindingChanged {
-                                action: row.binding.name.clone(),
-                                keystroke: key,
-                            },
-                            ctx
-                        );
                     }
 
                     row.editor_open = false;
@@ -953,15 +916,13 @@ fn trigger_keybinding_notifier(
     KeybindingChangedNotifier::handle(ctx).update(ctx, move |_me, ctx| {
         ctx.emit(KeybindingChangedEvent::BindingChanged {
             binding_name: name,
-            new_trigger: trigger,
-        });
+            new_trigger: trigger});
     })
 }
 
 #[derive(Default)]
 struct KeybindingsWidget {
-    local_only_icon_mouse_state: MouseStateHandle,
-}
+    local_only_icon_mouse_state: MouseStateHandle}
 
 impl KeybindingsWidget {
     fn render_description(
@@ -1106,8 +1067,7 @@ impl SettingsWidget for KeybindingsWidget {
         {
             Some(LocalOnlyIconState::Visible {
                 mouse_state: self.local_only_icon_mouse_state.clone(),
-                custom_tooltip: Some("Keyboard shortcuts are not synced to the cloud".to_string()),
-            })
+                custom_tooltip: Some("Keyboard shortcuts are not synced to the cloud".to_string())})
         } else {
             None
         };
@@ -1142,8 +1102,7 @@ impl SettingsWidget for KeybindingsWidget {
                     top: 10.,
                     bottom: 0.,
                     right: 0.,
-                    left: 0.,
-                }),
+                    left: 0.}),
             ))
             .with_child(Shrinkable::new(1., self.render_binding_list(view, appearance)).finish())
             .finish()

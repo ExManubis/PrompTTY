@@ -33,8 +33,7 @@ use crate::session_registry::{TuiSessions, TuiSessionsEvent};
 use crate::telemetry::TuiStartupTelemetryEvent;
 use crate::terminal_background::probe_and_select_theme;
 use crate::terminal_session_view::{
-    TuiConversationRestoreOrigin, TuiConversationRestoreTarget, tui_resume_shell_command,
-};
+    TuiConversationRestoreOrigin, TuiConversationRestoreTarget, tui_resume_shell_command};
 #[cfg(feature = "voice_input")]
 use crate::voice_input::requires_modifier_key_reporting;
 
@@ -42,8 +41,7 @@ use crate::voice_input::requires_modifier_key_reporting;
 /// local cargo builds fall back to a numeric placeholder.
 const CLI_VERSION: &str = match option_env!("GIT_RELEASE_TAG") {
     Some(version) => version,
-    None => "v0.0.0.0.0.0",
-};
+    None => "v0.0.0.0.0.0"};
 
 #[derive(Debug, Parser)]
 #[command(name = "warp", version = CLI_VERSION)]
@@ -79,18 +77,14 @@ struct TuiArgs {
         value_parser = LLMProvider::from_api_key_slug,
         conflicts_with_all = ["resume", "set_provider_api_key"]
     )]
-    clear_provider_api_key: Option<LLMProvider>,
-}
+    clear_provider_api_key: Option<LLMProvider>}
 
 enum ProviderApiKeyCommand {
     Set {
         provider: LLMProvider,
-        api_key: String,
-    },
+        api_key: String},
     Clear {
-        provider: LLMProvider,
-    },
-}
+        provider: LLMProvider}}
 
 /// One-shot commands available on the standalone TUI binaries. The full app
 /// binary implements the same `dump-settings-schema` contract (see
@@ -102,9 +96,7 @@ enum TuiCommand {
     /// Print the JSON schema for the current Warp channel's settings and exit.
     DumpSettingsSchema {
         /// Write the schema to this path instead of standard output.
-        output_path: Option<PathBuf>,
-    },
-}
+        output_path: Option<PathBuf>}}
 
 /// Reads a provider API key from a masked TTY prompt or, when stdin is piped,
 /// from stdin. Empty input and interactive cancellation return `Ok(None)`.
@@ -118,8 +110,7 @@ fn read_provider_api_key() -> Result<Option<String>> {
             Ok(value) if value.trim().is_empty() => Ok(None),
             Ok(value) => Ok(Some(value)),
             Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => Ok(None),
-            Err(error) => Err(error.into()),
-        };
+            Err(error) => Err(error.into())};
     }
 
     let mut value = String::new();
@@ -157,8 +148,7 @@ pub fn run() -> Result<()> {
             error.print()?;
             return Ok(());
         }
-        Err(error) => return Err(anyhow::Error::new(error)),
-    };
+        Err(error) => return Err(anyhow::Error::new(error))};
     if let Some(TuiCommand::DumpSettingsSchema { output_path }) = args.command {
         warp::features::init_feature_flags();
         return warp::settings::dump_settings_schema(output_path.as_deref());
@@ -181,8 +171,7 @@ pub fn run() -> Result<()> {
                 ));
             }
             Some(provider) => Some(ProviderApiKeyCommand::Clear { provider }),
-            None => None,
-        }
+            None => None}
     };
     if let Some(command) = provider_api_key_command {
         return warp::run_tui_cli_command(Box::new(move |ctx| {
@@ -190,8 +179,7 @@ pub fn run() -> Result<()> {
                 ProviderApiKeyCommand::Set { provider, api_key } => {
                     (provider, Some(api_key), "saved")
                 }
-                ProviderApiKeyCommand::Clear { provider } => (provider, None, "cleared"),
-            };
+                ProviderApiKeyCommand::Clear { provider } => (provider, None, "cleared")};
             let result = ApiKeyManager::handle(ctx)
                 .update(ctx, |manager, ctx| {
                     manager.persist_provider_key(provider, api_key, ctx)
@@ -245,8 +233,7 @@ fn init(
     exit_summary: TuiExitSummaryHandle,
     ctx: &mut AppContext,
 ) {
-    warp_core::send_telemetry_from_app_ctx!(TuiStartupTelemetryEvent::from_environment(), ctx);
-    // Register the TUI views' keybindings (and, in debug builds, the
+    warp_core::    // Register the TUI views' keybindings (and, in debug builds, the
     // cross-surface binding validators) before any input can be dispatched.
     crate::keybindings::init(ctx);
 
@@ -329,15 +316,13 @@ fn init(
             root.update(ctx, |_, ctx| {
                 ctx.subscribe_to_model(&sessions, |_, _, event, ctx| match event {
                     TuiSessionsEvent::SessionRemoved(_) => ctx.notify(),
-                    TuiSessionsEvent::FocusChanged(_) => ctx.notify(),
-                });
+                    TuiSessionsEvent::FocusChanged(_) => ctx.notify()});
             });
             let orchestration = TuiOrchestrationModel::register(ctx);
             TuiSessions::wire_orchestration(&sessions, &orchestration, ctx);
             ensure_terminal_session(&sessions, &root, ctx);
         }
-        Err(error) => handle_tui_driver_startup_error(error, ctx),
-    }
+        Err(error) => handle_tui_driver_startup_error(error, ctx)}
 }
 
 fn handle_tui_driver_startup_error(error: TuiDriverStartupError, ctx: &mut AppContext) {

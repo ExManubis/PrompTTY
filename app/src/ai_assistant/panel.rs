@@ -12,8 +12,7 @@ use warpui::elements::{
     DispatchEventResult, DragBarSide, Element, Empty, EventHandler, Fill, Flex, HyperlinkUrl, Icon,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, PositionedElementAnchor, PositionedElementOffsetBounds, Radius, Resizable,
-    ResizableStateHandle, SavePosition, Shrinkable, Stack, Text, resizable_state_handle,
-};
+    ResizableStateHandle, SavePosition, Shrinkable, Stack, Text, resizable_state_handle};
 use warpui::fonts::Properties;
 use warpui::keymap::{EditableBinding, FixedBinding};
 use warpui::platform::Cursor;
@@ -22,8 +21,7 @@ use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle, WeakViewHandle,
-};
+    ViewContext, ViewHandle, WeakViewHandle};
 
 use super::execution_context::execution_context_for_session;
 use super::requests::{Event as RequestsEvent, RequestStatus, Requests};
@@ -31,15 +29,12 @@ use super::transcript::{Transcript, TranscriptEvent};
 use super::utils::{TranscriptPart, render_prepared_response_button, render_request_limit_info};
 use super::{
     AI_ASSISTANT_FEATURE_NAME, AI_ASSISTANT_LOGO_COLOR, AI_ASSISTANT_SVG_PATH,
-    ASK_AI_ASSISTANT_TEXT, AskAIType, PROMPT_CHARACTER_LIMIT,
-};
+    ASK_AI_ASSISTANT_TEXT, AskAIType, PROMPT_CHARACTER_LIMIT};
 use crate::ai::AIRequestUsageModel;
 use crate::appearance::Appearance;
 use crate::editor::{
-    EditorOptions, EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, TextOptions,
-};
+    EditorOptions, EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, TextOptions};
 use crate::input_suggestions::{Event as InputSuggestionsEvent, InputSuggestions};
-use crate::send_telemetry_from_ctx;
 use crate::server::server_api::ServerApi;
 use crate::server::server_api::ai::AIClient;
 use crate::server::telemetry::{TelemetryEvent, WarpAIActionType};
@@ -90,27 +85,23 @@ struct MouseStateHandles {
 
     script_zero_state_prompt: MouseStateHandle,
     git_zero_state_prompt: MouseStateHandle,
-    files_zero_state_prompt: MouseStateHandle,
-}
+    files_zero_state_prompt: MouseStateHandle}
 
 pub enum AIAssistantPanelEvent {
     ClosePanel,
     PasteInTerminalInput(Arc<String>),
     FocusTerminalInput,
-    OpenWorkflowModalWithCommand(String),
-}
+    OpenWorkflowModalWithCommand(String)}
 
 /// Which child view is currently focused. It must be exactly one of these.
 #[derive(Copy, Clone)]
 enum PanelFocusState {
     Editor,
-    Transcript,
-}
+    Transcript}
 
 enum InputSuggestionsMode {
     Open { origin_buffer_text: String },
-    Closed,
-}
+    Closed}
 
 /// The panel view is responsible for the various components that make up the panel
 /// (e.g. header, transcript, editor).
@@ -126,8 +117,7 @@ pub struct AIAssistantPanelView {
     focus_state: PanelFocusState,
 
     resizable_state_handle: ResizableStateHandle,
-    mouse_state_handles: MouseStateHandles,
-}
+    mouse_state_handles: MouseStateHandles}
 
 #[derive(Debug, Clone)]
 pub enum AIAssistantAction {
@@ -138,8 +128,7 @@ pub enum AIAssistantAction {
     ClickedUrl(HyperlinkUrl),
     CopyAnswerToClipboard(Arc<String>),
     FocusTerminalInput,
-    FocusEditor,
-}
+    FocusEditor}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -248,8 +237,7 @@ impl AIAssistantPanelView {
             focus_state: PanelFocusState::Editor,
 
             resizable_state_handle,
-            mouse_state_handles: Default::default(),
-        };
+            mouse_state_handles: Default::default()};
 
         panel.tick(ctx);
         panel.on_active_session_change(active_session_model, ctx);
@@ -298,8 +286,7 @@ impl AIAssistantPanelView {
         match ask_type {
             AskAIType::FromTextSelection {
                 text,
-                populate_input_box,
-            } => {
+                populate_input_box} => {
                 if *populate_input_box {
                     let prefix = "Explain the following:\n";
                     let code_block_formatting_len = self.format_as_code_block("").len();
@@ -417,15 +404,8 @@ impl AIAssistantPanelView {
                 });
             }
             // Not supported by the AI Assistant. Only supported by blocklist AI.
-            AskAIType::FromBlocks { .. } => (),
-        }
+            AskAIType::FromBlocks { .. } => ()}
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::OpenedWarpAI {
-                source: ask_type.into()
-            },
-            ctx
-        );
     }
 
     fn is_prompt_too_long(&self, prompt: &str) -> bool {
@@ -447,7 +427,6 @@ impl AIAssistantPanelView {
                     self.issue_request(buffer_text, ctx);
                 } else {
                     // Only send this event if the user tried to execute with a longer than permitted prompt.
-                    send_telemetry_from_ctx!(TelemetryEvent::WarpAICharacterLimitExceeded, ctx);
                 }
                 ctx.notify();
             }
@@ -500,8 +479,7 @@ impl AIAssistantPanelView {
                                 );
                             });
                         self.input_suggestions_mode = InputSuggestionsMode::Open {
-                            origin_buffer_text: buffer_text,
-                        };
+                            origin_buffer_text: buffer_text};
                     } else {
                         self.editor.update(ctx, |editor, ctx| editor.move_up(ctx));
                     }
@@ -801,8 +779,7 @@ impl AIAssistantPanelView {
                 top: 4.,
                 bottom: 4.,
                 left: 8.,
-                right: 8.,
-            }),
+                right: 8.}),
             border_radius: Some(CornerRadius::with_all(Radius::Pixels(4.))),
             ..Default::default()
         };
@@ -1022,28 +999,15 @@ impl TypedActionView for AIAssistantPanelView {
         match action {
             ResetContext => {
                 self.reset_context(ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::WarpAIAction {
-                        action_type: WarpAIActionType::Restart
-                    },
-                    ctx
-                );
             }
             CopyTranscript => {
                 self.copy_transcript(ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::WarpAIAction {
-                        action_type: WarpAIActionType::CopyTranscript
-                    },
-                    ctx
-                );
             }
             ClosePanel => {
                 ctx.emit(AIAssistantPanelEvent::ClosePanel);
             }
             PreparedPrompt(prompt) => {
                 self.issue_request(prompt.to_string(), ctx);
-                send_telemetry_from_ctx!(TelemetryEvent::UsedWarpAIPreparedPrompt { prompt }, ctx);
             }
             ClickedUrl(url) => {
                 ctx.open_url(&url.url);
@@ -1051,12 +1015,6 @@ impl TypedActionView for AIAssistantPanelView {
             CopyAnswerToClipboard(content) => {
                 ctx.clipboard()
                     .write(ClipboardContent::plain_text(content.to_string()));
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::WarpAIAction {
-                        action_type: WarpAIActionType::CopyAnswer
-                    },
-                    ctx
-                );
             }
             FocusTerminalInput => ctx.emit(AIAssistantPanelEvent::FocusTerminalInput),
             FocusEditor => {
@@ -1081,8 +1039,7 @@ impl View for AIAssistantPanelView {
                     });
                     ctx.focus(&self.editor);
                 }
-                PanelFocusState::Transcript => ctx.focus(&self.transcript_view),
-            }
+                PanelFocusState::Transcript => ctx.focus(&self.transcript_view)}
             ctx.notify();
         }
     }

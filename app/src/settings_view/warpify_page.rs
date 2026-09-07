@@ -9,32 +9,27 @@ use strum::IntoEnumIterator;
 use warp_core::features::FeatureFlag;
 use warp_errors::report_if_error;
 use warpui::elements::{
-    Container, Flex, FormattedTextElement, HighlightedHyperlink, MouseStateHandle, ParentElement,
-};
+    Container, Flex, FormattedTextElement, HighlightedHyperlink, MouseStateHandle, ParentElement};
 use warpui::keymap::ContextPredicate;
 use warpui::presenter::ChildView;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle,
-};
+    ViewContext, ViewHandle};
 
 use super::settings_page::{
     Category, CategoryHeader, HEADER_FONT_SIZE, HEADER_PADDING, LocalOnlyIconState, MatchData,
     PageType, SettingsPageEvent, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
     ToggleState, add_setting, render_alternating_color_list, render_body_item,
-    render_dropdown_item, render_page_title,
-};
+    render_dropdown_item, render_page_title};
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::appearance::Appearance;
-use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::TelemetryEvent;
 use crate::settings::{ReuseExistingSshControlMaster, SshSettings};
 use crate::terminal::warpify::settings::{
     EnableSshWarpification, SshExtensionInstallMode, SshExtensionInstallModeSetting,
-    WarpifySettings, WarpifySettingsChangedEvent,
-};
+    WarpifySettings, WarpifySettingsChangedEvent};
 use crate::ui_components::blended_colors;
 use crate::view_components::dropdown::{Dropdown, DropdownItem};
 use crate::view_components::{SubmittableTextInput, SubmittableTextInputEvent};
@@ -87,8 +82,7 @@ pub struct WarpifyPageView {
     remove_denylisted_command_button_states: Vec<MouseStateHandle>,
     add_denylisted_commands_editor: ViewHandle<SubmittableTextInput>,
 
-    ssh_extension_install_mode_dropdown: ViewHandle<Dropdown<WarpifyPageAction>>,
-}
+    ssh_extension_install_mode_dropdown: ViewHandle<Dropdown<WarpifyPageAction>>}
 
 impl WarpifyPageView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -140,8 +134,7 @@ impl WarpifyPageView {
             add_added_commands_editor,
             remove_denylisted_command_button_states: Default::default(),
             add_denylisted_commands_editor,
-            ssh_extension_install_mode_dropdown,
-        };
+            ssh_extension_install_mode_dropdown};
 
         instance.update_button_states(warpify_settings_handle, ctx);
         instance
@@ -219,10 +212,8 @@ impl WarpifyPageView {
                     warpify_settings.add_subshell_command(new_command, ctx);
                 });
 
-                send_telemetry_from_ctx!(TelemetryEvent::AddAddedSubshellCommand, ctx);
             }
-            SubmittableTextInputEvent::Escape => ctx.emit(SettingsPageEvent::FocusModal),
-        }
+            SubmittableTextInputEvent::Escape => ctx.emit(SettingsPageEvent::FocusModal)}
     }
 
     fn handle_denylisted_command_editor_event(
@@ -237,21 +228,17 @@ impl WarpifyPageView {
                     warpify_settings.denylist_subshell_command(new_command, ctx);
                 });
 
-                send_telemetry_from_ctx!(TelemetryEvent::AddDenylistedSubshellCommand, ctx);
             }
-            SubmittableTextInputEvent::Escape => ctx.emit(SettingsPageEvent::FocusModal),
-        }
+            SubmittableTextInputEvent::Escape => ctx.emit(SettingsPageEvent::FocusModal)}
     }
 
     fn remove_denylisted_command(&self, index: usize, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(TelemetryEvent::RemoveDenylistedSubshellCommand, ctx);
         WarpifySettings::handle(ctx).update(ctx, |warpify, ctx| {
             warpify.remove_denylisted_subshell_command(index, ctx)
         });
     }
 
     fn remove_added_command(&self, index: usize, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(TelemetryEvent::RemoveAddedSubshellCommand, ctx);
         WarpifySettings::handle(ctx).update(ctx, |warpify, ctx| {
             warpify.remove_added_subshell_command(index, ctx)
         });
@@ -375,8 +362,7 @@ pub enum WarpifyPageAction {
     ToggleReuseSshControlMaster,
     /// Set the SSH extension installation mode (always ask / always install / always skip).
     SetSshExtensionInstallMode(SshExtensionInstallMode),
-    OpenUrl(String),
-}
+    OpenUrl(String)}
 
 impl TypedActionView for WarpifyPageView {
     type Action = WarpifyPageAction;
@@ -392,12 +378,6 @@ impl TypedActionView for WarpifyPageView {
                         ssh_settings
                             .enable_ssh_warpification
                             .toggle_and_save_value(ctx)
-                    );
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::ToggleSshWarpification {
-                            enabled: *ssh_settings.enable_ssh_warpification.value(),
-                        },
-                        ctx
                     );
                 });
                 let enabled = *WarpifySettings::as_ref(ctx)
@@ -419,16 +399,6 @@ impl TypedActionView for WarpifyPageView {
                             .reuse_existing_control_master
                             .toggle_and_save_value(ctx)
                     );
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::FeaturesPageAction {
-                            action: "ToggleSshReuseControlMaster".to_string(),
-                            value: ssh_settings
-                                .reuse_existing_control_master
-                                .value()
-                                .to_string(),
-                        },
-                        ctx
-                    );
                 });
             }
             SetSshExtensionInstallMode(mode) => {
@@ -437,12 +407,6 @@ impl TypedActionView for WarpifyPageView {
                         warpify_settings
                             .ssh_extension_install_mode
                             .set_value(*mode, ctx)
-                    );
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::SetSshExtensionInstallMode {
-                            mode: mode.display_name(),
-                        },
-                        ctx
                     );
                 });
             }
@@ -483,8 +447,7 @@ impl From<ViewHandle<WarpifyPageView>> for SettingsPageViewHandle {
 
 #[derive(Default)]
 struct TitleWidget {
-    learn_more_highlight_index: HighlightedHyperlink,
-}
+    learn_more_highlight_index: HighlightedHyperlink}
 
 impl TitleWidget {
     fn render_top_of_page(&self, appearance: &Appearance, _app: &AppContext) -> Box<dyn Element> {
@@ -605,8 +568,7 @@ impl SettingsWidget for SubshellsWidget {
 struct SSHWidget {
     enable_ssh_warpification_switch_state: SwitchStateHandle,
     reuse_control_master_switch_state: SwitchStateHandle,
-    local_only_icon_tooltip_states: RefCell<HashMap<String, MouseStateHandle>>,
-}
+    local_only_icon_tooltip_states: RefCell<HashMap<String, MouseStateHandle>>}
 
 impl SettingsWidget for SSHWidget {
     type View = WarpifyPageView;

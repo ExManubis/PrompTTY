@@ -1,5 +1,4 @@
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_errors::report_error;
 use warpui::keymap::Keystroke;
@@ -11,8 +10,7 @@ use crate::ai::blocklist::BlocklistAIHistoryModel;
 use crate::ai::blocklist::agent_view::{
     AgentViewEntryBlock, AgentViewEntryBlockEvent, AgentViewEntryBlockParams, AgentViewEntryOrigin,
     AutoTriggerBehavior, DismissalStrategy, ENTER_OR_EXIT_CONFIRMATION_WINDOW, EnterAgentViewError,
-    EphemeralMessage,
-};
+    EphemeralMessage};
 use crate::ai::blocklist::history_model::CloudConversationData;
 use crate::global_resource_handles::GlobalResourceHandlesProvider;
 use crate::persistence::ModelEvent;
@@ -21,11 +19,9 @@ use crate::terminal::TerminalView;
 use crate::terminal::input::message_bar::{Message, MessageItem};
 use crate::terminal::model::rich_content::RichContentType;
 use crate::terminal::view::load_ai_conversation::{
-    RestoreConversationEntryBehavior, RestoredAIConversation,
-};
+    RestoreConversationEntryBehavior, RestoredAIConversation};
 use crate::terminal::view::{
-    AgentViewEntryMetadata, RichContentInsertionPosition, RichContentMetadata,
-};
+    AgentViewEntryMetadata, RichContentInsertionPosition, RichContentMetadata};
 use crate::view_components::DismissibleToast;
 use crate::workspace::ToastStack;
 
@@ -269,8 +265,7 @@ impl TerminalView {
                 for (block_id, agent_view_visibility) in attached_blocks {
                     if let Err(e) = sender.send(ModelEvent::UpdateBlockAgentViewVisibility {
                         block_id: block_id.to_string(),
-                        agent_view_visibility: agent_view_visibility.into(),
-                    }) {
+                        agent_view_visibility: agent_view_visibility.into()}) {
                         report_error!(
                             anyhow::Error::new(e)
                                 .context("Error sending UpdateBlockAgentViewVisibility event")
@@ -286,8 +281,7 @@ impl TerminalView {
             let should_auto_submit = match origin.should_autotrigger_request() {
                 AutoTriggerBehavior::Always => true,
                 AutoTriggerBehavior::InAgentView => was_in_agent_view_already,
-                AutoTriggerBehavior::Never => false,
-            };
+                AutoTriggerBehavior::Never => false};
             if should_auto_submit {
                 // Clear the "enter again to send" ephemeral message if it's currently showing
                 self.ephemeral_message_model.update(ctx, |model, ctx| {
@@ -338,14 +332,6 @@ impl TerminalView {
             }
         }
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AgentViewEntered {
-                origin: TelemetryAgentViewEntryOrigin::from(origin),
-                did_auto_trigger_request,
-            },
-            ctx
-        );
-
         // Mark all AgentViewEntry rich content as dirty so their heights get
         // re-measured. When the agent view is active, AgentViewEntryBlock renders
         // as Empty (0 height). When exiting, we need to force a re-layout so the
@@ -388,8 +374,7 @@ impl TerminalView {
             AgentViewEntryBlockEvent::OpenConversationContextMenu {
                 conversation_id,
                 agent_view_entry_block_id,
-                position,
-            } => me.open_agent_view_entry_context_menu(
+                position} => me.open_agent_view_entry_context_menu(
                 *conversation_id,
                 *agent_view_entry_block_id,
                 *position,
@@ -405,8 +390,7 @@ impl TerminalView {
             Some(RichContentMetadata::AgentViewEntry(
                 AgentViewEntryMetadata {
                     conversation_id,
-                    origin,
-                },
+                    origin},
             )),
             position,
             ctx,

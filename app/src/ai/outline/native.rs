@@ -9,11 +9,9 @@ use futures::stream::AbortHandle;
 use instant::Instant;
 use repo_metadata::repositories::{DetectedRepositories, DetectedRepositoriesEvent};
 use repo_metadata::repository::{
-    BufferingRepositorySubscriber, RepositorySubscriber, SubscriberId,
-};
+    BufferingRepositorySubscriber, RepositorySubscriber, SubscriberId};
 use repo_metadata::{
-    CanonicalizedPath, DirectoryWatcher, Repository, RepositoryUpdate, RepositoryWatchMode,
-};
+    CanonicalizedPath, DirectoryWatcher, Repository, RepositoryUpdate, RepositoryWatchMode};
 use settings::Setting as _;
 use warp_errors::report_error;
 use warpui::{Entity, ModelContext, ModelHandle, SingletonEntity};
@@ -22,10 +20,9 @@ use super::OutlineStatus;
 use crate::ai::persisted_workspace::all_working_directories;
 use crate::settings::{
     AISettings, AISettingsChangedEvent, CodeSettings, CodeSettingsChangedEvent, InputSettings,
-    InputSettingsChangedEvent,
-};
+    InputSettingsChangedEvent};
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{TelemetryEvent, safe_info, safe_warn, send_telemetry_from_ctx};
+use crate::{TelemetryEvent, safe_info, safe_warn};
 
 /// State for a repository outline, containing both the repository handle and the outline status.
 #[derive(Debug)]
@@ -35,12 +32,10 @@ struct OutlineState {
     /// Current status of the outline.
     status: OutlineStatus,
     /// Subscriber ID for repository updates (if watching).
-    subscriber_id: Option<SubscriberId>,
-}
+    subscriber_id: Option<SubscriberId>}
 
 pub enum RepoOutlinesEvent {
-    OutlinesUpdated(PathBuf),
-}
+    OutlinesUpdated(PathBuf)}
 
 const MAX_REPO_FILE_SIZE_LIMIT: usize = 5000;
 
@@ -53,8 +48,7 @@ pub struct RepoOutlines {
     /// An `AbortHandle` for the active outline computation task.
     active_outline_task: Option<AbortHandle>,
 
-    indexing_enabled: bool,
-}
+    indexing_enabled: bool}
 
 const REPO_WATCHER_DEBOUNCE_DURATION: Duration = Duration::from_secs(10);
 
@@ -86,8 +80,7 @@ impl RepoOutlines {
             ctx.subscribe_to_model(&DetectedRepositories::handle(ctx), |me, _, event, ctx| {
                 let DetectedRepositoriesEvent::DetectedGitRepo {
                     repository,
-                    source: _,
-                } = event;
+                    source: _} = event;
                 me.index_repo(repository.clone(), ctx);
             });
         }
@@ -103,8 +96,7 @@ impl RepoOutlines {
             outlines: Default::default(),
             outline_queue: Default::default(),
             active_outline_task: Default::default(),
-            indexing_enabled,
-        }
+            indexing_enabled}
     }
 
     #[allow(dead_code)]
@@ -114,8 +106,7 @@ impl RepoOutlines {
             outlines: Default::default(),
             outline_queue: Default::default(),
             active_outline_task: Default::default(),
-            indexing_enabled: true,
-        }
+            indexing_enabled: true}
     }
 
     fn index_repo(&mut self, repository: ModelHandle<Repository>, ctx: &mut ModelContext<Self>) {
@@ -127,8 +118,7 @@ impl RepoOutlines {
             let outline_state = OutlineState {
                 repository,
                 status: OutlineStatus::Pending,
-                subscriber_id: None,
-            };
+                subscriber_id: None};
             self.outlines.insert(repo_path.clone(), outline_state);
             self.outline_queue.push_back(repo_path);
             self.compute_next_outline(ctx);
@@ -234,13 +224,6 @@ impl RepoOutlines {
                     if me.should_build_outlines(ctx) {
                         match res {
                             Ok((canonicalized_path, outline, parse_duration)) => {
-                                send_telemetry_from_ctx!(
-                                    TelemetryEvent::RepoOutlineConstructionSuccess {
-                                        total_parse_seconds: parse_duration.as_secs() as usize,
-                                        file_count: outline.file_count(),
-                                    },
-                                    ctx
-                                );
 
                                 safe_info!(
                                     safe: ("Successfully constructed symbols outline for repo."),
@@ -290,12 +273,6 @@ impl RepoOutlines {
                                     )
                                 );
 
-                                send_telemetry_from_ctx!(
-                                    TelemetryEvent::RepoOutlineConstructionFailed {
-                                        error: e.to_string()
-                                    },
-                                    ctx
-                                );
                                 if let Some(outline_state) = me.outlines.get_mut(&root_path_clone) {
                                     outline_state.status = OutlineStatus::Failed;
                                 }
@@ -320,8 +297,7 @@ impl RepoOutlines {
         let (repository_update_tx, repository_update_rx) = async_channel::unbounded();
         let start = repository_handle.update(ctx, |repo, ctx| {
             let inner = OutlineRepositorySubscriber {
-                repository_update_tx,
-            };
+                repository_update_tx};
             let debounced =
                 BufferingRepositorySubscriber::new(inner, REPO_WATCHER_DEBOUNCE_DURATION);
             repo.start_watching(
@@ -408,8 +384,7 @@ impl RepoOutlines {
             Some(_) => {
                 log::warn!("Failed to update repo outline: repo outline failed or is pending")
             }
-            None => log::warn!("Failed to update repo outline: repo outline not found"),
-        }
+            None => log::warn!("Failed to update repo outline: repo outline not found")}
     }
 }
 
@@ -420,8 +395,7 @@ impl Entity for RepoOutlines {
 impl SingletonEntity for RepoOutlines {}
 
 struct OutlineRepositorySubscriber {
-    repository_update_tx: Sender<RepositoryUpdate>,
-}
+    repository_update_tx: Sender<RepositoryUpdate>}
 
 impl RepositorySubscriber for OutlineRepositorySubscriber {
     fn on_scan(

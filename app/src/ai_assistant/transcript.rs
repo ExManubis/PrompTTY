@@ -9,16 +9,14 @@ use warpui::elements::{
     Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, EventHandler, Fill, Flex,
     FormattedTextElement, HyperlinkUrl, Icon, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     ParentAnchor, ParentElement, Radius, SavePosition, ScrollbarWidth, Shrinkable, Stack, Text,
-    Wrap,
-};
+    Wrap};
 use warpui::keymap::Keystroke;
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::units::{IntoPixels, Pixels};
 use warpui::{
     AppContext, BlurContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity,
-    TypedActionView, View, ViewContext, WeakViewHandle,
-};
+    TypedActionView, View, ViewContext, WeakViewHandle};
 
 use super::AI_ASSISTANT_SVG_PATH;
 use super::panel::{HEADER_HEIGHT, HEXAGON_ALERT_SVG_PATH};
@@ -26,11 +24,9 @@ use super::requests::{RequestStatus, Requests};
 use super::utils::{
     AssistantTranscriptPart, CodeBlockIndex, FormattedTranscriptMessage, MarkdownSegment,
     TranscriptPartSubType, code_block_position_id, markdown_segments_from_text,
-    render_prepared_response_button, render_request_limit_info, save_as_workflow_position_id,
-};
+    render_prepared_response_button, render_request_limit_info, save_as_workflow_position_id};
 use crate::ai::AIRequestUsageModel;
 use crate::appearance::Appearance;
-use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::{SaveAsWorkflowModalSource, TelemetryEvent, WarpAIActionType};
 use crate::ui_components::blended_colors;
 use crate::workspaces::user_workspaces::UserWorkspaces;
@@ -71,15 +67,13 @@ pub struct CodeBlockMouseStateHandles {
     pub copy_button: MouseStateHandle,
     pub copy_button_tooltip: MouseStateHandle,
     pub save_as_workflow_button: MouseStateHandle,
-    pub save_as_workflow_button_tooltip: MouseStateHandle,
-}
+    pub save_as_workflow_button_tooltip: MouseStateHandle}
 
 #[derive(Default)]
 struct MouseStateHandles {
     show_examples_button: MouseStateHandle,
     what_to_do_next_button: MouseStateHandle,
-    how_do_i_fix_button: MouseStateHandle,
-}
+    how_do_i_fix_button: MouseStateHandle}
 
 /// A view to render a Q/A style transcript.
 pub struct Transcript {
@@ -89,37 +83,30 @@ pub struct Transcript {
     selected_code_block: Option<CodeBlockIndex>,
 
     clipped_scroll_state: ClippedScrollStateHandle,
-    mouse_state_handles: MouseStateHandles,
-}
+    mouse_state_handles: MouseStateHandles}
 
 #[derive(Debug, Clone)]
 pub enum TranscriptAction {
     CopyAnswerToClipboard {
-        transcript_part_index: usize,
-    },
+        transcript_part_index: usize},
     CopyCodeToClipboard {
-        code_block_index: CodeBlockIndex,
-    },
+        code_block_index: CodeBlockIndex},
     PasteInTerminalInput {
-        code_block_index: CodeBlockIndex,
-    },
+        code_block_index: CodeBlockIndex},
     OpenWorkflowModal(CodeBlockIndex),
     ClickedCodeBlock {
-        code_block_index: CodeBlockIndex,
-    },
+        code_block_index: CodeBlockIndex},
     ClickedUrl(HyperlinkUrl),
     Keydown(Keystroke),
     /// A mouse down event outside of the other clickable elements (e.g. buttons, code blocks, etc.)
-    MouseDown,
-}
+    MouseDown}
 
 pub enum TranscriptEvent {
     PasteInTerminalInput { code_block_index: CodeBlockIndex },
     FocusEditor,
     FocusTranscript,
     ClickedCodeBlock,
-    OpenWorkflowModalWithCommand(String),
-}
+    OpenWorkflowModalWithCommand(String)}
 
 impl Entity for Transcript {
     type Event = TranscriptEvent;
@@ -133,8 +120,7 @@ impl TypedActionView for Transcript {
 
         match action {
             CopyAnswerToClipboard {
-                transcript_part_index,
-            } => {
+                transcript_part_index} => {
                 let answer = self
                     .requests_model
                     .as_ref(ctx)
@@ -145,12 +131,6 @@ impl TypedActionView for Transcript {
                 if let Some(answer) = answer {
                     ctx.clipboard().write(ClipboardContent::plain_text(answer));
                 }
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::WarpAIAction {
-                        action_type: WarpAIActionType::CopyAnswer
-                    },
-                    ctx
-                );
             }
             CopyCodeToClipboard { code_block_index } => {
                 self.copy_code_to_clipboard(*code_block_index, ctx);
@@ -189,8 +169,7 @@ impl Transcript {
             requests_model: requests_model.to_owned(),
             selected_code_block: None,
             clipped_scroll_state: Default::default(),
-            mouse_state_handles: Default::default(),
-        }
+            mouse_state_handles: Default::default()}
     }
 
     fn copy_code_to_clipboard(
@@ -202,12 +181,6 @@ impl Transcript {
             ctx.clipboard().write(ClipboardContent::plain_text(code));
         }
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::WarpAIAction {
-                action_type: WarpAIActionType::CopyCode
-            },
-            ctx
-        );
     }
 
     fn paste_in_terminal_input(
@@ -216,12 +189,6 @@ impl Transcript {
         ctx: &mut ViewContext<Self>,
     ) {
         ctx.emit(TranscriptEvent::PasteInTerminalInput { code_block_index });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::WarpAIAction {
-                action_type: WarpAIActionType::InsertIntoInput
-            },
-            ctx
-        );
     }
 
     fn open_workflow_modal(
@@ -233,12 +200,6 @@ impl Transcript {
             ctx.emit(TranscriptEvent::OpenWorkflowModalWithCommand(code));
         }
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::SaveAsWorkflowModal {
-                source: SaveAsWorkflowModalSource::WarpAIPanel
-            },
-            ctx
-        );
     }
 
     fn handle_keydown(&mut self, keystroke: &Keystroke, ctx: &mut ViewContext<Self>) {
@@ -422,8 +383,7 @@ impl Transcript {
             .build()
             .on_click(move |ctx, _, _| {
                 ctx.dispatch_typed_action(TranscriptAction::CopyCodeToClipboard {
-                    code_block_index,
-                });
+                    code_block_index});
             })
             .with_cursor(Cursor::PointingHand)
             .finish();
@@ -450,14 +410,12 @@ impl Transcript {
                         padding: Some(4.),
                         color: None,
                         with_accent_animations: true,
-                        circular: true,
-                    },
+                        circular: true},
                 )
                 .build()
                 .on_click(move |ctx, _, _| {
                     ctx.dispatch_typed_action(TranscriptAction::PasteInTerminalInput {
-                        code_block_index,
-                    });
+                        code_block_index});
                 })
                 .with_cursor(Cursor::PointingHand)
                 .finish();
@@ -486,8 +444,7 @@ impl Transcript {
                         padding: Some(4.),
                         color: None,
                         with_accent_animations: true,
-                        circular: true,
-                    },
+                        circular: true},
                 )
                 .build()
                 .on_click(move |ctx, _, _| {
@@ -554,8 +511,7 @@ impl Transcript {
                     .build()
                     .on_click(move |ctx, _, _| {
                         ctx.dispatch_typed_action(TranscriptAction::CopyAnswerToClipboard {
-                            transcript_part_index,
-                        })
+                            transcript_part_index})
                     })
                     .with_cursor(Cursor::PointingHand)
                     .finish();
@@ -618,8 +574,7 @@ impl Transcript {
                 let column_part = match part {
                     MarkdownSegment::Other {
                         formatted_text,
-                        highlighted_hyperlink,
-                    } => FormattedTextElement::new(
+                        highlighted_hyperlink} => FormattedTextElement::new(
                         formatted_text.to_owned(),
                         BODY_FONT_SIZE,
                         appearance.ui_font_family(),
@@ -638,8 +593,7 @@ impl Transcript {
                     MarkdownSegment::CodeBlock {
                         index,
                         code,
-                        mouse_state_handles,
-                    } => {
+                        mouse_state_handles} => {
                         let actions = self.render_code_block_actions(
                             *index,
                             appearance,
@@ -696,8 +650,7 @@ impl Transcript {
                         )
                         .on_left_mouse_down(move |ctx, _, _| {
                             ctx.dispatch_typed_action(TranscriptAction::ClickedCodeBlock {
-                                code_block_index,
-                            });
+                                code_block_index});
                             DispatchEventResult::StopPropagation
                         })
                         .finish()
@@ -843,9 +796,7 @@ impl View for Transcript {
                     copy_all_tooltip_and_button_mouse_handles: None,
                     formatted_message: FormattedTranscriptMessage {
                         markdown: in_flight_request_markdown,
-                        raw: IN_FLIGHT_REQUEST_TEXT.to_owned(),
-                    },
-                },
+                        raw: IN_FLIGHT_REQUEST_TEXT.to_owned()}},
                 appearance,
             ));
         }

@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
 
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::Icon;
 use warp_core::ui::theme::color::internal_colors;
 use warp_errors::report_error;
@@ -9,16 +8,14 @@ use warp_util::path::LineAndColumnArg;
 use warpui::elements::{
     Align, ChildView, ConstrainedBox, Container, CrossAxisAlignment, DragBarSide, Element, Empty,
     Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Resizable,
-    ResizableStateHandle, Shrinkable, resizable_state_handle,
-};
+    ResizableStateHandle, Shrinkable, resizable_state_handle};
 use warpui::fonts::Weight;
 use warpui::platform::Cursor;
 use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle, WeakViewHandle,
-};
+    ViewContext, ViewHandle, WeakViewHandle};
 
 use crate::TelemetryEvent;
 use crate::ai::agent::conversation::AIConversationId;
@@ -31,15 +28,13 @@ use crate::code::file_tree::FileTreeEvent;
 use crate::code::file_tree::FileTreeView;
 use crate::coding_panel_enablement_state::CodingPanelEnablementState;
 use crate::drive::panel::{
-    DrivePanel, DrivePanelEvent, MAX_SIDEBAR_WIDTH_RATIO, MIN_SIDEBAR_WIDTH,
-};
+    DrivePanel, DrivePanelEvent, MAX_SIDEBAR_WIDTH_RATIO, MIN_SIDEBAR_WIDTH};
 use crate::drive::settings::WarpDriveSettings;
 use crate::pane_group::pane::view::header::PANE_HEADER_HEIGHT;
 use crate::pane_group::pane::view::header::components::HEADER_EDGE_PADDING;
 use crate::pane_group::working_directories::WorkingDirectory;
 use crate::pane_group::{
-    PaneGroup, WorkingDirectoriesEvent, WorkingDirectoriesModel, {self},
-};
+    PaneGroup, WorkingDirectoriesEvent, WorkingDirectoriesModel, {self}};
 #[cfg(feature = "local_fs")]
 use crate::server::telemetry::CodePanelsFileOpenEntrypoint;
 use crate::server::telemetry::{FileTreeSource, WarpDriveSource};
@@ -54,21 +49,17 @@ use crate::util::file::external_editor::EditorSettings;
 use crate::util::openable_file_type::FileTarget;
 #[cfg(feature = "local_fs")]
 use crate::util::openable_file_type::{
-    EditorLayout, is_markdown_file, resolve_file_target_with_editor_choice,
-};
+    EditorLayout, is_markdown_file, resolve_file_target_with_editor_choice};
 use crate::workspace::WorkspaceAction;
 use crate::workspace::view::conversation_list::view::{
-    ConversationListView, Event as ConversationListViewEvent,
-};
+    ConversationListView, Event as ConversationListViewEvent};
 use crate::workspace::view::global_search::view::{
-    Event as GlobalSearchViewEvent, GlobalSearchEntryFocus, GlobalSearchView,
-};
+    Event as GlobalSearchViewEvent, GlobalSearchEntryFocus, GlobalSearchView};
 use crate::workspace::view::{
     LEFT_PANEL_AGENT_CONVERSATIONS_BINDING_NAME, LEFT_PANEL_GLOBAL_SEARCH_BINDING_NAME,
     LEFT_PANEL_PROJECT_EXPLORER_BINDING_NAME, LEFT_PANEL_WARP_DRIVE_BINDING_NAME,
     OPEN_GLOBAL_SEARCH_BINDING_NAME, TOGGLE_CONVERSATION_LIST_VIEW_BINDING_NAME,
-    TOGGLE_PROJECT_EXPLORER_BINDING_NAME, TOGGLE_WARP_DRIVE_BINDING_NAME,
-};
+    TOGGLE_PROJECT_EXPLORER_BINDING_NAME, TOGGLE_WARP_DRIVE_BINDING_NAME};
 
 #[derive(Default)]
 struct MouseStateHandles {
@@ -76,8 +67,7 @@ struct MouseStateHandles {
     conversation_list_view_button: MouseStateHandle,
     global_search_button: MouseStateHandle,
     warp_drive_button: MouseStateHandle,
-    sign_in_button: MouseStateHandle,
-}
+    sign_in_button: MouseStateHandle}
 
 #[derive(Clone, Debug)]
 pub enum LeftPanelAction {
@@ -85,15 +75,13 @@ pub enum LeftPanelAction {
     GlobalSearch { entry_focus: GlobalSearchEntryFocus },
     WarpDrive,
     ConversationListView,
-    SignIn,
-}
+    SignIn}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ToolPanelAvailability {
     Available,
     RequiresAccount,
-    RequiresAi,
-}
+    RequiresAi}
 
 impl ToolPanelView {
     fn availability(self, app: &AppContext) -> ToolPanelAvailability {
@@ -133,24 +121,20 @@ pub enum LeftPanelEvent {
     OpenFileWithTarget {
         location: LocalOrRemotePath,
         target: FileTarget,
-        line_col: Option<LineAndColumnArg>,
-    },
+        line_col: Option<LineAndColumnArg>},
     NewConversationInNewTab,
     ShowDeleteConfirmationDialog {
         conversation_id: AIConversationId,
         conversation_title: String,
-        terminal_view_id: Option<warpui::EntityId>,
-    },
-    SignInRequested,
-}
+        terminal_view_id: Option<warpui::EntityId>},
+    SignInRequested}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ToolPanelView {
     ProjectExplorer,
     GlobalSearch { entry_focus: GlobalSearchEntryFocus },
     WarpDrive,
-    ConversationListView,
-}
+    ConversationListView}
 
 /// Encapsulates the active view state to enforce that all mutations go through
 /// `active_view_state::set`, which handles necessary side effects.
@@ -208,8 +192,7 @@ pub struct ToolbeltButtonConfig {
     /// Cached keybinding display string for the tooltip.
     ///
     /// This is updated in response to [`KeybindingChangedEvent`]s.
-    pub tooltip_keybinding: Option<String>,
-}
+    pub tooltip_keybinding: Option<String>}
 
 pub struct LeftPanelView {
     resizable_state_handle: ResizableStateHandle,
@@ -223,8 +206,7 @@ pub struct LeftPanelView {
     #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
     working_directories_model: ModelHandle<WorkingDirectoriesModel>,
     is_agent_management_view_open: bool,
-    panel_position: super::PanelPosition,
-}
+    panel_position: super::PanelPosition}
 
 fn toolbelt_tooltip_keybinding(binding_names: &[&'static str], app: &AppContext) -> Option<String> {
     let mut parts = Vec::new();
@@ -364,13 +346,11 @@ impl LeftPanelView {
             ConversationListViewEvent::ShowDeleteConfirmationDialog {
                 conversation_id,
                 conversation_title,
-                terminal_view_id,
-            } => {
+                terminal_view_id} => {
                 ctx.emit(LeftPanelEvent::ShowDeleteConfirmationDialog {
                     conversation_id: *conversation_id,
                     conversation_title: conversation_title.clone(),
-                    terminal_view_id: *terminal_view_id,
-                });
+                    terminal_view_id: *terminal_view_id});
             }
         });
 
@@ -397,8 +377,7 @@ impl LeftPanelView {
         ctx.subscribe_to_model(&working_directories_model, |me, _, event, ctx| {
             if let WorkingDirectoriesEvent::DirectoriesChanged {
                 pane_group_id,
-                directories,
-            } = event
+                directories} = event
             {
                 let Some(active_pane_group) = &me.active_pane_group else {
                     return;
@@ -426,8 +405,7 @@ impl LeftPanelView {
                                 remote_path.path.clone(),
                             ))
                         }
-                        _ => None,
-                    })
+                        _ => None})
                     .collect();
 
                 // Update GlobalSearchView root directories (local + remote).
@@ -472,8 +450,7 @@ impl LeftPanelView {
             active_pane_group: None,
             working_directories_model,
             is_agent_management_view_open: false,
-            panel_position: super::PanelPosition::Left,
-        };
+            panel_position: super::PanelPosition::Left};
         view.update_button_active_states();
 
         view
@@ -506,8 +483,7 @@ impl LeftPanelView {
             // Use discriminant comparison for GlobalSearch since it has inner data
             match (v, &current_view) {
                 (ToolPanelView::GlobalSearch { .. }, ToolPanelView::GlobalSearch { .. }) => true,
-                _ => std::mem::discriminant(v) == std::mem::discriminant(&current_view),
-            }
+                _ => std::mem::discriminant(v) == std::mem::discriminant(&current_view)}
         });
 
         // Rebuild toolbelt buttons
@@ -556,8 +532,7 @@ impl LeftPanelView {
                     action: LeftPanelAction::ProjectExplorer,
                     render_with_active_state: false,
                     tooltip_keybinding: toolbelt_tooltip_keybinding(&tooltip_keybinding_names, ctx),
-                    tooltip_keybinding_names,
-                }
+                    tooltip_keybinding_names}
             }
             ToolPanelView::GlobalSearch { .. } => {
                 let tooltip_keybinding_names = vec![
@@ -570,12 +545,10 @@ impl LeftPanelView {
                     active_icon: None,
                     tooltip_text: "Global search".to_string(),
                     action: LeftPanelAction::GlobalSearch {
-                        entry_focus: GlobalSearchEntryFocus::QueryEditor,
-                    },
+                        entry_focus: GlobalSearchEntryFocus::QueryEditor},
                     render_with_active_state: false,
                     tooltip_keybinding: toolbelt_tooltip_keybinding(&tooltip_keybinding_names, ctx),
-                    tooltip_keybinding_names,
-                }
+                    tooltip_keybinding_names}
             }
             ToolPanelView::WarpDrive => {
                 let tooltip_keybinding_names = vec![
@@ -590,8 +563,7 @@ impl LeftPanelView {
                     action: LeftPanelAction::WarpDrive,
                     render_with_active_state: false,
                     tooltip_keybinding: toolbelt_tooltip_keybinding(&tooltip_keybinding_names, ctx),
-                    tooltip_keybinding_names,
-                }
+                    tooltip_keybinding_names}
             }
             ToolPanelView::ConversationListView => {
                 let tooltip_keybinding_names = vec![
@@ -606,8 +578,7 @@ impl LeftPanelView {
                     action: LeftPanelAction::ConversationListView,
                     render_with_active_state: false,
                     tooltip_keybinding: toolbelt_tooltip_keybinding(&tooltip_keybinding_names, ctx),
-                    tooltip_keybinding_names,
-                }
+                    tooltip_keybinding_names}
             }
         }
     }
@@ -775,8 +746,7 @@ impl LeftPanelView {
                         remote_path.path.clone(),
                     ))
                 }
-                _ => None,
-            })
+                _ => None})
             .collect();
 
         // Update GlobalSearchView root directories (local + remote).
@@ -857,8 +827,7 @@ impl LeftPanelView {
                 active_view_state::set(
                     self,
                     ToolPanelView::GlobalSearch {
-                        entry_focus: GlobalSearchEntryFocus::Results,
-                    },
+                        entry_focus: GlobalSearchEntryFocus::Results},
                     ctx,
                 );
             }
@@ -894,12 +863,10 @@ impl LeftPanelView {
             GlobalSearchViewEvent::OpenMatch {
                 location,
                 line_number,
-                column_num,
-            } => {
+                column_num} => {
                 let line_col = LineAndColumnArg {
                     line_num: *line_number as usize,
-                    column_num: *column_num,
-                };
+                    column_num: *column_num};
 
                 let settings = EditorSettings::as_ref(ctx);
                 let target = match location {
@@ -924,19 +891,10 @@ impl LeftPanelView {
                     }
                 };
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::CodePanelsFileOpened {
-                        entrypoint: CodePanelsFileOpenEntrypoint::GlobalSearch,
-                        target: target.clone(),
-                    },
-                    ctx
-                );
-
                 ctx.emit(LeftPanelEvent::OpenFileWithTarget {
                     location: location.clone(),
                     target,
-                    line_col: Some(line_col),
-                });
+                    line_col: Some(line_col)});
             }
         }
     }
@@ -947,13 +905,11 @@ impl LeftPanelView {
             FileTreeEvent::FileRenamed { old_path, new_path } => {
                 ctx.emit(LeftPanelEvent::FileTree(pane_group::Event::FileRenamed {
                     old_path: old_path.clone(),
-                    new_path: new_path.clone(),
-                }));
+                    new_path: new_path.clone()}));
             }
             FileTreeEvent::FileDeleted { path } => {
                 ctx.emit(LeftPanelEvent::FileTree(pane_group::Event::FileDeleted {
-                    path: path.clone(),
-                }));
+                    path: path.clone()}));
             }
             FileTreeEvent::AttachAsContext { path } => {
                 ctx.emit(LeftPanelEvent::FileTree(
@@ -963,18 +919,15 @@ impl LeftPanelView {
             FileTreeEvent::OpenFile {
                 path,
                 target,
-                line_col,
-            } => {
+                line_col} => {
                 ctx.emit(LeftPanelEvent::OpenFileWithTarget {
                     location: path.clone(),
                     target: target.clone(),
-                    line_col: *line_col,
-                });
+                    line_col: *line_col});
             }
             FileTreeEvent::CDToDirectory { path } => {
                 ctx.emit(LeftPanelEvent::FileTree(pane_group::Event::CDToDirectory {
-                    path: path.clone(),
-                }));
+                    path: path.clone()}));
             }
             FileTreeEvent::OpenDirectoryInNewTab { path } => {
                 ctx.emit(LeftPanelEvent::FileTree(
@@ -1039,8 +992,7 @@ impl LeftPanelView {
                 LeftPanelAction::ConversationListView => {
                     self.active_view.get() == ToolPanelView::ConversationListView
                 }
-                LeftPanelAction::SignIn => false,
-            };
+                LeftPanelAction::SignIn => false};
         }
     }
 
@@ -1122,67 +1074,33 @@ impl LeftPanelView {
             LeftPanelAction::ProjectExplorer => {
                 active_view_state::set(self, ToolPanelView::ProjectExplorer, ctx);
                 if force_open {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::FileTreeToggled {
-                            source: FileTreeSource::ForceOpened,
-                            is_code_mode_v2: true,
-                            cli_agent: None,
-                        },
-                        ctx
-                    );
                 } else {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::FileTreeToggled {
-                            source: FileTreeSource::LeftPanelToolbelt,
-                            is_code_mode_v2: true,
-                            cli_agent: None,
-                        },
-                        ctx
-                    );
                 }
             }
             LeftPanelAction::GlobalSearch { entry_focus } => {
                 let was_active = self.active_view.get()
                     == ToolPanelView::GlobalSearch {
-                        entry_focus: *entry_focus,
-                    };
+                        entry_focus: *entry_focus};
                 active_view_state::set(
                     self,
                     ToolPanelView::GlobalSearch {
-                        entry_focus: *entry_focus,
-                    },
+                        entry_focus: *entry_focus},
                     ctx,
                 );
                 if !was_active {
-                    send_telemetry_from_ctx!(TelemetryEvent::GlobalSearchOpened, ctx);
                 }
             }
             LeftPanelAction::WarpDrive => {
                 active_view_state::set(self, ToolPanelView::WarpDrive, ctx);
                 if self.active_view_availability(ctx) == ToolPanelAvailability::Available {
                     if force_open {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::WarpDriveOpened {
-                                source: WarpDriveSource::ForceOpened,
-                                is_code_mode_v2: true
-                            },
-                            ctx
-                        );
                     } else {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::WarpDriveOpened {
-                                source: WarpDriveSource::LeftPanelToolbelt,
-                                is_code_mode_v2: true
-                            },
-                            ctx
-                        );
                     }
                 }
             }
             LeftPanelAction::ConversationListView => {
                 active_view_state::set(self, ToolPanelView::ConversationListView, ctx);
                 if self.active_view_availability(ctx) == ToolPanelAvailability::Available {
-                    send_telemetry_from_ctx!(TelemetryEvent::ConversationListViewOpened, ctx);
                 }
             }
             LeftPanelAction::SignIn => {
@@ -1290,8 +1208,7 @@ impl View for LeftPanelView {
                     }
                 }
                 ToolPanelView::WarpDrive => ctx.focus(&self.warp_drive_view),
-                ToolPanelView::ConversationListView => ctx.focus(&self.conversation_list_view),
-            }
+                ToolPanelView::ConversationListView => ctx.focus(&self.conversation_list_view)}
         }
     }
 
@@ -1346,8 +1263,7 @@ impl View for LeftPanelView {
                     )
                     .finish(),
                     _ => Shrinkable::new(1.0, Container::new(Empty::new().finish()).finish())
-                        .finish(),
-                },
+                        .finish()},
                 ToolPanelView::GlobalSearch { .. } => match self.active_global_search_view(app) {
                     Some(global_search_view) => Shrinkable::new(
                         1.0,
@@ -1355,8 +1271,7 @@ impl View for LeftPanelView {
                     )
                     .finish(),
                     _ => Shrinkable::new(1.0, Container::new(Empty::new().finish()).finish())
-                        .finish(),
-                },
+                        .finish()},
                 ToolPanelView::WarpDrive => Shrinkable::new(
                     1.0,
                     Container::new(ChildView::new(&self.warp_drive_view).finish())
@@ -1412,8 +1327,7 @@ impl View for LeftPanelView {
 
         let drag_side = match self.panel_position {
             super::PanelPosition::Left => DragBarSide::Right,
-            super::PanelPosition::Right => DragBarSide::Left,
-        };
+            super::PanelPosition::Right => DragBarSide::Left};
         Resizable::new(self.resizable_state_handle.clone(), panel_content)
             .with_dragbar_side(drag_side)
             .on_resize(move |ctx, _| {

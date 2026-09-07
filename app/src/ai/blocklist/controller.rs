@@ -28,8 +28,7 @@ use warp_errors::report_error;
 use warp_multi_agent_api::{Task, ToolType, message};
 use warpui::r#async::{SpawnedFutureHandle, Timer};
 use warpui::{
-    AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity, WeakViewHandle,
-};
+    AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity, WeakViewHandle};
 
 use self::response_stream::{PendingResume, RecoveryBudget, ResponseStream, ResponseStreamEvent};
 use super::action_model::{BlocklistAIActionEvent, BlocklistAIActionModel};
@@ -37,8 +36,7 @@ use super::context_model::{BlocklistAIContextModel, PendingAttachment, PendingFi
 use super::conversation_selection::{ConversationSelectionEvent, ConversationSelectionHandle};
 use super::history_model::BlocklistAIHistoryModel;
 use super::orchestration_event_streamer::{
-    OrchestrationEventStreamer, OrchestrationEventStreamerEvent,
-};
+    OrchestrationEventStreamer, OrchestrationEventStreamerEvent};
 use super::orchestration_events::{OrchestrationEventService, OrchestrationEventServiceEvent};
 use super::queued_query::{QueuedQueryId, QueuedQueryModel};
 use super::{BlocklistAIInputModel, ResponseStreamId};
@@ -52,15 +50,13 @@ use crate::ai::agent::{
     CancellationReason, DocumentContentAttachmentSource, EntrypointType, FileContext,
     FinishedAIAgentOutput, PassiveSuggestionResultType, PassiveSuggestionTrigger,
     PassiveSuggestionTriggerType, RenderableAIError, RequestCost, RequestMetadata, RunningCommand,
-    StaticQueryType, TransientNetworkErrorKind, UserQueryMode, extract_user_query_mode,
-};
+    StaticQueryType, TransientNetworkErrorKind, UserQueryMode, extract_user_query_mode};
 use crate::ai::agent_events::AgentMessageEventMetadata;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent_sdk::ClaudeHarness;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::document::ai_document_model::{
-    AIDocumentId, AIDocumentModel, AIDocumentUserEditStatus,
-};
+    AIDocumentId, AIDocumentModel, AIDocumentUserEditStatus};
 use crate::ai::llms::{LLMId, LLMPreferences};
 use crate::ai::skills::{ActiveSkillLookupError, SkillManager};
 use crate::cloud_object::model::persistence::CloudModel;
@@ -69,15 +65,13 @@ use crate::global_resource_handles::GlobalResourceHandlesProvider;
 use crate::network::NetworkStatus;
 use crate::notebooks::editor::model::FileLinkResolutionContext;
 use crate::persistence::ModelEvent;
-use crate::send_telemetry_from_ctx;
 use crate::server::server_api::AIApiError;
 #[cfg(not(target_family = "wasm"))]
 use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::TelemetryEvent;
 use crate::terminal::ShellLaunchData;
 use crate::terminal::model::block::{
-    BlockId, CURSOR_MARKER, formatted_terminal_contents_for_input,
-};
+    BlockId, CURSOR_MARKER, formatted_terminal_contents_for_input};
 use crate::terminal::model::session::SessionType;
 use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model::terminal_model::TerminalModel;
@@ -85,23 +79,20 @@ use crate::terminal::view::inline_banner::ZeroStatePromptSuggestionType;
 use crate::workspace::OneTimeModalModel;
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::{
-    ResolvedTeamScope, TeamContext, TeamContextResolver, TeamScope, UserWorkspaces,
-};
+    ResolvedTeamScope, TeamContext, TeamContextResolver, TeamScope, UserWorkspaces};
 
 #[derive(Debug, Clone)]
 pub struct SessionContext {
     session_type: Option<SessionType>,
     shell: Option<ShellLaunchData>,
-    current_working_directory: Option<String>,
-}
+    current_working_directory: Option<String>}
 
 impl SessionContext {
     pub fn from_session(session: &ActiveSession, app: &AppContext) -> Self {
         SessionContext {
             session_type: session.session_type(app),
             shell: session.shell_launch_data(app),
-            current_working_directory: session.current_working_directory().cloned(),
-        }
+            current_working_directory: session.current_working_directory().cloned()}
     }
 
     pub fn session_type(&self) -> &Option<SessionType> {
@@ -121,8 +112,7 @@ impl SessionContext {
     pub fn host_id(&self) -> Option<&warp_core::HostId> {
         match &self.session_type {
             Some(SessionType::WarpifiedRemote { host_id }) => host_id.as_ref(),
-            Some(SessionType::Local) | None => None,
-        }
+            Some(SessionType::Local) | None => None}
     }
 
     /// Returns `true` if this is a remote session (regardless of whether
@@ -134,13 +124,10 @@ impl SessionContext {
     pub fn skill_path_origin(&self) -> SkillPathOrigin {
         match &self.session_type {
             Some(SessionType::WarpifiedRemote {
-                host_id: Some(host_id),
-            }) => SkillPathOrigin::Remote {
-                host_id: host_id.clone(),
-            },
+                host_id: Some(host_id)}) => SkillPathOrigin::Remote {
+                host_id: host_id.clone()},
             Some(SessionType::WarpifiedRemote { host_id: None }) => SkillPathOrigin::Unavailable,
-            Some(SessionType::Local) | None => SkillPathOrigin::Local,
-        }
+            Some(SessionType::Local) | None => SkillPathOrigin::Local}
     }
 
     #[cfg(test)]
@@ -148,8 +135,7 @@ impl SessionContext {
         SessionContext {
             session_type: None,
             shell: None,
-            current_working_directory: None,
-        }
+            current_working_directory: None}
     }
 
     #[cfg(test)]
@@ -157,8 +143,7 @@ impl SessionContext {
         SessionContext {
             session_type,
             shell: None,
-            current_working_directory: None,
-        }
+            current_working_directory: None}
     }
 }
 
@@ -176,25 +161,20 @@ pub enum BlocklistAIControllerEvent {
         /// send a model request (e.g., /fork).
         model_id: LLMId,
         /// The ID of the response stream for this request.
-        stream_id: ResponseStreamId,
-    },
+        stream_id: ResponseStreamId},
 
     /// Emitted when an AI output response is fully received, particularly relevant when output is
     /// being streamed.
     FinishedReceivingOutput {
         stream_id: ResponseStreamId,
-        conversation_id: AIConversationId,
-    },
+        conversation_id: AIConversationId},
 
     /// Emitted when the export-to-file slash command is executed.
     ExportConversationToFile {
-        filename: Option<String>,
-    },
+        filename: Option<String>},
 
     ExecuteLocalHarnessCommand {
-        command: String,
-    },
-}
+        command: String}}
 
 #[derive(Debug)]
 pub struct RequestInput {
@@ -207,8 +187,7 @@ pub struct RequestInput {
     pub computer_use_model_id: LLMId,
     pub shared_session_response_initiator: Option<ParticipantId>,
     pub request_start_ts: DateTime<Local>,
-    pub supported_tools_override: Option<Vec<ToolType>>,
-}
+    pub supported_tools_override: Option<Vec<ToolType>>}
 
 impl RequestInput {
     #[allow(clippy::too_many_arguments)]
@@ -259,8 +238,7 @@ impl RequestInput {
                 .or_default()
                 .push(AIAgentInput::ActionResult {
                     result,
-                    context: context.clone(),
-                });
+                    context: context.clone()});
         }
         me
     }
@@ -314,8 +292,7 @@ impl RequestInput {
             computer_use_model_id,
             shared_session_response_initiator,
             request_start_ts: Local::now(),
-            supported_tools_override: None,
-        }
+            supported_tools_override: None}
     }
 }
 
@@ -365,8 +342,7 @@ pub struct BlocklistAIController {
             PassiveSuggestionResultType,
             Option<PassiveSuggestionTrigger>,
         )>,
-    >,
-}
+    >}
 
 enum InputQueryType {
     /// The user submitted query from the input. This may map to [`AIAgentInput::UserQuery`] but may
@@ -374,35 +350,28 @@ enum InputQueryType {
     UserSubmittedQueryFromInput {
         query: String,
         static_query_type: Option<StaticQueryType>,
-        running_command: Option<RunningCommand>,
-    },
+        running_command: Option<RunningCommand>},
     /// A custom [`AIInputType`].
-    AIInputType { ai_input: AIAgentInput },
-}
+    AIInputType { ai_input: AIAgentInput }}
 
 enum WhichTask {
     NewConversation,
     Task {
         conversation_id: AIConversationId,
-        task_id: TaskId,
-    },
-}
+        task_id: TaskId}}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum LocalClaudeWakeTrigger {
     PendingEvents,
     WakeOnlyStream {
-        wake_message: AgentMessageEventMetadata,
-    },
-}
+        wake_message: AgentMessageEventMetadata}}
 
 impl LocalClaudeWakeTrigger {
     #[cfg(not(target_family = "wasm"))]
     fn requires_pending_events(&self) -> bool {
         match self {
             Self::PendingEvents => true,
-            Self::WakeOnlyStream { .. } => false,
-        }
+            Self::WakeOnlyStream { .. } => false}
     }
 }
 
@@ -414,8 +383,7 @@ struct InputQuery {
     additional_attachments: HashMap<String, AIAgentAttachment>,
     /// When `Some`, this submission is a fired queued-prompt row; the send path resolves the
     /// row's stored attachments by this id instead of the live input staging.
-    queued_query_id: Option<QueuedQueryId>,
-}
+    queued_query_id: Option<QueuedQueryId>}
 
 impl InputQuery {
     fn query(&self) -> String {
@@ -593,8 +561,7 @@ impl BlocklistAIController {
             let ConversationSelectionEvent::Deactivated {
                 conversation_id,
                 final_exchange_count,
-                is_exit_before_new_entrance,
-            } = event
+                is_exit_before_new_entrance} = event
             else {
                 return;
             };
@@ -627,8 +594,7 @@ impl BlocklistAIController {
         ctx.subscribe_to_model(&streamer, move |me, _, event, ctx| match event {
             OrchestrationEventStreamerEvent::DormantClaudeWakeReady {
                 conversation_id,
-                wake_message,
-            } => {
+                wake_message} => {
                 me.handle_dormant_claude_wake_ready(*conversation_id, wake_message.clone(), ctx);
             }
             // Viewer-mode events are handled by `OrchestrationViewerModel`.
@@ -652,8 +618,7 @@ impl BlocklistAIController {
             pending_auto_resume_handles: HashMap::new(),
             pending_local_claude_wakes: HashMap::new(),
             pending_passive_follow_ups: HashSet::new(),
-            pending_passive_suggestion_results: HashMap::new(),
-        }
+            pending_passive_suggestion_results: HashMap::new()}
     }
 
     /// Internal method to send a query to the AI model. External callers should use either
@@ -687,9 +652,7 @@ impl BlocklistAIController {
             }
             WhichTask::Task {
                 conversation_id,
-                task_id,
-            } => (conversation_id, task_id),
-        };
+                task_id} => (conversation_id, task_id)};
 
         // Drain any queued passive suggestion results for this conversation
         // *before* cancelling progress, since cancel_conversation_progress
@@ -704,8 +667,7 @@ impl BlocklistAIController {
             ai_history_model.active_conversation_id(self.terminal_surface_id);
         let cancellation_reason = CancellationReason::FollowUpSubmitted {
             is_for_same_conversation: active_conversation_id
-                .is_some_and(|id| id == conversation_id),
-        };
+                .is_some_and(|id| id == conversation_id)};
         if let Some(active_conversation_id) = active_conversation_id {
             self.cancel_conversation_progress(active_conversation_id, cancellation_reason, ctx);
         }
@@ -731,17 +693,6 @@ impl BlocklistAIController {
 
         // Attribute /orchestrate queries to the slash-command entry surface.
         if matches!(user_query_mode, UserQueryMode::Orchestrate) {
-            send_telemetry_from_ctx!(
-                super::telemetry::BlocklistOrchestrationTelemetryEvent::OrchestrationEntered(
-                    super::telemetry::OrchestrationEnteredEvent {
-                        conversation_id,
-                        plan_id: None,
-                        entry_source:
-                            super::telemetry::OrchestrationEntrySource::SlashCommandOrchestrate,
-                    }
-                ),
-                ctx
-            );
         }
 
         let should_prepend_finished_action_results = matches!(
@@ -771,8 +722,7 @@ impl BlocklistAIController {
                 .into_iter()
                 .map(|result| AIAgentInput::ActionResult {
                     result,
-                    context: context.clone(),
-                })
+                    context: context.clone()})
                 .collect_vec()
         } else {
             // Custom AI inputs like CodeReview are encoded as top-level request
@@ -797,8 +747,7 @@ impl BlocklistAIController {
             inputs.push(AIAgentInput::PassiveSuggestionResult {
                 trigger,
                 suggestion,
-                context: context.clone(),
-            });
+                context: context.clone()});
         }
 
         let additional_attachments = input_query.additional_attachments;
@@ -820,8 +769,7 @@ impl BlocklistAIController {
                         .context_model
                         .as_ref(ctx)
                         .pending_attachments()
-                        .to_vec(),
-                };
+                        .to_vec()};
 
                 input_for_query(
                     query,
@@ -837,8 +785,7 @@ impl BlocklistAIController {
                     ctx,
                 )
             }
-            InputQueryType::AIInputType { ai_input } => ai_input,
-        };
+            InputQueryType::AIInputType { ai_input } => ai_input};
         inputs.push(ai_input);
 
         // Piggyback any pending orchestration config updates for this conversation.
@@ -849,8 +796,7 @@ impl BlocklistAIController {
             inputs.push(AIAgentInput::OrchestrationConfigUpdate {
                 plan_id: dirty_event.plan_id.clone(),
                 config: dirty_event.config.clone(),
-                status: dirty_event.status,
-            });
+                status: dirty_event.status});
         }
 
         let scope = ResolvedTeamScope::from_scope(&self.team_context(ctx));
@@ -868,8 +814,7 @@ impl BlocklistAIController {
             Some(RequestMetadata {
                 is_autodetected_user_query: !self.input_model.as_ref(ctx).is_input_type_locked(),
                 entrypoint: entrypoint_type,
-                is_auto_resume_after_error: false,
-            }),
+                is_auto_resume_after_error: false}),
             RecoveryBudget::fresh(),
             is_queued_prompt,
             ctx,
@@ -904,8 +849,7 @@ impl BlocklistAIController {
                 .cloned()
                 .map(|working_directory| FileLinkResolutionContext {
                     working_directory,
-                    shell_launch_data: session.shell_launch_data(ctx),
-                });
+                    shell_launch_data: session.shell_launch_data(ctx)});
 
         for attachment in referenced_attachments.values() {
             let AIAgentAttachment::DocumentContent {
@@ -1045,16 +989,13 @@ impl BlocklistAIController {
                 InputQuery {
                     which_task: WhichTask::Task {
                         conversation_id,
-                        task_id,
-                    },
+                        task_id},
                     input_query: InputQueryType::UserSubmittedQueryFromInput {
                         query,
                         static_query_type,
-                        running_command: Some(running_command),
-                    },
+                        running_command: Some(running_command)},
                     additional_attachments: HashMap::new(),
-                    queued_query_id,
-                },
+                    queued_query_id},
                 entrypoint_type,
                 participant_id,
                 is_queued_prompt,
@@ -1067,11 +1008,9 @@ impl BlocklistAIController {
                     input_query: InputQueryType::UserSubmittedQueryFromInput {
                         query,
                         static_query_type,
-                        running_command: None,
-                    },
+                        running_command: None},
                     additional_attachments: HashMap::new(),
-                    queued_query_id,
-                },
+                    queued_query_id},
                 entrypoint_type,
                 participant_id,
                 is_queued_prompt,
@@ -1295,8 +1234,7 @@ impl BlocklistAIController {
             for (block_id, agent_view_visibility) in promoted_blocks {
                 if let Err(e) = sender.send(ModelEvent::UpdateBlockAgentViewVisibility {
                     block_id: block_id.to_string(),
-                    agent_view_visibility: agent_view_visibility.into(),
-                }) {
+                    agent_view_visibility: agent_view_visibility.into()}) {
                     report_error!(
                         anyhow::Error::new(e)
                             .context("Error sending UpdateBlockAgentViewVisibility event")
@@ -1310,16 +1248,13 @@ impl BlocklistAIController {
             InputQuery {
                 which_task: WhichTask::Task {
                     conversation_id,
-                    task_id,
-                },
+                    task_id},
                 input_query: InputQueryType::UserSubmittedQueryFromInput {
                     query,
                     static_query_type: None,
-                    running_command,
-                },
+                    running_command},
                 additional_attachments,
-                queued_query_id,
-            },
+                queued_query_id},
             entrypoint_type,
             participant_id,
             is_queued_prompt,
@@ -1341,11 +1276,9 @@ impl BlocklistAIController {
                 input_query: InputQueryType::UserSubmittedQueryFromInput {
                     query: query_type.query().to_string(),
                     static_query_type: query_type.static_query_type(),
-                    running_command: None,
-                },
+                    running_command: None},
                 additional_attachments: HashMap::new(),
-                queued_query_id: None,
-            },
+                queued_query_id: None},
             EntrypointType::ZeroStateAgentModePromptSuggestion,
             participant_id,
             /*is_queued_prompt*/ false,
@@ -1371,18 +1304,15 @@ impl BlocklistAIController {
                 };
                 WhichTask::Task {
                     conversation_id: conversation.id(),
-                    task_id: conversation.get_root_task_id().clone(),
-                }
+                    task_id: conversation.get_root_task_id().clone()}
             }
-            None => WhichTask::NewConversation,
-        };
+            None => WhichTask::NewConversation};
         self.send_query(
             InputQuery {
                 which_task,
                 input_query: InputQueryType::AIInputType { ai_input },
                 additional_attachments: HashMap::new(),
-                queued_query_id: None,
-            },
+                queued_query_id: None},
             EntrypointType::UserInitiated,
             participant_id,
             /*is_queued_prompt*/ false,
@@ -1530,11 +1460,9 @@ impl BlocklistAIController {
                 };
                 WhichTask::Task {
                     conversation_id: conversation.id(),
-                    task_id: conversation.get_root_task_id().clone(),
-                }
+                    task_id: conversation.get_root_task_id().clone()}
             }
-            None => WhichTask::NewConversation,
-        };
+            None => WhichTask::NewConversation};
 
         let context = input_context_for_request(
             false,
@@ -1559,15 +1487,11 @@ impl BlocklistAIController {
                     ai_input: AIAgentInput::PassiveSuggestionResult {
                         trigger,
                         suggestion,
-                        context,
-                    },
-                },
+                        context}},
                 additional_attachments: HashMap::new(),
-                queued_query_id: None,
-            },
+                queued_query_id: None},
             EntrypointType::TriggerPassiveSuggestion {
-                trigger: trigger_type,
-            },
+                trigger: trigger_type},
             participant_id,
             /*is_queued_prompt*/ false,
             ctx,
@@ -1787,8 +1711,7 @@ impl BlocklistAIController {
         let task_id = conversation.task_id();
         let wake_message_for_prepare = match &trigger {
             LocalClaudeWakeTrigger::PendingEvents => None,
-            LocalClaudeWakeTrigger::WakeOnlyStream { wake_message } => Some(wake_message.clone()),
-        };
+            LocalClaudeWakeTrigger::WakeOnlyStream { wake_message } => Some(wake_message.clone())};
         let trigger_for_callback = trigger.clone();
 
         let server_api = ServerApiProvider::as_ref(ctx).get();
@@ -1839,8 +1762,7 @@ impl BlocklistAIController {
                             },
                         );
                         ctx.emit(BlocklistAIControllerEvent::ExecuteLocalHarnessCommand {
-                            command,
-                        });
+                            command});
                     }
                     Ok(None) => {
                         match &trigger_for_callback {
@@ -2083,8 +2005,7 @@ impl BlocklistAIController {
             Some(RequestMetadata {
                 is_autodetected_user_query: false,
                 entrypoint: EntrypointType::ResumeConversation,
-                is_auto_resume_after_error: true,
-            })
+                is_auto_resume_after_error: true})
         } else {
             None
         };
@@ -2176,8 +2097,7 @@ impl BlocklistAIController {
             RequestInput::for_task(
                 vec![AIAgentInput::AutoCodeDiffQuery {
                     query,
-                    context: input_context.into(),
-                }],
+                    context: input_context.into()}],
                 new_conversation.get_root_task_id().clone(),
                 &self.active_session,
                 self.get_current_response_initiator(),
@@ -2190,10 +2110,8 @@ impl BlocklistAIController {
                 is_autodetected_user_query: false,
                 entrypoint: EntrypointType::PromptSuggestion {
                     is_static: false,
-                    is_coding: true,
-                },
-                is_auto_resume_after_error: false,
-            }),
+                    is_coding: true},
+                is_auto_resume_after_error: false}),
             RecoveryBudget::fresh(),
             /*is_queued_prompt*/ false,
             ctx,
@@ -2249,8 +2167,7 @@ impl BlocklistAIController {
                 // Do not tie passive suggestion requests to the cloud agent task, since they are
                 // separate, read-only requests.
                 ambient_agent_task_id: None,
-                existing_suggestions: None,
-            };
+                existing_suggestions: None};
             (conversation_id, task_id, conversation_data)
         } else if !matches!(
             trigger,
@@ -2267,8 +2184,7 @@ impl BlocklistAIController {
                 // Do not tie passive suggestion requests to the cloud agent task, since they are
                 // separate, read-only requests.
                 ambient_agent_task_id: None,
-                existing_suggestions: None,
-            };
+                existing_suggestions: None};
             (conversation_id, task_id, conversation_data)
         } else {
             return Err(anyhow!(
@@ -2286,8 +2202,7 @@ impl BlocklistAIController {
                 ctx,
             ),
             attachments: vec![],
-            trigger: trigger.clone(),
-        }];
+            trigger: trigger.clone()}];
 
         let scope = ResolvedTeamScope::from_scope(&self.team_context(ctx));
         let request_input = RequestInput::for_task(
@@ -2305,10 +2220,8 @@ impl BlocklistAIController {
         let metadata = Some(RequestMetadata {
             is_autodetected_user_query: false,
             entrypoint: EntrypointType::TriggerPassiveSuggestion {
-                trigger: Some((&trigger).into()),
-            },
-            is_auto_resume_after_error: false,
-        });
+                trigger: Some((&trigger).into())},
+            is_auto_resume_after_error: false});
 
         let scope = self.team_context(ctx);
         let request_params = api::RequestParams::new(
@@ -2342,8 +2255,7 @@ impl BlocklistAIController {
                 ctx,
             ),
             attachments,
-            trigger,
-        }];
+            trigger}];
 
         let scope = ResolvedTeamScope::from_scope(&self.team_context(ctx));
         let new_conversation = self.start_new_conversation_for_request(ctx);
@@ -2361,10 +2273,8 @@ impl BlocklistAIController {
             Some(RequestMetadata {
                 is_autodetected_user_query: false,
                 entrypoint: EntrypointType::TriggerPassiveSuggestion {
-                    trigger: Some(trigger_type),
-                },
-                is_auto_resume_after_error: false,
-            }),
+                    trigger: Some(trigger_type)},
+                is_auto_resume_after_error: false}),
             RecoveryBudget::fresh(),
             /*is_queued_prompt*/ false,
             ctx,
@@ -2497,19 +2407,6 @@ impl BlocklistAIController {
             .in_flight_response_streams
             .has_active_stream_for_conversation(conversation_id, ctx)
         {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::AIInputNotSent {
-                    entrypoint: query_metadata.map(|metadata| metadata.entrypoint),
-                    inputs: request_input
-                        .all_inputs()
-                        .cloned()
-                        .map(|input| input.into())
-                        .collect(),
-                    active_server_conversation_id: conversation_server_token.clone(),
-                    active_client_conversation_id: Some(conversation_id),
-                },
-                ctx
-            );
             const AI_INPUT_NOT_SENT_ERROR_STR: &str =
                 "Not sending AI input because there is an in-flight request";
             safe_assert!(false, "{}", AI_INPUT_NOT_SENT_ERROR_STR);
@@ -2525,8 +2422,7 @@ impl BlocklistAIController {
             existing_suggestions: history_model
                 .as_ref(ctx)
                 .existing_suggestions_for_conversation(conversation_id)
-                .cloned(),
-        };
+                .cloned()};
 
         // Log an error if tool call results do not have corresponding tool calls in task context
         validate_tool_call_results(
@@ -2572,8 +2468,7 @@ impl BlocklistAIController {
                 server_conversation_id: server_conversation_token_for_identifiers.map(Into::into),
                 client_conversation_id: Some(conversation_data.id),
                 client_exchange_id: None,
-                model_id: Some(request_params.model.clone()),
-            };
+                model_id: Some(request_params.model.clone())};
             ResponseStream::new(request_params.clone(), ai_identifiers, recovery, ctx)
         });
         let response_stream_id = response_stream.as_ref(ctx).id().clone();
@@ -2630,8 +2525,7 @@ impl BlocklistAIController {
             conversation_data.id,
             response_stream,
             CancellationReason::FollowUpSubmitted {
-                is_for_same_conversation: true,
-            },
+                is_for_same_conversation: true},
             ctx,
         );
 
@@ -2659,8 +2553,7 @@ impl BlocklistAIController {
             contains_user_query: input_contains_user_query,
             is_queued_prompt,
             model_id: request_params.model.clone(),
-            stream_id: response_stream_id.clone(),
-        });
+            stream_id: response_stream_id.clone()});
         if !is_passive_request {
             history_model.update(ctx, |history_model, ctx| {
                 history_model.mark_active_conversation_id(
@@ -3244,8 +3137,7 @@ impl BlocklistAIController {
                 }
                 ctx.emit(BlocklistAIControllerEvent::FinishedReceivingOutput {
                     stream_id,
-                    conversation_id,
-                });
+                    conversation_id});
                 AIRequestUsageModel::handle(ctx).update(ctx, |request_usage_model, ctx| {
                     request_usage_model.refresh_request_usage_async(ctx);
                 });
@@ -3354,8 +3246,7 @@ impl BlocklistAIController {
                             error_message: error_message.to_owned(),
                             will_attempt_resume: false,
                             waiting_for_network: false,
-                            is_user_error: false,
-                        },
+                            is_user_error: false},
                         /*recovery_pending*/ false,
                         stream_id,
                         conversation_id,
@@ -3381,8 +3272,7 @@ impl BlocklistAIController {
                 history_model.update(ctx, |history_model, ctx| {
                     history_model.mark_response_stream_completed_with_error(
                         RenderableAIError::QuotaLimit {
-                            user_display_message: None,
-                        },
+                            user_display_message: None},
                         /*recovery_pending*/ false,
                         stream_id,
                         conversation_id,
@@ -3399,8 +3289,7 @@ impl BlocklistAIController {
                             error_message: error_message.to_owned(),
                             will_attempt_resume: false,
                             waiting_for_network: false,
-                            is_user_error: false,
-                        },
+                            is_user_error: false},
                         /*recovery_pending*/ false,
                         stream_id,
                         conversation_id,
@@ -3424,8 +3313,7 @@ impl BlocklistAIController {
 
                 let error = if is_aws_bedrock {
                     RenderableAIError::AwsBedrockCredentialsExpiredOrInvalid {
-                        model_name: details.model_name,
-                    }
+                        model_name: details.model_name}
                 } else if is_gemini_enterprise {
                     RenderableAIError::GeminiEnterpriseCredentialsExpiredOrInvalid
                 } else {
@@ -3437,12 +3325,10 @@ impl BlocklistAIController {
                         LlmProvider::Openrouter => Some("OpenRouter"),
                         LlmProvider::AwsBedrock
                         | LlmProvider::GeminiEnterprise
-                        | LlmProvider::Unknown => None,
-                    });
+                        | LlmProvider::Unknown => None});
                     RenderableAIError::InvalidApiKey {
                         provider: provider.unwrap_or("Unknown").to_string(),
-                        model_name: details.model_name,
-                    }
+                        model_name: details.model_name}
                 };
 
                 history_model.update(ctx, |history_model, ctx| {
@@ -3467,8 +3353,7 @@ impl BlocklistAIController {
                             error_message,
                             will_attempt_resume: false,
                             waiting_for_network: false,
-                            is_user_error: false,
-                        },
+                            is_user_error: false},
                         /*recovery_pending*/ false,
                         stream_id,
                         conversation_id,
@@ -3509,8 +3394,7 @@ pub struct ClientIdentifiers {
     pub conversation_id: AIConversationId,
     pub client_exchange_id: AIAgentExchangeId,
     /// Not populated for restored AI blocks.
-    pub response_stream_id: Option<ResponseStreamId>,
-}
+    pub response_stream_id: Option<ResponseStreamId>}
 
 #[allow(clippy::too_many_arguments)]
 fn input_for_query(
@@ -3532,8 +3416,7 @@ fn input_for_query(
     for attachment in prompt_attachments {
         match attachment {
             PendingAttachment::Image(image) => image_context.push(AIAgentContext::Image(image)),
-            PendingAttachment::File(file) => file_attachments.push(file),
-        }
+            PendingAttachment::File(file) => file_attachments.push(file)}
     }
 
     let context = input_context_for_request(
@@ -3567,8 +3450,7 @@ fn input_for_query(
         referenced_attachments,
         user_query_mode,
         running_command,
-        intended_agent,
-    }
+        intended_agent}
 }
 
 pub(super) fn add_pending_file_attachments(
@@ -3579,8 +3461,7 @@ pub(super) fn add_pending_file_attachments(
         let attachment = AIAgentAttachment::FilePathReference {
             file_id: uuid::Uuid::new_v4().to_string(),
             file_name: file.file_name.clone(),
-            file_path: file.file_path.to_string_lossy().to_string(),
-        };
+            file_path: file.file_path.to_string_lossy().to_string()};
         let mut key = file.file_name.clone();
         if referenced_attachments.contains_key(&key) {
             let mut suffix = 1;
@@ -3658,8 +3539,7 @@ fn get_running_command(terminal_model: &TerminalModel) -> Option<RunningCommand>
         },
         cursor: CURSOR_MARKER.to_owned(),
         requested_command_id: active_block.requested_command_action_id().cloned(),
-        is_alt_screen_active,
-    })
+        is_alt_screen_active})
 }
 
 #[cfg(test)]

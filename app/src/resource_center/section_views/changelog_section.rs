@@ -4,22 +4,18 @@ use warp_core::features::FeatureFlag;
 use warpui::elements::{
     Border, CacheOption, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Element,
     Flex, FormattedTextElement, HighlightedHyperlink, Icon, Image, MouseStateHandle, ParentElement,
-    Radius,
-};
+    Radius};
 use warpui::fonts::Weight;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Entity, ModelAsRef, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext,
-};
+    ViewContext};
 
 use super::feature_section::FeatureSection;
 use super::{SectionAction, SectionView};
 use crate::appearance::Appearance;
 use crate::changelog_model::{
-    ChangelogHeader, ChangelogModel, ChangelogState, Event as ChangelogEvent,
-};
-use crate::send_telemetry_from_ctx;
+    ChangelogHeader, ChangelogModel, ChangelogState, Event as ChangelogEvent};
 use crate::server::telemetry::TelemetryEvent;
 use crate::themes::theme::Fill;
 use crate::ui_components::icons;
@@ -27,8 +23,7 @@ use crate::ui_components::icons;
 #[derive(Default)]
 struct ChangelogMouseStateHandles {
     top_bar_mouse_state: MouseStateHandle,
-    view_changelogs_mouse_state: MouseStateHandle,
-}
+    view_changelogs_mouse_state: MouseStateHandle}
 
 const CHANGELOG_FETCH_ERROR_MSG: &str = "Unable to fetch the latest changelog.";
 const CHANGELOG_LOADING_MSG: &str = "Loading...";
@@ -43,8 +38,7 @@ pub struct ChangelogSectionView {
     improvements_highlighted_link: HighlightedHyperlink,
     bug_fixes_highlighted_link: HighlightedHyperlink,
     changelog_fetch_error: FormattedText,
-    changelog_loading: FormattedText,
-}
+    changelog_loading: FormattedText}
 
 impl Entity for ChangelogSectionView {
     type Event = ();
@@ -57,10 +51,6 @@ impl TypedActionView for ChangelogSectionView {
         use SectionAction::*;
         match action {
             OpenUrl(url) => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::OpenChangelogLink { url: url.clone() },
-                    ctx
-                );
                 ctx.open_url(url.as_str());
             }
             ToggleExpanded => self.toggle_expanded(ctx),
@@ -74,8 +64,7 @@ fn create_formatted_text_from_string(message: String) -> FormattedText {
         lines: vec![FormattedTextLine::Line(vec![
             FormattedTextFragment::plain_text(message),
         ])]
-        .into(),
-    }
+        .into()}
 }
 
 impl ChangelogSectionView {
@@ -99,8 +88,7 @@ impl ChangelogSectionView {
             changelog_fetch_error: create_formatted_text_from_string(
                 CHANGELOG_FETCH_ERROR_MSG.to_string(),
             ),
-            changelog_loading: create_formatted_text_from_string(CHANGELOG_LOADING_MSG.to_string()),
-        }
+            changelog_loading: create_formatted_text_from_string(CHANGELOG_LOADING_MSG.to_string())}
     }
 
     fn handle_changelog_event(&mut self, _: &ChangelogEvent, ctx: &mut ViewContext<Self>) {

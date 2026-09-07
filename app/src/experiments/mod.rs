@@ -27,8 +27,6 @@ use warpui::{AppContext, SingletonEntity};
 
 use crate::auth::auth_state::AuthStateProvider;
 use crate::channel::{Channel, ChannelState};
-use crate::send_telemetry_sync_from_app_ctx;
-
 /// Number of buckets we are using to partition user traffic. The largest valid
 /// bucket index is NUM_BUCKETS - 1.
 const NUM_BUCKETS: u16 = 1000;
@@ -93,8 +91,7 @@ struct BucketRange {
     /// The group to assign this range of buckets to.
     group: GroupId,
     /// The range of buckets.
-    range: Range<u16>,
-}
+    range: Range<u16>}
 
 impl BucketRange {
     // Ignoring the warning that appears when there are no experiments running currently.
@@ -105,8 +102,7 @@ impl BucketRange {
     {
         Self {
             group: exp.get_group_id(),
-            range,
-        }
+            range}
     }
 }
 
@@ -115,8 +111,7 @@ impl BucketRange {
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub struct GroupId {
     experiment: &'static str,
-    variant: &'static str,
-}
+    variant: &'static str}
 
 impl fmt::Display for GroupId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -152,8 +147,7 @@ pub struct Layer {
     /// in the experiment remain in the same group. This involves fragmenting the
     /// bucket ranges for each group. See the `Increasing experiment traffic
     /// allocations` section in the Notion guide for more details.
-    bucket_ranges: Vec<BucketRange>,
-}
+    bucket_ranges: Vec<BucketRange>}
 
 #[allow(dead_code)]
 impl Layer {
@@ -259,8 +253,7 @@ pub trait Experiment<T: Experiment<T>>: FromStr {
     fn get_group_id(&self) -> GroupId {
         GroupId {
             experiment: Self::name(),
-            variant: self.variant(),
-        }
+            variant: self.variant()}
     }
 
     /// Parses a group id to return the associated experiment. Will fail if the
@@ -334,14 +327,6 @@ pub trait Experiment<T: Experiment<T>>: FromStr {
             if let Some(group) = assigned_group.as_ref() {
                 let group_assignment = group.variant();
                 // Send synchronously since this we rely on this event to collect experiment data.
-                send_telemetry_sync_from_app_ctx!(
-                    crate::server::telemetry::TelemetryEvent::ExperimentTriggered {
-                        experiment: Self::name(),
-                        layer: Self::layer().name(),
-                        group_assignment,
-                    },
-                    ctx
-                );
             }
         }
 

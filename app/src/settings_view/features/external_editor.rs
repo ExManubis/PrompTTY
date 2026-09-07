@@ -10,15 +10,12 @@ use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::appearance::Appearance;
-use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::TelemetryEvent;
 use crate::settings_view::settings_page::{
-    AdditionalInfo, LocalOnlyIconState, ToggleState, render_body_item, render_dropdown_item,
-};
+    AdditionalInfo, LocalOnlyIconState, ToggleState, render_body_item, render_dropdown_item};
 use crate::util::file::external_editor::settings::{
     EditorChoice, EditorLayout, OpenCodePanelsFileEditor, OpenFileEditor, OpenFileLayout,
-    PreferMarkdownViewer, PreferTabbedEditorView,
-};
+    PreferMarkdownViewer, PreferTabbedEditorView};
 use crate::util::file::external_editor::{EditorSettings, SUPPORTED_EDITORS};
 use crate::view_components::{Dropdown, DropdownItem};
 
@@ -32,8 +29,7 @@ pub enum ExternalEditorAction {
     SetLayout(EditorLayout),
     TogglePreferMarkdownViewer,
     ToggleTabbedEditorView,
-    OpenUrl(String),
-}
+    OpenUrl(String)}
 
 pub struct ExternalEditorView {
     editor_dropdown: ViewHandle<Dropdown<ExternalEditorAction>>,
@@ -42,8 +38,7 @@ pub struct ExternalEditorView {
     tabbed_editor_view_mouse_state: SwitchStateHandle,
     prefer_markdown_viewer_switch: SwitchStateHandle,
     markdown_viewer_mouse_state: MouseStateHandle,
-    local_only_icon_states: RefCell<HashMap<String, MouseStateHandle>>,
-}
+    local_only_icon_states: RefCell<HashMap<String, MouseStateHandle>>}
 
 impl ExternalEditorView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -109,8 +104,7 @@ impl ExternalEditorView {
             tabbed_editor_view_mouse_state: Default::default(),
             prefer_markdown_viewer_switch: Default::default(),
             markdown_viewer_mouse_state: Default::default(),
-            local_only_icon_states: Default::default(),
-        }
+            local_only_icon_states: Default::default()}
     }
 
     fn init_layout_dropdown(
@@ -133,8 +127,7 @@ impl ExternalEditorView {
         dropdown.set_items(items, ctx);
         match layout_to_open_files {
             EditorLayout::SplitPane => dropdown.set_selected_by_name(default_option_text, ctx),
-            EditorLayout::NewTab => dropdown.set_selected_by_name("New Tab", ctx),
-        };
+            EditorLayout::NewTab => dropdown.set_selected_by_name("New Tab", ctx)};
     }
 
     fn init_editor_dropdown(
@@ -178,8 +171,7 @@ impl ExternalEditorView {
             }
             EditorChoice::Warp => dropdown.set_selected_by_name("PrompTTY", ctx),
             EditorChoice::EnvEditor => dropdown.set_selected_by_name("$EDITOR", ctx),
-            EditorChoice::SystemDefault => dropdown.set_selected_by_name(default_option_text, ctx),
-        };
+            EditorChoice::SystemDefault => dropdown.set_selected_by_name(default_option_text, ctx)};
     }
 
     /// Handles [`ExternalEditorAction::SetEditor`] by updating the external editor settings.
@@ -188,13 +180,6 @@ impl ExternalEditorView {
             report_if_error!(settings.open_file_editor.set_value(*editor, ctx));
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::FeaturesPageAction {
-                action: "SetEditor".to_string(),
-                value: format!("{editor:?}")
-            },
-            ctx
-        );
     }
 
     fn set_code_panels_editor(&mut self, editor: &EditorChoice, ctx: &mut ViewContext<Self>) {
@@ -206,13 +191,6 @@ impl ExternalEditorView {
             );
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::FeaturesPageAction {
-                action: "SetCodePanelsEditor".to_string(),
-                value: format!("{editor:?}")
-            },
-            ctx
-        );
     }
 
     // Handles [`ExternalEditorAction::SetLayout`] by updating the external editor layout settings.
@@ -221,13 +199,6 @@ impl ExternalEditorView {
             report_if_error!(settings.open_file_layout.set_value(*layout, ctx));
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::FeaturesPageAction {
-                action: "SetLayout".to_string(),
-                value: format!("{layout:?}")
-            },
-            ctx
-        );
     }
 
     /// Handles [`ExternalEditorAction::TogglePreferMarkdownViewer`]
@@ -239,13 +210,6 @@ impl ExternalEditorView {
             new_value.unwrap_or(PreferMarkdownViewer::default_value())
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::FeaturesPageAction {
-                action: "TogglePreferMarkdownViewer".to_string(),
-                value: new_value.to_string()
-            },
-            ctx
-        );
     }
 
     /// Handles [`ExternalEditorAction::TogglePreferTabbedEditorView`] by updating the tabbed file viewer preference.
@@ -258,13 +222,6 @@ impl ExternalEditorView {
             new_value.unwrap_or(PreferTabbedEditorView::default_value())
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::FeaturesPageAction {
-                action: "ToggleTabbedEditorView".to_string(),
-                value: new_value.to_string()
-            },
-            ctx
-        );
     }
 }
 
@@ -367,8 +324,7 @@ impl View for ExternalEditorView {
                     "https://docs.warp.dev/terminal/more-features/markdown-viewer".to_string(),
                 )),
                 secondary_text: None,
-                tooltip_override_text: None,
-            }),
+                tooltip_override_text: None}),
             LocalOnlyIconState::for_setting(
                 PreferMarkdownViewer::storage_key(),
                 PreferMarkdownViewer::sync_to_cloud(),

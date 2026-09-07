@@ -15,8 +15,7 @@ use std::sync::LazyLock;
 use ::ai::api_keys::{ApiKeyManager, ApiKeyManagerEvent, ApiKeys, CustomEndpointParams};
 #[cfg(not(target_family = "wasm"))]
 use ::ai::grok_subscription::oauth::{
-    self, ManualCodeExchange, OauthCancellationHandle, TokenResponse,
-};
+    self, ManualCodeExchange, OauthCancellationHandle, TokenResponse};
 use chrono::{DateTime, Local};
 use markdown_parser::{FormattedText, FormattedTextFragment, FormattedTextLine};
 use pathfinder_geometry::vector::vec2f;
@@ -33,45 +32,37 @@ use warpui::elements::{
     Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Empty, Expanded, Flex, FormattedTextElement, HighlightedHyperlink, Hoverable, HyperlinkLens,
     HyperlinkUrl, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
-    ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack, Text,
-};
+    ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack, Text};
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::{ContextPredicate, Keystroke};
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
 use warpui::{
     Action, AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakViewHandle, WindowId, id,
-};
+    ViewHandle, WeakViewHandle, WindowId, id};
 
 use super::ai_shared::{
     render_ai_feature_switch, render_ai_setting_description, render_ai_setting_label,
     render_ai_setting_toggle, render_toolbar_layout_editor, styles,
-    update_editor_interaction_state,
-};
+    update_editor_interaction_state};
 use super::custom_inference_modal::{
-    CustomEndpointModal, CustomEndpointModalEvent, CustomEndpointModalViewState,
-};
+    CustomEndpointModal, CustomEndpointModalEvent, CustomEndpointModalViewState};
 use super::remove_custom_endpoint_confirmation_dialog::{
-    RemoveCustomEndpointConfirmationDialog, RemoveCustomEndpointConfirmationDialogEvent,
-};
+    RemoveCustomEndpointConfirmationDialog, RemoveCustomEndpointConfirmationDialogEvent};
 use super::set_default_model_modal::{SetDefaultModelModalBody, SetDefaultModelModalBodyEvent};
 use super::settings_page::{
     CONTENT_FONT_SIZE, Category, CategoryHeader, HEADER_PADDING, LocalOnlyIconState, MatchData,
     PageTitle, PageType, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
     TOGGLE_BUTTON_RIGHT_PADDING, ToggleState, build_toggle_element, render_body_item_label,
-    render_dropdown_item, render_filterable_dropdown_item,
-};
+    render_dropdown_item, render_filterable_dropdown_item};
 use super::{
     SettingActionPairContexts, SettingActionPairDescriptions, SettingsAction, SettingsSection,
-    ToggleSettingActionPair, editor_text_colors, flags,
-};
+    ToggleSettingActionPair, editor_text_colors, flags};
 use crate::ai::AIRequestUsageModel;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::aws_credentials::refresh_aws_credentials;
 use crate::ai::blocklist::agent_view::agent_input_footer::editor::{
-    AgentToolbarEditorMode, AgentToolbarInlineEditor,
-};
+    AgentToolbarEditorMode, AgentToolbarInlineEditor};
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::geap_credentials::force_refresh_geap_credentials;
@@ -80,12 +71,10 @@ use crate::appearance::{Appearance, AppearanceEvent};
 use crate::auth::AuthStateProvider;
 use crate::editor::{
     EditorOptions, EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys,
-    SingleLineEditorOptions, TextColors, TextOptions,
-};
+    SingleLineEditorOptions, TextColors, TextOptions};
 use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::server::telemetry::{
-    AgentModeAutoDetectionSettingOrigin, ToggleCodeSuggestionsSettingSource,
-};
+    AgentModeAutoDetectionSettingOrigin, ToggleCodeSuggestionsSettingSource};
 use crate::settings::{
     AIAutoDetectionEnabled, AICommandDenylist, AISettings, AISettingsChangedEvent,
     AgentModeQuerySuggestionsEnabled, AutoApproveBypassesCommandDenylist, AwsBedrockAutoLogin,
@@ -96,18 +85,16 @@ use crate::settings::{
     PromptSubmissionMode, SharedBlockTitleGenerationEnabled,
     ShouldRenderUseAgentToolbarForUserCommands, ShouldShowOzUpdatesInZeroState, ShowAgentTips,
     ShowConversationHistory, ShowHintText, ThinkingDisplayMode, VOICE_INPUT_LANGUAGES,
-    VoiceInputEnabled, VoiceInputLanguage, VoiceInputToggleKey,
-};
+    VoiceInputEnabled, VoiceInputLanguage, VoiceInputToggleKey};
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
 use crate::util::bindings;
 use crate::view_components::action_button::{
-    ActionButton, ButtonSize, DangerSecondaryTheme, SecondaryTheme,
-};
+    ActionButton, ButtonSize, DangerSecondaryTheme, SecondaryTheme};
 use crate::view_components::{Dropdown, DropdownItem, FilterableDropdown};
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, TeamContext, UserWorkspacesEvent};
 use crate::workspaces::workspace::{AdminEnablementSetting, CustomerType};
-use crate::{TelemetryEvent, UserWorkspaces, send_telemetry_from_ctx};
+use crate::{TelemetryEvent, UserWorkspaces};
 
 const AI_SETTINGS_DROPDOWN_WIDTH: f32 = 250.;
 const AI_SETTINGS_DROPDOWN_MAX_HEIGHT: f32 = 250.;
@@ -314,8 +301,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
                         flags::THINKING_DISPLAY_SHOW_AND_COLLAPSE
                     }
                     ThinkingDisplayMode::AlwaysShow => flags::THINKING_DISPLAY_ALWAYS_SHOW,
-                    ThinkingDisplayMode::NeverShow => flags::THINKING_DISPLAY_NEVER_SHOW,
-                };
+                    ThinkingDisplayMode::NeverShow => flags::THINKING_DISPLAY_NEVER_SHOW};
                 FixedBinding::empty(
                     mode.command_palette_description(),
                     builder(SettingsAction::WarpAgent(
@@ -365,8 +351,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
             .map(|mode| {
                 let context_flag = match mode {
                     PromptSubmissionMode::Interrupt => flags::PROMPT_SUBMISSION_INTERRUPT,
-                    PromptSubmissionMode::Queue => flags::PROMPT_SUBMISSION_QUEUE,
-                };
+                    PromptSubmissionMode::Queue => flags::PROMPT_SUBMISSION_QUEUE};
                 FixedBinding::empty(
                     mode.command_palette_description(),
                     builder(SettingsAction::WarpAgent(
@@ -585,8 +570,7 @@ fn is_team_policy_change_for_window(event: &UserWorkspacesEvent, window_id: Wind
         || matches!(
             event,
             UserWorkspacesEvent::WindowTeamChanged {
-                window_id: changed_window_id,
-            } if *changed_window_id == window_id
+                window_id: changed_window_id} if *changed_window_id == window_id
         )
 }
 
@@ -612,8 +596,7 @@ const GROK_OAUTH_CONNECT_TOAST_OBJECT_ID: &str = "grok_oauth_connect_toast";
 #[cfg(not(target_family = "wasm"))]
 enum GrokOauthAttemptOutcome {
     Cancelled,
-    Connected(TokenResponse),
-}
+    Connected(TokenResponse)}
 
 /// State for the SuperGrok connect attempt this page is currently tracking.
 ///
@@ -631,8 +614,7 @@ struct GrokOauthAttempt {
     /// Set once the loopback listener is confirmed released, independent of
     /// `outcome` -- a raced-in callback's token exchange can still be in
     /// flight.
-    released: bool,
-}
+    released: bool}
 
 pub struct WarpAgentPageView {
     page: PageType<Self>,
@@ -672,8 +654,7 @@ pub struct WarpAgentPageView {
     #[cfg(not(target_family = "wasm"))]
     grok_oauth_attempt: Option<GrokOauthAttempt>,
     #[cfg(not(target_family = "wasm"))]
-    grok_code_editor: ViewHandle<EditorView>,
-}
+    grok_code_editor: ViewHandle<EditorView>}
 
 impl WarpAgentPageView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -814,8 +795,7 @@ impl WarpAgentPageView {
                     text_colors_override: Some(TextColors {
                         default_color: appearance.theme().active_ui_text_color(),
                         disabled_color: appearance.theme().disabled_ui_text_color(),
-                        hint_color: appearance.theme().disabled_ui_text_color(),
-                    }),
+                        hint_color: appearance.theme().disabled_ui_text_color()}),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -950,8 +930,7 @@ impl WarpAgentPageView {
                             );
                         });
                 }
-                _ => (),
-            }
+                _ => ()}
             ctx.notify();
         });
 
@@ -1011,8 +990,7 @@ impl WarpAgentPageView {
                     top: 24.,
                     bottom: 0.,
                     left: 24.,
-                    right: 24.,
-                }),
+                    right: 24.}),
                 font_size: Some(16.),
                 font_weight: Some(Weight::Bold),
                 ..Default::default()
@@ -1022,8 +1000,7 @@ impl WarpAgentPageView {
                     top: 0.,
                     bottom: 24.,
                     left: 24.,
-                    right: 0.,
-                }),
+                    right: 0.}),
                 ..Default::default()
             })
             .with_background_opacity(100)
@@ -1064,8 +1041,7 @@ impl WarpAgentPageView {
         ctx.subscribe_to_view(
             &set_default_model_modal_view,
             |me, _, event, ctx| match event {
-                ModalEvent::Close => me.hide_set_default_model_modal(ctx),
-            },
+                ModalEvent::Close => me.hide_set_default_model_modal(ctx)},
         );
         let set_default_model_modal = ModalViewState::new(set_default_model_modal_view);
         let last_seen_provider_keys = ApiKeyManager::as_ref(ctx).keys().clone();
@@ -1186,8 +1162,7 @@ impl WarpAgentPageView {
             #[cfg(not(target_family = "wasm"))]
             grok_oauth_attempt: None,
             #[cfg(not(target_family = "wasm"))]
-            grok_code_editor,
-        }
+            grok_code_editor}
     }
 
     fn update_voice_input_dropdown_enablement(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1571,8 +1546,7 @@ impl WarpAgentPageView {
                 url,
                 api_key,
                 schema,
-                models,
-            } => {
+                models} => {
                 if !Self::can_use_custom_inference_controls(ctx) {
                     self.hide_custom_endpoint_modal(ctx);
                     return;
@@ -1583,8 +1557,7 @@ impl WarpAgentPageView {
                         url: url.clone(),
                         api_key: api_key.clone(),
                         models: models.clone(),
-                        schema: *schema,
-                    },
+                        schema: *schema},
                     ctx,
                 );
                 if let Err(error) = result {
@@ -1615,8 +1588,7 @@ impl WarpAgentPageView {
                 url,
                 api_key,
                 schema,
-                models,
-            } => {
+                models} => {
                 if !Self::can_use_custom_inference_controls(ctx) {
                     self.hide_custom_endpoint_modal(ctx);
                     return;
@@ -1628,8 +1600,7 @@ impl WarpAgentPageView {
                         url: url.clone(),
                         api_key: api_key.clone(),
                         models: models.clone(),
-                        schema: *schema,
-                    },
+                        schema: *schema},
                     ctx,
                 );
                 if let Err(error) = result {
@@ -1771,8 +1742,6 @@ impl WarpAgentPageView {
         use crate::view_components::{DismissibleToast, ToastLink};
         use crate::workspace::WorkspaceAction;
 
-        send_telemetry_from_ctx!(TelemetryEvent::SuperGrokSubscriptionConnectInitiated, ctx);
-
         // Binding before opening the browser lets a bind failure surface
         // without a dangling browser tab.
         let attempt = match oauth::OauthAttempt::start() {
@@ -1781,12 +1750,6 @@ impl WarpAgentPageView {
                 safe_error!(
                     safe: ("Failed to start Grok OAuth callback server"),
                     full: ("Failed to start Grok OAuth callback server: {err:#}")
-                );
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::SuperGrokSubscriptionConnectFinished {
-                        error: Some("bind_failed".to_string()),
-                    },
-                    ctx
                 );
                 let window_id = ctx.window_id();
                 ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
@@ -1804,8 +1767,7 @@ impl WarpAgentPageView {
             manual_exchange: attempt.manual_code_exchange(),
             cancellation: attempt.cancellation_handle(),
             outcome: None,
-            released: false,
-        });
+            released: false});
         self.grok_code_editor.update(ctx, |editor, ctx| {
             editor.clear_buffer(ctx);
         });
@@ -1886,12 +1848,6 @@ impl WarpAgentPageView {
                         safe: ("Grok OAuth loopback callback failed"),
                         full: ("Grok OAuth loopback callback failed: {err:#}")
                     );
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::SuperGrokSubscriptionConnectFinished {
-                            error: Some("loopback_failed".to_string()),
-                        },
-                        ctx
-                    );
                     let window_id = ctx.window_id();
                     ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
                         toast_stack.add_ephemeral_toast(
@@ -1917,12 +1873,6 @@ impl WarpAgentPageView {
         self.grok_code_editor.update(ctx, |editor, ctx| {
             editor.clear_buffer(ctx);
         });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::SuperGrokSubscriptionConnectFinished {
-                error: Some("cancelled".to_string()),
-            },
-            ctx
-        );
         let window_id = ctx.window_id();
         ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
             toast_stack.remove_toast_by_identifier(
@@ -1949,10 +1899,6 @@ impl WarpAgentPageView {
         self.grok_code_editor.update(ctx, |editor, ctx| {
             editor.clear_buffer(ctx);
         });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::SuperGrokSubscriptionConnectFinished { error: None },
-            ctx
-        );
         ApiKeyManager::handle(ctx).update(ctx, move |manager, ctx| {
             manager.store_grok_tokens(tokens, ctx);
         });
@@ -2038,12 +1984,6 @@ impl WarpAgentPageView {
                         safe_error!(
                             safe: ("Grok manual code exchange failed"),
                             full: ("Grok manual code exchange failed: {err:#}")
-                        );
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::SuperGrokSubscriptionConnectFinished {
-                                error: Some("manual_code_failed".to_string()),
-                            },
-                            ctx
                         );
                         let window_id = ctx.window_id();
                         ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
@@ -2302,8 +2242,7 @@ pub enum WarpAgentPageEvent {
     OpenCustomRouterFile(PathBuf),
     SignupAnonymousUser,
     ShowModal,
-    HideModal,
-}
+    HideModal}
 
 impl Entity for WarpAgentPageView {
     type Event = WarpAgentPageEvent;
@@ -2364,8 +2303,7 @@ pub enum WarpAgentPageAction {
     ToggleCloudHandoff,
     ToggleAmpersandHandoff,
     ToggleAutoHandoffOnSleep,
-    ToggleShowConversationHistory,
-}
+    ToggleShowConversationHistory}
 
 impl TypedActionView for WarpAgentPageView {
     type Action = WarpAgentPageAction;
@@ -2398,12 +2336,6 @@ impl TypedActionView for WarpAgentPageView {
                     settings.is_any_ai_enabled.toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleGlobalAI {
-                                is_ai_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Global AI setting: {e:?}");
@@ -2418,12 +2350,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleActiveAI {
-                                is_active_ai_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Active AI setting: {e:?}");
@@ -2438,12 +2364,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleIntelligentAutosuggestionsSetting {
-                                is_intelligent_autosuggestions_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Next Command setting: {e:?}");
@@ -2461,12 +2381,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::TogglePromptSuggestionsSetting {
-                                is_prompt_suggestions_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Prompt Suggestions setting: {e:?}");
@@ -2481,13 +2395,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleCodeSuggestionsSetting {
-                                source: ToggleCodeSuggestionsSettingSource::Settings,
-                                is_code_suggestions_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Code Suggestions setting: {e:?}");
@@ -2502,12 +2409,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleNaturalLanguageAutosuggestionsSetting {
-                                is_natural_language_autosuggestions_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!(
@@ -2524,12 +2425,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(_new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleSharedBlockTitleGenerationSetting {
-                                is_shared_block_title_generation_enabled: true,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!(
@@ -2549,12 +2444,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleGitOperationsAutogenSetting {
-                                is_git_operations_autogen_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Git Operations Autogen setting: {e:?}");
@@ -2569,13 +2458,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::AgentModeToggleAutoDetectionSetting {
-                                is_autodetection_enabled: new_value,
-                                origin: AgentModeAutoDetectionSettingOrigin::SettingsPage
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Input Auto-detection: {e:?}");
@@ -2603,12 +2485,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleUseAgentToolbarSetting {
-                                is_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Use Agent Footer setting: {e:?}");
@@ -2623,12 +2499,6 @@ impl TypedActionView for WarpAgentPageView {
                         .toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleVoiceInputSetting {
-                                is_voice_input_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Voice Input: {e:?}");
@@ -2653,14 +2523,6 @@ impl TypedActionView for WarpAgentPageView {
             WarpAgentPageAction::ToggleShowInputHintText => {
                 InputSettings::handle(ctx).update(ctx, |input_settings, ctx| {
                     report_if_error!(input_settings.show_hint_text.toggle_and_save_value(ctx));
-                    send_telemetry_from_ctx!(
-                        // We purposely keep the FeaturesPageAction event, even though we have moved the setting to AI settings.
-                        TelemetryEvent::FeaturesPageAction {
-                            action: "ToggleShowInputHintText".to_string(),
-                            value: format!("{}", *input_settings.show_hint_text),
-                        },
-                        ctx
-                    );
                 });
             }
             WarpAgentPageAction::ToggleAiCommandSearchHashTrigger => {
@@ -2670,16 +2532,6 @@ impl TypedActionView for WarpAgentPageView {
                             .enable_ai_command_search_hash_trigger
                             .toggle_and_save_value(ctx)
                     );
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::FeaturesPageAction {
-                            action: "ToggleAiCommandSearchHashTrigger".to_string(),
-                            value: format!(
-                                "{}",
-                                *input_settings.enable_ai_command_search_hash_trigger
-                            ),
-                        },
-                        ctx
-                    );
                 });
             }
             WarpAgentPageAction::ToggleShowAgentTips => {
@@ -2688,12 +2540,6 @@ impl TypedActionView for WarpAgentPageView {
                     .toggle_and_save_value(ctx)
                 {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleShowAgentTips {
-                                is_enabled: new_value,
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Show Agent Tips setting: {e:?}");
@@ -2837,13 +2683,6 @@ impl TypedActionView for WarpAgentPageView {
                                 .set_value(*layout, ctx)
                         );
                     },
-                );
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::FeaturesPageAction {
-                        action: "SetConversationLayout".to_string(),
-                        value: format!("{layout:?}")
-                    },
-                    ctx
                 );
                 ctx.notify();
             }
@@ -3092,8 +2931,7 @@ fn render_active_ai_toggle(toggle: &SwitchStateHandle, app: &AppContext) -> Box<
 
 #[derive(Default)]
 struct NextCommandWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for NextCommandWidget {
     type View = WarpAgentPageView;
@@ -3138,8 +2976,7 @@ impl SettingsWidget for NextCommandWidget {
 
 #[derive(Default)]
 struct PromptSuggestionsWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for PromptSuggestionsWidget {
     type View = WarpAgentPageView;
@@ -3183,8 +3020,7 @@ impl SettingsWidget for PromptSuggestionsWidget {
 
 #[derive(Default)]
 struct SuggestedCodeBannersWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for SuggestedCodeBannersWidget {
     type View = WarpAgentPageView;
@@ -3228,8 +3064,7 @@ impl SettingsWidget for SuggestedCodeBannersWidget {
 
 #[derive(Default)]
 struct NaturalLanguageAutosuggestionsWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for NaturalLanguageAutosuggestionsWidget {
     type View = WarpAgentPageView;
@@ -3273,15 +3108,13 @@ impl SettingsWidget for NaturalLanguageAutosuggestionsWidget {
 
 struct SharedBlockTitleGenerationWidget {
     toggle: SwitchStateHandle,
-    view_handle: WeakViewHandle<WarpAgentPageView>,
-}
+    view_handle: WeakViewHandle<WarpAgentPageView>}
 
 impl SharedBlockTitleGenerationWidget {
     fn new(ctx: &ViewContext<WarpAgentPageView>) -> Self {
         Self {
             toggle: Default::default(),
-            view_handle: ctx.handle(),
-        }
+            view_handle: ctx.handle()}
     }
 }
 
@@ -3327,8 +3160,7 @@ impl SettingsWidget for SharedBlockTitleGenerationWidget {
 
 #[derive(Default)]
 struct GitOperationsAutogenWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for GitOperationsAutogenWidget {
     type View = WarpAgentPageView;
@@ -3372,8 +3204,7 @@ impl SettingsWidget for GitOperationsAutogenWidget {
 struct NaturalLanguageDetectionWidget {
     incorrect_autodetection_highlight_index: HighlightedHyperlink,
     autodetection_toggle: SwitchStateHandle,
-    nld_in_terminal_toggle: SwitchStateHandle,
-}
+    nld_in_terminal_toggle: SwitchStateHandle}
 
 impl SettingsWidget for NaturalLanguageDetectionWidget {
     type View = WarpAgentPageView;
@@ -3403,8 +3234,7 @@ impl SettingsWidget for NaturalLanguageDetectionWidget {
 
 #[derive(Default)]
 struct ShowInputHintTextWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for ShowInputHintTextWidget {
     type View = WarpAgentPageView;
@@ -3434,8 +3264,7 @@ impl SettingsWidget for ShowInputHintTextWidget {
 
 #[derive(Default)]
 struct AiCommandSearchHashTriggerWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for AiCommandSearchHashTriggerWidget {
     type View = WarpAgentPageView;
@@ -3465,8 +3294,7 @@ impl SettingsWidget for AiCommandSearchHashTriggerWidget {
 
 #[derive(Default)]
 struct ShowAgentTipsWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for ShowAgentTipsWidget {
     type View = WarpAgentPageView;
@@ -3500,8 +3328,7 @@ impl SettingsWidget for ShowAgentTipsWidget {
 
 #[derive(Default)]
 struct IncludeAgentCommandsInHistoryWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for IncludeAgentCommandsInHistoryWidget {
     type View = WarpAgentPageView;
@@ -3532,8 +3359,7 @@ impl SettingsWidget for IncludeAgentCommandsInHistoryWidget {
 
 #[derive(Default)]
 struct AutoApproveBypassesCommandDenylistWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for AutoApproveBypassesCommandDenylistWidget {
     type View = WarpAgentPageView;
@@ -3664,8 +3490,7 @@ impl NaturalLanguageDetectionWidget {
                     top: 4.,
                     bottom: 4.,
                     left: 6.,
-                    right: 6.,
-                }),
+                    right: 6.}),
                 background: Some(appearance.theme().surface_2().into()),
                 ..Default::default()
             })
@@ -3803,8 +3628,7 @@ impl NaturalLanguageDetectionWidget {
 #[derive(Default)]
 struct VoiceWidget {
     voice_input_toggle: SwitchStateHandle,
-    wispr_highlight_index: HighlightedHyperlink,
-}
+    wispr_highlight_index: HighlightedHyperlink}
 
 impl VoiceWidget {
     fn render_voice_section(
@@ -4006,8 +3830,7 @@ impl OtherAIWidget {
 
 #[derive(Default)]
 struct ShowOzUpdatesInZeroStateWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for ShowOzUpdatesInZeroStateWidget {
     type View = WarpAgentPageView;
@@ -4042,8 +3865,7 @@ impl SettingsWidget for ShowOzUpdatesInZeroStateWidget {
 
 #[derive(Default)]
 struct UseAgentFooterWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for UseAgentFooterWidget {
     type View = WarpAgentPageView;
@@ -4114,8 +3936,7 @@ impl SettingsWidget for AgentToolbarLayoutEditorWidget {
 
 #[derive(Default)]
 struct ShowConversationHistoryWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for ShowConversationHistoryWidget {
     type View = WarpAgentPageView;
@@ -4264,8 +4085,7 @@ pub(crate) struct AgentAttributionToggleState {
     pub(crate) is_forced_by_org: bool,
     /// Whether the toggle should be rendered as non-interactive overall
     /// (forced by the org, or AI globally disabled).
-    pub(crate) is_disabled: bool,
-}
+    pub(crate) is_disabled: bool}
 
 /// Derive the toggle state from its three inputs.
 pub(crate) fn derive_agent_attribution_toggle_state(
@@ -4275,24 +4095,20 @@ pub(crate) fn derive_agent_attribution_toggle_state(
 ) -> AgentAttributionToggleState {
     let is_forced_by_org = match org_setting {
         AdminEnablementSetting::Enable | AdminEnablementSetting::Disable => true,
-        AdminEnablementSetting::RespectUserSetting => false,
-    };
+        AdminEnablementSetting::RespectUserSetting => false};
     let is_enabled = match org_setting {
         AdminEnablementSetting::Enable => true,
         AdminEnablementSetting::Disable => false,
-        AdminEnablementSetting::RespectUserSetting => user_pref,
-    };
+        AdminEnablementSetting::RespectUserSetting => user_pref};
     AgentAttributionToggleState {
         is_enabled,
         is_forced_by_org,
-        is_disabled: is_forced_by_org || !is_any_ai_enabled,
-    }
+        is_disabled: is_forced_by_org || !is_any_ai_enabled}
 }
 
 #[derive(Default)]
 struct AgentAttributionWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for AgentAttributionWidget {
     type View = WarpAgentPageView;
@@ -4326,8 +4142,7 @@ impl SettingsWidget for AgentAttributionWidget {
                 .check(state.is_enabled)
                 .with_tooltip(TooltipConfig {
                     text: "This option is enforced by your organization's settings and cannot be customized.".to_string(),
-                    styles: ui_builder.default_tool_tip_styles(),
-                })
+                    styles: ui_builder.default_tool_tip_styles()})
                 .disable()
                 .build()
                 .finish()
@@ -4380,8 +4195,7 @@ mod tests;
 
 #[derive(Default)]
 struct CloudAgentComputerUseWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for CloudAgentComputerUseWidget {
     type View = WarpAgentPageView;
@@ -4397,16 +4211,14 @@ impl SettingsWidget for CloudAgentComputerUseWidget {
         app: &AppContext,
     ) -> Box<dyn Element> {
         use crate::ai::execution_profiles::{
-            CloudAgentComputerUseState, resolve_cloud_agent_computer_use_state,
-        };
+            CloudAgentComputerUseState, resolve_cloud_agent_computer_use_state};
 
         let is_any_ai_enabled = AISettings::as_ref(app).is_any_ai_enabled(app);
 
         // Determine toggle state based on workspace autonomy setting and user preference
         let CloudAgentComputerUseState {
             enabled: is_checked,
-            is_forced_by_org,
-        } = {
+            is_forced_by_org} = {
             let scope = UserWorkspaces::as_ref(app).team_context(&view.self_handle, app);
             resolve_cloud_agent_computer_use_state(&scope, app)
         };
@@ -4422,8 +4234,7 @@ impl SettingsWidget for CloudAgentComputerUseWidget {
                 .check(is_checked)
                 .with_tooltip(TooltipConfig {
                     text: "This option is enforced by your organization's settings and cannot be customized.".to_string(),
-                    styles: ui_builder.default_tool_tip_styles(),
-                })
+                    styles: ui_builder.default_tool_tip_styles()})
                 .disable()
                 .build()
                 .finish()
@@ -4474,8 +4285,7 @@ impl SettingsWidget for CloudAgentComputerUseWidget {
 
 #[derive(Default)]
 struct CloudHandoffWidget {
-    handoff_toggle: SwitchStateHandle,
-}
+    handoff_toggle: SwitchStateHandle}
 
 impl SettingsWidget for CloudHandoffWidget {
     type View = WarpAgentPageView;
@@ -4520,8 +4330,7 @@ impl SettingsWidget for CloudHandoffWidget {
             if !tooltip_text.is_empty() {
                 builder = builder.with_tooltip(TooltipConfig {
                     text: tooltip_text.to_string(),
-                    styles: ui_builder.default_tool_tip_styles(),
-                });
+                    styles: ui_builder.default_tool_tip_styles()});
             }
             builder.disable().build().finish()
         } else {
@@ -4562,8 +4371,7 @@ impl SettingsWidget for CloudHandoffWidget {
 
 #[derive(Default)]
 struct AutoHandoffOnSleepWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for AutoHandoffOnSleepWidget {
     type View = WarpAgentPageView;
@@ -4625,8 +4433,7 @@ impl SettingsWidget for AutoHandoffOnSleepWidget {
 
 #[derive(Default)]
 struct AmpersandHandoffWidget {
-    toggle: SwitchStateHandle,
-}
+    toggle: SwitchStateHandle}
 
 impl SettingsWidget for AmpersandHandoffWidget {
     type View = WarpAgentPageView;
@@ -4690,8 +4497,7 @@ pub(crate) enum GrokSubscriptionButtonAction {
     Connect,
     Cancel,
     Cancelling,
-    Disconnect,
-}
+    Disconnect}
 
 /// Connected tokens take precedence: once stored, the row always offers
 /// Disconnect. `oauth_phase`: `None` idle, `Some(false)` cancellable,
@@ -4706,15 +4512,13 @@ pub(crate) fn grok_subscription_button_action(
     match oauth_phase {
         Some(true) => GrokSubscriptionButtonAction::Cancelling,
         Some(false) => GrokSubscriptionButtonAction::Cancel,
-        None => GrokSubscriptionButtonAction::Connect,
-    }
+        None => GrokSubscriptionButtonAction::Connect}
 }
 
 struct ProviderApiKeyEditor {
     provider: LLMProvider,
     editor: ViewHandle<EditorView>,
-    team_key_info_tooltip: MouseStateHandle,
-}
+    team_key_info_tooltip: MouseStateHandle}
 
 struct ApiKeysWidget {
     view_handle: WeakViewHandle<WarpAgentPageView>,
@@ -4729,8 +4533,7 @@ struct ApiKeysWidget {
     can_use_warp_credits_for_fallback: SwitchStateHandle,
     upgrade_highlight_index: HighlightedHyperlink,
 
-    description_learn_more_index: HighlightedHyperlink,
-}
+    description_learn_more_index: HighlightedHyperlink}
 
 impl ApiKeysWidget {
     fn new(ctx: &mut ViewContext<<Self as SettingsWidget>::View>) -> Self {
@@ -4762,8 +4565,7 @@ impl ApiKeysWidget {
                             text_colors_override: Some(TextColors {
                                 default_color: appearance.theme().active_ui_text_color(),
                                 disabled_color: appearance.theme().disabled_ui_text_color(),
-                                hint_color: appearance.theme().disabled_ui_text_color(),
-                            }),
+                                hint_color: appearance.theme().disabled_ui_text_color()}),
                             ..Default::default()
                         },
                         ..Default::default()
@@ -4817,8 +4619,7 @@ impl ApiKeysWidget {
                 ProviderApiKeyEditor {
                     provider,
                     editor,
-                    team_key_info_tooltip: MouseStateHandle::default(),
-                }
+                    team_key_info_tooltip: MouseStateHandle::default()}
             })
             .collect::<Vec<_>>();
 
@@ -4953,8 +4754,7 @@ impl ApiKeysWidget {
             can_use_warp_credits_for_fallback: Default::default(),
             upgrade_highlight_index: Default::default(),
 
-            description_learn_more_index: Default::default(),
-        }
+            description_learn_more_index: Default::default()}
     }
     fn has_team_first_party_key(&self, provider: LLMProvider, app: &AppContext) -> bool {
         let workspaces = UserWorkspaces::as_ref(app);
@@ -5042,8 +4842,7 @@ impl ApiKeysWidget {
             top: 10.,
             bottom: 10.,
             left: 16.,
-            right: 16.,
-        });
+            right: 16.});
         let editor_style = UiComponentStyles {
             padding,
             background: Some(appearance.theme().surface_2().into()),
@@ -5263,8 +5062,7 @@ impl ApiKeysWidget {
             GrokSubscriptionButtonAction::Disconnect => &self.grok_disconnect_button,
             GrokSubscriptionButtonAction::Cancelling => &self.grok_cancelling_button,
             GrokSubscriptionButtonAction::Cancel => &self.grok_cancel_button,
-            GrokSubscriptionButtonAction::Connect => &self.grok_connect_button,
-        };
+            GrokSubscriptionButtonAction::Connect => &self.grok_connect_button};
 
         let header_row = Flex::row()
             .with_main_axis_size(MainAxisSize::Max)
@@ -5299,8 +5097,7 @@ impl ApiKeysWidget {
                     connected_at.format("%m/%d/%Y at %-I:%M%P")
                 ),
                 // Tokens stored before the connection time was tracked.
-                None => "Connected.".to_string(),
-            };
+                None => "Connected.".to_string()};
             let check = ConstrainedBox::new(
                 Icon::Check
                     .to_warpui_icon(appearance.theme().ansi_fg_green().into())
@@ -5343,8 +5140,7 @@ impl ApiKeysWidget {
                 top: 10.,
                 bottom: 10.,
                 left: 16.,
-                right: 16.,
-            }),
+                right: 16.}),
             background: Some(theme.surface_2().into()),
             ..Default::default()
         };
@@ -5409,8 +5205,7 @@ struct CustomInferenceVisibility {
     provider_keys_enabled: bool,
     show_custom_inference: bool,
     custom_inference_controls_enabled: bool,
-    managed_byok_byoe_enabled: bool,
-}
+    managed_byok_byoe_enabled: bool}
 
 impl CustomInferenceVisibility {
     /// Resolves the section's visibility for `team_scope`'s team.
@@ -5437,8 +5232,7 @@ impl CustomInferenceVisibility {
             provider_keys_enabled,
             show_custom_inference,
             custom_inference_controls_enabled,
-            managed_byok_byoe_enabled: workspaces.is_managed_byok_byoe_enabled(),
-        }
+            managed_byok_byoe_enabled: workspaces.is_managed_byok_byoe_enabled()}
     }
 
     /// Whether any member-facing Custom Inference content renders at all.
@@ -5473,8 +5267,7 @@ impl SettingsWidget for ApiKeysWidget {
             provider_keys_enabled,
             show_custom_inference,
             custom_inference_controls_enabled,
-            managed_byok_byoe_enabled,
-        } = visibility;
+            managed_byok_byoe_enabled} = visibility;
 
         let mut column = Flex::column();
 
@@ -5650,8 +5443,7 @@ struct AwsBedrockWidget {
     aws_auth_refresh_profile_editor: ViewHandle<EditorView>,
     credentials_enabled_toggle: SwitchStateHandle,
     auto_login_toggle: SwitchStateHandle,
-    refresh_credentials_button: ViewHandle<ActionButton>,
-}
+    refresh_credentials_button: ViewHandle<ActionButton>}
 
 impl AwsBedrockWidget {
     fn new(ctx: &mut ViewContext<<Self as SettingsWidget>::View>) -> Self {
@@ -5676,8 +5468,7 @@ impl AwsBedrockWidget {
                     text_colors_override: Some(TextColors {
                         default_color: appearance.theme().active_ui_text_color(),
                         disabled_color: appearance.theme().disabled_ui_text_color(),
-                        hint_color: appearance.theme().disabled_ui_text_color(),
-                    }),
+                        hint_color: appearance.theme().disabled_ui_text_color()}),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -5724,8 +5515,7 @@ impl AwsBedrockWidget {
                     text_colors_override: Some(TextColors {
                         default_color: appearance.theme().active_ui_text_color(),
                         disabled_color: appearance.theme().disabled_ui_text_color(),
-                        hint_color: appearance.theme().disabled_ui_text_color(),
-                    }),
+                        hint_color: appearance.theme().disabled_ui_text_color()}),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -5844,8 +5634,7 @@ impl AwsBedrockWidget {
             aws_auth_refresh_profile_editor,
             credentials_enabled_toggle: SwitchStateHandle::default(),
             auto_login_toggle: SwitchStateHandle::default(),
-            refresh_credentials_button,
-        }
+            refresh_credentials_button}
     }
 
     fn render_aws_bedrock_section(
@@ -5905,8 +5694,7 @@ impl AwsBedrockWidget {
                 top: 10.,
                 bottom: 10.,
                 left: 16.,
-                right: 16.,
-            });
+                right: 16.});
             let editor_style = UiComponentStyles {
                 padding,
                 background: Some(appearance.theme().surface_2().into()),
@@ -6080,8 +5868,7 @@ impl SettingsWidget for AwsBedrockWidget {
 struct GeminiEnterpriseWidget {
     self_handle: WeakViewHandle<WarpAgentPageView>,
     credentials_enabled_toggle: SwitchStateHandle,
-    refresh_credentials_button: ViewHandle<ActionButton>,
-}
+    refresh_credentials_button: ViewHandle<ActionButton>}
 
 impl GeminiEnterpriseWidget {
     fn is_refresh_enabled<T: Entity>(ctx: &ViewContext<T>) -> bool {
@@ -6154,8 +5941,7 @@ impl GeminiEnterpriseWidget {
         Self {
             self_handle,
             credentials_enabled_toggle: SwitchStateHandle::default(),
-            refresh_credentials_button,
-        }
+            refresh_credentials_button}
     }
 
     fn render_gemini_enterprise_section(

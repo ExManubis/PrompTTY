@@ -7,7 +7,6 @@ use futures::FutureExt;
 use futures::future::BoxFuture;
 #[cfg(not(target_family = "wasm"))]
 use futures::future::Either;
-use warp_core::send_telemetry_from_ctx;
 #[cfg(not(target_family = "wasm"))]
 use warpui::r#async::Timer;
 use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
@@ -15,15 +14,13 @@ use warpui::{AppContext, Entity, ModelContext, SingletonEntity};
 use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput};
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{
-    AIAgentAction, AIAgentActionResultType, AIAgentActionType, SendMessageToAgentResult,
-};
+    AIAgentAction, AIAgentActionResultType, AIAgentActionType, SendMessageToAgentResult};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::history_model::BlocklistAIHistoryModel;
 use crate::ai::blocklist::telemetry::{
     BlocklistOrchestrationTelemetryEvent, TeamAgentCommunicationFailedEvent,
     TeamAgentCommunicationFailureReason, TeamAgentCommunicationKind,
-    TeamAgentCommunicationTransport, TeamAgentOrchestrationVersion,
-};
+    TeamAgentCommunicationTransport, TeamAgentOrchestrationVersion};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::ai::{SendAgentMessageRequest, SendAgentMessageResponse};
 
@@ -31,15 +28,13 @@ use crate::server::server_api::ai::{SendAgentMessageRequest, SendAgentMessageRes
 const SEND_AGENT_MESSAGE_TIMEOUT: Duration = Duration::from_secs(15);
 
 pub struct SendMessageToAgentExecutor {
-    ambient_agent_task_id: Option<AmbientAgentTaskId>,
-}
+    ambient_agent_task_id: Option<AmbientAgentTaskId>}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SendMessageTaskResolution {
     ConversationTask,
     AmbientTaskFallback,
-    NoTaskContext,
-}
+    NoTaskContext}
 
 fn sender_run_id_and_task_id_for_send(
     conversation_id: AIConversationId,
@@ -58,8 +53,7 @@ fn sender_run_id_and_task_id_for_send(
             Some(task_id),
             SendMessageTaskResolution::AmbientTaskFallback,
         ),
-        (None, None) => (None, SendMessageTaskResolution::NoTaskContext),
-    };
+        (None, None) => (None, SendMessageTaskResolution::NoTaskContext)};
     let sender_run_id = conversation
         .and_then(|conversation| conversation.run_id())
         .or_else(|| task_id.map(|task_id| task_id.to_string()))
@@ -82,8 +76,7 @@ async fn send_agent_message_with_timeout(
                     .send_agent_message_for_task(&task_id, request)
                     .await
             }
-            None => ai_client.send_agent_message(request).await,
-        }
+            None => ai_client.send_agent_message(request).await}
     };
     let timeout = Timer::after(SEND_AGENT_MESSAGE_TIMEOUT);
     futures::pin_mut!(send_message);
@@ -96,8 +89,7 @@ async fn send_agent_message_with_timeout(
             task_id_for_timeout
                 .map(|task_id| format!(" for task {task_id}"))
                 .unwrap_or_default()
-        )),
-    }
+        ))}
 }
 
 #[cfg(target_family = "wasm")]
@@ -113,15 +105,13 @@ async fn send_agent_message_with_timeout(
                 .send_agent_message_for_task(&task_id, request)
                 .await
         }
-        None => ai_client.send_agent_message(request).await,
-    }
+        None => ai_client.send_agent_message(request).await}
 }
 
 impl SendMessageToAgentExecutor {
     pub fn new() -> Self {
         Self {
-            ambient_agent_task_id: None,
-        }
+            ambient_agent_task_id: None}
     }
 
     pub fn set_ambient_agent_task_id(&mut self, id: Option<AmbientAgentTaskId>) {
@@ -146,8 +136,7 @@ impl SendMessageToAgentExecutor {
                 AIAgentActionType::SendMessageToAgent {
                     addresses,
                     subject,
-                    message,
-                },
+                    message},
             ..
         } = input.action
         else {
@@ -175,8 +164,7 @@ impl SendMessageToAgentExecutor {
             to: addresses,
             subject,
             body: message_body,
-            sender_run_id,
-        };
+            sender_run_id};
         ActionExecution::new_async(
             async move {
                 send_agent_message_with_timeout(server_api, ai_client, task_id, request).await
@@ -193,23 +181,6 @@ impl SendMessageToAgentExecutor {
                 }
                 Err(err) => {
                     let error_message = err.to_string();
-                    send_telemetry_from_ctx!(
-                        BlocklistOrchestrationTelemetryEvent::TeamAgentCommunicationFailed(
-                            TeamAgentCommunicationFailedEvent {
-                                communication_kind: TeamAgentCommunicationKind::Message,
-                                transport: TeamAgentCommunicationTransport::ServerApi,
-                                orchestration_version: TeamAgentOrchestrationVersion::V2,
-                                failure_reason: TeamAgentCommunicationFailureReason::RequestFailed,
-                                source_conversation_id: conversation_id,
-                                source_run_id: (!log_sender_run_id.is_empty())
-                                    .then(|| log_sender_run_id.clone()),
-                                target_count: Some(log_addresses.len()),
-                                lifecycle_event_type: None,
-                                error_message: Some(error_message.clone()),
-                            }
-                        ),
-                        ctx
-                    );
                     log::warn!(
                         "Failed to send child-agent message via server API: conversation_id={conversation_id:?} resolution={task_resolution:?} sender_run_id={log_sender_run_id:?} task_id={log_task_id:?} target_agent_ids={log_addresses:?} subject={log_subject:?} body_len={log_body_len} error={err:#}"
                     );

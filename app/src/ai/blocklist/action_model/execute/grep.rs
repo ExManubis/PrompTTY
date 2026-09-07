@@ -13,14 +13,12 @@ use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonE
 
 use super::{
     ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput,
-    get_server_output_id, is_file_path, is_git_repository,
-};
+    get_server_output_id, is_file_path, is_git_repository};
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::redaction::redact_secrets;
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionResultType, AIAgentActionType, GrepFileMatch, GrepLineMatch,
-    GrepResult, ServerOutputId,
-};
+    GrepResult, ServerOutputId};
 use crate::ai::blocklist::BlocklistAIPermissions;
 use crate::ai::blocklist::telemetry_banner::should_collect_ai_ugc_telemetry;
 use crate::ai::paths::{host_native_absolute_path, shell_native_absolute_path};
@@ -29,7 +27,7 @@ use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model::session::{ExecuteCommandOptions, Session, shell_quote_arg};
 use crate::terminal::shell::ShellType;
 use crate::workspaces::user_workspaces::TeamContext;
-use crate::{PrivacySettings, TelemetryEvent, send_telemetry_from_app_ctx};
+use crate::{PrivacySettings, TelemetryEvent};
 
 const GREP_TIMEOUT: Duration = Duration::from_secs(10);
 const NON_ZERO_EXIT_CODE_ERROR: &str = "Grep command exited with non-zero exit code";
@@ -40,13 +38,11 @@ struct GrepError {
     command: Option<String>,
     output: Option<String>,
     /// The error message from the Grep call. This should NOT contain UGC.
-    error: GrepErrorType,
-}
+    error: GrepErrorType}
 
 enum GrepErrorType {
     NonZeroExitCode,
-    Other(String),
-}
+    Other(String)}
 
 impl GrepError {
     /// Create a new GrepError with the given error message. This should NOT
@@ -55,16 +51,14 @@ impl GrepError {
         Self {
             command: None,
             output: None,
-            error: GrepErrorType::Other(error_message),
-        }
+            error: GrepErrorType::Other(error_message)}
     }
 
     pub fn new_for_non_zero_exit_code() -> Self {
         Self {
             command: None,
             output: None,
-            error: GrepErrorType::NonZeroExitCode,
-        }
+            error: GrepErrorType::NonZeroExitCode}
     }
 
     pub fn with_command(mut self, command: String) -> Self {
@@ -81,8 +75,7 @@ impl GrepError {
     pub fn error_message(&self) -> &str {
         match &self.error {
             GrepErrorType::NonZeroExitCode => NON_ZERO_EXIT_CODE_ERROR,
-            GrepErrorType::Other(error) => error,
-        }
+            GrepErrorType::Other(error) => error}
     }
 
     /// Returns an error message to be returned as input to the AI conversation.
@@ -102,8 +95,7 @@ impl GrepError {
             GrepError {
                 error: GrepErrorType::Other(error),
                 ..
-            } => error.clone(),
-        }
+            } => error.clone()}
     }
 }
 
@@ -142,8 +134,7 @@ fn create_redacted_grep_error_event(
         error: error.error_message().to_string(),
         command: should_collect_ugc.then_some(error.command).flatten(),
         output: should_collect_ugc.then_some(error.output).flatten(),
-        server_output_id,
-    }
+        server_output_id}
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -175,20 +166,17 @@ fn log_grep_error(
         absolute_path,
         error,
     );
-    send_telemetry_from_app_ctx!(event, ctx);
 }
 
 pub struct GrepExecutor {
     active_session: ModelHandle<ActiveSession>,
-    terminal_view_id: EntityId,
-}
+    terminal_view_id: EntityId}
 
 impl GrepExecutor {
     pub fn new(active_session: ModelHandle<ActiveSession>, terminal_view_id: EntityId) -> Self {
         Self {
             active_session,
-            terminal_view_id,
-        }
+            terminal_view_id}
     }
 
     pub(super) fn should_autoexecute(
@@ -203,8 +191,7 @@ impl GrepExecutor {
                     action: AIAgentActionType::Grep { path, .. },
                     ..
                 },
-            conversation_id,
-        } = input
+            conversation_id} = input
         else {
             return false;
         };
@@ -270,8 +257,7 @@ impl GrepExecutor {
                     .await
                 {
                     Ok(result) => result,
-                    Err(_) => Err(GrepError::new("Grep operation timed out".to_string())),
-                }
+                    Err(_) => Err(GrepError::new("Grep operation timed out".to_string()))}
             },
             move |result, ctx| match result {
                 Ok(grep_result) => {
@@ -290,7 +276,6 @@ impl GrepExecutor {
                             );
                         }
                         GrepResult::Success { .. } => {
-                            send_telemetry_from_app_ctx!(TelemetryEvent::GrepToolSucceeded, ctx);
                         }
                         _ => {}
                     }
@@ -437,20 +422,17 @@ async fn run_ripgrep(queries: &[String], absolute_path: String) -> Result<GrepRe
                     .entry(m.file_path)
                     .or_default()
                     .push(GrepLineMatch {
-                        line_number: m.line_number as usize,
-                    });
+                        line_number: m.line_number as usize});
             }
             let matched_files: Vec<GrepFileMatch> = files_map
                 .into_iter()
                 .map(|(file_path, matched_lines)| GrepFileMatch {
                     file_path: file_path.to_string_lossy().to_string(),
-                    matched_lines,
-                })
+                    matched_lines})
                 .collect();
             Ok(GrepResult::Success { matched_files })
         }
-        Err(e) => Err(GrepError::new(format!("Ripgrep search failed: {e}"))),
-    }
+        Err(e) => Err(GrepError::new(format!("Ripgrep search failed: {e}")))}
 }
 
 /// The outcome of executing a grep-like command that follows the POSIX
@@ -458,8 +440,7 @@ async fn run_ripgrep(queries: &[String], absolute_path: String) -> Result<GrepRe
 /// matches" (as `git grep` and GNU/BSD `grep` all do).
 enum GrepCommandOutcome {
     NoMatches,
-    Matches(String),
-}
+    Matches(String)}
 
 async fn execute_grep_command(
     command: &str,
@@ -505,8 +486,7 @@ async fn run_git_grep_command(
 
     match execute_grep_command(&grep_command, session, execute_directory).await? {
         GrepCommandOutcome::NoMatches => Ok(GrepResult::Success {
-            matched_files: vec![],
-        }),
+            matched_files: vec![]}),
         GrepCommandOutcome::Matches(output) => parse_null_delimited_grep_output(
             &output,
             shell_launch_data,
@@ -517,8 +497,7 @@ async fn run_git_grep_command(
             GrepError::new(e.to_string())
                 .with_command(grep_command)
                 .with_output(output)
-        }),
-    }
+        })}
 }
 
 async fn run_grep_command(
@@ -533,8 +512,7 @@ async fn run_grep_command(
 
     match execute_grep_command(&grep_command, session, execute_directory).await {
         Ok(GrepCommandOutcome::NoMatches) => Ok(GrepResult::Success {
-            matched_files: vec![],
-        }),
+            matched_files: vec![]}),
         Ok(GrepCommandOutcome::Matches(output)) => parse_null_delimited_grep_output(
             &output,
             shell_launch_data,
@@ -602,17 +580,14 @@ async fn run_grep_per_file_fallback(
     let scan_command = build_grep_content_scan_command(queries, target_path, shell_type);
     match execute_grep_command(&scan_command, session, execute_directory).await {
         Ok(GrepCommandOutcome::NoMatches) => Ok(GrepResult::Success {
-            matched_files: vec![],
-        }),
+            matched_files: vec![]}),
         Ok(GrepCommandOutcome::Matches(output)) => Ok(GrepResult::Success {
             matched_files: parse_grep_content_scan_output(
                 &output,
                 &shell_launch_data,
                 &Some(execute_directory.to_string()),
-            ),
-        }),
-        Err(_) => Err(original_error),
-    }
+            )}),
+        Err(_) => Err(original_error)}
 }
 
 /// Builds the single command for `run_grep_per_file_fallback`: lists
@@ -724,8 +699,7 @@ fn parse_grep_content_scan_output(
                 shell_launch_data,
                 current_working_directory,
             ),
-            matched_lines,
-        });
+            matched_lines});
     }
 
     if skipped_count > 0 {
@@ -897,8 +871,7 @@ fn parse_null_delimited_grep_output(
                 // prevent parsing the rest of the output.
                 remaining = match remaining.find('\n') {
                     Some(index) => &remaining[index + 1..],
-                    None => "",
-                };
+                    None => ""};
             }
         }
     }
@@ -922,8 +895,7 @@ fn parse_null_delimited_grep_output(
                 &shell_launch_data,
                 &current_working_directory,
             ),
-            matched_lines,
-        })
+            matched_lines})
         .collect())
 }
 
@@ -949,13 +921,11 @@ fn take_null_delimited_record(input: &str) -> Option<(&str, usize, &str)> {
 
     let after_separator = match after_digits.as_bytes().first() {
         Some(b'\0') | Some(b':') => &after_digits[1..],
-        _ => return None,
-    };
+        _ => return None};
 
     let rest = match after_separator.find('\n') {
         Some(index) => &after_separator[index + 1..],
-        None => "",
-    };
+        None => ""};
     Some((path, line_number, rest))
 }
 

@@ -13,8 +13,7 @@ use warpui::elements::{
     Align, Border, ChildView, Clipped, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DEFAULT_UI_LINE_HEIGHT_RATIO, Dismiss, Element, Empty, Fill, Flex, FormattedTextElement,
     Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
-    Shrinkable, Text, Wrap,
-};
+    Shrinkable, Text, Wrap};
 use warpui::fonts::{FamilyId, FontInfo, Weight};
 use warpui::keymap::{ContextPredicate, FixedBinding};
 use warpui::platform::{Cursor, FilePickerConfiguration, GraphicsBackend, SystemTheme};
@@ -22,23 +21,20 @@ use warpui::rendering::ThinStrokes;
 use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::radio_buttons::{
-    RadioButtonItem, RadioButtonLayout, RadioButtonStateHandle,
-};
+    RadioButtonItem, RadioButtonLayout, RadioButtonStateHandle};
 use warpui::ui_components::slider::SliderStateHandle;
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::units::IntoPixels;
 use warpui::{
     Action, AppContext, Entity, ModelHandle, SingletonEntity, TypedActionView, UpdateModel, View,
-    ViewContext, ViewHandle, WindowId,
-};
+    ViewContext, ViewHandle, WindowId};
 
 use super::directory_color_add_picker::{DirectoryColorAddPicker, DirectoryColorAddPickerEvent};
 use super::settings_page::{
     AdditionalInfo, CONTENT_FONT_SIZE, Category, HEADER_PADDING, LocalOnlyIconState, MatchData,
     PageType, SettingsPageEvent, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
     ToggleState, build_reset_button, render_body_item, render_body_item_label,
-    render_dropdown_item,
-};
+    render_dropdown_item};
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::appearance::{Appearance, AppearanceEvent};
 use crate::channel::{Channel, ChannelState};
@@ -48,8 +44,7 @@ use crate::context_chips::renderer::{ChipDragState, Renderer as ContextChipRende
 use crate::drive::settings::WarpDriveSettings;
 use crate::editor::{
     EditOrigin, EditorView, Event as EditorEvent, InteractionState, SingleLineEditorOptions,
-    TextOptions,
-};
+    TextOptions};
 use crate::features::FeatureFlag;
 use crate::gpu_state::{GPUState, GPUStateEvent};
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
@@ -60,8 +55,7 @@ use crate::settings::{
     FocusPaneOnHover, FontSettings, FontSettingsChangedEvent, GPUSettings, InputBoxType,
     InputModeSettings, InputModeState, InputSettings, InputSettingsChangedEvent, MonospaceFontName,
     PaneSettings, ShouldDimInactivePanes, ThemeSettings, UsageDisplayUnit, UseSystemTheme,
-    UseThinStrokes, active_theme_kind, respect_system_theme,
-};
+    UseThinStrokes, active_theme_kind, respect_system_theme};
 use crate::terminal::block_list_viewport::InputMode;
 use crate::terminal::blockgrid_element::BlockGridElement;
 use crate::terminal::ligature_settings::{LigatureRenderingEnabled, LigatureSettings};
@@ -69,12 +63,10 @@ use crate::terminal::model::ObfuscateSecrets;
 use crate::terminal::model::blockgrid::BlockGrid;
 use crate::terminal::session_settings::SessionSettings;
 use crate::terminal::settings::{
-    AltScreenPadding, AltScreenPaddingMode, Spacing, SpacingMode, TerminalSettings,
-};
+    AltScreenPadding, AltScreenPaddingMode, Spacing, SpacingMode, TerminalSettings};
 use crate::terminal::{
     BlockListSettings, ShowBlockDividers, ShowBlockPrompt, ShowBlockSelectionHighlight,
-    ShowJumpToBottomOfBlockButton, ShowScrollbar, SizeInfo,
-};
+    ShowJumpToBottomOfBlockButton, ShowScrollbar, SizeInfo};
 use crate::themes::theme::{self, RespectSystemTheme, SelectedSystemThemes, ThemeKind, WarpTheme};
 use crate::themes::theme_chooser::ThemeChooserMode;
 use crate::ui_components::color_dot::{TAB_COLOR_OPTIONS, render_color_dot};
@@ -85,17 +77,15 @@ use crate::view_components::action_button::{ActionButton, ButtonSize, NakedTheme
 use crate::view_components::{Dropdown, DropdownItem, FilterableDropdown};
 use crate::window_settings::{
     BackgroundBlurRadius, BackgroundBlurTexture, BackgroundOpacity, LeftPanelVisibilityAcrossTabs,
-    OpenWindowsAtCustomSize, WindowSettings, WindowSettingsChangedEvent, ZoomLevel,
-};
+    OpenWindowsAtCustomSize, WindowSettings, WindowSettingsChangedEvent, ZoomLevel};
 use crate::workspace::WorkspaceAction;
 use crate::workspace::header_toolbar_editor::HeaderToolbarInlineEditor;
 use crate::workspace::tab_settings::{
     DirectoryTabColor, HideTitleBarSearchBarInVerticalTabs, PreserveActiveTabColor,
     ShowIndicatorsButton, ShowVerticalTabPanelInRestoredWindows, TabCloseButtonPosition,
     TabSettings, TabSettingsChangedEvent, UseLatestUserPromptAsConversationTitleInTabNames,
-    UseVerticalTabs, WorkspaceDecorationVisibility, canonical_directory_key,
-};
-use crate::{send_telemetry_from_ctx, themes};
+    UseVerticalTabs, WorkspaceDecorationVisibility, canonical_directory_key};
+use crate::{themes};
 
 const FONT_SIZE_INPUT_BOX_WIDTH: f32 = 80.;
 const NOTEBOOK_FONT_SIZE_INPUT_BOX_WIDTH: f32 = 50.;
@@ -258,8 +248,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
             builder(SettingsAction::AppearancePageToggle(
                 AppearancePageAction::SetInputMode {
                     new_mode: InputMode::Waterfall,
-                    from_binding: true,
-                },
+                    from_binding: true},
             )),
             context.to_owned(),
         )
@@ -272,8 +261,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
             builder(SettingsAction::AppearancePageToggle(
                 AppearancePageAction::SetInputMode {
                     new_mode: InputMode::PinnedToTop,
-                    from_binding: true,
-                },
+                    from_binding: true},
             )),
             context.to_owned(),
         )
@@ -285,8 +273,7 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
         builder(SettingsAction::AppearancePageToggle(
             AppearancePageAction::SetInputMode {
                 new_mode: InputMode::PinnedToBottom,
-                from_binding: true,
-            },
+                from_binding: true},
         )),
         context.to_owned(),
     )]);
@@ -495,15 +482,13 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
 pub enum FontType {
     Any,
     #[default]
-    Monospace,
-}
+    Monospace}
 
 impl FontType {
     fn toggle(self) -> Self {
         match self {
             Self::Monospace => Self::Any,
-            Self::Any => Self::Monospace,
-        }
+            Self::Any => Self::Monospace}
     }
 }
 
@@ -525,8 +510,7 @@ pub enum AppearancePageAction {
     SetThinStrokes(ThinStrokes),
     SetInputMode {
         new_mode: InputMode,
-        from_binding: bool,
-    },
+        from_binding: bool},
     SetInputType(InputBoxType),
     SetCursorType(CursorDisplayType),
     SetWorkspaceDecorationVisibility(WorkspaceDecorationVisibility),
@@ -569,13 +553,10 @@ pub enum AppearancePageAction {
     ResetZoomLevel,
     SetDefaultDirectoryTabColor {
         path: PathBuf,
-        color: DirectoryTabColor,
-    },
+        color: DirectoryTabColor},
     RemoveDefaultDirectoryTabColor {
-        path: PathBuf,
-    },
-    SetUsageDisplayUnit(UsageDisplayUnit),
-}
+        path: PathBuf},
+    SetUsageDisplayUnit(UsageDisplayUnit)}
 
 pub struct AppearanceSettingsPageView {
     page: PageType<Self>,
@@ -616,8 +597,7 @@ pub struct AppearanceSettingsPageView {
 
     /// The information we need to render the PS1 as a grid when we're
     /// honoring the user's PS1.
-    ps1_grid_info: Option<(BlockGrid, SizeInfo)>,
-}
+    ps1_grid_info: Option<(BlockGrid, SizeInfo)>}
 
 impl Entity for AppearanceSettingsPageView {
     type Event = SettingsPageEvent;
@@ -725,8 +705,7 @@ impl TypedActionView for AppearanceSettingsPageView {
             }
             SetInputMode {
                 new_mode,
-                from_binding,
-            } => self.set_input_mode(*new_mode, *from_binding, ctx),
+                from_binding} => self.set_input_mode(*new_mode, *from_binding, ctx),
             SetInputType(input_type) => self.set_input_type(*input_type, ctx),
             SetCursorType(cursor_display_type) => self.set_cursor_type(*cursor_display_type, ctx),
             OpacitySliderDragged(val) => self.set_opacity(*val, false, ctx),
@@ -755,10 +734,6 @@ impl TypedActionView for AppearanceSettingsPageView {
                         .toggle_and_save_value(ctx)
                     {
                         Ok(new_val) => {
-                            send_telemetry_from_ctx!(
-                                TelemetryEvent::ToggleFocusPaneOnHover { enabled: new_val },
-                                ctx
-                            );
                         }
                         Err(e) => {
                             report_error!(e);
@@ -780,10 +755,6 @@ impl TypedActionView for AppearanceSettingsPageView {
                     );
                 });
                 self.set_alt_screen_padding_editor_text(ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::UpdateAltScreenPaddingMode { new_mode },
-                    ctx
-                );
             }
             UpdateAltScreenPaddingMode(new_mode) => {
                 TerminalSettings::handle(ctx).update(ctx, |terminal_settings, ctx| {
@@ -794,12 +765,6 @@ impl TypedActionView for AppearanceSettingsPageView {
                     );
                 });
                 self.set_alt_screen_padding_editor_text(ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::UpdateAltScreenPaddingMode {
-                        new_mode: *new_mode,
-                    },
-                    ctx
-                );
             }
             SetTabCloseButtonPosition(position) => {
                 self.update_tab_close_button_position(*position, ctx);
@@ -1263,8 +1228,7 @@ impl AppearanceSettingsPageView {
                             Self::input_mode_dropdown_item_label(val),
                             AppearancePageAction::SetInputMode {
                                 new_mode: val,
-                                from_binding: false,
-                            },
+                                from_binding: false},
                         )
                     })
                     .collect(),
@@ -1405,8 +1369,7 @@ impl AppearanceSettingsPageView {
             header_toolbar_inline_editor,
             alt_screen_padding_editor,
             context_chips,
-            ps1_grid_info: None,
-        }
+            ps1_grid_info: None}
     }
 
     fn build_page(ctx: &mut ViewContext<Self>) -> PageType<Self> {
@@ -1715,8 +1678,7 @@ impl AppearanceSettingsPageView {
         match val {
             InputMode::PinnedToBottom => "Pin to the bottom (Warp mode)",
             InputMode::PinnedToTop => "Pin to the top (Reverse mode)",
-            InputMode::Waterfall => "Start at the top (Classic mode)",
-        }
+            InputMode::Waterfall => "Start at the top (Classic mode)"}
     }
 
     fn thin_strokes_dropdown_item_label(val: ThinStrokes) -> &'static str {
@@ -1724,16 +1686,14 @@ impl AppearanceSettingsPageView {
             ThinStrokes::Never => "Never",
             ThinStrokes::OnLowDpiDisplays => "On low-DPI displays",
             ThinStrokes::OnHighDpiDisplays => "On high-DPI displays",
-            ThinStrokes::Always => "Always",
-        }
+            ThinStrokes::Always => "Always"}
     }
 
     fn enforce_minimum_contrast_dropdown_item_label(val: EnforceMinimumContrast) -> &'static str {
         match val {
             EnforceMinimumContrast::Always => "Always",
             EnforceMinimumContrast::OnlyNamedColors => "Only for named colors",
-            EnforceMinimumContrast::Never => "Never",
-        }
+            EnforceMinimumContrast::Never => "Never"}
     }
 
     fn workspace_decoration_visibility_dropdown_item_label(
@@ -1742,8 +1702,7 @@ impl AppearanceSettingsPageView {
         match value {
             WorkspaceDecorationVisibility::AlwaysShow => "Always",
             WorkspaceDecorationVisibility::HideFullscreen => "When windowed",
-            WorkspaceDecorationVisibility::OnHover => "Only on hover",
-        }
+            WorkspaceDecorationVisibility::OnHover => "Only on hover"}
     }
 
     fn tab_close_button_position_dropdown_item_label(
@@ -1751,8 +1710,7 @@ impl AppearanceSettingsPageView {
     ) -> &'static str {
         match value {
             TabCloseButtonPosition::Right => "Right",
-            TabCloseButtonPosition::Left => "Left",
-        }
+            TabCloseButtonPosition::Left => "Left"}
     }
 
     fn handle_alt_screen_padding_editor_event(
@@ -1769,16 +1727,11 @@ impl AppearanceSettingsPageView {
                 {
                     TerminalSettings::handle(ctx).update(ctx, |terminal_settings, ctx| {
                         let new_mode = AltScreenPaddingMode::Custom {
-                            uniform_padding: padding.into_pixels(),
-                        };
+                            uniform_padding: padding.into_pixels()};
                         report_if_error!(
                             terminal_settings
                                 .alt_screen_padding
                                 .set_value(new_mode, ctx)
-                        );
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::UpdateAltScreenPaddingMode { new_mode },
-                            ctx
                         );
                     });
                 }
@@ -1932,12 +1885,6 @@ impl AppearanceSettingsPageView {
         ctx: &mut ViewContext<Self>,
     ) {
         if should_set_defaults {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::SetOpacity {
-                    opacity: opacity_value as u8
-                },
-                ctx
-            );
         }
         WindowSettings::handle(ctx).update(ctx, |window_settings, ctx| {
             report_if_error!(
@@ -1956,12 +1903,6 @@ impl AppearanceSettingsPageView {
         ctx: &mut ViewContext<Self>,
     ) {
         if should_set_defaults {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::SetBlurRadius {
-                    blur_radius: blur_value as u8
-                },
-                ctx
-            );
         }
 
         ctx.windows()
@@ -1982,13 +1923,6 @@ impl AppearanceSettingsPageView {
             editor.set_buffer_text(&format!("{DEFAULT_UI_LINE_HEIGHT_RATIO}"), ctx);
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::SetLineHeight {
-                new_value: DEFAULT_UI_LINE_HEIGHT_RATIO
-            },
-            ctx
-        );
-
         FontSettings::handle(ctx).update(ctx, |font_settings, ctx| {
             report_if_error!(
                 font_settings
@@ -2008,12 +1942,6 @@ impl AppearanceSettingsPageView {
         let current_line_height = appearance.ui_builder().line_height_ratio();
 
         if (current_line_height - new_line_height).abs() > f32::EPSILON {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::SetLineHeight {
-                    new_value: new_line_height
-                },
-                ctx
-            );
 
             if (MIN_LINE_SPACING..=MAX_LINE_SPACING).contains(&new_line_height) {
                 FontSettings::handle(ctx).update(ctx, |font_settings, ctx| {
@@ -2031,10 +1959,6 @@ impl AppearanceSettingsPageView {
         WindowSettings::handle(ctx).update(ctx, |window_settings, ctx| {
             let current_val = window_settings.open_windows_at_custom_size.value();
             let new_val: bool = !current_val;
-            send_telemetry_from_ctx!(
-                TelemetryEvent::ToggleNewWindowsAtCustomSize { enabled: new_val },
-                ctx
-            );
             report_if_error!(
                 window_settings
                     .open_windows_at_custom_size
@@ -2046,7 +1970,6 @@ impl AppearanceSettingsPageView {
 
     fn set_new_windows_num_columns(&mut self, columns: u16, ctx: &mut ViewContext<Self>) {
         WindowSettings::handle(ctx).update(ctx, |window_settings, ctx| {
-            send_telemetry_from_ctx!(TelemetryEvent::SetNewWindowsAtCustomSize, ctx);
             report_if_error!(
                 window_settings
                     .new_windows_num_columns
@@ -2057,7 +1980,6 @@ impl AppearanceSettingsPageView {
 
     fn set_new_windows_num_rows(&mut self, rows: u16, ctx: &mut ViewContext<Self>) {
         WindowSettings::handle(ctx).update(ctx, |window_settings, ctx| {
-            send_telemetry_from_ctx!(TelemetryEvent::SetNewWindowsAtCustomSize, ctx);
             report_if_error!(window_settings.new_windows_num_rows.set_value(rows, ctx));
         });
     }
@@ -2267,10 +2189,6 @@ impl AppearanceSettingsPageView {
         FontSettings::handle(ctx).update(ctx, |font_settings, ctx| {
             match font_settings.use_thin_strokes.set_value(*value, ctx) {
                 Ok(_) => {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::ThinStrokesSettingChanged { new_value: *value },
-                        ctx
-                    );
                 }
                 Err(e) => {
                     report_error!(e);
@@ -2287,10 +2205,6 @@ impl AppearanceSettingsPageView {
                 .show_jump_to_bottom_of_block_button
                 .value()
         };
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleJumpToBottomofBlockButton { enabled: new_value },
-            ctx
-        );
         ctx.update_model(&block_list_settings, move |block_list_settings, ctx| {
             report_if_error!(
                 block_list_settings
@@ -2303,10 +2217,6 @@ impl AppearanceSettingsPageView {
     pub fn toggle_show_block_dividers(&mut self, ctx: &mut ViewContext<Self>) {
         let block_list_settings = BlockListSettings::handle(ctx);
         let new_value = { !*block_list_settings.as_ref(ctx).show_block_dividers.value() };
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleShowBlockDividers { enabled: new_value },
-            ctx
-        );
         ctx.update_model(&block_list_settings, move |block_list_settings, ctx| {
             report_if_error!(
                 block_list_settings
@@ -2384,10 +2294,6 @@ impl AppearanceSettingsPageView {
                 .toggle_and_save_value(ctx)
             {
                 Ok(new_value) => {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::ToggleDimInactivePanes { enabled: new_value },
-                        ctx
-                    );
                 }
                 Err(e) => {
                     report_error!(e);
@@ -2430,7 +2336,6 @@ impl AppearanceSettingsPageView {
         ctx: &mut ViewContext<Self>,
     ) {
         let old_mode = *InputModeSettings::as_ref(ctx).input_mode.value();
-        send_telemetry_from_ctx!(TelemetryEvent::InputModeChanged { old_mode, new_mode }, ctx);
         InputModeSettings::handle(ctx).update(ctx, |input_mode, ctx| {
             report_if_error!(input_mode.input_mode.set_value(new_mode, ctx));
         });
@@ -2459,13 +2364,6 @@ impl AppearanceSettingsPageView {
                 .set_selected_idx(new_type as usize);
 
             let is_udi_enabled = new_type == InputBoxType::Universal;
-            send_telemetry_from_ctx!(
-                TelemetryEvent::InputUXModeChanged {
-                    is_udi_enabled,
-                    origin: InputUXChangeOrigin::Settings
-                },
-                ctx
-            );
 
             // Selecting classic mode must also enable honor_ps1 so the mode takes
             // effect immediately (input_type() requires honor_ps1 to return classic).
@@ -2488,12 +2386,6 @@ impl AppearanceSettingsPageView {
                     .cursor_display_type
                     .set_value(new_cursor_type, ctx)
             );
-            send_telemetry_from_ctx!(
-                TelemetryEvent::CursorDisplayType {
-                    cursor: new_cursor_type.to_string(),
-                },
-                ctx
-            );
         });
     }
 
@@ -2510,10 +2402,6 @@ impl AppearanceSettingsPageView {
             report_if_error!(tab_settings.show_indicators.set_value(new_value, ctx));
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleTabIndicators { enabled: new_value },
-            ctx
-        );
     }
 
     fn toggle_show_code_review_button(&mut self, ctx: &mut ViewContext<Self>) {
@@ -2541,10 +2429,6 @@ impl AppearanceSettingsPageView {
             );
         });
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::TogglePreserveActiveTabColor { enabled: new_value },
-            ctx
-        );
     }
 
     fn toggle_vertical_tabs(&mut self, ctx: &mut ViewContext<Self>) {
@@ -2604,13 +2488,6 @@ impl AppearanceSettingsPageView {
             );
             prev_value
         });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleWorkspaceDecorationVisibility {
-                previous_value,
-                new_value
-            },
-            ctx
-        );
     }
 
     /// Toggle among the supported workspace decoration visibility values.
@@ -2626,13 +2503,6 @@ impl AppearanceSettingsPageView {
                 );
                 (new_value, previous_value)
             });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleWorkspaceDecorationVisibility {
-                previous_value,
-                new_value
-            },
-            ctx
-        );
     }
 
     fn build_workspace_decoration_visibility_dropdown(
@@ -2770,10 +2640,6 @@ impl AppearanceSettingsPageView {
                 );
             });
 
-            send_telemetry_from_ctx!(
-                TelemetryEvent::ToggleLigatureRendering { enabled: new_value },
-                ctx
-            );
         }
     }
 
@@ -2784,8 +2650,7 @@ impl AppearanceSettingsPageView {
         // Toggle between Universal and Classic
         let new_type = match current_type {
             InputBoxType::Universal => InputBoxType::Classic,
-            InputBoxType::Classic => InputBoxType::Universal,
-        };
+            InputBoxType::Classic => InputBoxType::Universal};
 
         // Update the setting
         self.set_input_type(new_type, ctx);
@@ -2799,10 +2664,6 @@ impl AppearanceSettingsPageView {
         TabSettings::handle(ctx).update(ctx, |tab_settings, ctx| {
             report_if_error!(tab_settings.close_button_position.set_value(position, ctx));
         });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::TabCloseButtonPositionUpdated { position },
-            ctx
-        );
         ctx.notify();
     }
 }
@@ -2839,8 +2700,7 @@ fn render_group(
 
 #[derive(Default)]
 struct CreateCustomThemeWidget {
-    mouse_state: MouseStateHandle,
-}
+    mouse_state: MouseStateHandle}
 
 impl SettingsWidget for CreateCustomThemeWidget {
     type View = AppearanceSettingsPageView;
@@ -2879,8 +2739,7 @@ struct ThemeSelectWidget {
     sync_os_switch_state: SwitchStateHandle,
     open_theme_chooser_button_mouse_state: MouseStateHandle,
     open_theme_chooser_button_mouse_state_light: MouseStateHandle,
-    open_theme_chooser_button_mouse_state_dark: MouseStateHandle,
-}
+    open_theme_chooser_button_mouse_state_dark: MouseStateHandle}
 
 impl ThemeSelectWidget {
     fn render_theme_option(
@@ -2896,15 +2755,13 @@ impl ThemeSelectWidget {
         let mode_ui_label = match theme_chooser_mode {
             ThemeChooserMode::SystemLight => "Light",
             ThemeChooserMode::SystemDark => "Dark",
-            ThemeChooserMode::SystemAgnostic => "Current theme",
-        };
+            ThemeChooserMode::SystemAgnostic => "Current theme"};
 
         ConstrainedBox::new(
             Hoverable::new(state, |hover_state| {
                 let (border_color, border_width) = match hover_state.is_hovered() {
                     true => (theme.accent(), 1.0),
-                    false => (theme.accent(), 0.0),
-                };
+                    false => (theme.accent(), 0.0)};
 
                 let mut container = Container::new(
                     Flex::row()
@@ -2919,8 +2776,7 @@ impl ThemeSelectWidget {
                                             top: 20.,
                                             bottom: 20.,
                                             left: 10.,
-                                            right: 20.,
-                                        }),
+                                            right: 20.}),
                                 )
                                 .build()
                                 .finish(),
@@ -2938,8 +2794,7 @@ impl ThemeSelectWidget {
                                     top: 20.,
                                     bottom: 20.,
                                     left: 20.,
-                                    right: 10.,
-                                }))
+                                    right: 10.}))
                                 .build()
                                 .finish(),
                         )
@@ -3009,8 +2864,7 @@ impl SettingsWidget for ThemeSelectWidget {
                     app.system_theme() == SystemTheme::Dark,
                     app,
                 ))
-                .finish(),
-        };
+                .finish()};
 
         Flex::column()
             .with_cross_axis_alignment(CrossAxisAlignment::Stretch)
@@ -3063,8 +2917,7 @@ impl SettingsWidget for ThemeSelectWidget {
 
 #[derive(Default)]
 struct CustomWindowSizeWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for CustomWindowSizeWidget {
     type View = AppearanceSettingsPageView;
@@ -3125,8 +2978,7 @@ impl SettingsWidget for CustomWindowSizeWidget {
                                     top: 4.,
                                     bottom: 4.,
                                     left: 6.,
-                                    right: 6.,
-                                }),
+                                    right: 6.}),
                                 background: Some(appearance.theme().surface_2().into()),
                                 border_color: column_border_color,
                                 ..Default::default()
@@ -3161,8 +3013,7 @@ impl SettingsWidget for CustomWindowSizeWidget {
                                     top: 4.,
                                     bottom: 4.,
                                     left: 6.,
-                                    right: 6.,
-                                }),
+                                    right: 6.}),
                                 background: Some(appearance.theme().surface_2().into()),
                                 border_color: row_border_color,
                                 ..Default::default()
@@ -3186,8 +3037,7 @@ impl SettingsWidget for CustomWindowSizeWidget {
 
 #[derive(Default)]
 struct WindowOpacityWidget {
-    slider_state: SliderStateHandle,
-}
+    slider_state: SliderStateHandle}
 
 impl SettingsWidget for WindowOpacityWidget {
     type View = AppearanceSettingsPageView;
@@ -3313,8 +3163,7 @@ impl SettingsWidget for WindowOpacityWidget {
 #[derive(Default)]
 struct WindowBlurWidget {
     slider_state: SliderStateHandle,
-    info_button: MouseStateHandle,
-}
+    info_button: MouseStateHandle}
 
 impl SettingsWidget for WindowBlurWidget {
     type View = AppearanceSettingsPageView;
@@ -3337,8 +3186,7 @@ impl SettingsWidget for WindowBlurWidget {
                 "https://docs.warp.dev/terminal/appearance/size-opacity-blurring".into(),
             )),
             secondary_text: None,
-            tooltip_override_text: None,
-        };
+            tooltip_override_text: None};
 
         Flex::column()
             .with_child(render_body_item::<AppearancePageAction>(
@@ -3380,8 +3228,7 @@ impl SettingsWidget for WindowBlurWidget {
 
 #[derive(Default)]
 struct WindowBlurTextureWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for WindowBlurTextureWidget {
     type View = AppearanceSettingsPageView;
@@ -3444,8 +3291,7 @@ impl SettingsWidget for WindowBlurTextureWidget {
 
 #[derive(Default)]
 struct ToolsPanelStateScopeWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ToolsPanelStateScopeWidget {
     type View = AppearanceSettingsPageView;
@@ -3494,8 +3340,7 @@ impl SettingsWidget for ToolsPanelStateScopeWidget {
 /// subscriptions.
 #[derive(Default)]
 struct ToolsPanelProjectExplorerWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ToolsPanelProjectExplorerWidget {
     type View = AppearanceSettingsPageView;
@@ -3534,8 +3379,7 @@ impl SettingsWidget for ToolsPanelProjectExplorerWidget {
 
 #[derive(Default)]
 struct ToolsPanelConversationHistoryWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ToolsPanelConversationHistoryWidget {
     type View = AppearanceSettingsPageView;
@@ -3574,8 +3418,7 @@ impl SettingsWidget for ToolsPanelConversationHistoryWidget {
 
 #[derive(Default)]
 struct ToolsPanelGlobalSearchWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ToolsPanelGlobalSearchWidget {
     type View = AppearanceSettingsPageView;
@@ -3613,8 +3456,7 @@ impl SettingsWidget for ToolsPanelGlobalSearchWidget {
 
 #[derive(Default)]
 struct ToolsPanelWarpDriveWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ToolsPanelWarpDriveWidget {
     type View = AppearanceSettingsPageView;
@@ -3650,14 +3492,12 @@ impl SettingsWidget for ToolsPanelWarpDriveWidget {
 }
 
 struct InputTypeWidget {
-    radio_buttons_states: Vec<MouseStateHandle>,
-}
+    radio_buttons_states: Vec<MouseStateHandle>}
 
 impl Default for InputTypeWidget {
     fn default() -> Self {
         Self {
-            radio_buttons_states: vec![MouseStateHandle::default(), MouseStateHandle::default()],
-        }
+            radio_buttons_states: vec![MouseStateHandle::default(), MouseStateHandle::default()]}
     }
 }
 
@@ -3692,8 +3532,7 @@ impl SettingsWidget for InputTypeWidget {
                 if let Some(index) = index {
                     let input_type = match index {
                         0 => InputBoxType::Universal,
-                        _ => InputBoxType::Classic,
-                    };
+                        _ => InputBoxType::Classic};
                     ctx.dispatch_typed_action(AppearancePageAction::SetInputType(input_type));
                 }
             }))
@@ -3747,8 +3586,7 @@ impl SettingsWidget for InputModeWidget {
 
 #[derive(Default)]
 struct PromptWidget {
-    button_mouse_state: MouseStateHandle,
-}
+    button_mouse_state: MouseStateHandle}
 
 impl SettingsWidget for PromptWidget {
     type View = AppearanceSettingsPageView;
@@ -3810,8 +3648,7 @@ impl SettingsWidget for PromptWidget {
         Hoverable::new(self.button_mouse_state.clone(), |hover_state| {
             let (border_color, border_width) = match hover_state.is_hovered() {
                 true => (appearance.theme().accent(), 1.0),
-                false => (appearance.theme().accent(), 0.0),
-            };
+                false => (appearance.theme().accent(), 0.0)};
 
             Container::new(body)
                 .with_background(background)
@@ -3826,8 +3663,7 @@ impl SettingsWidget for PromptWidget {
         .with_cursor(Cursor::PointingHand)
         .on_click(|ctx, _, _| {
             ctx.dispatch_typed_action(WorkspaceAction::OpenPromptEditor {
-                open_source: PromptEditorOpenSource::AppearancePage,
-            })
+                open_source: PromptEditorOpenSource::AppearancePage})
         })
         .finish()
     }
@@ -3835,8 +3671,7 @@ impl SettingsWidget for PromptWidget {
 
 #[derive(Default)]
 struct DimInactivePanesWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for DimInactivePanesWidget {
     type View = AppearanceSettingsPageView;
@@ -3878,8 +3713,7 @@ impl SettingsWidget for DimInactivePanesWidget {
 
 #[derive(Default)]
 struct FocusFollowsMouseWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for FocusFollowsMouseWidget {
     type View = AppearanceSettingsPageView;
@@ -3921,8 +3755,7 @@ impl SettingsWidget for FocusFollowsMouseWidget {
 
 #[derive(Default)]
 struct CompactModeWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for CompactModeWidget {
     type View = AppearanceSettingsPageView;
@@ -3969,8 +3802,7 @@ impl SettingsWidget for CompactModeWidget {
 
 #[derive(Default)]
 struct JumpToBottomOfBlockWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for JumpToBottomOfBlockWidget {
     type View = AppearanceSettingsPageView;
@@ -4018,8 +3850,7 @@ impl SettingsWidget for JumpToBottomOfBlockWidget {
 
 #[derive(Default)]
 struct ShowBlockDividersWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ShowBlockDividersWidget {
     type View = AppearanceSettingsPageView;
@@ -4063,8 +3894,7 @@ impl SettingsWidget for ShowBlockDividersWidget {
 
 #[derive(Default)]
 struct ShowScrollbarWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ShowScrollbarWidget {
     type View = AppearanceSettingsPageView;
@@ -4107,8 +3937,7 @@ impl SettingsWidget for ShowScrollbarWidget {
 
 #[derive(Default)]
 struct ShowBlockSelectionHighlightWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ShowBlockSelectionHighlightWidget {
     type View = AppearanceSettingsPageView;
@@ -4155,8 +3984,7 @@ impl SettingsWidget for ShowBlockSelectionHighlightWidget {
 
 #[derive(Default)]
 struct ShowBlockPromptWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ShowBlockPromptWidget {
     type View = AppearanceSettingsPageView;
@@ -4199,8 +4027,7 @@ impl SettingsWidget for ShowBlockPromptWidget {
 
 #[derive(Default)]
 struct AIFontWidget {
-    checkbox_state: MouseStateHandle,
-}
+    checkbox_state: MouseStateHandle}
 
 impl SettingsWidget for AIFontWidget {
     type View = AppearanceSettingsPageView;
@@ -4269,8 +4096,7 @@ impl SettingsWidget for AIFontWidget {
 #[derive(Default)]
 struct TerminalFontWidget {
     line_height_button_state: MouseStateHandle,
-    fonts_checkbox_state: MouseStateHandle,
-}
+    fonts_checkbox_state: MouseStateHandle}
 
 impl TerminalFontWidget {
     fn render_line_height_editor(
@@ -4307,8 +4133,7 @@ impl TerminalFontWidget {
                                 top: 7.,
                                 bottom: 7.,
                                 left: 12.,
-                                right: 12.,
-                            }),
+                                right: 12.}),
                             margin: Some(Coords {
                                 top: 2.,
                                 left: 12.,
@@ -4492,8 +4317,7 @@ impl SettingsWidget for TerminalFontWidget {
                                 top: 7.,
                                 bottom: 7.,
                                 left: 12.,
-                                right: 12.,
-                            }),
+                                right: 12.}),
                             margin: Some(Coords {
                                 top: 2.,
                                 left: 2.,
@@ -4526,8 +4350,7 @@ impl SettingsWidget for TerminalFontWidget {
 
 #[derive(Default)]
 struct NotebookFontSizeWidget {
-    checkbox_state: MouseStateHandle,
-}
+    checkbox_state: MouseStateHandle}
 
 impl SettingsWidget for NotebookFontSizeWidget {
     type View = AppearanceSettingsPageView;
@@ -4596,8 +4419,7 @@ impl SettingsWidget for NotebookFontSizeWidget {
                                         top: 7.,
                                         bottom: 7.,
                                         left: 16.,
-                                        right: 16.,
-                                    }),
+                                        right: 16.}),
                                     background: Some(appearance.theme().surface_2().into()),
                                     ..Default::default()
                                 })
@@ -4724,8 +4546,7 @@ impl SettingsWidget for UsageDisplayUnitWidget {
 #[derive(Default)]
 struct LigaturesWidget {
     switch_state: SwitchStateHandle,
-    info_mouse_state: MouseStateHandle,
-}
+    info_mouse_state: MouseStateHandle}
 
 impl SettingsWidget for LigaturesWidget {
     type View = AppearanceSettingsPageView;
@@ -4749,8 +4570,7 @@ impl SettingsWidget for LigaturesWidget {
                 mouse_state: self.info_mouse_state.clone(),
                 on_click_action: None,
                 secondary_text: None,
-                tooltip_override_text: Some("Ligatures may reduce performance".to_string()),
-            }),
+                tooltip_override_text: Some("Ligatures may reduce performance".to_string())}),
             LocalOnlyIconState::for_setting(
                 LigatureRenderingEnabled::storage_key(),
                 LigatureRenderingEnabled::sync_to_cloud(),
@@ -4775,8 +4595,7 @@ impl SettingsWidget for LigaturesWidget {
 
 struct CursorTypeWidget {
     radio_state: RadioButtonStateHandle,
-    radio_buttons_states: Vec<MouseStateHandle>,
-}
+    radio_buttons_states: Vec<MouseStateHandle>}
 
 impl Default for CursorTypeWidget {
     fn default() -> Self {
@@ -4784,8 +4603,7 @@ impl Default for CursorTypeWidget {
             radio_state: Default::default(),
             radio_buttons_states: all::<CursorDisplayType>()
                 .map(|_| Default::default())
-                .collect(),
-        }
+                .collect()}
     }
 }
 
@@ -4850,8 +4668,7 @@ impl SettingsWidget for CursorTypeWidget {
                         }
                     }))
                     .build()
-                    .finish(),
-            },
+                    .finish()},
             None,
         )
     }
@@ -4859,8 +4676,7 @@ impl SettingsWidget for CursorTypeWidget {
 
 #[derive(Default)]
 struct BlinkingCursorWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for BlinkingCursorWidget {
     type View = AppearanceSettingsPageView;
@@ -4937,8 +4753,7 @@ impl SettingsWidget for TabCloseButtonPositionWidget {
 
 #[derive(Default)]
 struct TabIndicatorWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for TabIndicatorWidget {
     type View = AppearanceSettingsPageView;
@@ -4982,8 +4797,7 @@ impl SettingsWidget for TabIndicatorWidget {
 
 #[derive(Default)]
 struct PreserveActiveTabColorWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for PreserveActiveTabColorWidget {
     type View = AppearanceSettingsPageView;
@@ -5027,8 +4841,7 @@ impl SettingsWidget for PreserveActiveTabColorWidget {
 
 #[derive(Default)]
 struct VerticalTabsWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for VerticalTabsWidget {
     type View = AppearanceSettingsPageView;
@@ -5072,8 +4885,7 @@ impl SettingsWidget for VerticalTabsWidget {
 
 #[derive(Default)]
 struct ShowVerticalTabPanelInRestoredWindowsWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for ShowVerticalTabPanelInRestoredWindowsWidget {
     type View = AppearanceSettingsPageView;
@@ -5122,8 +4934,7 @@ impl SettingsWidget for ShowVerticalTabPanelInRestoredWindowsWidget {
 
 #[derive(Default)]
 struct HideTitleBarSearchBarInVerticalTabsWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for HideTitleBarSearchBarInVerticalTabsWidget {
     type View = AppearanceSettingsPageView;
@@ -5172,8 +4983,7 @@ impl SettingsWidget for HideTitleBarSearchBarInVerticalTabsWidget {
 
 #[derive(Default)]
 struct UseLatestUserPromptAsConversationTitleInTabNamesWidget {
-    switch_state: SwitchStateHandle,
-}
+    switch_state: SwitchStateHandle}
 
 impl SettingsWidget for UseLatestUserPromptAsConversationTitleInTabNamesWidget {
     type View = AppearanceSettingsPageView;
@@ -5273,8 +5083,7 @@ fn build_directory_delete_buttons(
                     .on_click(move |ctx| {
                         ctx.dispatch_typed_action(
                             AppearancePageAction::RemoveDefaultDirectoryTabColor {
-                                path: delete_path.clone(),
-                            },
+                                path: delete_path.clone()},
                         );
                     })
             })
@@ -5323,8 +5132,7 @@ fn directory_tab_colors(app: &AppContext) -> Vec<(String, DirectoryTabColor)> {
 }
 
 struct DirectoryTabColorsWidget {
-    add_picker: ViewHandle<DirectoryColorAddPicker>,
-}
+    add_picker: ViewHandle<DirectoryColorAddPicker>}
 
 impl SettingsWidget for DirectoryTabColorsWidget {
     type View = AppearanceSettingsPageView;
@@ -5407,17 +5215,14 @@ impl SettingsWidget for DirectoryTabColorsWidget {
             for (ansi_id, mouse_state) in color_options.zip(dot_mouse_states.iter().cloned()) {
                 let tab_color = match ansi_id {
                     None => DirectoryTabColor::Unassigned,
-                    Some(id) => DirectoryTabColor::Color(id),
-                };
+                    Some(id) => DirectoryTabColor::Color(id)};
                 let dot_color = match ansi_id {
                     None => pathfinder_color::ColorU::transparent_black(),
-                    Some(id) => id.to_ansi_color(&theme.terminal_colors().normal).into(),
-                };
+                    Some(id) => id.to_ansi_color(&theme.terminal_colors().normal).into()};
                 let is_selected = current_color == tab_color;
                 let tooltip_text = match ansi_id {
                     None => "Default (no color)".to_string(),
-                    Some(id) => id.to_string(),
-                };
+                    Some(id) => id.to_string()};
                 let dir_path_clone = PathBuf::from(&dir_path);
 
                 dots_row.add_child(
@@ -5436,8 +5241,7 @@ impl SettingsWidget for DirectoryTabColorsWidget {
                             ctx.dispatch_typed_action(
                                 AppearancePageAction::SetDefaultDirectoryTabColor {
                                     path: dir_path_clone.clone(),
-                                    color: tab_color,
-                                },
+                                    color: tab_color},
                             );
                         }
                     })
@@ -5514,8 +5318,7 @@ impl SettingsWidget for ZenModeWidget {
 #[derive(Default)]
 struct AltScreenPaddingWidget {
     switch_state: SwitchStateHandle,
-    additional_info_mouse_state: MouseStateHandle,
-}
+    additional_info_mouse_state: MouseStateHandle}
 
 impl SettingsWidget for AltScreenPaddingWidget {
     type View = AppearanceSettingsPageView;
@@ -5540,8 +5343,7 @@ impl SettingsWidget for AltScreenPaddingWidget {
                     "https://docs.warp.dev/terminal/more-features/full-screen-apps#padding".into(),
                 )),
                 secondary_text: None,
-                tooltip_override_text: None,
-            }),
+                tooltip_override_text: None}),
             LocalOnlyIconState::for_setting(
                 AltScreenPadding::storage_key(),
                 AltScreenPadding::sync_to_cloud(),
@@ -5575,8 +5377,7 @@ impl SettingsWidget for AltScreenPaddingWidget {
             let buffer_text = view.alt_screen_padding_editor.as_ref(app).buffer_text(app);
             let border_color = match buffer_text.parse::<f32>() {
                 Ok(p) if p >= 0. => None,
-                _ => Some(themes::theme::Fill::error().into()),
-            };
+                _ => Some(themes::theme::Fill::error().into())};
 
             let editor_style = UiComponentStyles {
                 width: Some(40.),

@@ -10,52 +10,42 @@ use ai::agent::action_result::{RunAgentsAgentOutcomeKind, RunAgentsResult};
 use ai::agent::orchestration_config::{OrchestrationConfig, OrchestrationConfigStatus};
 use ai::skills::SkillReference;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warp_graphql::queries::get_runners::RunnerSortBy;
 use warpui::elements::{
     Border, ChildAnchor, ChildView, Container, CornerRadius, CrossAxisAlignment, Empty, Flex,
-    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack, Text, Wrap,
-};
+    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack, Text, Wrap};
 use warpui::keymap::FixedBinding;
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle,
-};
+    ViewHandle};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIAgentActionId, AIAgentActionResultType, icons};
 use crate::ai::blocklist::action_model::{
     AIActionStatus, BlocklistAIActionEvent, BlocklistAIActionModel, RunAgentsExecutor,
-    RunAgentsExecutorEvent, RunAgentsSpawningSnapshot,
-};
+    RunAgentsExecutorEvent, RunAgentsSpawningSnapshot};
 use crate::ai::blocklist::agent_view::orchestration_pill_bar::render_static_agent_pill;
 use crate::ai::blocklist::block::AIBlock;
 use crate::ai::blocklist::block::model::{AIBlockModel, AIBlockOutputStatus};
 use crate::ai::blocklist::block::view_impl::WithContentItemSpacing;
 use crate::ai::blocklist::inline_action::create_environment_modal::{
-    CreateEnvironmentModal, CreateEnvironmentModalEvent,
-};
+    CreateEnvironmentModal, CreateEnvironmentModalEvent};
 use crate::ai::blocklist::inline_action::host_picker::{HostPicker, HostPickerEvent};
 use crate::ai::blocklist::inline_action::inline_action_header::{HeaderConfig, InteractionMode};
 use crate::ai::blocklist::inline_action::inline_action_icons;
 use crate::ai::blocklist::inline_action::orchestration_controls::{
     self as oc, AuthSecretSelection, OrchestrationConfigState, OrchestrationControlAction,
-    OrchestrationEditState, OrchestrationPickerHandles,
-};
+    OrchestrationEditState, OrchestrationPickerHandles};
 use crate::ai::blocklist::inline_action::requested_action::{
-    CTRL_C_KEYSTROKE, ENTER_KEYSTROKE, render_requested_action_row_for_text,
-};
+    CTRL_C_KEYSTROKE, ENTER_KEYSTROKE, render_requested_action_row_for_text};
 use crate::ai::blocklist::telemetry::{
     BlocklistOrchestrationTelemetryEvent, OrchestrationEnteredEvent, OrchestrationEntrySource,
-    RunAgentsCardDecision, run_agents_card_decision_event,
-};
+    RunAgentsCardDecision, run_agents_card_decision_event};
 use crate::ai::connected_self_hosted_workers::{
-    ConnectedSelfHostedWorkersEvent, ConnectedSelfHostedWorkersModel,
-};
+    ConnectedSelfHostedWorkersEvent, ConnectedSelfHostedWorkersModel};
 use crate::ai::harness_availability::{
-    AuthSecretFetchState, HarnessAvailabilityEvent, HarnessAvailabilityModel,
-};
+    AuthSecretFetchState, HarnessAvailabilityEvent, HarnessAvailabilityModel};
 use crate::ai::llms::{LLMPreferences, LLMPreferencesEvent};
 use crate::appearance::Appearance;
 use crate::features::FeatureFlag;
@@ -66,8 +56,7 @@ use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{ButtonSize, KeystrokeSource, NakedTheme};
 use crate::view_components::compactible_action_button::{
-    CompactibleActionButton, MEDIUM_SIZE_SWITCH_THRESHOLD, RenderCompactibleActionButton,
-};
+    CompactibleActionButton, MEDIUM_SIZE_SWITCH_THRESHOLD, RenderCompactibleActionButton};
 use crate::view_components::compactible_split_action_button::CompactibleSplitActionButton;
 use crate::view_components::dropdown::DropdownEvent;
 use crate::view_components::{FilterableDropdownEvent, FilterableDropdownOrientation};
@@ -108,16 +97,14 @@ pub struct RunAgentsCardFields {
     /// Run-wide skills propagated to each child at dispatch.
     pub skills: Vec<SkillReference>,
     /// The plan that this RunAgents call is executing for.
-    pub plan_id: String,
-}
+    pub plan_id: String}
 
 /// Per-action edit state for the orchestrate confirmation card: the
 /// run-wide config fields plus the card-only request fields.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RunAgentsEditState {
     pub orchestration_config_state: oc::OrchestrationConfigState,
-    pub card: RunAgentsCardFields,
-}
+    pub card: RunAgentsCardFields}
 
 impl RunAgentsEditState {
     pub fn from_request(req: &RunAgentsRequest) -> Self {
@@ -140,9 +127,7 @@ impl RunAgentsEditState {
                 base_prompt: req.base_prompt.clone(),
                 summary: req.summary.clone(),
                 skills: req.skills.clone(),
-                plan_id: req.plan_id.clone(),
-            },
-        }
+                plan_id: req.plan_id.clone()}}
     }
 
     pub fn to_request(&self) -> RunAgentsRequest {
@@ -158,8 +143,7 @@ impl RunAgentsEditState {
             harness_auth_secret_name: self
                 .orchestration_config_state
                 .auth_secret_name()
-                .map(str::to_string),
-        }
+                .map(str::to_string)}
     }
 }
 
@@ -195,8 +179,7 @@ impl OrchestrationControlAction for RunAgentsCardViewAction {
 struct RunAgentsCardHandles {
     reject_button: Option<CompactibleActionButton>,
     accept_button: Option<CompactibleSplitActionButton>,
-    pickers: OrchestrationPickerHandles<RunAgentsCardViewAction>,
-}
+    pickers: OrchestrationPickerHandles<RunAgentsCardViewAction>}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RunAgentsCardViewAction {
@@ -205,35 +188,26 @@ pub enum RunAgentsCardViewAction {
     ToggleAcceptMenu,
     Reject,
     ExecutionModeToggled {
-        is_remote: bool,
-    },
+        is_remote: bool},
     ModelChanged {
-        model_id: String,
-    },
+        model_id: String},
     HarnessChanged {
-        harness_type: String,
-    },
+        harness_type: String},
     EnvironmentChanged {
-        environment_id: String,
-    },
+        environment_id: String},
     CreateEnvironmentRequested,
     RunnerChanged {
-        runner_id: String,
-    },
+        runner_id: String},
     WorkerHostChanged {
-        worker_host: String,
-    },
+        worker_host: String},
     AuthSecretChanged {
-        auth_secret_name: Option<String>,
-    },
+        auth_secret_name: Option<String>},
     /// User picked the "New API key…" item; opens the workspace create modal.
-    CreateNewAuthSecretRequested,
-}
+    CreateNewAuthSecretRequested}
 
 #[derive(Clone, Debug)]
 pub enum RunAgentsCardViewEvent {
-    RejectRequested,
-}
+    RejectRequested}
 
 pub struct RunAgentsCardView {
     action_id: AIAgentActionId,
@@ -270,8 +244,7 @@ pub struct RunAgentsCardView {
     /// Runners aren't cached client-side, so we fetch them lazily.
     runners: Vec<(String, String)>,
     /// True while the `getRunners` fetch is in flight.
-    runners_loading: bool,
-}
+    runners_loading: bool}
 
 /// Resolves UI-only interactive defaults on edit state that has
 /// already had config-inherited fields resolved. These defaults are
@@ -331,8 +304,7 @@ impl RunAgentsCardView {
     ) -> Self {
         let RunAgentsEditState {
             orchestration_config_state,
-            card,
-        } = RunAgentsEditState::from_request(request);
+            card} = RunAgentsEditState::from_request(request);
         // Snapshot the raw incoming request so we can diff against the
         // edited state at Accept time.
         let original_tool_call_request = request.clone();
@@ -383,8 +355,7 @@ impl RunAgentsCardView {
         ctx.subscribe_to_model(&run_agents_executor, move |me, _, event, ctx| match event {
             RunAgentsExecutorEvent::SpawningStarted {
                 action_id,
-                snapshot,
-            } if action_id == &action_id_for_subscription => {
+                snapshot} if action_id == &action_id_for_subscription => {
                 me.spawning = Some(*snapshot);
                 ctx.notify();
             }
@@ -574,8 +545,7 @@ impl RunAgentsCardView {
             decision_event_emitted: false,
             has_auto_opened_create_modal: false,
             runners: Vec::new(),
-            runners_loading: false,
-        };
+            runners_loading: false};
 
         view.ensure_pickers(ctx);
         view.refresh_accept_button_state(ctx);
@@ -594,8 +564,7 @@ impl RunAgentsCardView {
                 .orchestration_edit_state
                 .orchestration_config_state
                 .clone(),
-            card: self.card.clone(),
-        }
+            card: self.card.clone()}
     }
 
     /// Re-sync edit state from the latest streaming request.
@@ -743,14 +712,6 @@ impl RunAgentsCardView {
             return;
         }
         self.entered_event_emitted = true;
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::OrchestrationEntered(OrchestrationEnteredEvent {
-                conversation_id,
-                plan_id: (!self.card.plan_id.is_empty()).then(|| self.card.plan_id.clone()),
-                entry_source: OrchestrationEntrySource::RunAgentsCardShown,
-            }),
-            ctx
-        );
     }
 
     /// Emits `RunAgentsCardDecision` at most once per card instance.
@@ -770,10 +731,6 @@ impl RunAgentsCardView {
             &self.orchestration_edit_state.orchestration_config_state,
             &self.original_tool_call_request,
             self.active_config.as_ref(),
-        );
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::RunAgentsCardDecision(event),
-            ctx
         );
     }
 
@@ -903,8 +860,7 @@ impl RunAgentsCardView {
         if self.handles.pickers.environment_picker.is_none() {
             let initial_env = match &state.execution_mode {
                 RunAgentsExecutionMode::Remote { environment_id, .. } => environment_id.as_str(),
-                RunAgentsExecutionMode::Local => "",
-            };
+                RunAgentsExecutionMode::Local => ""};
             let handle = oc::create_environment_picker(initial_env, &styles, ctx);
             handle.update(ctx, |d, _| {
                 d.set_orientation(FilterableDropdownOrientation::Up)
@@ -923,8 +879,7 @@ impl RunAgentsCardView {
         if self.handles.pickers.host_picker.is_none() {
             let initial_host = match &state.execution_mode {
                 RunAgentsExecutionMode::Remote { worker_host, .. } => worker_host.as_str(),
-                RunAgentsExecutionMode::Local => oc::ORCHESTRATION_WARP_WORKER_HOST,
-            };
+                RunAgentsExecutionMode::Local => oc::ORCHESTRATION_WARP_WORKER_HOST};
             let handle = ctx.add_typed_action_view(HostPicker::new);
             // Open upward so the menu doesn't overlap pickers below it,
             // matching the other dropdowns in this card.
@@ -944,8 +899,7 @@ impl RunAgentsCardView {
                 }
                 HostPickerEvent::HostChanged { slug } => {
                     ctx.dispatch_typed_action(&RunAgentsCardViewAction::WorkerHostChanged {
-                        worker_host: slug.clone(),
-                    });
+                        worker_host: slug.clone()});
                 }
                 HostPickerEvent::Closed => {
                     me.refocus_after_picker_close(ctx);
@@ -1025,8 +979,7 @@ impl RunAgentsCardView {
             .execution_mode
         {
             RunAgentsExecutionMode::Remote { runner_id, .. } => runner_id.clone(),
-            RunAgentsExecutionMode::Local => String::new(),
-        };
+            RunAgentsExecutionMode::Local => String::new()};
         let handle = oc::create_runner_picker(
             &initial_runner,
             &self.runners,
@@ -1077,8 +1030,7 @@ impl RunAgentsCardView {
                     .execution_mode
                 {
                     RunAgentsExecutionMode::Remote { runner_id, .. } => runner_id.clone(),
-                    RunAgentsExecutionMode::Local => String::new(),
-                };
+                    RunAgentsExecutionMode::Local => String::new()};
                 if let Some(handle) = me.handles.pickers.runner_picker.clone() {
                     oc::populate_runner_picker(&handle, &me.runners, &current, false, ctx);
                 }
@@ -1100,8 +1052,7 @@ impl RunAgentsCardView {
             .execution_mode
         {
             RunAgentsExecutionMode::Remote { runner_id, .. } => runner_id.clone(),
-            RunAgentsExecutionMode::Local => String::new(),
-        };
+            RunAgentsExecutionMode::Local => String::new()};
         if let Some(handle) = self.handles.pickers.runner_picker.clone() {
             oc::populate_runner_picker(&handle, &self.runners, &current, self.runners_loading, ctx);
         }
@@ -1249,8 +1200,7 @@ impl View for RunAgentsCardView {
         }
         if matches!(status, Some(AIActionStatus::RunningAsync)) {
             let snapshot = RunAgentsSpawningSnapshot {
-                agent_count: self.card.agent_run_configs.len(),
-            };
+                agent_count: self.card.agent_run_configs.len()};
             return render_spawning_card(&snapshot, appearance, app);
         }
 
@@ -1495,8 +1445,7 @@ fn render_header(handles: &RunAgentsCardHandles, app: &AppContext) -> Box<dyn El
             vec![Rc::new(reject.clone()), Rc::new(accept.clone())];
         config = config.with_interaction_mode(InteractionMode::ActionButtons {
             action_buttons,
-            size_switch_threshold: MEDIUM_SIZE_SWITCH_THRESHOLD,
-        });
+            size_switch_threshold: MEDIUM_SIZE_SWITCH_THRESHOLD});
     }
 
     config.render(app)
@@ -1656,8 +1605,7 @@ pub(crate) fn format_terminal_state(result: &RunAgentsResult) -> (String, Status
         RunAgentsResult::Cancelled => (
             SPAWN_AGENTS_CANCELLED_LABEL.to_string(),
             StatusKind::Cancelled,
-        ),
-    }
+        )}
 }
 
 /// Whether the card can no longer reach a real outcome and must render as
@@ -1684,8 +1632,7 @@ pub(crate) enum StatusKind {
     Success,
     Mixed,
     Failure,
-    Cancelled,
-}
+    Cancelled}
 
 fn render_spawning_card(
     snapshot: &RunAgentsSpawningSnapshot,
@@ -1725,8 +1672,7 @@ fn render_status_only_card(
         StatusKind::Mixed => inline_action_icons::warning_icon(appearance).finish(),
         StatusKind::Success => inline_action_icons::green_check_icon(appearance).finish(),
         StatusKind::Failure => inline_action_icons::red_x_icon(appearance).finish(),
-        StatusKind::Cancelled => inline_action_icons::cancelled_icon(appearance).finish(),
-    };
+        StatusKind::Cancelled => inline_action_icons::cancelled_icon(appearance).finish()};
     let row = render_requested_action_row_for_text(
         label.into(),
         appearance.ui_font_family(),

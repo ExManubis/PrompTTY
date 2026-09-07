@@ -1,9 +1,7 @@
 use settings::Setting as _;
 use voice_input::{
     StartListeningError, VoiceInput, VoiceInputLifecycle, VoiceInputLifecycleState,
-    VoiceSessionResult,
-};
-use warp_core::send_telemetry_from_ctx;
+    VoiceSessionResult};
 use warp_core::ui::theme::AnsiColorIdentifier;
 use warp_core::ui::theme::color::internal_colors;
 use warp_errors::report_error;
@@ -36,8 +34,7 @@ const NUM_TIMES_TO_SHOW_VOICE_NEW_FEATURE_POPUP: usize = 4;
 pub(super) struct VoiceInputState {
     lifecycle: VoiceInputLifecycle,
     recording_handle: Option<SpawnedFutureHandle>,
-    transcription_handle: Option<SpawnedFutureHandle>,
-}
+    transcription_handle: Option<SpawnedFutureHandle>}
 
 impl VoiceInputState {
     pub(super) fn is_active(&self) -> bool {
@@ -48,8 +45,7 @@ impl VoiceInputState {
         match self.lifecycle.state() {
             VoiceInputLifecycleState::Listening => Some(icons::Icon::Microphone),
             VoiceInputLifecycleState::Transcribing => Some(icons::Icon::DotsHorizontal),
-            VoiceInputLifecycleState::Idle => None,
-        }
+            VoiceInputLifecycleState::Idle => None}
     }
 }
 
@@ -319,15 +315,6 @@ impl EditorView {
                     } else {
                         InputType::Shell
                     };
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::VoiceInputUsed {
-                            action: "start".to_string(),
-                            session_duration_ms: None,
-                            is_udi_enabled,
-                            current_input_mode,
-                        },
-                        ctx
-                    );
 
                     if matches!(*source, voice_input::VoiceInputToggledFrom::Button) {
                         // If the user hasn't explicitly interacted with voice yet, show first-time toast.
@@ -409,8 +396,7 @@ impl EditorView {
 
         ctx.emit(super::Event::VoiceStateUpdated {
             is_listening,
-            is_transcribing,
-        });
+            is_transcribing});
     }
 
     /// Handles the result of a voice recording session.
@@ -441,17 +427,7 @@ impl EditorView {
         match result {
             VoiceSessionResult::Audio {
                 wav_base64,
-                session_duration_ms,
-            } => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::VoiceInputUsed {
-                        action: "stop".to_string(),
-                        session_duration_ms: Some(session_duration_ms),
-                        is_udi_enabled,
-                        current_input_mode,
-                    },
-                    ctx
-                );
+                session_duration_ms} => {
 
                 // Start transcription
                 let voice_transcriber = VoiceTranscriber::handle(ctx).as_ref(ctx);
@@ -485,19 +461,8 @@ impl EditorView {
                 }
             }
             VoiceSessionResult::Aborted {
-                session_duration_ms,
-            } => {
+                session_duration_ms} => {
                 log::info!("Aborted listening for voice input");
-
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::VoiceInputUsed {
-                        action: "cancel".to_string(),
-                        session_duration_ms,
-                        is_udi_enabled,
-                        current_input_mode,
-                    },
-                    ctx
-                );
 
                 if state.lifecycle.fail() {
                     self.set_voice_input_state(state, ctx);
@@ -539,8 +504,7 @@ impl EditorView {
                     );
                     self.voice_error_toast(super::VOICE_ERROR_TOAST_TEXT, ctx)
                 }
-            },
-        }
+            }}
         ctx.notify();
     }
 

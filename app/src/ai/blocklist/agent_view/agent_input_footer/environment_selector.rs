@@ -2,29 +2,24 @@ use std::sync::Arc;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::color::blend::Blend;
 use warp_core::ui::theme::Fill;
 use warpui::elements::{
     ChildAnchor, ChildView, ConstrainedBox, OffsetPositioning, ParentAnchor, ParentElement,
-    ParentOffsetBounds, Stack,
-};
+    ParentOffsetBounds, Stack};
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle,
-};
+    ViewHandle};
 
 use super::{AgentInputButtonTheme, AmbientAgentViewModel};
 use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
 use crate::ai::cloud_environments::CloudEnvironmentCatalog;
 use crate::appearance::Appearance;
 use crate::context_chips::display_menu::{
-    ChipMenuType, DisplayChipMenu, FixedFooter, GenericMenuItem, PromptDisplayMenuEvent,
-};
+    ChipMenuType, DisplayChipMenu, FixedFooter, GenericMenuItem, PromptDisplayMenuEvent};
 use crate::server::ids::SyncId;
 use crate::terminal::input::{
-    HandoffComposeState, HandoffComposeStateEvent, MenuPositioning, MenuPositioningProvider,
-};
+    HandoffComposeState, HandoffComposeStateEvent, MenuPositioning, MenuPositioningProvider};
 use crate::terminal::view::ambient_agent::AmbientAgentViewModelEvent;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{ActionButton, ActionButtonTheme, ButtonSize};
@@ -33,15 +28,13 @@ use crate::view_components::action_button::{ActionButton, ActionButtonTheme, But
 #[derive(Clone)]
 pub(crate) enum EnvironmentSelectorTarget {
     CloudPane(ModelHandle<AmbientAgentViewModel>),
-    Handoff(ModelHandle<HandoffComposeState>),
-}
+    Handoff(ModelHandle<HandoffComposeState>)}
 
 impl EnvironmentSelectorTarget {
     fn selected_environment_id(&self, ctx: &AppContext) -> Option<SyncId> {
         match self {
             Self::CloudPane(model) => model.as_ref(ctx).selected_environment_id().cloned(),
-            Self::Handoff(state) => state.as_ref(ctx).selected_environment_id().cloned(),
-        }
+            Self::Handoff(state) => state.as_ref(ctx).selected_environment_id().cloned()}
     }
 
     fn set_environment_id(
@@ -86,8 +79,7 @@ impl EnvironmentSelectorTarget {
     fn is_configuring(&self, ctx: &AppContext) -> bool {
         match self {
             Self::CloudPane(model) => model.as_ref(ctx).is_configuring_ambient_agent(),
-            Self::Handoff(state) => state.as_ref(ctx).is_active(),
-        }
+            Self::Handoff(state) => state.as_ref(ctx).is_active()}
     }
 }
 
@@ -98,26 +90,22 @@ pub struct EnvironmentSelector {
     environments: ModelHandle<CloudEnvironmentCatalog>,
     is_menu_open: bool,
     menu_positioning_provider: Arc<dyn MenuPositioningProvider>,
-    target: EnvironmentSelectorTarget,
-}
+    target: EnvironmentSelectorTarget}
 
 pub enum EnvironmentSelectorEvent {
     MenuVisibilityChanged { open: bool },
-    OpenEnvironmentManagementPane,
-}
+    OpenEnvironmentManagementPane}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EnvironmentSelectorAction {
-    ToggleMenu,
-}
+    ToggleMenu}
 
 /// Menu item for an environment in the selector.
 #[derive(Debug, Clone)]
 struct EnvironmentMenuItem {
     id: SyncId,
     name: String,
-    is_selected: bool,
-}
+    is_selected: bool}
 
 const ENV_MENU_CHECK_ICON_SIZE: f32 = 16.;
 
@@ -210,10 +198,6 @@ impl EnvironmentSelector {
                     .downcast_ref::<NewEnvironmentMenuItem>()
                     .is_some()
                 {
-                    send_telemetry_from_ctx!(
-                        CloudAgentTelemetryEvent::OpenedEnvironmentManagementPane,
-                        ctx
-                    );
                     me.set_menu_visibility(false, ctx);
                     ctx.emit(EnvironmentSelectorEvent::OpenEnvironmentManagementPane);
                     return;
@@ -225,12 +209,6 @@ impl EnvironmentSelector {
                     .as_any()
                     .downcast_ref::<EnvironmentMenuItem>()
                 {
-                    send_telemetry_from_ctx!(
-                        CloudAgentTelemetryEvent::EnvironmentSelected {
-                            environment_id: env_item.id.into_server(),
-                        },
-                        ctx
-                    );
                     if me.is_configuring(ctx) {
                         me.target.set_environment_id(Some(env_item.id), true, ctx);
                         me.environments.update(ctx, |catalog, ctx| {
@@ -287,8 +265,7 @@ impl EnvironmentSelector {
             environments,
             is_menu_open: false,
             menu_positioning_provider,
-            target,
-        };
+            target};
         me.refresh_menu(ctx);
         me.refresh_button(ctx);
         me.auto_select_default_environment_if_new_session(ctx);
@@ -337,7 +314,6 @@ impl EnvironmentSelector {
 
         self.is_menu_open = is_open;
         if is_open {
-            send_telemetry_from_ctx!(CloudAgentTelemetryEvent::EnvironmentSelectorOpened, ctx);
             ctx.focus(&self.dropdown);
             self.highlight_selected_environment(ctx);
         }
@@ -356,8 +332,7 @@ impl EnvironmentSelector {
             EnvironmentSelectorTarget::CloudPane(model) => {
                 model.as_ref(ctx).is_configuring_ambient_agent()
             }
-            EnvironmentSelectorTarget::Handoff(state) => state.as_ref(ctx).is_active(),
-        }
+            EnvironmentSelectorTarget::Handoff(state) => state.as_ref(ctx).is_active()}
     }
 
     /// Ensures a default environment is selected if none is currently selected.
@@ -385,8 +360,7 @@ impl EnvironmentSelector {
                 EnvironmentMenuItem {
                     id: environment.id,
                     name: environment.name.clone(),
-                    is_selected,
-                }
+                    is_selected}
             })
             .collect::<Vec<_>>();
 
@@ -441,8 +415,7 @@ impl EnvironmentSelector {
                 ParentOffsetBounds::WindowByPosition,
                 ParentAnchor::TopLeft,
                 ChildAnchor::BottomLeft,
-            ),
-        }
+            )}
     }
 }
 
@@ -501,8 +474,7 @@ impl ActionButtonTheme for DisabledTheme {
         let base_bg = appearance.theme().surface_1();
         let effective_bg = match background {
             Some(overlay) => base_bg.blend(&overlay),
-            None => base_bg,
-        };
+            None => base_bg};
 
         appearance
             .theme()

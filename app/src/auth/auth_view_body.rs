@@ -9,15 +9,13 @@ use warpui::clipboard::ClipboardContent;
 use warpui::color::ColorU;
 use warpui::elements::{
     Align, Border, Container, CornerRadius, CrossAxisAlignment, Dismiss, Fill, Flex,
-    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Stack,
-};
+    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Stack};
 use warpui::fonts::Weight;
 use warpui::keymap::FixedBinding;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, UpdateModel, View,
-    ViewContext, ViewHandle,
-};
+    ViewContext, ViewHandle};
 
 use super::AuthStateProvider;
 use super::auth_manager::AuthManager;
@@ -25,13 +23,11 @@ use super::auth_view_modal::AuthViewVariant;
 use super::auth_view_shared_helpers::{
     PrivacySettingsActions, PrivacySettingsHandles, action_button_color_and_variant,
     render_offline_info_overlay_body, render_overlay, render_privacy_settings_overlay_body,
-    render_square_logo,
-};
+    render_square_logo};
 use crate::appearance::Appearance;
 use crate::auth::auth_view_shared_helpers::render_offline_contents;
 use crate::editor::{
-    EditorView, InteractionState, SingleLineEditorOptions, TextColors, TextOptions,
-};
+    EditorView, InteractionState, SingleLineEditorOptions, TextColors, TextOptions};
 use crate::experiments::{AuthFlowInstructions, Experiment};
 use crate::modal::MODAL_CORNER_RADIUS;
 use crate::network::NetworkStatus;
@@ -39,8 +35,6 @@ use crate::server::telemetry::{AnonymousUserSignupEntrypoint, LoginEventSource, 
 use crate::settings::{AISettings, PrivacySettings};
 use crate::themes::theme::Fill as ThemeFill;
 use crate::util::color::{darken, lighten};
-use crate::{send_telemetry_from_ctx, send_telemetry_sync_from_ctx};
-
 const TOS_URL: &str = "https://www.warp.dev/terms-of-service";
 
 const COMMON_BODY_UI_FONT_SIZE: f32 = 12.;
@@ -87,14 +81,12 @@ struct MouseStateHandles {
     sign_up_mouse_state_handle: MouseStateHandle,
     learn_more_mouse_state_handle: MouseStateHandle,
     privacy_settings_mouse_state_handle: MouseStateHandle,
-    close_button_mouse_state_handle: MouseStateHandle,
-}
+    close_button_mouse_state_handle: MouseStateHandle}
 
 #[derive(Copy, Clone, Debug)]
 pub enum AuthViewOverlay {
     PrivacySettings,
-    OfflineInfo,
-}
+    OfflineInfo}
 
 pub struct AuthViewBody {
     variant: AuthViewVariant,
@@ -106,21 +98,18 @@ pub struct AuthViewBody {
     auth_step: AuthStep,
     loginless_step: LoginlessStep,
     copy_url_click_count: u8,
-    allow_loginless: bool,
-}
+    allow_loginless: bool}
 
 /// State for two-step loginless flow for anonymous users
 enum LoginlessStep {
     /// Initial state: user has not yet clicked "sign up later" entrypoint
     Start,
     /// Confirmation state: user has clicked "sign up later" and is now in confirmation view
-    Initiated,
-}
+    Initiated}
 
 pub enum AuthStep {
     SelectAuthPathway,
-    BrowserOpen,
-}
+    BrowserOpen}
 
 #[derive(Clone, Copy, Debug)]
 pub enum AuthViewBodyAction {
@@ -136,8 +125,7 @@ pub enum AuthViewBodyAction {
     ToggleTelemetry,
     ToggleCrashReporting,
     ToggleCloudConversationStorage,
-    Close,
-}
+    Close}
 
 impl AuthViewBody {
     pub fn new(variant: AuthViewVariant, ctx: &mut ViewContext<Self>) -> Self {
@@ -152,8 +140,7 @@ impl AuthViewBody {
                         text_colors_override: Some(TextColors {
                             default_color: *AUTH_TOKEN_INPUT_TEXT_COLOR,
                             disabled_color: *AUTH_TOKEN_INPUT_TEXT_DISABLED,
-                            hint_color: *AUTH_TOKEN_INPUT_TEXT_HINT,
-                        }),
+                            hint_color: *AUTH_TOKEN_INPUT_TEXT_HINT}),
                         ..Default::default()
                     },
                     soft_wrap: false,
@@ -199,8 +186,7 @@ impl AuthViewBody {
             auth_step: AuthStep::SelectAuthPathway,
             loginless_step: LoginlessStep::Start,
             copy_url_click_count: 0,
-            allow_loginless,
-        }
+            allow_loginless}
     }
 
     pub fn handle_paste(&mut self, ctx: &mut ViewContext<Self>) {
@@ -226,8 +212,7 @@ impl AuthViewBody {
     pub fn set_input_editable(&mut self, is_editable: bool, ctx: &mut ViewContext<Self>) {
         let interaction_state = match is_editable {
             false => InteractionState::Disabled,
-            true => InteractionState::Editable,
-        };
+            true => InteractionState::Editable};
         self.auth_token_input.update(ctx, |editor, ctx| {
             editor.set_interaction_state(interaction_state, ctx)
         });
@@ -247,8 +232,7 @@ impl AuthViewBody {
             toggle_telemetry: AuthViewBodyAction::ToggleTelemetry,
             toggle_crash_reporting: AuthViewBodyAction::ToggleCrashReporting,
             toggle_cloud_conversation_storage: AuthViewBodyAction::ToggleCloudConversationStorage,
-            hide_overlay: AuthViewBodyAction::HideOverlay,
-        }
+            hide_overlay: AuthViewBodyAction::HideOverlay}
     }
 
     fn render_auth_token_suggest(&self, ui_builder: &UiBuilder) -> Box<dyn Element> {
@@ -289,14 +273,12 @@ impl AuthViewBody {
                         top: 12.,
                         bottom: 12.,
                         left: 16.,
-                        right: 16.,
-                    }),
+                        right: 16.}),
                     margin: Some(Coords {
                         top: 8.,
                         bottom: 0.,
                         left: 0.,
-                        right: 0.,
-                    }),
+                        right: 0.}),
                     ..Default::default()
                 })
                 .build()
@@ -438,8 +420,7 @@ impl AuthViewBody {
                 top: 0.,
                 bottom: 0.,
                 left: 12., // Unequal padding for optical centering
-                right: 8.,
-            }),
+                right: 8.}),
             height: Some(40.),
             ..Default::default()
         };
@@ -613,8 +594,7 @@ impl AuthViewBody {
             AuthViewVariant::ShareRequirementCloseable => {
                 "In order to share, please create an account."
             }
-            _ => "",
-        };
+            _ => ""};
 
         Container::new(
             ui_builder
@@ -640,8 +620,7 @@ impl AuthViewBody {
             AuthViewVariant::Initial => "Welcome to PrompTTY!",
             AuthViewVariant::RequireLoginCloseable
             | AuthViewVariant::HitDriveObjectLimitCloseable
-            | AuthViewVariant::ShareRequirementCloseable => "Sign up for Warp",
-        };
+            | AuthViewVariant::ShareRequirementCloseable => "Sign up for Warp"};
 
         ui_builder
             .span(text)
@@ -808,8 +787,7 @@ impl AuthViewBody {
 
         let auth_token = Container::new(match self.render_auth_token_input(appearance) {
             Some(auth_token_input) => auth_token_input,
-            _ => self.render_auth_token_suggest(ui_builder),
-        })
+            _ => self.render_auth_token_suggest(ui_builder)})
         .with_margin_top(AUTH_MODAL_GAP)
         .finish();
 
@@ -826,8 +804,7 @@ pub enum AuthViewBodyEvent {
     SignUpButtonClicked,
     AuthTokenEntered(String),
     LoginLaterClicked,
-    Close,
-}
+    Close}
 
 impl Entity for AuthViewBody {
     type Event = AuthViewBodyEvent;
@@ -839,12 +816,6 @@ impl TypedActionView for AuthViewBody {
     fn handle_action(&mut self, action: &AuthViewBodyAction, ctx: &mut ViewContext<Self>) {
         match action {
             AuthViewBodyAction::Login => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::LoginButtonClicked {
-                        source: LoginEventSource::AuthModal,
-                    },
-                    ctx
-                );
                 self.auth_step = AuthStep::BrowserOpen;
 
                 AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
@@ -853,23 +824,11 @@ impl TypedActionView for AuthViewBody {
                 });
             }
             AuthViewBodyAction::InitiateLoginLater => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::LoginLaterButtonClicked {
-                        source: LoginEventSource::AuthModal,
-                    },
-                    ctx
-                );
                 self.loginless_step = LoginlessStep::Initiated;
             }
             AuthViewBodyAction::LoginLater => {
                 // Send synchronously since this is an important event in the sign up funnel and we
                 // don't want to lose events if the user quits before the event queue is flushed.
-                send_telemetry_sync_from_ctx!(
-                    TelemetryEvent::LoginLaterConfirmationButtonClicked {
-                        source: LoginEventSource::AuthModal,
-                    },
-                    ctx
-                );
                 ctx.emit(AuthViewBodyEvent::LoginLaterClicked);
             }
             AuthViewBodyAction::EnterToken => {
@@ -903,7 +862,6 @@ impl TypedActionView for AuthViewBody {
             AuthViewBodyAction::Signup => {
                 // Send synchronously since this is an important event in the sign up funnel and we
                 // don't want to lose events if the user quits before the event queue is flushed.
-                send_telemetry_sync_from_ctx!(TelemetryEvent::SignUpButtonClicked, ctx);
                 self.auth_step = AuthStep::BrowserOpen;
 
                 AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
@@ -936,12 +894,6 @@ impl TypedActionView for AuthViewBody {
             }
             AuthViewBodyAction::ShowOverlay(overlay) => {
                 if let AuthViewOverlay::PrivacySettings = overlay {
-                    send_telemetry_sync_from_ctx!(
-                        TelemetryEvent::OpenAuthPrivacySettings {
-                            source: LoginEventSource::AuthModal,
-                        },
-                        ctx
-                    );
                 }
                 self.active_overlay = Some(*overlay);
                 ctx.notify();
@@ -1024,8 +976,7 @@ impl View for AuthViewBody {
             AuthStep::SelectAuthPathway => {
                 self.render_select_auth_pathway_content(is_anonymous, appearance, &ui_builder, app)
             }
-            AuthStep::BrowserOpen => self.render_browser_open_content(appearance, &ui_builder),
-        });
+            AuthStep::BrowserOpen => self.render_browser_open_content(appearance, &ui_builder)});
 
         let content = content.finish();
 

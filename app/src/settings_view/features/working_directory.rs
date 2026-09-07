@@ -7,7 +7,6 @@ use warpui::{Element, Entity, SingletonEntity, TypedActionView, View, ViewContex
 
 use crate::appearance::Appearance;
 use crate::editor::{EditorView, Event as EditorEvent, SingleLineEditorOptions, TextOptions};
-use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::TelemetryEvent;
 use crate::settings_view::features_page::render_group;
 use crate::terminal::session_settings::*;
@@ -26,8 +25,7 @@ pub enum WorkingDirectoryAction {
     SetPerSourceWorkingDirectoryMode(NewSessionSource, WorkingDirectoryMode),
     /// Sets the path that will be used for [`WorkingDirectoryMode::CustomDir`]
     /// for the given source (where None represents global configuration).
-    SetCustomWorkingDirectoryValue(Option<NewSessionSource>, String),
-}
+    SetCustomWorkingDirectoryValue(Option<NewSessionSource>, String)}
 
 /// A view for configuring the initial working directory for new sessions,
 /// either globally or on a per-source (new tab/window/split pane) basis.
@@ -39,8 +37,7 @@ pub struct WorkingDirectoryView {
     new_tab_working_directory_dropdown: ViewHandle<Dropdown<WorkingDirectoryAction>>,
     new_tab_working_directory_editor: ViewHandle<EditorView>,
     split_pane_working_directory_dropdown: ViewHandle<Dropdown<WorkingDirectoryAction>>,
-    split_pane_working_directory_editor: ViewHandle<EditorView>,
-}
+    split_pane_working_directory_editor: ViewHandle<EditorView>}
 
 impl WorkingDirectoryView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -110,8 +107,7 @@ impl WorkingDirectoryView {
             new_tab_working_directory_dropdown,
             new_tab_working_directory_editor,
             split_pane_working_directory_dropdown,
-            split_pane_working_directory_editor,
-        }
+            split_pane_working_directory_editor}
     }
 }
 
@@ -205,13 +201,6 @@ impl TypedActionView for WorkingDirectoryView {
                     ));
                 });
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::InitialWorkingDirectoryConfigurationChanged {
-                        advanced_mode_enabled: mode.is_none()
-                    },
-                    ctx
-                );
-
                 // Redraw settings in case we switched in or out of advanced mode.
                 ctx.notify();
             }
@@ -221,8 +210,7 @@ impl TypedActionView for WorkingDirectoryView {
                         |config| match source {
                             NewSessionSource::SplitPane => config.split_pane.mode = *mode,
                             NewSessionSource::Tab => config.new_tab.mode = *mode,
-                            NewSessionSource::Window => config.new_window.mode = *mode,
-                        },
+                            NewSessionSource::Window => config.new_window.mode = *mode},
                         ctx,
                     ));
                 });
@@ -242,8 +230,7 @@ impl TypedActionView for WorkingDirectoryView {
                             Some(NewSessionSource::Window) => {
                                 config.new_window.custom_dir.clone_from(value)
                             }
-                            None => config.global.custom_dir.clone_from(value),
-                        },
+                            None => config.global.custom_dir.clone_from(value)},
                         ctx,
                     ));
                 });
@@ -350,8 +337,7 @@ fn init_per_source_dropdown(
     let source_config = match source {
         NewSessionSource::SplitPane => &config.split_pane,
         NewSessionSource::Tab => &config.new_tab,
-        NewSessionSource::Window => &config.new_window,
-    };
+        NewSessionSource::Window => &config.new_window};
     dropdown.set_selected_by_name(source_config.mode.dropdown_item_label(), ctx);
 }
 
@@ -378,8 +364,7 @@ fn create_editor(
             None => &config.global,
             Some(NewSessionSource::SplitPane) => &config.split_pane,
             Some(NewSessionSource::Tab) => &config.new_tab,
-            Some(NewSessionSource::Window) => &config.new_window,
-        };
+            Some(NewSessionSource::Window) => &config.new_window};
         source_config.custom_dir.clone()
     };
     editor.update(ctx, |editor, ctx| {

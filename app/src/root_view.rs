@@ -9,8 +9,7 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use onboarding::{
     AgentOnboardingEvent, AgentOnboardingView, OfferVariant, OnboardingEvent, OnboardingIntention,
-    SelectedSettings,
-};
+    SelectedSettings};
 use parking_lot::Mutex;
 use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
@@ -23,8 +22,7 @@ use warp_core::safe_error;
 use warp_core::user_preferences::GetUserPreferences as _;
 use warp_errors::{report_error, report_if_error};
 use warpui::elements::{
-    Border, ChildAnchor, OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Stack,
-};
+    Border, ChildAnchor, OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Stack};
 use warpui::keymap::{EditableBinding, FixedBinding};
 use warpui::platform::{WindowBounds, WindowStyle};
 use warpui::presenter::ChildView;
@@ -33,8 +31,7 @@ use warpui::windowing::WindowManager;
 use warpui::{
     AddWindowOptions, AppContext, DisplayId, Element, Entity, EntityId, FocusContext,
     NextNewWindowsHasThisWindowsBoundsUponClose, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle, WindowId, id,
-};
+    ViewContext, ViewHandle, WindowId, id};
 
 use crate::ai::AIRequestUsageModel;
 use crate::ai::agent::api::ServerConversationToken;
@@ -46,8 +43,7 @@ use crate::app_state::{AppState, PaneUuid, WindowSnapshot};
 use crate::appearance::Appearance;
 use crate::auth::auth_manager::{AuthManager, AuthManagerEvent};
 use crate::auth::auth_override_warning_modal::{
-    AuthOverrideWarningModal, AuthOverrideWarningModalEvent, AuthOverrideWarningModalVariant,
-};
+    AuthOverrideWarningModal, AuthOverrideWarningModalEvent, AuthOverrideWarningModalVariant};
 use crate::auth::auth_state::AuthState;
 use crate::auth::auth_view_modal::{AuthRedirectPayload, AuthView, AuthViewVariant};
 use crate::auth::login_slide::{LoginSlideEvent, LoginSlideSource, LoginSlideView};
@@ -77,12 +73,10 @@ use crate::server::server_api::auth::UserAuthenticationError;
 use crate::server::server_api::{ServerApi, ServerApiProvider, ServerTime};
 use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
 use crate::settings::cloud_preferences_syncer::{
-    CloudPreferencesSyncer, CloudPreferencesSyncerEvent,
-};
+    CloudPreferencesSyncer, CloudPreferencesSyncerEvent};
 use crate::settings::{
     AISettings, QuakeModeSettings, ThemeSettings, apply_account_first_onboarding_settings,
-    apply_onboarding_settings,
-};
+    apply_onboarding_settings};
 use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
 use crate::settings_view::{SettingsSection, flags};
 use crate::terminal::available_shells::AvailableShell;
@@ -106,9 +100,7 @@ use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces, UserWorkspacesEvent};
 use crate::workspaces::workspace::FtueAccountClass;
 use crate::{
-    ChannelState, GlobalResourceHandles, GlobalResourceHandlesProvider, UpdateQuakeModeEventArg,
-    send_telemetry_from_app_ctx, send_telemetry_from_ctx,
-};
+    ChannelState, GlobalResourceHandles, GlobalResourceHandlesProvider, UpdateQuakeModeEventArg};
 
 const WINDOW_TITLE: &str = "PrompTTY";
 
@@ -136,8 +128,7 @@ fn offer_variant_for_account_class(account_class: FtueAccountClass) -> Option<Of
     match account_class {
         FtueAccountClass::Paid => None,
         FtueAccountClass::FreeIcp => Some(OfferVariant::HeadStart),
-        FtueAccountClass::FreeStandard => Some(OfferVariant::ChooseHowToStart),
-    }
+        FtueAccountClass::FreeStandard => Some(OfferVariant::ChooseHowToStart)}
 }
 
 /// Whether the team selected in `ctx`'s window imposes any AI autonomy policy, which is
@@ -181,8 +172,7 @@ enum WindowState {
     /// Quake mode window is open but hidden away from the screen.
     /// In this state, toggling quake mode will show the hidden window rather
     /// than creating a new one.
-    Hidden,
-}
+    Hidden}
 
 #[derive(Debug, Clone)]
 pub struct QuakeModeState {
@@ -192,14 +182,12 @@ pub struct QuakeModeState {
     /// ID of the active screen when we last positioned the quake mode window.
     /// Note that this is not necessarily the screen quake mode lives in if user
     /// set a specific pinned screen.
-    active_display_id: DisplayId,
-}
+    active_display_id: DisplayId}
 
 /// Configuration for the new quake mode window including the active screen id and the window bound.
 struct QuakeModeFrameConfig {
     display_id: DisplayId,
-    window_bounds: RectF,
-}
+    window_bounds: RectF}
 
 /// Trigger of a potential quake window move.
 #[derive(Debug)]
@@ -211,8 +199,7 @@ enum QuakeModeMoveTrigger {
     /// we will attempt to move the quake window if the active screen dimension
     /// changed. If it hasn't change, we will keep the window as is to avoid
     /// meaningless resizing.
-    ActiveScreenSetting,
-}
+    ActiveScreenSetting}
 
 #[derive(
     Debug,
@@ -236,12 +223,10 @@ pub enum QuakeModePinPosition {
     Top,
     Bottom,
     Left,
-    Right,
-}
+    Right}
 
 pub struct OpenFromRestoredArg {
-    pub app_state: Option<AppState>,
-}
+    pub app_state: Option<AppState>}
 
 pub struct OpenLaunchConfigArg {
     pub launch_config: launch_config::LaunchConfig,
@@ -251,23 +236,19 @@ pub struct OpenLaunchConfigArg {
     ///
     /// Currently, this is only supported by single-window launch configs
     /// and will open the window tabs into the existing window when true.
-    pub open_in_active_window: bool,
-}
+    pub open_in_active_window: bool}
 
 pub struct OpenPath {
-    pub path: PathBuf,
-}
+    pub path: PathBuf}
 
 // Arguments for actions that run a command that should start a subshell.
 pub struct SubshellCommandArg {
     pub command: String,
-    pub shell_type: Option<ShellType>,
-}
+    pub shell_type: Option<ShellType>}
 
 // Arguments for creating an ambient agent environment.
 pub struct CreateEnvironmentArg {
-    pub repos: Vec<String>,
-}
+    pub repos: Vec<String>}
 
 impl CreateEnvironmentArg {
     /// Formats the `/create-environment` slash command invocation.
@@ -571,8 +552,7 @@ fn open_launch_config(arg: &OpenLaunchConfigArg, ctx: &mut AppContext) {
             } else {
                 open_new_with_workspace_source(
                     NewWorkspaceSource::FromTemplate {
-                        window_template: window_template.clone(),
-                    },
+                        window_template: window_template.clone()},
                     ctx,
                 );
             }
@@ -587,20 +567,12 @@ fn open_launch_config(arg: &OpenLaunchConfigArg, ctx: &mut AppContext) {
 
             open_new_with_workspace_source(
                 NewWorkspaceSource::FromTemplate {
-                    window_template: window_template.clone(),
-                },
+                    window_template: window_template.clone()},
                 ctx,
             );
         }
     }
 
-    send_telemetry_from_app_ctx!(
-        TelemetryEvent::OpenLaunchConfig {
-            ui_location: crate::server::telemetry::LaunchConfigUiLocation::Uri,
-            open_in_active_window: arg.open_in_active_window,
-        },
-        ctx
-    );
 }
 
 /// Replaces the settings and tutorial snapshots consumed when post-auth
@@ -680,8 +652,7 @@ pub fn create_transferred_window(
                     vertical_tabs_panel_open: transferred_tab.vertical_tabs_panel_open,
                     right_panel_open: transferred_tab.right_panel_open,
                     is_right_panel_maximized: transferred_tab.is_right_panel_maximized,
-                    is_tab_drag_preview,
-                },
+                    is_tab_drag_preview},
                 ctx,
             );
             if !is_tab_drag_preview {
@@ -769,15 +740,13 @@ fn open_from_restored(arg: &OpenFromRestoredArg, ctx: &mut AppContext) {
                             anchor_new_windows_from_closed_position:
                                 NextNewWindowsHasThisWindowsBoundsUponClose::No,
                             on_gpu_driver_selected: on_gpu_driver_selected_callback(),
-                            window_instance: Some(ChannelState::app_id().to_string() + "-hotkey"),
-                        },
+                            window_instance: Some(ChannelState::app_id().to_string() + "-hotkey")},
                         |ctx| {
                             let mut view = RootView::new(
                                 global_resource_handles.clone(),
                                 NewWorkspaceSource::Restored {
                                     window_snapshot: window.clone(),
-                                    block_lists: app_state.block_lists.clone(),
-                                },
+                                    block_lists: app_state.block_lists.clone()},
                                 ctx,
                             );
                             view.focus(ctx);
@@ -790,8 +759,7 @@ fn open_from_restored(arg: &OpenFromRestoredArg, ctx: &mut AppContext) {
                     *quake_mode_state = Some(QuakeModeState {
                         window_state: WindowState::Hidden,
                         window_id: id,
-                        active_display_id: frame_args.display_id,
-                    });
+                        active_display_id: frame_args.display_id});
                 } else {
                     normal_window_count += 1;
                     if app_state
@@ -816,8 +784,7 @@ fn open_from_restored(arg: &OpenFromRestoredArg, ctx: &mut AppContext) {
                                     global_resource_handles.clone(),
                                     NewWorkspaceSource::Restored {
                                         window_snapshot: window.clone(),
-                                        block_lists: app_state.block_lists.clone(),
-                                    },
+                                        block_lists: app_state.block_lists.clone()},
                                     ctx,
                                 );
                                 view.focus(ctx);
@@ -838,8 +805,7 @@ fn open_from_restored(arg: &OpenFromRestoredArg, ctx: &mut AppContext) {
                         global_resource_handles.clone(),
                         NewWorkspaceSource::Empty {
                             previous_active_window: None,
-                            shell: None,
-                        },
+                            shell: None},
                         ctx,
                     );
                     view.focus(ctx);
@@ -868,8 +834,7 @@ fn open_from_restored(arg: &OpenFromRestoredArg, ctx: &mut AppContext) {
                             global_resource_handles,
                             NewWorkspaceSource::Restored {
                                 window_snapshot: window.clone(),
-                                block_lists: app_state.block_lists.clone(),
-                            },
+                                block_lists: app_state.block_lists.clone()},
                             ctx,
                         );
                         view.focus(ctx);
@@ -913,8 +878,7 @@ pub(crate) fn open_new_from_path(
             options: Box::new(
                 NewTerminalOptions::default()
                     .with_initial_directory_opt(path_if_directory(&arg.path).map(Into::into)),
-            ),
-        },
+            )},
         ctx,
     )
 }
@@ -923,8 +887,7 @@ pub(crate) fn open_new_from_path(
 fn open_shared_session_as_viewer(session_id: &SessionId, ctx: &mut AppContext) {
     open_new_with_workspace_source(
         NewWorkspaceSource::SharedSessionAsViewer {
-            session_id: *session_id,
-        },
+            session_id: *session_id},
         ctx,
     );
 }
@@ -936,8 +899,7 @@ fn open_conversation_viewer(conversation_id: &ServerConversationToken, ctx: &mut
     // This will open a new window with a loading state, fetch data via GraphQL, and display it
     open_new_with_workspace_source(
         NewWorkspaceSource::FromCloudConversationId {
-            conversation_id: conversation_id.clone(),
-        },
+            conversation_id: conversation_id.clone()},
         ctx,
     );
 }
@@ -947,8 +909,7 @@ fn create_environment(arg: &CreateEnvironmentArg, ctx: &mut AppContext) {
     let repos = arg.repos.clone();
     let (window_id, root_handle) = open_new_with_workspace_source(
         NewWorkspaceSource::Session {
-            options: Box::default(),
-        },
+            options: Box::default()},
         ctx,
     );
 
@@ -980,8 +941,7 @@ fn create_environment_and_run(arg: &CreateEnvironmentArg, ctx: &mut AppContext) 
     let repos = arg.repos.clone();
     let (window_id, root_handle) = open_new_with_workspace_source(
         NewWorkspaceSource::Session {
-            options: Box::default(),
-        },
+            options: Box::default()},
         ctx,
     );
 
@@ -1030,13 +990,10 @@ fn workspace_action_for_open_settings(args: &OpenSettingsArgs) -> WorkspaceActio
         OpenSettingsArgs::Default => WorkspaceAction::ShowSettings,
         OpenSettingsArgs::Search { query } => WorkspaceAction::ShowSettingsPageWithSearch {
             search_query: query.clone(),
-            section: None,
-        },
+            section: None},
         OpenSettingsArgs::Widget { page, widget_id } => WorkspaceAction::ScrollToSettingsWidget {
             page: *page,
-            widget_id,
-        },
-    }
+            widget_id}}
 }
 
 fn open_settings_in_new_window(args: &OpenSettingsArgs, ctx: &mut AppContext) {
@@ -1119,8 +1076,7 @@ fn open_warp_drive_object(arg: &OpenWarpDriveObjectArgs, ctx: &mut AppContext) {
             arg.settings.clone(),
             ctx,
         ),
-        _ => log::info!("Open object type {:?} not yet supported", arg.object_type),
-    }
+        _ => log::info!("Open object type {:?} not yet supported", arg.object_type)}
 }
 
 fn display_object_missing_error_in_window(window_id: WindowId, ctx: &mut AppContext) {
@@ -1138,8 +1094,7 @@ fn open_new_workspace_with_notebook_open(
     open_new_with_workspace_source(
         NewWorkspaceSource::NotebookById {
             id: notebook_id,
-            settings,
-        },
+            settings},
         ctx,
     );
 }
@@ -1152,8 +1107,7 @@ fn open_new_workspace_with_workflow_open(
     open_new_with_workspace_source(
         NewWorkspaceSource::WorkflowById {
             id: workflow_id,
-            settings,
-        },
+            settings},
         ctx,
     );
 }
@@ -1162,8 +1116,7 @@ fn open_new_workspace_with_workflow_open(
 fn open_new_with_file_notebook(arg: &PathBuf, ctx: &mut AppContext) {
     open_new_with_workspace_source(
         NewWorkspaceSource::NotebookFromFilePath {
-            file_path: Some(arg.to_owned()),
-        },
+            file_path: Some(arg.to_owned())},
         ctx,
     );
 }
@@ -1177,8 +1130,7 @@ pub(crate) fn open_new_window_get_handles(
     open_new_with_workspace_source(
         NewWorkspaceSource::Empty {
             previous_active_window: active_window_id,
-            shell,
-        },
+            shell},
         ctx,
     )
 }
@@ -1220,8 +1172,7 @@ fn open_new_tab_insert_subshell_command_and_bootstrap_if_supported(
             });
             root_view_handle
         }
-        None => open_new_window_get_handles(None, ctx).1,
-    };
+        None => open_new_window_get_handles(None, ctx).1};
 
     root_view_handle.update(ctx, |root_view, ctx| {
         root_view.insert_subshell_command_and_bootstrap_if_supported(arg, ctx);
@@ -1377,8 +1328,7 @@ fn update_quake_mode_state(arg: &UpdateQuakeModeEventArg, ctx: &mut AppContext) 
                         WindowState::Hidden
                     }
                 }
-                WindowState::Hidden => WindowState::Hidden,
-            }
+                WindowState::Hidden => WindowState::Hidden}
         }
     }
 }
@@ -1387,8 +1337,7 @@ fn update_quake_mode_state(arg: &UpdateQuakeModeEventArg, ctx: &mut AppContext) 
 fn quake_mode_config(settings: &QuakeModeSettings, ctx: &mut AppContext) -> QuakeModeFrameConfig {
     QuakeModeFrameConfig {
         display_id: ctx.windows().active_display_id(),
-        window_bounds: settings.resolve_quake_mode_bounds(ctx),
-    }
+        window_bounds: settings.resolve_quake_mode_bounds(ctx)}
 }
 
 fn get_quake_mode_state(ctx: &mut AppContext) -> Option<QuakeModeState> {
@@ -1396,8 +1345,7 @@ fn get_quake_mode_state(ctx: &mut AppContext) -> Option<QuakeModeState> {
 
     match quake_mode_state.as_ref() {
         Some(state) if ctx.is_window_open(state.window_id) => Some(state.clone()),
-        _ => None,
-    }
+        _ => None}
 }
 
 fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx: &mut AppContext) {
@@ -1405,7 +1353,6 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
     let state = get_quake_mode_state(ctx);
     match state {
         None => {
-            send_telemetry_from_app_ctx!(TelemetryEvent::OpenQuakeModeWindow, ctx);
 
             let config = quake_mode_config(
                 &KeysSettings::as_ref(ctx)
@@ -1437,8 +1384,7 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
                         global_resource_handles.clone(),
                         NewWorkspaceSource::Empty {
                             previous_active_window: active_window_id,
-                            shell: None,
-                        },
+                            shell: None},
                         ctx,
                     );
                     view.focus(ctx);
@@ -1451,11 +1397,9 @@ fn toggle_quake_mode_window(global_resource_handles: &GlobalResourceHandles, ctx
             *quake_mode_state = Some(QuakeModeState {
                 window_state: WindowState::PendingOpen,
                 window_id: id,
-                active_display_id: config.display_id,
-            });
+                active_display_id: config.display_id});
         }
         Some(state) if matches!(state.window_state, WindowState::Hidden) => {
-            send_telemetry_from_app_ctx!(TelemetryEvent::OpenQuakeModeWindow, ctx);
 
             // If quake mode does not have a set pin screen -- move it to the current active screen.
             if KeysSettings::as_ref(ctx)
@@ -1534,45 +1478,34 @@ fn abort_voice_input(_: &(), ctx: &mut AppContext) {
 pub enum NewWorkspaceSource {
     Empty {
         previous_active_window: Option<WindowId>,
-        shell: Option<AvailableShell>,
-    },
+        shell: Option<AvailableShell>},
     FromTemplate {
-        window_template: launch_config::WindowTemplate,
-    },
+        window_template: launch_config::WindowTemplate},
     Restored {
         window_snapshot: WindowSnapshot,
-        block_lists: Arc<HashMap<PaneUuid, Vec<SerializedBlockListItem>>>,
-    },
+        block_lists: Arc<HashMap<PaneUuid, Vec<SerializedBlockListItem>>>},
     Session {
-        options: Box<NewTerminalOptions>,
-    },
+        options: Box<NewTerminalOptions>},
     SharedSessionAsViewer {
-        session_id: SessionId,
-    },
+        session_id: SessionId},
     FromCloudConversationId {
-        conversation_id: ServerConversationToken,
-    },
+        conversation_id: ServerConversationToken},
     NotebookFromFilePath {
-        file_path: Option<PathBuf>,
-    },
+        file_path: Option<PathBuf>},
     NotebookById {
         id: SyncId,
-        settings: OpenWarpDriveObjectSettings,
-    },
+        settings: OpenWarpDriveObjectSettings},
     WorkflowById {
         id: SyncId,
-        settings: OpenWarpDriveObjectSettings,
-    },
+        settings: OpenWarpDriveObjectSettings},
     AgentSession {
         options: Box<NewTerminalOptions>,
-        initial_query: Option<String>,
-    },
+        initial_query: Option<String>},
     /// Starts the workspace with the Cloud Agent setup tab.
     AmbientAgent,
     /// Opens a new window pre-scoped to a specific team, chosen via the title-bar team switcher.
     TeamSwitched {
-        team_uid: ServerId,
-    },
+        team_uid: ServerId},
     /// A tab is being transferred from another window via the transferable views framework.
     /// The workspace will create a placeholder tab, which will be replaced by the transferred
     /// PaneGroup after window creation.
@@ -1591,9 +1524,7 @@ pub enum NewWorkspaceSource {
         /// Whether the right panel was maximized in the source tab
         is_right_panel_maximized: bool,
         /// Whether this transferred tab window is currently being used as a drag preview.
-        is_tab_drag_preview: bool,
-    },
-}
+        is_tab_drag_preview: bool}}
 
 impl NewWorkspaceSource {
     pub fn has_horizontal_split(&self) -> bool {
@@ -1612,8 +1543,7 @@ impl NewWorkspaceSource {
                     active_tab.root.has_horizontal_split()
                 }
             }
-            _ => false,
-        }
+            _ => false}
     }
 
     pub fn team_uid(&self, ctx: &AppContext) -> Option<ServerId> {
@@ -1665,23 +1595,20 @@ impl NewWorkspaceSource {
 struct WorkspaceArgs {
     global_resource_handles: GlobalResourceHandles,
     server_time: Option<Arc<ServerTime>>,
-    workspace_setting: NewWorkspaceSource,
-}
+    workspace_setting: NewWorkspaceSource}
 
 // Some onboarding states can either contain a ref to an existing terminal view
 // if it exists or, if it doesn't, the args needed to create a new empty one.
 #[derive(Clone)]
 enum AuthOnboardingTarget {
     Workspace(Box<WorkspaceArgs>),
-    Terminal(ViewHandle<Workspace>),
-}
+    Terminal(ViewHandle<Workspace>)}
 
 #[derive(Clone)]
 struct AccountFirstLoginContext {
     login_slide_view: ViewHandle<LoginSlideView>,
     onboarding_view: ViewHandle<AgentOnboardingView>,
-    target: AuthOnboardingTarget,
-}
+    target: AuthOnboardingTarget}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum AccountFirstCompletion {
@@ -1692,8 +1619,7 @@ enum AccountFirstCompletion {
     /// The user gained AI usage from the offer without ending up on a plan,
     /// so they remain free-standard.
     FreeStandardCreditsPurchased,
-    UpgradeCompleted,
-}
+    UpgradeCompleted}
 
 impl AccountFirstCompletion {
     fn completion_type(self) -> &'static str {
@@ -1705,8 +1631,7 @@ impl AccountFirstCompletion {
             AccountFirstCompletion::FreeStandardCreditsPurchased => {
                 "free_standard_credits_purchased"
             }
-            AccountFirstCompletion::UpgradeCompleted => "upgrade_completed",
-        }
+            AccountFirstCompletion::UpgradeCompleted => "upgrade_completed"}
     }
 
     fn account_class(self) -> Option<FtueAccountClass> {
@@ -1767,22 +1692,18 @@ enum AuthOnboardingState {
     NeedsSsoLink(AuthOnboardingTarget),
     Onboarding {
         onboarding_view: ViewHandle<AgentOnboardingView>,
-        target: AuthOnboardingTarget,
-    },
+        target: AuthOnboardingTarget},
     /// Post-onboarding login slide (full-screen, onboarding-style).
     LoginSlide {
         login_slide_view: ViewHandle<LoginSlideView>,
         onboarding_view: ViewHandle<AgentOnboardingView>,
-        target: AuthOnboardingTarget,
-    },
+        target: AuthOnboardingTarget},
     PostAuthOnboarding {
         onboarding_view: ViewHandle<AgentOnboardingView>,
         target: AuthOnboardingTarget,
         account_class: FtueAccountClass,
-        upgrade_started: bool,
-    },
-    Terminal(ViewHandle<Workspace>),
-}
+        upgrade_started: bool},
+    Terminal(ViewHandle<Workspace>)}
 
 pub struct RootView {
     auth_onboarding_state: AuthOnboardingState,
@@ -1811,8 +1732,7 @@ pub struct RootView {
     pending_account_first_tutorial_after_settings: bool,
     pending_account_first_sso_login: Option<AccountFirstLoginContext>,
     account_first_refresh_in_flight: bool,
-    paste_auth_token_modal: Option<ViewHandle<PasteAuthTokenModalView>>,
-}
+    paste_auth_token_modal: Option<ViewHandle<PasteAuthTokenModalView>>}
 
 impl RootView {
     pub fn new(
@@ -1856,8 +1776,7 @@ impl RootView {
         let workspace_args = WorkspaceArgs {
             global_resource_handles,
             server_time: None,
-            workspace_setting,
-        };
+            workspace_setting};
 
         let auth_onboarding_state = if auth_state.is_logged_in() {
             AuthOnboardingState::Terminal(workspace_args.create_workspace(ctx))
@@ -1881,8 +1800,7 @@ impl RootView {
                         });
                         AuthOnboardingState::Onboarding {
                             onboarding_view,
-                            target: AuthOnboardingTarget::Workspace(workspace_args_box),
-                        }
+                            target: AuthOnboardingTarget::Workspace(workspace_args_box)}
                     } else if !ChannelState::cloud_enabled()
                         || FeatureFlag::SkipFirebaseAnonymousUser.is_enabled()
                     {
@@ -1924,8 +1842,7 @@ impl RootView {
             pending_account_first_tutorial_after_settings: false,
             pending_account_first_sso_login: None,
             account_first_refresh_in_flight: false,
-            paste_auth_token_modal: None,
-        };
+            paste_auth_token_modal: None};
 
         match &root_view.auth_onboarding_state {
             AuthOnboardingState::Terminal(workspace) if FeatureFlag::Changelog.is_enabled() => {
@@ -1973,8 +1890,7 @@ impl RootView {
         ctx.subscribe_to_model(&autoupdate_handle, |root_view, _handle, evt, ctx| {
             if let AutoupdateStateEvent::CheckComplete {
                 result,
-                request_type: RequestType::Poll,
-            } = evt
+                request_type: RequestType::Poll} = evt
             {
                 root_view.polling_update_check_complete(result, ctx)
             }
@@ -2011,8 +1927,7 @@ impl RootView {
     pub fn workspace_view(&self) -> Option<&ViewHandle<Workspace>> {
         match &self.auth_onboarding_state {
             AuthOnboardingState::Terminal(workspace) => Some(workspace),
-            _ => None,
-        }
+            _ => None}
     }
 
     fn polling_update_check_complete(
@@ -2258,8 +2173,7 @@ impl RootView {
         let AuthOnboardingState::LoginSlide {
             login_slide_view,
             onboarding_view,
-            target,
-        } = &self.auth_onboarding_state
+            target} = &self.auth_onboarding_state
         else {
             return None;
         };
@@ -2269,8 +2183,7 @@ impl RootView {
             .then(|| AccountFirstLoginContext {
                 login_slide_view: login_slide_view.clone(),
                 onboarding_view: onboarding_view.clone(),
-                target: target.clone(),
-            })
+                target: target.clone()})
     }
 
     fn account_first_is_paid(ctx: &AppContext) -> bool {
@@ -2300,8 +2213,7 @@ impl RootView {
         self.auth_onboarding_state = AuthOnboardingState::LoginSlide {
             login_slide_view: context.login_slide_view,
             onboarding_view: context.onboarding_view,
-            target: context.target,
-        };
+            target: context.target};
         self.account_first_refresh_in_flight = true;
         let workspace_refresh = TeamUpdateManager::handle(ctx)
             .update(ctx, |manager, ctx| manager.refresh_workspace_metadata(ctx));
@@ -2333,15 +2245,6 @@ impl RootView {
         let account_class =
             Self::account_first_class(Self::account_first_is_paid(ctx), fresh_request_limit);
         let has_team = UserWorkspaces::as_ref(ctx).has_teams();
-        send_telemetry_from_ctx!(
-            OnboardingEvent::OnboardingAuthCompleted {
-                account_class: account_class.as_str().to_string(),
-                has_team,
-                is_paid: account_class == FtueAccountClass::Paid,
-                team_discovery_outcome: "unknown".to_string(),
-            },
-            ctx
-        );
 
         match account_class {
             FtueAccountClass::Paid => {
@@ -2357,8 +2260,7 @@ impl RootView {
                     onboarding_view: context.onboarding_view,
                     target: context.target,
                     account_class,
-                    upgrade_started: false,
-                };
+                    upgrade_started: false};
                 ctx.emit(RootViewEvent::AuthOnboardingStateChanged);
                 self.focus(ctx);
                 ctx.notify();
@@ -2380,25 +2282,12 @@ impl RootView {
                 upgrade_started,
                 ..
             } => (*account_class, *upgrade_started),
-            _ => return,
-        };
+            _ => return};
         if !Self::account_first_is_paid(ctx) {
             return;
         }
 
         if upgrade_started {
-            send_telemetry_from_ctx!(
-                OnboardingEvent::OnboardingUpgradeCompleted {
-                    source_slide: match account_class {
-                        FtueAccountClass::FreeIcp => "head_start",
-                        FtueAccountClass::FreeStandard => "choose_how_to_start",
-                        FtueAccountClass::Paid => "unknown",
-                    }
-                    .to_string(),
-                    account_class: account_class.as_str().to_string(),
-                },
-                ctx
-            );
             self.complete_account_first(AccountFirstCompletion::UpgradeCompleted, ctx);
         } else {
             self.complete_account_first(AccountFirstCompletion::PaidTeam, ctx);
@@ -2417,8 +2306,7 @@ impl RootView {
                 ..
             } if login_slide_view.as_ref(ctx).is_account_first_onboarding() => target.clone(),
             AuthOnboardingState::PostAuthOnboarding { target, .. } => target.clone(),
-            _ => return,
-        };
+            _ => return};
 
         mark_local_onboarding_completed(ctx);
         if FeatureFlag::HOAOnboardingFlow.is_enabled() {
@@ -2460,13 +2348,6 @@ impl RootView {
         self.pending_account_first_tutorial_after_settings =
             completion.starts_agent_tutorial() && !settings_applied;
 
-        send_telemetry_from_ctx!(
-            OnboardingEvent::OnboardingCompleted {
-                completion_type: completion.completion_type().to_string(),
-            },
-            ctx
-        );
-
         self.auth_onboarding_state = AuthOnboardingState::Terminal(target.to_workspace(ctx));
         ctx.emit(RootViewEvent::AuthOnboardingStateChanged);
         if completion.starts_agent_tutorial() && settings_applied {
@@ -2492,8 +2373,7 @@ impl RootView {
                 let target = target.clone();
                 self.auth_onboarding_state = AuthOnboardingState::Onboarding {
                     onboarding_view,
-                    target,
-                };
+                    target};
                 self.pending_tutorial = None;
                 self.pending_post_auth_onboarding_settings = None;
                 self.pending_account_first_settings_class = None;
@@ -2645,21 +2525,8 @@ impl RootView {
                     | AuthOnboardingState::LoginSlide { .. }
                     | AuthOnboardingState::Terminal(_) => None,
                     #[cfg(target_family = "wasm")]
-                    AuthOnboardingState::WebImport(_) => None,
-                };
+                    AuthOnboardingState::WebImport(_) => None};
                 if let Some(account_class) = upgrade_started {
-                    send_telemetry_from_ctx!(
-                        OnboardingEvent::OnboardingUpgradeStarted {
-                            source_slide: match account_class {
-                                FtueAccountClass::FreeIcp => "head_start",
-                                FtueAccountClass::FreeStandard => "choose_how_to_start",
-                                FtueAccountClass::Paid => "unknown",
-                            }
-                            .to_string(),
-                            account_class: account_class.as_str().to_string(),
-                        },
-                        ctx
-                    );
                 }
             }
             AgentOnboardingEvent::UpgradeCopyUrlRequested => {}
@@ -2679,8 +2546,7 @@ impl RootView {
             AgentOnboardingEvent::PrivacySettingsFromTerminalThemeSlideRequested => {
                 let AuthOnboardingState::Onboarding {
                     target,
-                    onboarding_view,
-                } = &self.auth_onboarding_state
+                    onboarding_view} = &self.auth_onboarding_state
                 else {
                     return;
                 };
@@ -2726,8 +2592,7 @@ impl RootView {
                 self.auth_onboarding_state = AuthOnboardingState::LoginSlide {
                     login_slide_view,
                     onboarding_view,
-                    target,
-                };
+                    target};
                 ctx.emit(RootViewEvent::AuthOnboardingStateChanged);
                 self.focus(ctx);
                 ctx.notify();
@@ -2735,8 +2600,7 @@ impl RootView {
             AgentOnboardingEvent::LoginFromWelcomeRequested => {
                 let AuthOnboardingState::Onboarding {
                     target,
-                    onboarding_view,
-                } = &self.auth_onboarding_state
+                    onboarding_view} = &self.auth_onboarding_state
                 else {
                     return;
                 };
@@ -2779,8 +2643,7 @@ impl RootView {
                 self.auth_onboarding_state = AuthOnboardingState::LoginSlide {
                     login_slide_view,
                     onboarding_view,
-                    target,
-                };
+                    target};
                 ctx.emit(RootViewEvent::AuthOnboardingStateChanged);
                 self.focus(ctx);
                 ctx.notify();
@@ -2868,7 +2731,6 @@ impl RootView {
     ) -> bool {
         // Focus the pane that the notification originated from.
         self.focus_pane(pane_view_locator, ctx);
-        send_telemetry_from_ctx!(TelemetryEvent::NotificationClicked, ctx);
         true
     }
 
@@ -3754,8 +3616,7 @@ impl RootView {
 
 #[derive(Clone, Debug)]
 pub enum RootViewEvent {
-    AuthOnboardingStateChanged,
-}
+    AuthOnboardingStateChanged}
 
 impl Entity for RootView {
     type Event = RootViewEvent;
@@ -3811,8 +3672,7 @@ impl View for RootView {
             AuthOnboardingState::LoginSlide {
                 login_slide_view, ..
             } => ChildView::new(login_slide_view).finish(),
-            AuthOnboardingState::Terminal(workspace) => ChildView::new(workspace).finish(),
-        };
+            AuthOnboardingState::Terminal(workspace) => ChildView::new(workspace).finish()};
 
         let mut stack = Stack::new();
         stack.add_child(child);
@@ -3876,8 +3736,7 @@ pub enum RootViewAction {
     ToggleQuakeModeWindow,
     ShowOrHideNonQuakeModeWindows,
     ToggleFullscreen,
-    DebugEnterOnboardingState,
-}
+    DebugEnterOnboardingState}
 
 impl TypedActionView for RootView {
     type Action = RootViewAction;
@@ -3979,8 +3838,7 @@ impl AuthOnboardingState {
         });
         *self = AuthOnboardingState::Onboarding {
             onboarding_view,
-            target,
-        };
+            target};
     }
 
     fn complete_sso_link(&mut self, ctx: &mut ViewContext<RootView>) {
@@ -4085,13 +3943,11 @@ impl AuthOnboardingState {
                 // fresh workspace.
                 let workspace_setting = NewWorkspaceSource::Empty {
                     previous_active_window: None,
-                    shell: None,
-                };
+                    shell: None};
                 let workspace_args = WorkspaceArgs {
                     global_resource_handles,
                     server_time: None,
-                    workspace_setting,
-                };
+                    workspace_setting};
 
                 // Auth no longer holds the original workspace view handle
                 // This way it is destroyed at this step, and we will re-create
@@ -4124,8 +3980,7 @@ impl AuthOnboardingState {
                 };
                 args
             }
-            AuthOnboardingState::Terminal(_) => return false,
-        };
+            AuthOnboardingState::Terminal(_) => return false};
         workspace_args.workspace_setting = NewWorkspaceSource::SharedSessionAsViewer { session_id };
         true
     }
@@ -4135,7 +3990,6 @@ impl AuthOnboardingTarget {
     fn to_workspace(&self, ctx: &mut ViewContext<RootView>) -> ViewHandle<Workspace> {
         match self {
             AuthOnboardingTarget::Terminal(workspace) => workspace.clone(),
-            AuthOnboardingTarget::Workspace(args) => args.clone().create_workspace(ctx),
-        }
+            AuthOnboardingTarget::Workspace(args) => args.clone().create_workspace(ctx)}
     }
 }

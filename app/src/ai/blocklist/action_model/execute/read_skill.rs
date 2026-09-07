@@ -6,12 +6,10 @@ use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessA
 use crate::ai::agent::{AIAgentActionType, ReadSkillRequest, ReadSkillResult};
 use crate::ai::blocklist::SessionContext;
 use crate::ai::skills::{SkillManager, SkillTelemetryEvent};
-use crate::send_telemetry_from_ctx;
 use crate::terminal::model::session::active_session::ActiveSession;
 
 pub struct ReadSkillExecutor {
-    active_session: ModelHandle<ActiveSession>,
-}
+    active_session: ModelHandle<ActiveSession>}
 
 impl ReadSkillExecutor {
     pub fn new(active_session: ModelHandle<ActiveSession>) -> Self {
@@ -49,16 +47,6 @@ impl ReadSkillExecutor {
             ctx,
         ) {
             Ok(skill) => {
-                send_telemetry_from_ctx!(
-                    SkillTelemetryEvent::Read {
-                        reference: skill_ref.clone(),
-                        name: Some(skill.name.clone()),
-                        scope: Some(skill.scope),
-                        provider: Some(skill.provider),
-                        error: false,
-                    },
-                    ctx
-                );
                 let content = FileContext::new(
                     skill.path.display_path(),
                     AnyFileContent::StringContent(skill.content.clone()),
@@ -68,16 +56,6 @@ impl ReadSkillExecutor {
                 ActionExecution::Sync(ReadSkillResult::Success { content }.into())
             }
             Err(error) => {
-                send_telemetry_from_ctx!(
-                    SkillTelemetryEvent::Read {
-                        reference: skill_ref.clone(),
-                        name: None,
-                        scope: None,
-                        provider: None,
-                        error: true,
-                    },
-                    ctx
-                );
                 ActionExecution::Sync(ReadSkillResult::Error(error.to_string()).into())
             }
         }

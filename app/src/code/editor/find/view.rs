@@ -10,8 +10,7 @@ use warpui::elements::{
     Align, Border, ChildAnchor, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, DropShadow, Element, Flex, Hoverable, MainAxisAlignment, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentOffsetBounds, Radius, Rect, SavePosition, Shrinkable,
-    Text,
-};
+    Text};
 pub use warpui::elements::{ParentElement as _, Stack};
 pub use warpui::geometry::vector::vec2f;
 use warpui::keymap::EditableBinding;
@@ -19,16 +18,13 @@ use warpui::presenter::ChildView;
 use warpui::ui_components::components::UiComponent;
 use warpui::{
     Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle,
-};
+    ViewHandle};
 
 use crate::appearance::Appearance;
 use crate::editor::{
     EditorView, Event as EditorEvent, InteractionState, PropagateAndNoOpNavigationKeys,
-    SingleLineEditorOptions, TextOptions,
-};
+    SingleLineEditorOptions, TextOptions};
 use crate::features::FeatureFlag;
-use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::{FindOption, TelemetryEvent};
 use crate::settings::AppEditorSettings;
 use crate::themes::theme::Fill;
@@ -62,8 +58,7 @@ struct ButtonMouseStates {
     toggle_case_sensitivity: MouseStateHandle,
     toggle_regex_search: MouseStateHandle,
     toggle_replace_open: MouseStateHandle,
-    toggle_preserve_case: MouseStateHandle,
-}
+    toggle_preserve_case: MouseStateHandle}
 
 #[derive(Debug)]
 pub enum Event {
@@ -73,8 +68,7 @@ pub enum Event {
     SelectAll,
     ReplaceSelected,
     ReplaceAll,
-    VimEnterAndFocusEditor,
-}
+    VimEnterAndFocusEditor}
 
 pub struct CodeEditorFind {
     find_editor: ViewHandle<EditorView>,
@@ -88,8 +82,7 @@ pub struct CodeEditorFind {
     is_open: bool,
     is_replace_open: bool,
     select_all_button: ViewHandle<ActionButton>,
-    replace_all_button: ViewHandle<ActionButton>,
-}
+    replace_all_button: ViewHandle<ActionButton>}
 
 #[derive(Copy, Clone, Debug)]
 pub enum FindAction {
@@ -105,8 +98,7 @@ pub enum FindAction {
     ReplaceAll,
     TogglePreserveCase,
     /// The find input was clicked, so it should become editable and take focus again.
-    FocusFindInput,
-}
+    FocusFindInput}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -240,8 +232,7 @@ impl CodeEditorFind {
             is_open: false,
             is_replace_open: false,
             select_all_button,
-            replace_all_button,
-        }
+            replace_all_button}
     }
 
     pub fn set_open(&mut self, is_open: bool) {
@@ -304,8 +295,7 @@ impl CodeEditorFind {
                 ctx.emit(Event::Update {
                     // If the query is empty, don't search for an empty string - set the query to
                     // `None`.
-                    query: (!query.is_empty()).then_some(query),
-                });
+                    query: (!query.is_empty()).then_some(query)});
 
                 self.update_replace_button_state(ctx);
                 self.emit_result_a11y_content(ctx);
@@ -359,8 +349,7 @@ impl CodeEditorFind {
             }
             // If the user is focused on the replace editor and presses 'tab', focus should shift back to the find editor
             EditorEvent::Navigate(NavigationKey::Tab) => ctx.focus(&self.find_editor),
-            _ => (),
-        }
+            _ => ()}
     }
 
     fn update_replace_button_state(&mut self, ctx: &mut ViewContext<Self>) {
@@ -434,13 +423,6 @@ impl CodeEditorFind {
         self.searcher.update(ctx, |searcher, ctx| {
             searcher.set_case_sensitive(new_case_sensitive, ctx);
         });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleFindOption {
-                option: FindOption::CaseSensitive,
-                enabled: new_case_sensitive
-            },
-            ctx
-        );
     }
 
     fn toggle_regex_search(&mut self, ctx: &mut ViewContext<Self>) {
@@ -448,13 +430,6 @@ impl CodeEditorFind {
         self.searcher.update(ctx, |searcher, ctx| {
             searcher.set_regex(new_regex_enabled, ctx);
         });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleFindOption {
-                option: FindOption::Regex,
-                enabled: new_regex_enabled
-            },
-            ctx
-        );
     }
 
     fn render_match_index(&self, appearance: &Appearance, app: &AppContext) -> Box<dyn Element> {
@@ -462,8 +437,7 @@ impl CodeEditorFind {
         // (i.e. first match starts at index 1 out of the total number of matches).
         let index = match self.searcher.as_ref(app).selected_match() {
             None => 0,
-            Some(idx) => idx + 1,
-        };
+            Some(idx) => idx + 1};
         let label = format!(
             "{}/{}",
             if index > 0 {
@@ -564,8 +538,7 @@ impl CodeEditorFind {
         };
         let match_icon = match direction {
             FindDirection::Down => Icon::ArrowDown,
-            FindDirection::Up => Icon::ArrowUp,
-        };
+            FindDirection::Up => Icon::ArrowUp};
         let icon_color = if self.searcher.as_ref(app).match_count() == 0 {
             appearance.theme().nonactive_ui_text_color()
         } else {
@@ -977,8 +950,7 @@ impl View for CodeEditorFind {
                 count,
                 current + 1,
                 count
-            ),
-        };
+            )};
 
         let is_replace_focused = self.is_replace_open && self.replace_editor.is_focused(app);
         let help_text = if is_replace_focused {

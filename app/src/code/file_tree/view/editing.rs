@@ -16,7 +16,6 @@ use warpui::elements::MouseStateHandle;
 use super::{FileTreeIdentifier, FileTreeItem, FileTreeView};
 use crate::code::file_tree::FileTreeEvent;
 use crate::code::file_tree::view::{PendingEdit, PendingEditKind};
-use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::TelemetryEvent;
 
 /// Custom ordering function for items in the file tree.
@@ -39,8 +38,7 @@ pub(super) fn sort_entries_for_file_tree(
         (None, None) => return Ordering::Equal,
         (None, Some(_)) => return Ordering::Less,
         (Some(_), None) => return Ordering::Greater,
-        (Some(e1), Some(e2)) => (e1, e2),
-    };
+        (Some(e1), Some(e2)) => (e1, e2)};
 
     let is_dir_1 = matches!(entry_1, FileTreeEntryState::Directory(_));
     let is_dir_2 = matches!(entry_2, FileTreeEntryState::Directory(_));
@@ -58,8 +56,7 @@ pub(super) fn sort_entries_for_file_tree(
         (None, None) => return Ordering::Equal,
         (None, Some(_)) => return Ordering::Less,
         (Some(_), None) => return Ordering::Greater,
-        (Some(n1), Some(n2)) => (n1, n2),
-    };
+        (Some(n1), Some(n2)) => (n1, n2)};
 
     let starts_with_dot_1 = name_1.starts_with('.');
     let starts_with_dot_2 = name_2.starts_with('.');
@@ -68,8 +65,7 @@ pub(super) fn sort_entries_for_file_tree(
     match (starts_with_dot_1, starts_with_dot_2) {
         (true, false) => Ordering::Less,
         (false, true) => Ordering::Greater,
-        _ => alphanumeric_sort::compare_str(name_1, name_2),
-    }
+        _ => alphanumeric_sort::compare_str(name_1, name_2)}
 }
 
 impl FileTreeView {
@@ -86,8 +82,7 @@ impl FileTreeView {
             Some(FileTreeItem::DirectoryHeader {
                 directory, depth, ..
             }) => (directory.path.clone(), *depth),
-            _ => return,
-        };
+            _ => return};
 
         // Ensure the parent directory is expanded before creating a file beneath it.
         if !self.is_folder_expanded(&id.root, &path) {
@@ -106,23 +101,20 @@ impl FileTreeView {
                 metadata: FileMetadata::from_standardized(path.join("new_file"), false).into(),
                 depth: depth + 1,
                 mouse_state_handle: MouseStateHandle::default(),
-                draggable_state: warpui::elements::DraggableState::default(),
-            },
+                draggable_state: warpui::elements::DraggableState::default()},
         );
 
         // Ensure the new item we just created is selected.
         let new_id = FileTreeIdentifier {
             root: id.root.clone(),
-            index: new_item_index,
-        };
+            index: new_item_index};
         self.select_id(&new_id, ctx);
 
         // Ensure the editor is focused.
         ctx.focus(&self.editor_view);
         self.pending_edit = Some(PendingEdit {
             id: new_id,
-            kind: PendingEditKind::CreateNewFile,
-        });
+            kind: PendingEditKind::CreateNewFile});
     }
 
     /// Starts a rename edit on the item at the given identifier.
@@ -142,8 +134,7 @@ impl FileTreeView {
 
         self.pending_edit = Some(PendingEdit {
             id: id.clone(),
-            kind: PendingEditKind::RenameExisting,
-        });
+            kind: PendingEditKind::RenameExisting});
 
         self.editor_view.update(ctx, |view, ctx| {
             view.set_buffer_text(&current_name, ctx);
@@ -184,8 +175,6 @@ impl FileTreeView {
                             log::warn!("Failed to create file: {e}");
                             return;
                         }
-
-                        send_telemetry_from_ctx!(TelemetryEvent::FileTreeItemCreated, ctx);
 
                         FileTreeEntryState::File(metadata.clone())
                     } else {
@@ -234,8 +223,7 @@ impl FileTreeView {
                 // Emit event to notify workspace that a file was renamed
                 ctx.emit(FileTreeEvent::FileRenamed {
                     old_path: old_path.clone(),
-                    new_path: new_path.clone(),
-                });
+                    new_path: new_path.clone()});
 
                 // Rebuild and select the renamed item using its FileTreeIdentifier
                 self.rebuild_flatten_items_impl(Some(&file_tree_id), None, None);

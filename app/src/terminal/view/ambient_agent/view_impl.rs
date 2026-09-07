@@ -5,19 +5,16 @@ use std::rc::Rc;
 
 use warp_cli::agent::Harness;
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_terminal::model::BlockId;
 use warpui::elements::Align;
 use warpui::prelude::{Empty, Vector2F};
 use warpui::{
-    AppContext, Element, EntityId, ModelHandle, SingletonEntity, ViewContext, ViewHandle,
-};
+    AppContext, Element, EntityId, ModelHandle, SingletonEntity, ViewContext, ViewHandle};
 
 use super::loading_screen::{
     render_cloud_mode_cancelled_screen, render_cloud_mode_error_screen,
-    render_cloud_mode_github_auth_required_screen, render_cloud_mode_loading_screen,
-};
+    render_cloud_mode_github_auth_required_screen, render_cloud_mode_loading_screen};
 use super::{AmbientAgentEntryBlock, AmbientAgentViewModel, AmbientAgentViewModelEvent};
 use crate::ai::AIRequestUsageModel;
 use crate::ai::agent::conversation::{AIConversationId, ConversationStatus};
@@ -33,8 +30,7 @@ use crate::terminal::CLIAgent;
 use crate::terminal::cli_agent_sessions::CLIAgentSessionsModel;
 use crate::terminal::view::rich_content::{RichContentInsertionPosition, RichContentMetadata};
 use crate::terminal::view::{
-    ConversationDetailsPanelAutoOpenPolicy, Event as TerminalViewEvent, TerminalView,
-};
+    ConversationDetailsPanelAutoOpenPolicy, Event as TerminalViewEvent, TerminalView};
 use crate::workspace::view::cloud_agent_capacity_modal::CloudAgentCapacityModalVariant;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
@@ -87,8 +83,7 @@ impl TerminalView {
 
         if is_on_paid_plan {
             ctx.emit(crate::terminal::view::Event::ShowCloudAgentCapacityModal {
-                variant: CloudAgentCapacityModalVariant::OutOfCredits,
-            });
+                variant: CloudAgentCapacityModalVariant::OutOfCredits});
         } else {
             AIRequestUsageModel::handle(ctx).update(ctx, |model, ctx| {
                 model.refresh_request_usage_async(ctx);
@@ -120,8 +115,7 @@ impl TerminalView {
             | AmbientAgentViewModelEvent::HarnessCommandStarted { .. }
             | AmbientAgentViewModelEvent::HandoffSnapshotUploadFailed { .. }
             | AmbientAgentViewModelEvent::FollowupSubmissionFailed { .. } => true,
-            _ => false,
-        };
+            _ => false};
         if should_clean_up_pending_cloud_query {
             self.remove_pending_user_query_block(ctx);
             self.remove_cloud_mode_queue_row(ctx);
@@ -291,8 +285,7 @@ impl TerminalView {
                     && !self.model.lock().is_shared_ambient_agent_session()
                 {
                     ctx.emit(crate::terminal::view::Event::ShowCloudAgentCapacityModal {
-                        variant: CloudAgentCapacityModalVariant::ConcurrentLimit,
-                    });
+                        variant: CloudAgentCapacityModalVariant::ConcurrentLimit});
                 }
 
                 ctx.notify();
@@ -313,8 +306,7 @@ impl TerminalView {
                     self.update_active_ambient_agent_conversation_status(
                         ConversationStatus::Blocked {
                             blocked_action: CHILD_AGENT_GITHUB_AUTH_REQUIRED_BLOCKED_ACTION
-                                .to_string(),
-                        },
+                                .to_string()},
                         None,
                         ctx,
                     );
@@ -436,8 +428,7 @@ impl TerminalView {
             }
             AmbientAgentViewModelEvent::UpdatedSetupCommandVisibility
             | AmbientAgentViewModelEvent::AuthSecretSelected
-            | AmbientAgentViewModelEvent::RunLifecycleChanged => (),
-        }
+            | AmbientAgentViewModelEvent::RunLifecycleChanged => ()}
     }
 
     pub(in crate::terminal::view) fn maybe_insert_setup_command_blocks(
@@ -661,8 +652,7 @@ impl TerminalView {
             Harness::OpenCode => matches!(cli_agent, CLIAgent::OpenCode),
             Harness::Gemini => matches!(cli_agent, CLIAgent::Gemini),
             Harness::Codex => matches!(cli_agent, CLIAgent::Codex),
-            Harness::Unknown => false,
-        }
+            Harness::Unknown => false}
     }
 
     /// Enter cloud agent view from this existing session. Behavior depends on the current terminal state:
@@ -777,8 +767,7 @@ impl TerminalView {
         let resources = TerminalViewResources {
             tips_completed: self.tips_completed.clone(),
             server_api: self.server_api.clone(),
-            model_event_sender: self.model_event_sender.clone(),
-        };
+            model_event_sender: self.model_event_sender.clone()};
 
         // TODO: Use self.size_info
         let (terminal_view, terminal_manager) = super::create_cloud_mode_view(
@@ -845,8 +834,7 @@ impl TerminalView {
                 block_handle.clone(),
                 Some(RichContentMetadata::AmbientAgentBlock { block_handle }),
                 RichContentInsertionPosition::Append {
-                    insert_below_long_running_block: false,
-                },
+                    insert_below_long_running_block: false},
                 ctx,
             );
         });
@@ -869,13 +857,6 @@ impl TerminalView {
         stack.update(ctx, |stack, ctx| {
             stack.push(terminal_manager, pushed_view, ctx);
         });
-
-        send_telemetry_from_ctx!(
-            CloudAgentTelemetryEvent::EnteredCloudMode {
-                entry_point: CloudModeEntryPoint::LocalSession
-            },
-            ctx
-        );
 
         Some((terminal_view, ambient_agent_view_model))
     }

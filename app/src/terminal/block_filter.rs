@@ -2,28 +2,23 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use warp_editor::editor::NavigationKey;
 pub use warp_terminal::model::block_filter::{
-    BlockFilterQuery, ContextLines, DEFAULT_CONTEXT_LINES_VALUE,
-};
+    BlockFilterQuery, ContextLines, DEFAULT_CONTEXT_LINES_VALUE};
 use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
 use warpui::elements::{
     Align, Border, ChildAnchor, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Dash, Dismiss, DropShadow, Empty, Flex, Hoverable, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Rect, Shrinkable,
-    Stack, Text,
-};
+    Stack, Text};
 use warpui::presenter::ChildView;
 use warpui::ui_components::components::UiComponent;
 use warpui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle,
-};
+    ViewHandle};
 
 use crate::appearance::Appearance;
 use crate::editor::{
     EditOrigin, EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys,
-    SingleLineEditorOptions, TextOptions, ValidInputType,
-};
-use crate::send_telemetry_from_ctx;
+    SingleLineEditorOptions, TextOptions, ValidInputType};
 use crate::server::telemetry::TelemetryEvent;
 use crate::terminal::model::terminal_model::BlockIndex;
 use crate::themes::theme::Fill;
@@ -54,8 +49,7 @@ const INVERT_FILTER_TOOLTIP_LABEL: &str = "Invert filter";
 pub const BLOCK_FILTER_DOTTED_LINE_DASH: Dash = Dash {
     dash_length: 4.,
     gap_length: 4.,
-    force_consistent_gap_length: false,
-};
+    force_consistent_gap_length: false};
 pub const BLOCK_FILTER_DOTTED_LINE_WIDTH: f32 = 1.;
 
 /// View for the block filter editor.
@@ -73,8 +67,7 @@ pub struct BlockFilterEditor {
     /// filter is currently active.
     num_matched_lines: Option<usize>,
     /// The number of context lines in the previous query.
-    prev_num_context_lines: ContextLines,
-}
+    prev_num_context_lines: ContextLines}
 
 #[derive(Default)]
 struct MouseStateHandles {
@@ -82,18 +75,15 @@ struct MouseStateHandles {
     case_sensitivity_mouse_state_handle: MouseStateHandle,
     context_line_editor_mouse_state_handle: MouseStateHandle,
     clear_filter_mouse_state_handle: MouseStateHandle,
-    invert_filter_mouse_state_handle: MouseStateHandle,
-}
+    invert_filter_mouse_state_handle: MouseStateHandle}
 
 pub enum OpenedFromClick {
     Yes,
-    No,
-}
+    No}
 
 pub enum BlockFilterEditorEvent {
     UpdateFilter(BlockFilterQuery),
-    Close,
-}
+    Close}
 
 #[derive(Debug, Clone, Copy)]
 pub enum BlockFilterEditorAction {
@@ -101,8 +91,7 @@ pub enum BlockFilterEditorAction {
     ToggleRegex,
     ToggleCaseSensitivity,
     ToggleInvertFilter,
-    ClearQuery,
-}
+    ClearQuery}
 
 impl Entity for BlockFilterEditor {
     type Event = BlockFilterEditorEvent;
@@ -117,8 +106,7 @@ impl TypedActionView for BlockFilterEditor {
             BlockFilterEditorAction::ToggleRegex => self.toggle_regex(ctx),
             BlockFilterEditorAction::ToggleCaseSensitivity => self.toggle_case_sensitivity(ctx),
             BlockFilterEditorAction::ToggleInvertFilter => self.toggle_invert_filter(ctx),
-            BlockFilterEditorAction::ClearQuery => self.clear_query(ctx),
-        }
+            BlockFilterEditorAction::ClearQuery => self.clear_query(ctx)}
     }
 }
 
@@ -181,8 +169,7 @@ impl BlockFilterEditor {
             previous_editor_event_was_select_all: false,
             num_matched_lines: None,
             context_line_editor,
-            prev_num_context_lines: DEFAULT_CONTEXT_LINES_VALUE,
-        }
+            prev_num_context_lines: DEFAULT_CONTEXT_LINES_VALUE}
     }
 
     pub fn open_and_set_filter(
@@ -217,8 +204,7 @@ impl BlockFilterEditor {
             None => self.context_line_editor.update(ctx, |editor, ctx| {
                 editor
                     .system_reset_buffer_text(DEFAULT_CONTEXT_LINES_VALUE.to_string().as_str(), ctx)
-            }),
-        }
+            })}
     }
 
     fn reset_toggles(&mut self) {
@@ -248,34 +234,16 @@ impl BlockFilterEditor {
     fn toggle_regex(&mut self, ctx: &mut ViewContext<Self>) {
         self.regex_enabled = !self.regex_enabled;
         self.update_query(ctx);
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleBlockFilterRegex {
-                enabled: self.regex_enabled
-            },
-            ctx
-        );
     }
 
     fn toggle_case_sensitivity(&mut self, ctx: &mut ViewContext<Self>) {
         self.case_sensitivity_enabled = !self.case_sensitivity_enabled;
         self.update_query(ctx);
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleBlockFilterCaseSensitivity {
-                enabled: self.case_sensitivity_enabled
-            },
-            ctx
-        );
     }
 
     fn toggle_invert_filter(&mut self, ctx: &mut ViewContext<Self>) {
         self.invert_filter_enabled = !self.invert_filter_enabled;
         self.update_query(ctx);
-        send_telemetry_from_ctx!(
-            TelemetryEvent::ToggleBlockFilterInvert {
-                enabled: self.invert_filter_enabled
-            },
-            ctx
-        );
     }
 
     /// Sends a block filter query update.
@@ -293,14 +261,9 @@ impl BlockFilterEditor {
             regex_enabled: self.regex_enabled,
             case_sensitivity_enabled: self.case_sensitivity_enabled,
             invert_filter_enabled: self.invert_filter_enabled,
-            is_active: true,
-        }));
+            is_active: true}));
 
         if num_context_lines != self.prev_num_context_lines {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::UpdateBlockFilterQueryContextLines { num_context_lines },
-                ctx
-            );
             self.prev_num_context_lines = num_context_lines;
         }
     }
@@ -327,7 +290,6 @@ impl BlockFilterEditor {
                 if self.previous_editor_event_was_select_all
                     && !self.query_editor_text(ctx).is_empty()
                 {
-                    send_telemetry_from_ctx!(TelemetryEvent::UpdateBlockFilterQuery, ctx);
                 }
                 self.previous_editor_event_was_select_all = false;
             }
@@ -342,8 +304,7 @@ impl BlockFilterEditor {
                 });
             }
             EditorEvent::Navigate(NavigationKey::Tab) => self.focus_other_editor(ctx),
-            _ => (),
-        }
+            _ => ()}
     }
 
     fn handle_context_line_editor_event(
@@ -357,8 +318,7 @@ impl BlockFilterEditor {
             EditorEvent::Navigate(NavigationKey::Down) => self.decrease_context_line_count(ctx),
             EditorEvent::Navigate(NavigationKey::Tab) => self.focus_other_editor(ctx),
             EditorEvent::Escape => self.close(ctx),
-            _ => (),
-        }
+            _ => ()}
     }
 
     fn focus_other_editor(&mut self, ctx: &mut ViewContext<Self>) {
@@ -374,8 +334,7 @@ impl BlockFilterEditor {
             let parsed_number = editor.buffer_text(ctx).parse::<u16>();
             let new_number = match parsed_number {
                 Ok(prev_number) => prev_number.saturating_add(1).min(MAXIMUM_CONTEXT_LINES),
-                Err(_) => DEFAULT_CONTEXT_LINES_VALUE,
-            };
+                Err(_) => DEFAULT_CONTEXT_LINES_VALUE};
             editor.set_buffer_text(new_number.to_string().as_str(), ctx);
         })
     }
@@ -385,8 +344,7 @@ impl BlockFilterEditor {
             let parsed_number = editor.buffer_text(ctx).parse::<u16>();
             let new_number = match parsed_number {
                 Ok(prev_number) => prev_number.saturating_sub(1),
-                Err(_) => DEFAULT_CONTEXT_LINES_VALUE,
-            };
+                Err(_) => DEFAULT_CONTEXT_LINES_VALUE};
             editor.set_buffer_text(new_number.to_string().as_str(), ctx);
         })
     }

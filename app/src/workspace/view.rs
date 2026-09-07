@@ -82,8 +82,7 @@ use warp_errors::{report_error, report_if_error};
 use warp_server_client::auth::AuthEvent;
 use warp_util::path::{LineAndColumnArg, user_friendly_path};
 use warpui::accessibility::{
-    AccessibilityContent, AccessibilityVerbosity, ActionAccessibilityContent, WarpA11yRole,
-};
+    AccessibilityContent, AccessibilityVerbosity, ActionAccessibilityContent, WarpA11yRole};
 use warpui::clipboard::ClipboardContent;
 #[cfg(target_family = "wasm")]
 use warpui::elements::Percentage;
@@ -94,8 +93,7 @@ use warpui::elements::{
     Hoverable, Icon as WarpUiIcon, MainAxisAlignment, MainAxisSize, MouseInBehavior,
     MouseStateHandle, OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds,
     PositionedElementAnchor, PositionedElementOffsetBounds, Radius, Rect, SavePosition, Shrinkable,
-    SizeConstraintCondition, SizeConstraintSwitch, Stack, Text,
-};
+    SizeConstraintCondition, SizeConstraintSwitch, Stack, Text};
 use warpui::event::KeyState;
 use warpui::fonts::{Properties, Weight};
 use warpui::geometry::vector::{Vector2F, vec2f};
@@ -103,8 +101,7 @@ use warpui::keymap::Context;
 use warpui::modals::{AlertDialogWithCallbacks, AppModalCallback};
 use warpui::notification::{NotificationSendError, RequestPermissionsOutcome, UserNotification};
 use warpui::platform::{
-    Cursor, FilePickerConfiguration, FullscreenState, SystemTheme, TerminationMode,
-};
+    Cursor, FilePickerConfiguration, FullscreenState, SystemTheme, TerminationMode};
 use warpui::text_layout::ClipConfig;
 use warpui::ui_components::button::Button;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
@@ -112,50 +109,41 @@ use warpui::windowing::state::ApplicationStage;
 use warpui::windowing::{StateEvent, WindowManager};
 use warpui::{
     AppContext, Entity, EntityId, FocusContext, ModelHandle, SingletonEntity, TypedActionView,
-    UpdateModel, UpdateView, View, ViewAsRef, ViewContext, ViewHandle, WeakViewHandle, WindowId,
-};
+    UpdateModel, UpdateView, View, ViewAsRef, ViewContext, ViewHandle, WeakViewHandle, WindowId};
 
 use self::vertical_tabs::telemetry::{VerticalTabsDisplayOption, VerticalTabsTelemetryEvent};
 use self::vertical_tabs::{
     SummaryPaneKind, SummaryPaneKindIcons, VERTICAL_TABS_SETTINGS_BUTTON_POSITION_ID,
     VerticalTabsPanelState, htab_group_position_id, pane_summary_kind, render_detail_sidecar,
     render_settings_popup, render_summary_pane_kind_icons, show_before_indicator,
-    vtab_group_position_id,
-};
+    vtab_group_position_id};
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 use super::action::AutoCloudHandoffTrigger;
 use super::action::{
     InitContent, NewSessionMenuAnchor, RestoreConversationLayout, TabContextMenuAnchor,
-    VerticalTabsPaneContextMenuTarget, WorkspaceAction,
-};
+    VerticalTabsPaneContextMenuTarget, WorkspaceAction};
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 use super::auto_handoff::AutoCloudHandoffController;
 pub(crate) use super::close_session_confirmation_dialog::OpenDialogSource;
 use super::close_session_confirmation_dialog::{
-    CloseSessionConfirmationDialog, CloseSessionConfirmationEvent,
-};
+    CloseSessionConfirmationDialog, CloseSessionConfirmationEvent};
 use super::delete_conversation_confirmation_dialog::{
     DeleteConversationConfirmationDialog, DeleteConversationConfirmationEvent,
-    DeleteConversationDialogSource,
-};
+    DeleteConversationDialogSource};
 use super::hoa_onboarding::{
-    HoaOnboardingFlow, HoaOnboardingFlowEvent, HoaOnboardingStep, mark_hoa_onboarding_completed,
-};
+    HoaOnboardingFlow, HoaOnboardingFlowEvent, HoaOnboardingStep, mark_hoa_onboarding_completed};
 use super::lightbox_view::{LightboxParams, LightboxView, LightboxViewEvent};
 use super::native_modal::{NativeModal, NativeModalEvent};
 use super::one_time_modal_model::OneTimeModalEvent;
 use super::rewind_confirmation_dialog::{
-    RewindConfirmationDialog, RewindConfirmationEvent, RewindDialogSource,
-};
+    RewindConfirmationDialog, RewindConfirmationEvent, RewindDialogSource};
 use super::tab_settings::{
     HeaderToolbarChipSelection, NewTabPlacement, TabSettings, TabSettingsChangedEvent,
-    VerticalTabsDisplayGranularity, WorkspaceDecorationVisibility,
-};
+    VerticalTabsDisplayGranularity, WorkspaceDecorationVisibility};
 use super::util::{
     FLOATING_CHROME_INSET, PaneViewLocator, TAB_FLOATING_VERTICAL_INSET, TabMovement,
     TerminalSessionFallbackBehavior, WelcomeTipsViewState, WorkspaceMouseStates, WorkspaceState,
-    workspace_chrome_fill,
-};
+    workspace_chrome_fill};
 use super::{ActiveSession, TabBarDropTargetData, TabBarLocation, WorkspaceRegistry};
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
@@ -168,14 +156,12 @@ use crate::ai::agent::{AIAgentInput, EntrypointType};
 #[cfg(target_family = "wasm")]
 use crate::ai::agent_conversations_model::AgentConversationsModelEvent;
 use crate::ai::agent_conversations_model::{
-    AgentConversationNavigationSubject, AgentConversationsModel,
-};
+    AgentConversationNavigationSubject, AgentConversationsModel};
 use crate::ai::agent_management::AgentManagementEvent;
 use crate::ai::agent_management::notifications::NotificationFilter;
 use crate::ai::agent_management::notifications::toast_stack::AgentNotificationToastStack;
 use crate::ai::agent_management::notifications::view::{
-    NotificationMailboxView, NotificationMailboxViewEvent,
-};
+    NotificationMailboxView, NotificationMailboxViewEvent};
 use crate::ai::agent_management::telemetry::AgentManagementTelemetryEvent;
 use crate::ai::agent_management::view::{AgentManagementView, AgentManagementViewEvent};
 #[cfg(not(target_family = "wasm"))]
@@ -193,21 +179,17 @@ use crate::ai::blocklist::handoff;
 use crate::ai::blocklist::handoff::{
     HandoffCommitOutcome, HandoffLaunchAttachments, HandoffPrepareError, HandoffPrepareInput,
     HandoffPresentationSnapshot, HandoffRestoration, HandoffTargetMaterialization,
-    MaterializeHandoffTarget, PendingCloudLaunch, execute_handoff, prepare_handoff,
-};
+    MaterializeHandoffTarget, PendingCloudLaunch, execute_handoff, prepare_handoff};
 use crate::ai::blocklist::history_model::{CloudConversationData, load_conversation_from_server};
 use crate::ai::blocklist::inline_action::code_diff_view::CodeDiffView;
 use crate::ai::blocklist::suggested_agent_mode_workflow_modal::{
     SuggestedAgentModeWorkflowAndId, SuggestedAgentModeWorkflowModal,
-    SuggestedAgentModeWorkflowModalEvent,
-};
+    SuggestedAgentModeWorkflowModalEvent};
 use crate::ai::blocklist::suggested_rule_modal::{
-    SuggestedRuleAndId, SuggestedRuleModal, SuggestedRuleModalEvent,
-};
+    SuggestedRuleAndId, SuggestedRuleModal, SuggestedRuleModalEvent};
 use crate::ai::blocklist::{
     BlocklistAIHistoryEvent, FORK_PREFIX, PendingAttachment, PendingQueryState, QueuedQueryOrigin,
-    SerializedBlockListItem, SlashCommandRequest,
-};
+    SerializedBlockListItem, SlashCommandRequest};
 use crate::ai::cloud_agent_settings::CloudAgentSettings;
 #[cfg(target_family = "wasm")]
 use crate::ai::conversation_details_panel::ConversationDetailsPanel;
@@ -228,27 +210,23 @@ use crate::ai_assistant::{AI_ASSISTANT_FEATURE_NAME, AI_ASSISTANT_LOGO_COLOR, As
 use crate::app_state::{
     LeafContents, LeafSnapshot, LeftPanelDisplayedTab, LeftPanelSnapshot, NotebookPaneSnapshot,
     PaneNodeSnapshot, PaneUuid, RightPanelSnapshot, SettingsPaneSnapshot, TabGroupSnapshot,
-    TabSnapshot, TerminalPaneSnapshot, WindowSnapshot, WorkflowPaneSnapshot,
-};
+    TabSnapshot, TerminalPaneSnapshot, WindowSnapshot, WorkflowPaneSnapshot};
 use crate::appearance::{Appearance, AppearanceManager};
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::{AuthManager, AuthManagerEvent};
 use crate::auth::auth_override_warning_modal::{
-    AuthOverrideWarningModal, AuthOverrideWarningModalEvent, AuthOverrideWarningModalVariant,
-};
+    AuthOverrideWarningModal, AuthOverrideWarningModalEvent, AuthOverrideWarningModalVariant};
 use crate::auth::auth_state::AuthState;
 use crate::auth::auth_view_modal::{AuthRedirectPayload, AuthView, AuthViewEvent, AuthViewVariant};
 use crate::autoupdate::{
-    AutoupdateState, AutoupdateStateEvent, RelaunchModel, is_incoming_version_past_current,
-};
+    AutoupdateState, AutoupdateStateEvent, RelaunchModel, is_incoming_version_past_current};
 use crate::banner::BannerState;
 use crate::changelog_model::{ChangelogModel, ChangelogRequestType, Event as ChangelogEvent};
 use crate::channel::{Channel, ChannelState};
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::cloud_object::toast_message::CloudObjectToastMessage;
 use crate::cloud_object::{
-    CloudObject, GenericStringObjectFormat, JsonObjectType, ObjectType, Owner, Space,
-};
+    CloudObject, GenericStringObjectFormat, JsonObjectType, ObjectType, Owner, Space};
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::{add_color, remove_color};
 #[cfg(feature = "local_fs")]
@@ -269,12 +247,10 @@ use crate::drive::settings::{WarpDriveSettings, WarpDriveSettingsChangedEvent};
 use crate::drive::workflows::arguments::ArgumentsState;
 use crate::drive::workflows::modal::{WorkflowModal, WorkflowModalEvent};
 use crate::drive::{
-    CloudObjectTypeAndId, DriveObjectType, DrivePanel, DrivePanelEvent, OpenWarpDriveObjectSettings,
-};
+    CloudObjectTypeAndId, DriveObjectType, DrivePanel, DrivePanelEvent, OpenWarpDriveObjectSettings};
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
-    TextOptions,
-};
+    TextOptions};
 use crate::env_vars::CloudEnvVarCollection;
 use crate::env_vars::manager::{EnvVarCollectionManager, EnvVarCollectionSource};
 use crate::experiments::{BlockOnboarding, Experiment};
@@ -282,8 +258,7 @@ use crate::launch_configs::launch_config::WindowTemplate;
 use crate::launch_configs::save_modal::{LaunchConfigModalEvent, LaunchConfigSaveModal};
 use crate::menu::{
     Event as MenuEvent, MENU_VERTICAL_PADDING, Menu, MenuItem, MenuItemFields, MenuSelectionSource,
-    MenuVariant,
-};
+    MenuVariant};
 use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::network::{NetworkStatus, NetworkStatusEvent};
 use crate::notebooks::CloudNotebook;
@@ -297,35 +272,29 @@ use crate::pane_group::{
     self, AIFactPane, AnyPaneContent, ChildAgentOrigin, CodeDiffPane, CodePane, CodeReviewPanelArg,
     CustomRouterEditorPane, Direction as PaneGroupDirection, Direction, EnvironmentManagementPane,
     ExecutionProfileEditorPane, NetworkLogPane, NewTerminalOptions, PaneGroup, PaneId, PanesLayout,
-    TabBarHoverIndex, TerminalPaneId,
-};
+    TabBarHoverIndex, TerminalPaneId};
 use crate::persistence::ModelEvent;
 use crate::projects::ProjectManagementModel;
 use crate::prompt::editor_modal::{
     EditorModal as PromptEditorModal, EditorModalEvent as PromptEditorModalEvent,
-    OpenSource as PromptEditorOpenSource,
-};
+    OpenSource as PromptEditorOpenSource};
 use crate::quit_warning::UnsavedStateSummary;
 use crate::remote_server::manager::RemoteServerManager;
 use crate::resource_center::{
     ResourceCenterEvent, ResourceCenterPage, ResourceCenterView, Tip, TipAction, TipsCompleted,
-    mark_feature_used_and_write_to_user_defaults, skip_tips_and_write_to_user_defaults,
-};
+    mark_feature_used_and_write_to_user_defaults, skip_tips_and_write_to_user_defaults};
 use crate::root_view::{NewWorkspaceSource, OpenLaunchConfigArg, quake_mode_window_id};
 use crate::search::command_palette::view::{
-    Event as CommandPaletteEvent, NavigationMode, View as CommandPalette,
-};
+    Event as CommandPaletteEvent, NavigationMode, View as CommandPalette};
 use crate::search::command_search::searcher::{
-    AcceptedHistoryItem, AcceptedWorkflow, CommandSearchItemAction,
-};
+    AcceptedHistoryItem, AcceptedWorkflow, CommandSearchItemAction};
 use crate::search::command_search::settings::CommandSearchSettings;
 use crate::search::command_search::view::{CommandSearchEvent, CommandSearchView};
 #[cfg(target_family = "wasm")]
 use crate::search::slash_command_menu::static_commands::commands;
 use crate::search::{self, QueryFilter};
 use crate::server::cloud_objects::update_manager::{
-    ObjectOperation, OperationSuccessType, UpdateManager, UpdateManagerEvent,
-};
+    ObjectOperation, OperationSuccessType, UpdateManager, UpdateManagerEvent};
 use crate::server::ids::{ObjectUid, ServerId, SyncId};
 use crate::server::network_log_pane_manager::NetworkLogPaneManager;
 use crate::server::server_api::ai::AIClient;
@@ -334,8 +303,7 @@ use crate::server::telemetry::{
     AddTabWithShellSource, AnonymousUserSignupEntrypoint, CloseTarget, EnvVarTelemetryMetadata,
     FileTreeSource, KnowledgePaneEntrypoint, LaunchConfigUiLocation,
     MCPServerCollectionPaneEntrypoint, NotificationsTurnedOnSource, OpenedWarpAISource,
-    PaletteSource, SharingDialogSource, TabRenameEvent, WarpDriveSource,
-};
+    PaletteSource, SharingDialogSource, TabRenameEvent, WarpDriveSource};
 use crate::session_management::{SessionNavigationData, SessionSource, TabNavigationData};
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AccessibilitySettings, AliasExpansionSettings,
@@ -343,12 +311,10 @@ use crate::settings::{
     CodeSettingsChangedEvent, CtrlTabBehavior, CursorBlink, DebugSettings, DefaultSessionMode,
     FontSettings, GPUSettings, InputModeSettings, InputSettings, MonospaceFontSize, PaneSettings,
     PrivacySettings, SelectionSettings, Settings, SshSettings, ThemeSettings, active_theme_kind,
-    respect_system_theme,
-};
+    respect_system_theme};
 use crate::settings_view::environments_page::EnvironmentsPage;
 use crate::settings_view::handoff_environment_creation_modal::{
-    HandoffEnvironmentCreationModal, HandoffEnvironmentCreationModalEvent,
-};
+    HandoffEnvironmentCreationModal, HandoffEnvironmentCreationModalEvent};
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
 use crate::settings_view::pane_manager::SettingsPaneManager;
@@ -360,21 +326,17 @@ use crate::tab::{
     PaneNameMenuTarget, SelectedTabColor, TAB_INDICATOR_HEIGHT, TAB_PIN_INDICATOR_ICON_SIZE,
     TAB_PIN_VANISH_THRESHOLD, TabBarState, TabComponent, TabData, TabShortcutModifierState,
     TabTelemetryAction, color_picker_menu_items, next_tab_color, tab_position_id,
-    uses_vertical_tabs,
-};
+    uses_vertical_tabs};
 use crate::tab_configs::action_sidecar::SidecarItemKind;
 use crate::tab_configs::remove_confirmation_dialog::{
-    RemoveTabConfigConfirmationDialog, RemoveTabConfigConfirmationEvent,
-};
+    RemoveTabConfigConfirmationDialog, RemoveTabConfigConfirmationEvent};
 use crate::tab_configs::session_config_modal::{SessionConfigModal, SessionConfigModalEvent};
 use crate::tab_configs::telemetry::{
-    ExistingTabConfigOpenMode, GuidedModalSessionType, TabConfigsTelemetryEvent,
-};
+    ExistingTabConfigOpenMode, GuidedModalSessionType, TabConfigsTelemetryEvent};
 #[cfg(feature = "local_fs")]
 use crate::tab_configs::telemetry::{NewWorktreeConfigOpenSource, WorktreeBranchNamingMode};
 use crate::tab_configs::{
-    NewWorktreeModal, NewWorktreeModalEvent, TabConfigParamsModal, TabConfigParamsModalEvent,
-};
+    NewWorktreeModal, NewWorktreeModalEvent, TabConfigParamsModal, TabConfigParamsModalEvent};
 use crate::terminal::alt_screen_reporting::AltScreenReporting;
 use crate::terminal::available_shells::AvailableShell;
 #[cfg(target_os = "windows")]
@@ -398,13 +360,11 @@ use crate::terminal::model::session::Session;
 use crate::terminal::model::session::SessionId;
 use crate::terminal::model::terminal_model::ConversationTranscriptViewerStatus;
 use crate::terminal::resizable_data::{
-    DEFAULT_LEFT_PANEL_WIDTH, DEFAULT_RIGHT_PANEL_WIDTH, ModalSizes, ModalType, ResizableData,
-};
+    DEFAULT_LEFT_PANEL_WIDTH, DEFAULT_RIGHT_PANEL_WIDTH, ModalSizes, ModalType, ResizableData};
 use crate::terminal::safe_mode_settings::SafeModeSettings;
 use crate::terminal::session_settings::{
     NewSessionSource, NotificationsMode, NotificationsSettings, SessionSettings,
-    SessionSettingsChangedEvent, WorkingDirectoryMode,
-};
+    SessionSettingsChangedEvent, WorkingDirectoryMode};
 use crate::terminal::settings::{SpacingMode, TerminalSettings};
 use crate::terminal::shared_session::SharedSessionActionSource;
 use crate::terminal::shell::ShellType;
@@ -415,14 +375,12 @@ use crate::terminal::view::ambient_agent::{AuthSecretFtuxView, AuthSecretFtuxVie
 use crate::terminal::view::docker_sandbox::DEFAULT_DOCKER_SANDBOX_BASE_IMAGE;
 use crate::terminal::view::inline_banner::ZeroStatePromptSuggestionType;
 use crate::terminal::view::load_ai_conversation::{
-    RestorationDirState, RestoreConversationEntryBehavior, RestoredAIConversation,
-};
+    RestorationDirState, RestoreConversationEntryBehavior, RestoredAIConversation};
 use crate::terminal::view::ssh_file_upload::FileUploadId;
 use crate::terminal::view::{
     AgentOnboardingVersion, ConversationRestorationInNewPaneType, LeftPanelTargetView,
     NOTIFICATIONS_TROUBLESHOOT_URL, OnboardingIntention, OnboardingVersion, SyncEvent,
-    SyncInputType, TerminalAction,
-};
+    SyncInputType, TerminalAction};
 use crate::terminal::warpify::settings::WarpifySettings;
 use crate::terminal::{self, BlockListSettings, SizeInfo, TerminalModel, TerminalView};
 use crate::themes::theme::{AnsiColorIdentifier, RespectSystemTheme, ThemeKind};
@@ -442,11 +400,9 @@ use crate::user_config::{WarpConfig, WarpConfigUpdateEvent};
 use crate::user_config::{
     ensure_default_worktree_config, find_unused_tab_config_path, find_unused_toml_path,
     find_unused_worktree_config_path, materialize_default_worktree_config, sanitize_toml_base_name,
-    tab_configs_dir,
-};
+    tab_configs_dir};
 use crate::util::bindings::{
-    keybinding_name_to_display_string, keybinding_name_to_keystroke, trigger_to_keystroke,
-};
+    keybinding_name_to_display_string, keybinding_name_to_keystroke, trigger_to_keystroke};
 #[cfg(feature = "local_fs")]
 use crate::util::file::external_editor::Editor;
 #[cfg(feature = "local_fs")]
@@ -457,18 +413,15 @@ use crate::util::links;
 use crate::util::openable_file_type::FileTarget;
 #[cfg(feature = "local_fs")]
 use crate::util::openable_file_type::{
-    EditorLayout, resolve_file_target_to_open_in_warp, resolve_file_target_with_editor_choice,
-};
+    EditorLayout, resolve_file_target_to_open_in_warp, resolve_file_target_with_editor_choice};
 use crate::util::traffic_lights::{TrafficLightMouseStates, TrafficLightSide, traffic_light_data};
 use crate::util::truncation::truncate_from_end;
 #[cfg(target_family = "wasm")]
 use crate::view_components::action_button::ActionButton;
 use crate::view_components::callout_bubble::{
-    CalloutArrowDirection, CalloutArrowPosition, CalloutBubbleConfig, render_callout_bubble,
-};
+    CalloutArrowDirection, CalloutArrowPosition, CalloutBubbleConfig, render_callout_bubble};
 use crate::view_components::{
-    AgentToast, AgentToastStack, DismissibleToast, DismissibleToastStack, ToastLink,
-};
+    AgentToast, AgentToastStack, DismissibleToast, DismissibleToastStack, ToastLink};
 #[cfg(target_family = "wasm")]
 use crate::wasm_nux_dialog::WasmNUXDialog;
 use crate::window_settings::{WindowSettings, WindowSettingsChangedEvent, ZoomLevel};
@@ -476,15 +429,13 @@ use crate::workflows::manager::{WorkflowManager, WorkflowOpenSource};
 use crate::workflows::workflow::Workflow;
 use crate::workflows::{
     AIWorkflowOrigin, CloudWorkflow, WorkflowSelectionSource, WorkflowSource, WorkflowType,
-    WorkflowViewMode,
-};
+    WorkflowViewMode};
 use crate::workspace::action::CommandSearchOptions;
 use crate::workspace::bonus_grant_notification_model::BonusGrantNotificationEvent;
 #[cfg(target_os = "macos")]
 use crate::workspace::cli_install;
 use crate::workspace::cross_window_tab_drag::{
-    AttachTarget, CrossWindowTabDrag, DragResult, DropResult, GhostState,
-};
+    AttachTarget, CrossWindowTabDrag, DragResult, DropResult, GhostState};
 use crate::workspace::header_toolbar_editor::{HeaderToolbarEditorEvent, HeaderToolbarEditorModal};
 use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::one_time_modal_model::OneTimeModalModel;
@@ -492,33 +443,25 @@ use crate::workspace::sync_inputs::SyncedInputState;
 use crate::workspace::tab_group::{TabGroup, TabGroupId};
 use crate::workspace::tab_settings::TabCloseButtonPosition;
 use crate::workspace::toast_stack::{
-    ToastStack, ToastStack as WorkspaceToastStack, ToastStackEvent as WorkspaceToastStackEvent,
-};
+    ToastStack, ToastStack as WorkspaceToastStack, ToastStackEvent as WorkspaceToastStackEvent};
 use crate::workspace::view::agent_cli_launch_modal::{
-    AgentCliLaunchModal, AgentCliLaunchModalEvent,
-};
+    AgentCliLaunchModal, AgentCliLaunchModalEvent};
 use crate::workspace::view::auto_handoff_sleep_modal::{
-    AutoHandoffSleepModal, AutoHandoffSleepModalEvent,
-};
+    AutoHandoffSleepModal, AutoHandoffSleepModalEvent};
 use crate::workspace::view::cloud_agent_capacity_modal::{
-    CloudAgentCapacityModal, CloudAgentCapacityModalEvent, CloudAgentCapacityModalVariant,
-};
+    CloudAgentCapacityModal, CloudAgentCapacityModalEvent, CloudAgentCapacityModalVariant};
 use crate::workspace::view::codex_modal::{CodexModal, CodexModalEvent};
 use crate::workspace::view::feature_intro_modal::{
     FeatureIntroCtaTarget, FeatureIntroId, FeatureIntroModal, FeatureIntroModalEvent,
-    feature_intro_by_id,
-};
+    feature_intro_by_id};
 use crate::workspace::view::global_search::view::GlobalSearchEntryFocus;
 use crate::workspace::view::launch_modal::{LaunchModal, LaunchModalEvent, OzLaunchSlide};
 use crate::workspace::view::left_panel::{
-    LeftPanelAction, LeftPanelEvent, LeftPanelView, ToolPanelView,
-};
+    LeftPanelAction, LeftPanelEvent, LeftPanelView, ToolPanelView};
 use crate::workspace::view::openwarp_launch_modal::{
-    OpenWarpLaunchModal, OpenWarpLaunchModalEvent,
-};
+    OpenWarpLaunchModal, OpenWarpLaunchModalEvent};
 use crate::workspace::view::orchestration_launch_modal::{
-    OrchestrationLaunchModal, OrchestrationLaunchModalEvent,
-};
+    OrchestrationLaunchModal, OrchestrationLaunchModalEvent};
 use crate::workspace::view::right_panel::{RightPanelEvent, RightPanelView};
 use crate::workspace::{ForkFromExchange, ForkedConversationDestination};
 use crate::workspaces::update_manager::TeamUpdateManager;
@@ -526,8 +469,7 @@ use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
 use crate::workspaces::workspace::AdminEnablementSetting;
 use crate::{
     AgentNotificationsModel, BlocklistAIHistoryModel, GlobalResourceHandles, TelemetryEvent,
-    autoupdate, send_telemetry_from_ctx, settings,
-};
+    autoupdate, settings};
 
 /// The padding that should be applied to the workspace as a whole.
 ///
@@ -705,8 +647,7 @@ lazy_static! {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TabConfigsMenuOpenSource {
     KeyboardShortcut,
-    Pointer,
-}
+    Pointer}
 
 /// This enumerates the different kinds of banners we show to the user.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -727,8 +668,7 @@ pub enum WorkspaceBanner {
     #[cfg(target_os = "linux")]
     WaylandCrashRecovery,
     /// to display when settings.toml has errors (parse failure or invalid values)
-    InvalidSettings,
-}
+    InvalidSettings}
 
 impl WorkspaceBanner {
     /// We want some banners to have a close button and not others, e.g. if they are running a very
@@ -743,42 +683,36 @@ impl WorkspaceBanner {
             Self::Reauth => true,
             #[cfg(target_os = "linux")]
             Self::WaylandCrashRecovery => true,
-            Self::InvalidSettings => true,
-        }
+            Self::InvalidSettings => true}
     }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 enum SessionCycleDirection {
     Next,
-    Previous,
-}
+    Previous}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PanePanelDirection {
     Prev,
-    Next,
-}
+    Next}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum FocusRegion {
     LeftPanel,
     PaneGroup,
     RightPanel,
-    Other,
-}
+    Other}
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum PanelPosition {
     Left,
-    Right,
-}
+    Right}
 
 pub struct TabPaneGroupIdentifiers {
     pub tab_idx: usize,
     pub pane_group_id: EntityId,
-    pub terminal_ids: Vec<EntityId>,
-}
+    pub terminal_ids: Vec<EntityId>}
 
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -786,17 +720,14 @@ enum LocalToCloudHandoffIntent {
     UserInitiated(HandoffEntryPoint),
     Automatic {
         trigger: AutoCloudHandoffTrigger,
-        conversation_id: AIConversationId,
-    },
-}
+        conversation_id: AIConversationId}}
 
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 impl LocalToCloudHandoffIntent {
     fn entry_point(self) -> HandoffEntryPoint {
         match self {
             Self::UserInitiated(entry_point) => entry_point,
-            Self::Automatic { .. } => HandoffEntryPoint::Automatic,
-        }
+            Self::Automatic { .. } => HandoffEntryPoint::Automatic}
     }
 
     fn shows_user_feedback(self) -> bool {
@@ -808,8 +739,7 @@ impl LocalToCloudHandoffIntent {
             Self::UserInitiated(_) => None,
             Self::Automatic {
                 conversation_id, ..
-            } => Some(conversation_id),
-        }
+            } => Some(conversation_id)}
     }
 }
 
@@ -820,8 +750,7 @@ enum ShowTabBar {
     #[default]
     Stacked,
     /// Hide the tab bar.
-    Hidden,
-}
+    Hidden}
 
 impl ShowTabBar {
     fn has_tab_bar(self) -> bool {
@@ -839,8 +768,7 @@ enum SimplifiedWasmTabBarContent {
     /// Participating in a shared session (viewer or writer). Contains the optional ambient agent task ID.
     SharedSession { task_id: Option<AmbientAgentTaskId> },
     /// Viewing a conversation transcript. Contains the optional ambient agent task ID.
-    ConversationTranscript { task_id: Option<AmbientAgentTaskId> },
-}
+    ConversationTranscript { task_id: Option<AmbientAgentTaskId> }}
 
 type RemoteUploadId = (TerminalPaneId, FileUploadId);
 type WorkspaceMenuHandles = (
@@ -852,8 +780,7 @@ type WorkspaceMenuHandles = (
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum NewSessionSidecarSelection {
-    OpenWorktreeRepo { repo_path: String },
-}
+    OpenWorktreeRepo { repo_path: String }}
 
 #[derive(Debug, Default)]
 struct FileUploadSessions {
@@ -862,8 +789,7 @@ struct FileUploadSessions {
     local_to_remote_map: HashMap<TerminalPaneId, TerminalPaneId>,
     /// Maps a local pane to the ID of the file upload it is responsible for.
     local_to_upload_id_map: HashMap<TerminalPaneId, RemoteUploadId>,
-    upload_id_to_local_map: HashMap<RemoteUploadId, TerminalPaneId>,
-}
+    upload_id_to_local_map: HashMap<RemoteUploadId, TerminalPaneId>}
 
 /// Controls the color palette used for a workspace banner.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -871,8 +797,7 @@ pub enum BannerSeverity {
     /// Warning banners use an ansi-blended yellow background.
     Warning,
     /// Error banners use an ansi-blended red background.
-    Error,
-}
+    Error}
 
 /// Visual style for an individual banner action button.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -881,8 +806,7 @@ enum BannerButtonVariant {
     /// action in the Figma design (e.g. "Fix with Warp Agent").
     Naked,
     /// Border-only, no fill (e.g. "Open file").
-    Outlined,
-}
+    Outlined}
 
 struct WorkspaceBannerButtonDetails {
     text: String,
@@ -891,8 +815,7 @@ struct WorkspaceBannerButtonDetails {
     /// Optional leading icon shown before the label.
     icon: Option<Icon>,
     /// If set, renders an adjacent "More info" pill that dispatches this action.
-    more_info_button_action: Option<WorkspaceAction>,
-}
+    more_info_button_action: Option<WorkspaceAction>}
 
 struct WorkspaceBannerFields {
     banner_type: WorkspaceBanner,
@@ -902,22 +825,19 @@ struct WorkspaceBannerFields {
     /// Main description text (regular weight).
     description: String,
     secondary_button: Option<WorkspaceBannerButtonDetails>,
-    button: Option<WorkspaceBannerButtonDetails>,
-}
+    button: Option<WorkspaceBannerButtonDetails>}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum DefaultSessionModeBehavior {
     /// Respect the user's default-session-mode setting and auto-enter agent view when applicable.
     Apply,
     /// Skip default-session-mode auto-entry because the caller is explicitly specifying the mode for the new session.
-    Ignore,
-}
+    Ignore}
 
 #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
 struct CodeReviewPaneContext {
     repo_path: Option<LocalOrRemotePath>,
-    diff_state_model: ModelHandle<DiffStateModel>,
-}
+    diff_state_model: ModelHandle<DiffStateModel>}
 
 /// Parameters for updating the right panel's 'state.
 #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
@@ -926,8 +846,7 @@ struct RightPanelUpdateParams<'a> {
     target_open_state: bool,
     entrypoint: Option<CodeReviewPaneEntrypoint>,
     cli_agent: Option<crate::terminal::CLIAgent>,
-    review_pane_context: Option<&'a CodeReviewPaneContext>,
-}
+    review_pane_context: Option<&'a CodeReviewPaneContext>}
 
 /// Groups a modal view handle with the ID of the tab that was created to host
 /// it, so the custom tab title can be cleared on close regardless of which tab
@@ -936,23 +855,18 @@ struct ModalWithTab<V> {
     view: ViewHandle<V>,
     /// Set when the modal opens a new tab; consumed (taken) when the modal
     /// closes so we can clear the custom tab title.
-    tab_pane_group_id: Option<EntityId>,
-}
+    tab_pane_group_id: Option<EntityId>}
 /// Context saved when the session config modal triggers `open_tab_config` and
 /// the tab config has params (worktree). The params modal opens asynchronously,
 /// so we store what we need to finish the tab replacement when it completes.
 struct PendingSessionConfigReplacement {
-    old_pane_group_id: EntityId,
-}
+    old_pane_group_id: EntityId}
 enum PendingSessionConfigTabConfigChipTutorial {
     WhenBootstrapped {
         has_project: bool,
-        intention: OnboardingIntention,
-    },
+        intention: OnboardingIntention},
     AfterSetupCommands {
-        intention: OnboardingIntention,
-    },
-}
+        intention: OnboardingIntention}}
 
 fn query_for_rewind_prefill(inputs: &[AIAgentInput]) -> Option<String> {
     inputs.iter().find_map(AIAgentInput::display_query)
@@ -971,31 +885,25 @@ pub struct TransferredTab {
     pub vertical_tabs_panel_open: bool,
     pub right_panel_open: bool,
     pub is_right_panel_maximized: bool,
-    pub draggable_state: DraggableState,
-}
+    pub draggable_state: DraggableState}
 #[cfg(not(target_family = "wasm"))]
 struct ThirdPartyLocalContinuationLaunch {
-    command: String,
-}
+    command: String}
 
 /// Per-`TabGroupId` hover state for the horizontal tab bar header.
 #[derive(Clone, Default)]
 struct HorizontalTabGroupMouseStates {
-    header: MouseStateHandle,
-}
+    header: MouseStateHandle}
 
 /// A unit the horizontal tab bar renders: either a single ungrouped tab or a
 /// contiguous run of same-group tabs collapsed into one group container.
 enum TabBarSlot {
     Single {
-        index: usize,
-    },
+        index: usize},
     Group {
         group_id: TabGroupId,
         first_index: usize,
-        run_len: usize,
-    },
-}
+        run_len: usize}}
 
 pub struct Workspace {
     window_id: WindowId,
@@ -1186,8 +1094,7 @@ pub struct Workspace {
     /// Workspace-level modal hosting `AuthSecretFtuxView` for the
     /// orchestration cards' "New API key…" flow. Cloud mode renders the
     /// FTUX view inline and does not use this.
-    create_auth_secret_modal: Option<ViewHandle<Modal<AuthSecretFtuxView>>>,
-}
+    create_auth_secret_modal: Option<ViewHandle<Modal<AuthSecretFtuxView>>>}
 
 impl Workspace {
     /// Whether this workspace was opened directly against a shared session, cloud
@@ -1214,8 +1121,7 @@ impl Workspace {
                 .value()
             {
                 VerticalTabsDisplayGranularity::Panes => 10.,
-                VerticalTabsDisplayGranularity::Tabs => 12.,
-            }
+                VerticalTabsDisplayGranularity::Tabs => 12.}
         } else {
             appearance.ui_font_size()
         }
@@ -1280,8 +1186,7 @@ impl Workspace {
                 Some(_) if select_next => menu.select_next(view_ctx),
                 Some(_) => menu.select_previous(view_ctx),
                 None if select_next => menu.set_selected_by_index(1, view_ctx),
-                None => menu.set_selected_by_index(items_len.saturating_sub(1), view_ctx),
-            }
+                None => menu.set_selected_by_index(items_len.saturating_sub(1), view_ctx)}
         });
     }
 
@@ -1297,8 +1202,7 @@ impl Workspace {
 
             menu.selected_item().and_then(|item| match item {
                 MenuItem::Item(fields) => fields.on_select_action().cloned(),
-                _ => None,
-            })
+                _ => None})
         });
 
         if let Some(selection) = selected_selection {
@@ -1505,10 +1409,6 @@ impl Workspace {
                 // Only update the title if it was actually changed. Otherwise, lets assume
                 // user's intend was to cancel the operation.
                 if view.display_title(ctx) != title {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::TabRenamed(TabRenameEvent::CustomNameSet),
-                        ctx
-                    );
                     view.set_title(&title, ctx);
                 }
             });
@@ -1678,8 +1578,7 @@ impl Workspace {
         let show_welcome_tips = !tips_completed.as_ref(ctx).skipped_or_completed;
         let welcome_tips_view_state = if show_welcome_tips {
             WelcomeTipsViewState::Available {
-                is_popup_open: false,
-            }
+                is_popup_open: false}
         } else {
             WelcomeTipsViewState::Unavailable
         };
@@ -1843,22 +1742,10 @@ impl Workspace {
         match event {
             SuggestedRuleModalEvent::AddNewRule { rule } => {
                 self.current_workspace_state.is_suggested_rule_modal_open = false;
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::AISuggestedRuleAdded {
-                        rule_id: rule.logging_id.clone(),
-                    },
-                    ctx
-                );
             }
             SuggestedRuleModalEvent::OpenRuleForEditing { rule } => {
                 self.current_workspace_state.is_suggested_rule_modal_open = false;
                 self.open_ai_fact_collection_pane(Some(Direction::Right), None, ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::AISuggestedRuleEdited {
-                        rule_id: rule.logging_id.clone(),
-                    },
-                    ctx
-                );
             }
             SuggestedRuleModalEvent::Close => {
                 self.current_workspace_state.is_suggested_rule_modal_open = false;
@@ -2105,8 +1992,7 @@ impl Workspace {
                         top: 0.,
                         bottom: 0.,
                         left: 0.,
-                        right: 0.,
-                    }),
+                        right: 0.}),
                     height: Some(480.),
                     background: Some(ElementFill::None),
                     ..Default::default()
@@ -2197,15 +2083,6 @@ impl Workspace {
         match event {
             SessionConfigModalEvent::Completed(selection) => {
                 let pending_intention = self.pending_onboarding_intention.take();
-                send_telemetry_from_ctx!(
-                    TabConfigsTelemetryEvent::GuidedModalSubmitted {
-                        session_type: GuidedModalSessionType::from(&selection.session_type),
-                        enable_worktree: selection.enable_worktree,
-                        autogenerate_worktree_branch_name: selection
-                            .autogenerate_worktree_branch_name,
-                    },
-                    ctx
-                );
                 self.close_session_config_modal(ctx);
                 let has_worktree = selection.enable_worktree;
                 let has_params = {
@@ -2229,8 +2106,7 @@ impl Workspace {
                     } else if has_worktree {
                         self.queue_onboarding_tutorial_after_session_config_tab_config_chip(
                             PendingSessionConfigTabConfigChipTutorial::AfterSetupCommands {
-                                intention,
-                            },
+                                intention},
                             ctx,
                         );
                     } else {
@@ -2244,8 +2120,7 @@ impl Workspace {
                         self.queue_onboarding_tutorial_after_session_config_tab_config_chip(
                             PendingSessionConfigTabConfigChipTutorial::WhenBootstrapped {
                                 has_project: false,
-                                intention,
-                            },
+                                intention},
                             ctx,
                         );
                     }
@@ -2369,8 +2244,7 @@ impl Workspace {
                 }
                 ctx.notify();
             }
-            _ => me.handle_hoa_onboarding_event(event, ctx),
-        });
+            _ => me.handle_hoa_onboarding_event(event, ctx)});
         self.hoa_onboarding_flow = Some(flow.clone());
         ctx.focus(&flow);
         ctx.notify();
@@ -2417,7 +2291,6 @@ impl Workspace {
         self.pending_session_config_tab_config_chip = self.pending_onboarding_intention.is_some();
         self.show_session_config_tab_config_chip = false;
         ctx.focus(&self.session_config_modal.view);
-        send_telemetry_from_ctx!(TabConfigsTelemetryEvent::GuidedModalOpened, ctx);
         ctx.notify();
     }
 
@@ -2475,8 +2348,7 @@ impl Workspace {
             match pending_tutorial {
                 PendingSessionConfigTabConfigChipTutorial::WhenBootstrapped {
                     has_project,
-                    intention,
-                } => {
+                    intention} => {
                     self.dispatch_tutorial_when_bootstrapped(has_project, intention, ctx);
                 }
                 PendingSessionConfigTabConfigChipTutorial::AfterSetupCommands { intention } => {
@@ -2555,8 +2427,7 @@ impl Workspace {
             &CalloutBubbleConfig {
                 width: SESSION_CONFIG_TAB_CONFIG_CHIP_WIDTH,
                 arrow_direction,
-                arrow_position,
-            },
+                arrow_position},
             appearance,
         )
     }
@@ -2605,8 +2476,7 @@ impl Workspace {
                 }
                 WorkspaceToastStackEvent::RemoveToast {
                     window_id,
-                    identifier,
-                } if *window_id == ctx.window_id() => {
+                    identifier} if *window_id == ctx.window_id() => {
                     toast_stack.update(ctx, |toast_stack, ctx| {
                         toast_stack.dismiss_older_toasts(identifier, ctx)
                     });
@@ -2661,8 +2531,7 @@ impl Workspace {
                                 ToastLink::new("Open file".to_string()).with_onclick_action(
                                     WorkspaceAction::OpenTabConfigErrorFile {
                                         path,
-                                        toast_object_id: object_id,
-                                    },
+                                        toast_object_id: object_id},
                                 ),
                             );
                         toast_stack.update(ctx, |toast_stack, ctx| {
@@ -2695,8 +2564,7 @@ impl Workspace {
                                 ToastLink::new("Open file".to_string()).with_onclick_action(
                                     WorkspaceAction::OpenTabConfigErrorFile {
                                         path,
-                                        toast_object_id: object_id,
-                                    },
+                                        toast_object_id: object_id},
                                 ),
                             );
                         toast_stack.update(ctx, |toast_stack, ctx| {
@@ -2759,8 +2627,7 @@ impl Workspace {
                             .with_onclick_action(WorkspaceAction::OpenInExplorer { path }),
                     )
             }
-            Err(err) => DismissibleToast::error(format!("Failed to write heap profile: {err:#}")),
-        };
+            Err(err) => DismissibleToast::error(format!("Failed to write heap profile: {err:#}"))};
 
         self.toast_stack.update(ctx, |toast_stack, ctx| {
             toast_stack.add_ephemeral_toast(toast, ctx)
@@ -2785,8 +2652,7 @@ impl Workspace {
             model_event_sender,
             tips_completed,
             user_default_shell_unsupported_banner_model_handle,
-            settings_file_error,
-        } = global_resource_handles;
+            settings_file_error} = global_resource_handles;
 
         let server_api_provider = ServerApiProvider::as_ref(ctx);
         let server_api = server_api_provider.get();
@@ -2805,8 +2671,7 @@ impl Workspace {
             NewWorkspaceSource::Restored {
                 window_snapshot, ..
             } => ModalSizes::from_restored(&window_snapshot, left_panel_size, right_panel_size),
-            _ => ModalSizes::default_with_panel_defaults(left_panel_size, right_panel_size),
-        };
+            _ => ModalSizes::default_with_panel_defaults(left_panel_size, right_panel_size)};
         resizable_data.update(ctx, |model, _| {
             model.insert(window_id, new_resizable_modal_sizes)
         });
@@ -2993,8 +2858,7 @@ impl Workspace {
                 ref window_snapshot,
                 ..
             } => window_snapshot.agent_management_filters.clone(),
-            _ => None,
-        };
+            _ => None};
         let agent_management_view = ctx
             .add_typed_action_view(|ctx| AgentManagementView::new(agent_management_filters, ctx));
         ctx.subscribe_to_view(&agent_management_view, |me, _, event, ctx| {
@@ -3015,8 +2879,7 @@ impl Workspace {
                     }
                     me.handle_action(
                         &WorkspaceAction::FocusTerminalViewInWorkspace {
-                            terminal_view_id: *terminal_view_id,
-                        },
+                            terminal_view_id: *terminal_view_id},
                         ctx,
                     );
                     ctx.notify();
@@ -3222,8 +3085,7 @@ impl Workspace {
                 }
                 ctx.notify();
             }
-            _ => (),
-        });
+            _ => ()});
 
         ctx.subscribe_to_model(&OneTimeModalModel::handle(ctx), |me, model, event, ctx| {
             let OneTimeModalEvent::VisibilityChanged { is_open } = event;
@@ -3375,8 +3237,7 @@ impl Workspace {
             tab_fixed_width: None,
             oz_launch_modal: ModalWithTab {
                 view: oz_launch_view,
-                tab_pane_group_id: None,
-            },
+                tab_pane_group_id: None},
             openwarp_launch_modal: openwarp_launch_view,
             orchestration_launch_modal: orchestration_launch_view,
             agent_cli_launch_modal: agent_cli_launch_view,
@@ -3408,8 +3269,7 @@ impl Workspace {
             remove_tab_config_confirmation_dialog:
                 Self::build_remove_tab_config_confirmation_dialog(ctx),
             handoff_environment_creation_modal: None,
-            create_auth_secret_modal: None,
-        };
+            create_auth_secret_modal: None};
 
         ws.configure_new_workspace(workspace_setting, ctx);
         ws.sync_panel_positions_from_config(ctx);
@@ -3469,8 +3329,7 @@ impl Workspace {
                 window_id: source_window_id,
                 tab_index,
                 terminal_view_id,
-                conversation_id,
-            } => {
+                conversation_id} => {
                 if FeatureFlag::HOANotifications.is_enabled() {
                     return;
                 }
@@ -3789,14 +3648,12 @@ impl Workspace {
         match workspace_setting {
             NewWorkspaceSource::Empty {
                 previous_active_window,
-                shell,
-            } => {
+                shell} => {
                 self.configure_empty_workspace(previous_active_window, shell, ctx);
             }
             NewWorkspaceSource::Restored {
                 window_snapshot,
-                block_lists,
-            } => {
+                block_lists} => {
                 let active_tab_index = window_snapshot.active_tab_index;
                 let restored_left_panel_open = window_snapshot.left_panel_open;
 
@@ -3818,8 +3675,7 @@ impl Workspace {
                                     // Only restore pinned state when the
                                     // Pinned Tabs feature is enabled.
                                     pinned: FeatureFlag::PinnedTabs.is_enabled()
-                                        && group_snapshot.pinned,
-                                },
+                                        && group_snapshot.pinned},
                             )
                         })
                         .collect();
@@ -3909,8 +3765,7 @@ impl Workspace {
             }
             NewWorkspaceSource::AgentSession {
                 options,
-                initial_query,
-            } => {
+                initial_query} => {
                 self.add_tab_with_pane_layout(
                     PanesLayout::SingleTerminal(options),
                     Arc::new(HashMap::new()),
@@ -4090,11 +3945,9 @@ impl Workspace {
             let active_view = match left_panel_snapshot.left_panel_displayed_tab {
                 LeftPanelDisplayedTab::FileTree => ToolPanelView::ProjectExplorer,
                 LeftPanelDisplayedTab::GlobalSearch => ToolPanelView::GlobalSearch {
-                    entry_focus: GlobalSearchEntryFocus::Results,
-                },
+                    entry_focus: GlobalSearchEntryFocus::Results},
                 LeftPanelDisplayedTab::WarpDrive => ToolPanelView::WarpDrive,
-                LeftPanelDisplayedTab::ConversationListView => ToolPanelView::ConversationListView,
-            };
+                LeftPanelDisplayedTab::ConversationListView => ToolPanelView::ConversationListView};
             lp.restore_active_view_from_snapshot(active_view, ctx);
             lp.set_active_pane_group(pane_group.clone(), &self.working_directories_model, ctx);
         });
@@ -4272,8 +4125,7 @@ impl Workspace {
                 );
                 is_creator || is_owner
             }
-            _ => false,
-        };
+            _ => false};
 
         if !conversation_is_owned_by_current_user {
             self.load_cloud_conversation_into_new_transcript_viewer(server_token, None, ctx);
@@ -4459,8 +4311,7 @@ impl Workspace {
             match event {
                 ManagerEvent::StartedShare {
                     window_id,
-                    session_id,
-                } => {
+                    session_id} => {
                     if *window_id == ctx.window_id() {
                         me.copy_shared_session_link(session_id, ctx);
                     }
@@ -4557,22 +4408,19 @@ impl Workspace {
 
             if is_transcript_viewer {
                 return Some(SimplifiedWasmTabBarContent::ConversationTranscript {
-                    task_id: model_task_id,
-                });
+                    task_id: model_task_id});
             }
 
             if is_sharer_or_viewer {
                 return Some(SimplifiedWasmTabBarContent::SharedSession {
-                    task_id: model_task_id,
-                });
+                    task_id: model_task_id});
             }
 
             // Owned HandoffCloudCloud restores leave NotShared without transcript-viewer
             // status; deep-linked WASM workspaces still need the web conversation chrome.
             if self.opened_from_content_deep_link {
                 return Some(SimplifiedWasmTabBarContent::ConversationTranscript {
-                    task_id: view.ambient_agent_task_id_for_details_panel(ctx),
-                });
+                    task_id: view.ambient_agent_task_id_for_details_panel(ctx)});
             }
         }
 
@@ -5110,8 +4958,7 @@ impl Workspace {
                     subtitle,
                     window_id,
                     tab_index: tab_index + 1,
-                    color: tab.color(),
-                })
+                    color: tab.color()})
             })
             .collect()
     }
@@ -5156,8 +5003,7 @@ impl Workspace {
                     index,
                     PaneViewLocator {
                         pane_group_id: tab.pane_group.id(),
-                        pane_id,
-                    },
+                        pane_id},
                 )
             })
         })
@@ -5407,10 +5253,6 @@ impl Workspace {
         let title = tab.pane_group.as_ref(ctx).display_title(ctx);
 
         self.rename_tab_internal(index, &title, ctx);
-        send_telemetry_from_ctx!(
-            TelemetryEvent::TabRenamed(TabRenameEvent::OpenedEditor),
-            ctx
-        );
     }
 
     fn set_active_tab_name(&mut self, title: &str, ctx: &mut ViewContext<Self>) {
@@ -5440,10 +5282,6 @@ impl Workspace {
         pane_group.update(ctx, |pane_group, ctx| {
             if pane_group.display_title(ctx) != title {
                 pane_group.set_title(title, ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::TabRenamed(TabRenameEvent::CustomNameSet),
-                    ctx
-                );
             }
         });
         ctx.notify();
@@ -5471,16 +5309,6 @@ impl Workspace {
             return;
         }
         self.tabs[index].selected_color = color;
-        send_telemetry_from_ctx!(
-            TelemetryEvent::TabOperations {
-                action: if matches!(color, SelectedTabColor::Color(_)) {
-                    TabTelemetryAction::SetColor
-                } else {
-                    TabTelemetryAction::ResetColor
-                },
-            },
-            ctx
-        );
         ctx.notify();
     }
 
@@ -5590,10 +5418,6 @@ impl Workspace {
         tab.pane_group.update(ctx, |view, ctx| {
             view.clear_title(ctx);
         });
-        send_telemetry_from_ctx!(
-            TelemetryEvent::TabRenamed(TabRenameEvent::CustomNameCleared),
-            ctx
-        );
         self.update_window_title(ctx);
         ctx.notify();
     }
@@ -5707,8 +5531,7 @@ impl Workspace {
                 TabPaneGroupIdentifiers {
                     tab_idx,
                     pane_group_id,
-                    terminal_ids,
-                }
+                    terminal_ids}
             })
             .collect::<Vec<_>>()
     }
@@ -5765,8 +5588,7 @@ impl Workspace {
                 self.focus_pane(
                     PaneViewLocator {
                         pane_group_id: pane_group_handle.id(),
-                        pane_id,
-                    },
+                        pane_id},
                     ctx,
                 );
                 return true;
@@ -5796,8 +5618,7 @@ impl Workspace {
                         *win_id,
                         PaneViewLocator {
                             pane_group_id: pane_group.id(),
-                            pane_id,
-                        },
+                            pane_id},
                     ))
                 })
             });
@@ -5853,8 +5674,7 @@ impl Workspace {
                 workflow,
                 source,
                 argument_override,
-                workflow_selection_source,
-            } => {
+                workflow_selection_source} => {
                 self.run_workflow_in_active_input(
                     workflow,
                     *source.clone(),
@@ -5935,8 +5755,7 @@ impl Workspace {
         new_left.insert(0, HeaderToolbarItemKind::TabsPanel);
         let selection = HeaderToolbarChipSelection::Custom {
             left: new_left,
-            right,
-        };
+            right};
         TabSettings::handle(ctx).update(ctx, |settings, ctx| {
             report_if_error!(
                 settings
@@ -6167,16 +5986,14 @@ impl Workspace {
                                 target,
                                 None,
                                 CodeSource::ProjectRules {
-                                    location: location.clone(),
-                                },
+                                    location: location.clone()},
                                 ctx,
                             );
                         }
                         LocalOrRemotePath::Remote(_) => {
                             self.open_code(
                                 CodeSource::ProjectRules {
-                                    location: location.clone(),
-                                },
+                                    location: location.clone()},
                                 EditorLayout::SplitPane,
                                 None,
                                 false,
@@ -6388,11 +6205,9 @@ impl Workspace {
             LeftPanelEvent::OpenFileWithTarget {
                 location,
                 target,
-                line_col,
-            } => {
+                line_col} => {
                 let code_source = CodeSource::FileTree {
-                    location: location.clone(),
-                };
+                    location: location.clone()};
                 match location {
                     LocalOrRemotePath::Local(path) => {
                         self.open_file_with_target(
@@ -6437,14 +6252,12 @@ impl Workspace {
             LeftPanelEvent::ShowDeleteConfirmationDialog {
                 conversation_id,
                 conversation_title,
-                terminal_view_id,
-            } => {
+                terminal_view_id} => {
                 self.show_delete_conversation_confirmation_dialog(
                     DeleteConversationDialogSource {
                         conversation_id: *conversation_id,
                         conversation_title: conversation_title.clone(),
-                        terminal_view_id: *terminal_view_id,
-                    },
+                        terminal_view_id: *terminal_view_id},
                     ctx,
                 );
             }
@@ -6466,8 +6279,7 @@ impl Workspace {
             RightPanelEvent::OpenFileWithTarget {
                 path,
                 target,
-                line_col,
-            } => {
+                line_col} => {
                 // Exit maximized mode so the opened file is visible.
                 if self
                     .active_tab_pane_group()
@@ -6484,15 +6296,13 @@ impl Workspace {
                     CodeSource::Link {
                         path,
                         range_start: line_col,
-                        range_end: None,
-                    },
+                        range_end: None},
                     ctx,
                 );
             }
             RightPanelEvent::OpenFileInNewTab {
                 path,
-                line_and_column,
-            } => match path {
+                line_and_column} => match path {
                 LocalOrRemotePath::Local(path) => {
                     self.add_tab_for_code_file(path, line_and_column, ctx);
                 }
@@ -6627,8 +6437,7 @@ impl Workspace {
                 let is_terminal_default = effective_default == DefaultSessionMode::Terminal;
                 let mut terminal_item = MenuItemFields::new("Terminal")
                     .with_on_select_action(WorkspaceAction::AddTerminalTab {
-                        hide_homepage: false,
-                    })
+                        hide_homepage: false})
                     .with_icon(icons::Icon::LayoutAlt01);
                 if is_terminal_default {
                     terminal_item = terminal_item.with_key_shortcut_label(shortcut_label.clone());
@@ -6650,8 +6459,7 @@ impl Workspace {
                             let item = MenuItemFields::new(shell_name)
                                 .with_on_select_action(WorkspaceAction::AddTabWithShell {
                                     shell: shell.clone(),
-                                    source: AddTabWithShellSource::ShellSelectorMenu,
-                                })
+                                    source: AddTabWithShellSource::ShellSelectorMenu})
                                 .with_icon(icon);
                             menu_items.push(item.into_item());
                         }
@@ -6664,8 +6472,7 @@ impl Workspace {
             {
                 let mut terminal_item = MenuItemFields::new("Terminal")
                     .with_on_select_action(WorkspaceAction::AddTerminalTab {
-                        hide_homepage: false,
-                    })
+                        hide_homepage: false})
                     .with_icon(icons::Icon::LayoutAlt01);
                 if effective_default == DefaultSessionMode::Terminal {
                     terminal_item = terminal_item.with_key_shortcut_label(shortcut_label.clone());
@@ -6856,8 +6663,7 @@ impl Workspace {
                 .unwrap_or_else(|| position.y().max(TOTAL_TAB_BAR_HEIGHT))
             }
             NewSessionMenuAnchor::AddTabButton(position)
-            | NewSessionMenuAnchor::Pointer(position) => position.y(),
-        }
+            | NewSessionMenuAnchor::Pointer(position) => position.y()}
     }
 
     pub fn open_new_session_dropdown_menu(
@@ -6924,8 +6730,7 @@ impl Workspace {
                 OpenLaunchConfigArg {
                     launch_config,
                     ui_location: LaunchConfigUiLocation::TabMenu,
-                    open_in_active_window: false,
-                },
+                    open_in_active_window: false},
             ),
             NewSessionMenuItem::OpenLaunchConfigDocs => {
                 ctx.open_url("https://docs.warp.dev/terminal/sessions/launch-configurations")
@@ -6986,13 +6791,6 @@ impl Workspace {
                 worktree_branch_name.as_deref(),
                 ctx,
             );
-            send_telemetry_from_ctx!(
-                TabConfigsTelemetryEvent::ExistingConfigOpened {
-                    open_mode: ExistingTabConfigOpenMode::Direct,
-                    is_worktree_config,
-                },
-                ctx
-            );
         } else {
             // Pass the active terminal's cwd to seed the branch picker's git lookup.
             let cwd = self
@@ -7037,7 +6835,6 @@ impl Workspace {
             *settings.open_file_layout,
             None,
         );
-        send_telemetry_from_ctx!(TabConfigsTelemetryEvent::MenuCreateNewTabConfigClicked, ctx);
         self.open_file_with_target(
             path.clone(),
             target,
@@ -7045,8 +6842,7 @@ impl Workspace {
             CodeSource::Link {
                 path,
                 range_start: None,
-                range_end: None,
-            },
+                range_end: None},
             ctx,
         );
     }
@@ -7081,13 +6877,11 @@ impl Workspace {
                     CodeSource::Link {
                         path,
                         range_start: None,
-                        range_end: None,
-                    },
+                        range_end: None},
                     ctx,
                 );
             }
-            Err(e) => log::warn!("Failed to save tab config: {e:?}"),
-        }
+            Err(e) => log::warn!("Failed to save tab config: {e:?}")}
     }
 
     #[cfg(not(feature = "local_fs"))]
@@ -7137,8 +6931,7 @@ impl Workspace {
         let closed = self.close_tabs(
             indices.into_iter(),
             OpenDialogSource::CloseOtherTabs {
-                tab_index: first_index,
-            },
+                tab_index: first_index},
             false,
             true,
             ctx,
@@ -7474,8 +7267,7 @@ impl Workspace {
                     Some(other_gid) => group_member_index_range(&self.tabs, other_gid)
                         .map(|(f, _)| f)
                         .unwrap_or(above_index),
-                    None => above_index,
-                };
+                    None => above_index};
                 self.move_group_block(group_id, target, ctx);
             }
             TabMovement::Right => {
@@ -7487,8 +7279,7 @@ impl Workspace {
                     Some(other_gid) => group_member_index_range(&self.tabs, other_gid)
                         .map(|(_, l)| l)
                         .unwrap_or(below_index),
-                    None => below_index,
-                };
+                    None => below_index};
                 // Land in the slot just past that neighbor.
                 let target = below_block_last + 1;
                 self.move_group_block(group_id, target, ctx);
@@ -7816,14 +7607,11 @@ impl Workspace {
             VerticalTabsPaneContextMenuTarget::ClickedPane(locator) => PaneNameMenuTarget {
                 locator,
                 rename_label: "Rename pane",
-                reset_label: "Reset pane name",
-            },
+                reset_label: "Reset pane name"},
             VerticalTabsPaneContextMenuTarget::ActivePane(locator) => PaneNameMenuTarget {
                 locator,
                 rename_label: "Rename active pane",
-                reset_label: "Reset active pane name",
-            },
-        };
+                reset_label: "Reset active pane name"}};
         let can_move_left = self.can_move_tab(tab_index, TabMovement::Left);
         let can_move_right = self.can_move_tab(tab_index, TabMovement::Right);
         let is_only_member_of_group = self.tab_is_only_member_of_its_group(tab_index);
@@ -8070,8 +7858,7 @@ impl Workspace {
         let version = if FeatureFlag::AgentView.is_enabled() {
             AgentOnboardingVersion::AgentModality {
                 has_project: false,
-                intention: OnboardingIntention::AgentDrivenDevelopment,
-            }
+                intention: OnboardingIntention::AgentDrivenDevelopment}
         } else {
             AgentOnboardingVersion::UniversalInput { has_project: false }
         };
@@ -8290,8 +8077,7 @@ impl Workspace {
                         );
                     }
                 }
-                None => self.add_tab_for_cloud_workflow(workflow_id, settings, ctx),
-            }
+                None => self.add_tab_for_cloud_workflow(workflow_id, settings, ctx)}
         } else {
             self.add_tab_for_cloud_workflow(workflow_id, settings, ctx);
         }
@@ -8426,15 +8212,13 @@ impl Workspace {
             CloudObjectTypeAndId::Folder(_) => None,
             CloudObjectTypeAndId::GenericStringObject {
                 object_type: GenericStringObjectFormat::Json(JsonObjectType::EnvVarCollection),
-                id,
-            } => Some(Box::new(EnvVarCollectionManager::handle(ctx).update(
+                id} => Some(Box::new(EnvVarCollectionManager::handle(ctx).update(
                 ctx,
                 |evc_manager, ctx| {
                     evc_manager.create_pane(&EnvVarCollectionSource::Existing(id), window_id, ctx)
                 },
             ))),
-            CloudObjectTypeAndId::GenericStringObject { .. } => None,
-        }
+            CloudObjectTypeAndId::GenericStringObject { .. } => None}
     }
 
     fn open_settings_pane(
@@ -8480,9 +8264,7 @@ impl Workspace {
             custom_vertical_tabs_title: None,
             contents: LeafContents::Settings(SettingsPaneSnapshot::Local {
                 current_page: page.unwrap_or_default(),
-                search_query: search_query.map(|s| s.to_owned()),
-            }),
-        })));
+                search_query: search_query.map(|s| s.to_owned())})})));
         self.add_tab_with_pane_layout(
             panes_layout,
             Arc::new(HashMap::new()),
@@ -8598,14 +8380,6 @@ impl Workspace {
         additional_paths: &[PathBuf],
         ctx: &mut ViewContext<Self>,
     ) {
-        send_telemetry_from_ctx!(
-            TelemetryEvent::CodePaneOpened {
-                source: source.clone(),
-                layout,
-                preview
-            },
-            ctx
-        );
 
         let grouping_on = FeatureFlag::TabbedEditorView.is_enabled()
             && *EditorSettings::as_ref(ctx)
@@ -8907,7 +8681,6 @@ impl Workspace {
                 tips_view.set_action_target(ctx.window_id(), input_id, ctx)
             });
 
-            send_telemetry_from_ctx!(TelemetryEvent::OpenWelcomeTips, ctx);
         }
         ctx.focus(&self.welcome_tips_view);
         ctx.notify();
@@ -9157,13 +8930,6 @@ impl Workspace {
             && !was_warp_drive_open
             && self.current_workspace_state.is_warp_drive_open
         {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::WarpDriveOpened {
-                    source: WarpDriveSource::Legacy,
-                    is_code_mode_v2: false
-                },
-                ctx
-            );
             self.tips_completed.update(ctx, |tips_completed, ctx| {
                 mark_feature_used_and_write_to_user_defaults(
                     Tip::Action(TipAction::OpenWarpDrive),
@@ -9195,7 +8961,6 @@ impl Workspace {
 
         if !self.current_workspace_state.is_resource_center_open {
             self.open_resource_center_main_page(ctx);
-            send_telemetry_from_ctx!(TelemetryEvent::ResourceCenterOpened, ctx);
         } else {
             // Close side panel
             self.current_workspace_state.is_resource_center_open = false;
@@ -9402,8 +9167,7 @@ impl Workspace {
         };
         let context = CodeReviewPaneContext {
             repo_path: repo_location,
-            diff_state_model,
-        };
+            diff_state_model};
 
         self.open_right_panel(
             &context,
@@ -9472,18 +9236,6 @@ impl Workspace {
                     // If current_width is not the default, it means we have a width from a previous tab,
                     // so we don't need to do anything - the width is already preserved
                 }
-                send_telemetry_from_ctx!(
-                    CodeReviewTelemetryEvent::PaneOpened {
-                        is_local: panel_update_params
-                            .review_pane_context
-                            .and_then(|context| context.repo_path.as_ref())
-                            .map(LocalOrRemotePath::is_local),
-                        entrypoint: panel_update_params.entrypoint.unwrap_or_default(),
-                        is_code_mode_v2: true,
-                        cli_agent: panel_update_params.cli_agent.map(Into::into),
-                    },
-                    ctx
-                );
                 self.setup_code_review_panel(panel_update_params.review_pane_context, ctx);
             }
         } else {
@@ -9519,8 +9271,7 @@ impl Workspace {
                 })?;
                 Some(CodeReviewPaneContext {
                     repo_path,
-                    diff_state_model,
-                })
+                    diff_state_model})
             },
         );
 
@@ -9530,8 +9281,7 @@ impl Workspace {
                 target_open_state,
                 entrypoint: Some(CodeReviewPaneEntrypoint::RightPanel),
                 cli_agent: None,
-                review_pane_context: context.as_ref(),
-            },
+                review_pane_context: context.as_ref()},
             ctx,
         );
     }
@@ -9560,8 +9310,7 @@ impl Workspace {
                 target_open_state: true,
                 entrypoint: Some(entrypoint),
                 cli_agent,
-                review_pane_context: Some(context),
-            },
+                review_pane_context: Some(context)},
             ctx,
         );
         if let Some(repo_path) = &context.repo_path {
@@ -9593,8 +9342,7 @@ impl Workspace {
                 target_open_state: false,
                 entrypoint: None,
                 cli_agent: None,
-                review_pane_context: None,
-            },
+                review_pane_context: None},
             ctx,
         );
     }
@@ -9734,8 +9482,7 @@ impl Workspace {
         self.new_session_sidecar_menu.read(ctx, |menu, _| {
             menu.selected_item().and_then(|item| match item {
                 MenuItem::Item(fields) => fields.on_select_action().cloned(),
-                _ => None,
-            })
+                _ => None})
         })
     }
 
@@ -9781,7 +9528,6 @@ impl Workspace {
             self.current_workspace_state.is_ai_assistant_panel_open = false;
             // Open side panel
             self.current_workspace_state.is_resource_center_open = true;
-            send_telemetry_from_ctx!(TelemetryEvent::KeybindingsPageOpened, ctx);
         } else if current_page != ResourceCenterPage::Keybindings
             && self.current_workspace_state.is_resource_center_open
         {
@@ -9790,7 +9536,6 @@ impl Workspace {
                 .update(ctx, |resource_center_view, ctx| {
                     resource_center_view.set_current_page(ResourceCenterPage::Keybindings, ctx)
                 });
-            send_telemetry_from_ctx!(TelemetryEvent::KeybindingsPageOpened, ctx);
         } else {
             // Close side panel
             self.current_workspace_state.is_resource_center_open = false;
@@ -9993,8 +9738,7 @@ impl Workspace {
             let idx = menu.hovered_index()?;
             let label = match menu.items().get(idx)? {
                 MenuItem::Item(fields) => Some(fields.label().to_string()),
-                _ => None,
-            };
+                _ => None};
             Some((idx, label))
         });
 
@@ -10258,8 +10002,7 @@ impl Workspace {
                     let display = user_friendly_path(&path_str, home.as_deref()).into_owned();
                     MenuItemFields::new(display)
                         .with_on_select_action(NewSessionSidecarSelection::OpenWorktreeRepo {
-                            repo_path: path_str.clone(),
-                        })
+                            repo_path: path_str.clone()})
                         .with_icon(icons::Icon::Folder)
                         .with_clip_config(ClipConfig::start())
                         .with_tooltip(path_str)
@@ -10365,39 +10108,32 @@ impl Workspace {
         let hovered_action = self.new_session_dropdown_menu.read(ctx, |menu, _| {
             menu.items().get(hovered_index).and_then(|item| match item {
                 MenuItem::Item(fields) => fields.on_select_action().cloned(),
-                _ => None,
-            })
+                _ => None})
         });
 
         let item_kind = match &hovered_action {
             Some(WorkspaceAction::SelectTabConfig(config)) => SidecarItemKind::UserTabConfig {
-                config: config.clone(),
-            },
+                config: config.clone()},
             Some(WorkspaceAction::AddAgentTab) => SidecarItemKind::BuiltIn {
                 name: label.to_string(),
                 default_mode: DefaultSessionMode::Agent,
-                shell: None,
-            },
+                shell: None},
             Some(WorkspaceAction::AddAmbientAgentTab) => SidecarItemKind::BuiltIn {
                 name: label.to_string(),
                 default_mode: DefaultSessionMode::CloudAgent,
-                shell: None,
-            },
+                shell: None},
             Some(WorkspaceAction::AddTerminalTab { .. }) => SidecarItemKind::BuiltIn {
                 name: label.to_string(),
                 default_mode: DefaultSessionMode::Terminal,
-                shell: None,
-            },
+                shell: None},
             Some(WorkspaceAction::AddTabWithShell { shell, .. }) => SidecarItemKind::BuiltIn {
                 name: label.to_string(),
                 default_mode: DefaultSessionMode::Terminal,
-                shell: Some(shell.clone()),
-            },
+                shell: Some(shell.clone())},
             Some(WorkspaceAction::AddDockerSandboxTab) => SidecarItemKind::BuiltIn {
                 name: label.to_string(),
                 default_mode: DefaultSessionMode::DockerSandbox,
-                shell: None,
-            },
+                shell: None},
             _ => {
                 // Hovered item has no associated sidecar. Clear any stale
                 // sidecar state left over from a previously-hovered item so
@@ -10487,8 +10223,7 @@ impl Workspace {
         let hovered_label = self.new_session_dropdown_menu.read(ctx, |menu, _| {
             menu.items().get(hovered_index).and_then(|item| match item {
                 MenuItem::Item(fields) => Some(fields.label().to_string()),
-                _ => None,
-            })
+                _ => None})
         });
 
         // Separator or non-labeled item — hide sidecar.
@@ -10571,8 +10306,7 @@ impl Workspace {
             LaunchConfigModalEvent::OpenFileWithTarget {
                 path,
                 target,
-                line_col,
-            } => {
+                line_col} => {
                 self.open_file_with_target(
                     path.clone(),
                     target.clone(),
@@ -10580,8 +10314,7 @@ impl Workspace {
                     CodeSource::Link {
                         path: path.clone(),
                         range_start: *line_col,
-                        range_end: None,
-                    },
+                        range_end: None},
                     ctx,
                 );
             }
@@ -10631,13 +10364,6 @@ impl Workspace {
                     ctx,
                 );
                 if should_track_existing_config_open {
-                    send_telemetry_from_ctx!(
-                        TabConfigsTelemetryEvent::ExistingConfigOpened {
-                            open_mode: ExistingTabConfigOpenMode::ParamsModal,
-                            is_worktree_config: config.is_worktree(),
-                        },
-                        ctx
-                    );
                 }
                 self.close_tab_config_params_modal(ctx);
                 self.complete_pending_session_config_replacement(ctx);
@@ -10660,8 +10386,7 @@ impl Workspace {
             }
             TabConfigParamsModalEvent::PickNewRepo { param_index } => {
                 ctx.dispatch_typed_action_deferred(WorkspaceAction::OpenTabConfigRepoPicker {
-                    param_index: *param_index,
-                });
+                    param_index: *param_index});
             }
         }
     }
@@ -10740,8 +10465,7 @@ impl Workspace {
 
     fn handle_new_worktree_modal_event(&mut self, event: &ModalEvent, ctx: &mut ViewContext<Self>) {
         match event {
-            ModalEvent::Close => self.close_new_worktree_modal(ctx),
-        }
+            ModalEvent::Close => self.close_new_worktree_modal(ctx)}
     }
 
     fn handle_new_worktree_modal_body_event(
@@ -10754,8 +10478,7 @@ impl Workspace {
             NewWorktreeModalEvent::Submit {
                 repo,
                 branch,
-                worktree_branch_name,
-            } => {
+                worktree_branch_name} => {
                 self.handle_new_worktree_submit(repo, branch, worktree_branch_name.as_deref(), ctx);
                 self.close_new_worktree_modal(ctx);
             }
@@ -10829,8 +10552,7 @@ impl Workspace {
             _ if !base_branch.is_empty() => {
                 format!("New worktree: {repo_display_name}, {base_branch}")
             }
-            _ => format!("New worktree: {repo_display_name}"),
-        };
+            _ => format!("New worktree: {repo_display_name}")};
 
         let filename_hint = if let Some(name) = worktree_branch_name {
             name.to_string()
@@ -10881,13 +10603,6 @@ impl Workspace {
                         ctx,
                     );
                 }
-                send_telemetry_from_ctx!(
-                    TabConfigsTelemetryEvent::NewWorktreeConfigOpened {
-                        source: NewWorktreeConfigOpenSource::NewWorktreeModal,
-                        naming_mode,
-                    },
-                    ctx
-                );
             }
             Err(e) => {
                 log::warn!("Failed to parse generated worktree config: {e:?}");
@@ -10998,13 +10713,6 @@ impl Workspace {
         let param_values = tab_config.default_param_values();
         log::info!("Opening tab from saved worktree config");
         self.open_tab_config_with_params(tab_config, param_values, Some(&branch_name), ctx);
-        send_telemetry_from_ctx!(
-            TabConfigsTelemetryEvent::NewWorktreeConfigOpened {
-                source: NewWorktreeConfigOpenSource::Submenu,
-                naming_mode: WorktreeBranchNamingMode::Auto,
-            },
-            ctx
-        );
     }
 
     #[cfg(not(feature = "local_fs"))]
@@ -11081,8 +10789,7 @@ impl Workspace {
             (Some(terminal_model), Some(terminal_view)) => terminal_view.read(app, |view, ctx| {
                 view.is_input_box_visible(&terminal_model.lock(), ctx)
             }),
-            _ => false,
-        }
+            _ => false}
     }
 
     fn maybe_refresh_workflow_info_box_and_input(
@@ -11228,8 +10935,7 @@ impl Workspace {
             }
             CloseSessionConfirmationEvent::CloseSession {
                 dont_show_again,
-                open_confirmation_source,
-            } => {
+                open_confirmation_source} => {
                 if *dont_show_again
                     && let Err(e) = SessionSettings::handle(ctx).update(ctx, |settings, ctx| {
                         settings.should_confirm_close_session.set_value(false, ctx)
@@ -11245,14 +10951,12 @@ impl Workspace {
                     }
                     OpenDialogSource::ClosePane {
                         pane_group_id,
-                        pane_id,
-                    } => {
+                        pane_id} => {
                         self.close_pane(pane_group_id, pane_id, ctx);
                     }
                     OpenDialogSource::CloseTabsDirection {
                         tab_index,
-                        direction,
-                    } => {
+                        direction} => {
                         self.close_tabs_direction(tab_index, direction, true, ctx);
                     }
                     OpenDialogSource::CloseOtherTabs { tab_index } => {
@@ -11285,8 +10989,7 @@ impl Workspace {
                     &WorkspaceAction::ExecuteRewindAIConversation {
                         ai_block_view_id: rewind_source.ai_block_view_id,
                         exchange_id: rewind_source.exchange_id,
-                        conversation_id: rewind_source.conversation_id,
-                    },
+                        conversation_id: rewind_source.conversation_id},
                     ctx,
                 );
                 self.focus_active_tab(ctx);
@@ -11313,8 +11016,7 @@ impl Workspace {
                 self.handle_action(
                     &WorkspaceAction::ExecuteDeleteConversation {
                         conversation_id: source.conversation_id,
-                        terminal_view_id: source.terminal_view_id,
-                    },
+                        terminal_view_id: source.terminal_view_id},
                     ctx,
                 );
                 ctx.focus(&self.left_panel_view);
@@ -11501,8 +11203,7 @@ impl Workspace {
                     // Only persist pinned state when the Pinned Tabs feature is
                     // enabled.
                     pinned: FeatureFlag::PinnedTabs.is_enabled()
-                        && self.tabs.get(tab_index).is_some_and(|tab| tab.pinned),
-                }
+                        && self.tabs.get(tab_index).is_some_and(|tab| tab.pinned)}
             })
             .filter(|tab| {
                 // Filter out any tab that contains a single, read-only session.
@@ -11532,8 +11233,7 @@ impl Workspace {
                     name: group.name.clone(),
                     color: group.color,
                     collapsed: group.collapsed,
-                    pinned: FeatureFlag::PinnedTabs.is_enabled() && group.pinned,
-                })
+                    pinned: FeatureFlag::PinnedTabs.is_enabled() && group.pinned})
                 .collect()
         } else {
             Vec::new()
@@ -11606,8 +11306,7 @@ impl Workspace {
             left_panel_width,
             right_panel_width,
             agent_management_filters,
-            tab_groups,
-        }
+            tab_groups}
     }
 
     fn compute_left_panel_snapshot(
@@ -11627,8 +11326,7 @@ impl Workspace {
             Some(LeftPanelSnapshot {
                 left_panel_displayed_tab: lp.active_view().into(),
                 pane_group_id: pane_group_id.to_string(),
-                width: left_panel_width.unwrap_or(DEFAULT_LEFT_PANEL_WIDTH) as usize,
-            })
+                width: left_panel_width.unwrap_or(DEFAULT_LEFT_PANEL_WIDTH) as usize})
         })
     }
 
@@ -11649,8 +11347,7 @@ impl Workspace {
         Some(RightPanelSnapshot {
             pane_group_id: pane_group_id.to_string(),
             width: right_panel_width.unwrap_or(DEFAULT_RIGHT_PANEL_WIDTH) as usize,
-            is_maximized,
-        })
+            is_maximized})
     }
 
     pub fn open_launch_config_save_modal(&mut self, ctx: &mut ViewContext<Self>) {
@@ -11708,8 +11405,7 @@ impl Workspace {
                             shift_pressed_initially: matches!(
                                 direction,
                                 SessionCycleDirection::Previous
-                            ),
-                        },
+                            )},
                         None,
                         ctx,
                     );
@@ -12013,15 +11709,6 @@ impl Workspace {
                     })
                     .build();
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::QuitModalShown {
-                        running_processes: summary.total_long_running_commands as u32,
-                        shared_sessions: summary.shared_sessions as u32,
-                        modal_for: CloseTarget::Tab,
-                    },
-                    ctx
-                );
-
                 if cfg!(all(not(target_family = "wasm"), target_os = "macos")) {
                     AppContext::show_native_platform_modal(ctx, dialog);
                     return false;
@@ -12081,12 +11768,6 @@ impl Workspace {
                 self.feature_intro_tab_pane_group_id = None;
             }
             ctx.dispatch_global_action("workspace:save_app", ());
-            send_telemetry_from_ctx!(
-                TelemetryEvent::TabOperations {
-                    action: TabTelemetryAction::CloseTab,
-                },
-                ctx
-            );
         }
     }
 
@@ -12111,12 +11792,6 @@ impl Workspace {
 
         // Telemetry whenever tabs actually closed, not when confirmation dialog comes up.
         if tabs_closed {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::TabOperations {
-                    action: TabTelemetryAction::CloseOtherTabs,
-                },
-                ctx
-            );
         }
     }
 
@@ -12131,14 +11806,12 @@ impl Workspace {
     ) {
         let indices_to_remove = match direction {
             TabMovement::Left => 0..index,
-            TabMovement::Right => (index + 1)..self.tabs.len(),
-        };
+            TabMovement::Right => (index + 1)..self.tabs.len()};
         let tabs_closed = self.close_tabs(
             indices_to_remove,
             OpenDialogSource::CloseTabsDirection {
                 tab_index: index,
-                direction,
-            },
+                direction},
             skip_confirmation,
             true,
             ctx,
@@ -12148,15 +11821,8 @@ impl Workspace {
         if tabs_closed {
             match direction {
                 TabMovement::Right if self.active_tab_index > index => {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::TabOperations {
-                            action: TabTelemetryAction::CloseTabsToRight,
-                        },
-                        ctx
-                    );
                 }
-                _ => (),
-            }
+                _ => ()}
         }
     }
 
@@ -12298,8 +11964,7 @@ impl Workspace {
         let after = self.tabs[index].group_id;
         match before {
             Some(group_id) if before == after => self.index_after_group(group_id).unwrap_or(index),
-            _ => index,
-        }
+            _ => index}
     }
 
     pub fn open_autoupdate_failure_link(&mut self, ctx: &mut ViewContext<Self>) {
@@ -12325,8 +11990,7 @@ impl Workspace {
             PanesLayout::Snapshot(Box::new(PaneNodeSnapshot::Leaf(LeafSnapshot {
                 is_focused: true,
                 custom_vertical_tabs_title: None,
-                contents: LeafContents::GetStarted,
-            }))),
+                contents: LeafContents::GetStarted}))),
             Arc::new(HashMap::new()),
             None,
             ctx,
@@ -12384,13 +12048,6 @@ impl Workspace {
             return;
         }
 
-        send_telemetry_from_ctx!(
-            CloudAgentTelemetryEvent::EnteredCloudMode {
-                entry_point: CloudModeEntryPoint::NewTab,
-            },
-            ctx
-        );
-
         self.add_tab_with_pane_layout(
             PanesLayout::AmbientAgent,
             Arc::new(HashMap::new()),
@@ -12407,13 +12064,6 @@ impl Workspace {
         source: AddTabWithShellSource,
         ctx: &mut ViewContext<Self>,
     ) {
-        send_telemetry_from_ctx!(
-            TelemetryEvent::AddTabWithShell {
-                source,
-                shell: shell.telemetry_value()
-            },
-            ctx
-        );
         self.add_new_session_tab_with_default_mode(
             NewSessionSource::Tab,
             Some(ctx.window_id()),
@@ -12733,9 +12383,7 @@ impl Workspace {
             custom_vertical_tabs_title: None,
             contents: LeafContents::Notebook(NotebookPaneSnapshot::CloudNotebook {
                 notebook_id: Some(notebook_id),
-                settings: settings.clone(),
-            }),
-        })));
+                settings: settings.clone()})})));
         self.add_tab_with_pane_layout(panes_layout, Arc::new(HashMap::new()), None, ctx);
     }
 
@@ -12750,9 +12398,7 @@ impl Workspace {
             custom_vertical_tabs_title: None,
             contents: LeafContents::Workflow(WorkflowPaneSnapshot::CloudWorkflow {
                 workflow_id: Some(workflow_id),
-                settings: settings.clone(),
-            }),
-        })));
+                settings: settings.clone()})})));
         self.add_tab_with_pane_layout(panes_layout, Arc::new(HashMap::new()), None, ctx);
     }
 
@@ -12766,9 +12412,7 @@ impl Workspace {
             is_focused: true,
             custom_vertical_tabs_title: None,
             contents: LeafContents::Notebook(NotebookPaneSnapshot::LocalFileNotebook {
-                path: file_path,
-            }),
-        })));
+                path: file_path})})));
         self.add_tab_with_pane_layout(panes_layout, Arc::new(HashMap::new()), None, ctx);
     }
 
@@ -12799,8 +12443,7 @@ impl Workspace {
                 context_block,
                 None,
                 terminal::view::rich_content::RichContentInsertionPosition::Append {
-                    insert_below_long_running_block: false,
-                },
+                    insert_below_long_running_block: false},
                 ctx,
             );
         });
@@ -12827,8 +12470,7 @@ impl Workspace {
         let source = CodeSource::Link {
             path: file_path,
             range_start: line_and_column,
-            range_end: None,
-        };
+            range_end: None};
         let pane = CodePane::new(source, line_and_column, ctx);
 
         // A code file opened in a new tab joins the active tab's group (if any)
@@ -12937,8 +12579,7 @@ impl Workspace {
                     }
                 },
                 FilePickerConfiguration::new().folders_only(),
-            ),
-        }
+            )}
     }
 
     fn handle_open_repository(&mut self, path: &str, ctx: &mut ViewContext<Self>) {
@@ -13058,8 +12699,7 @@ impl Workspace {
         let layout_from_setting =
             match *EditorSettings::as_ref(ctx).open_conversation_layout_preference {
                 OpenConversationPreference::NewTab => RestoreConversationLayout::NewTab,
-                OpenConversationPreference::SplitPane => RestoreConversationLayout::SplitPane,
-            };
+                OpenConversationPreference::SplitPane => RestoreConversationLayout::SplitPane};
         #[cfg(not(feature = "local_fs"))]
         let layout_from_setting = RestoreConversationLayout::NewTab;
 
@@ -13389,20 +13029,17 @@ impl Workspace {
                         let launch =
                             claude_transcript::rehydrate_claude_transcript_from_reader(file)?;
                         Ok(ThirdPartyLocalContinuationLaunch {
-                            command: launch.command,
-                        })
+                            command: launch.command})
                     }
                     AIAgentHarness::Codex => {
                         let launch =
                             codex_transcript::rehydrate_codex_transcript_from_reader(file)?;
                         Ok(ThirdPartyLocalContinuationLaunch {
-                            command: launch.command,
-                        })
+                            command: launch.command})
                     }
                     _ => anyhow::bail!(
                         "Local continuation is not supported for this harness"
-                    ),
-                }
+                    )}
             },
             move |workspace, result, ctx| {
                 let launch = match result {
@@ -13692,8 +13329,7 @@ impl Workspace {
                 None,
                 Some(ConversationRestorationInNewPaneType::Forked {
                     conversation: forked_conversation,
-                    has_initial_query,
-                }),
+                    has_initial_query}),
                 false,
                 ctx,
             );
@@ -13740,8 +13376,7 @@ impl Workspace {
                 None, /* chosen_shell */
                 Some(ConversationRestorationInNewPaneType::Forked {
                     conversation: forked_conversation.clone(),
-                    has_initial_query,
-                }),
+                    has_initial_query}),
                 ctx,
             );
 
@@ -13770,8 +13405,7 @@ impl Workspace {
         // After splitting, focus the newly created pane
         let locator = PaneViewLocator {
             pane_group_id: active_pane_group_id,
-            pane_id: created_pane_id,
-        };
+            pane_id: created_pane_id};
         self.focus_pane(locator, ctx);
 
         Self::show_fork_toast(conversation_id, window_id, ctx);
@@ -13800,8 +13434,7 @@ impl Workspace {
                     .update(terminal_view_ctx, |controller, ctx| {
                         controller.send_slash_command_request(
                             SlashCommandRequest::Summarize {
-                                prompt: summarization_prompt,
-                            },
+                                prompt: summarization_prompt},
                             ctx,
                         );
                     });
@@ -13994,8 +13627,7 @@ impl Workspace {
                             .unwrap_or(neighbor)
                     }
                     // Ungrouped neighbor, or a member of our own group: step one.
-                    Some(_) | None => neighbor,
-                }
+                    Some(_) | None => neighbor}
             }
             TabMovement::Right if index < tabs_len - 1 => {
                 let neighbor = index + 1;
@@ -14008,12 +13640,10 @@ impl Workspace {
                             .unwrap_or(neighbor)
                     }
                     // Ungrouped neighbor, or a member of our own group: step one.
-                    Some(_) | None => neighbor,
-                }
+                    Some(_) | None => neighbor}
             }
             // Already at the start/end of the list: nothing to move past.
-            TabMovement::Left | TabMovement::Right => return,
-        };
+            TabMovement::Left | TabMovement::Right => return};
 
         // `hop_tab_to_index` keeps the same tab active across the move, so we
         // only capture whether the moved tab was the active one for telemetry.
@@ -14021,9 +13651,7 @@ impl Workspace {
         self.hop_tab_to_index(index, target, ctx);
 
         if moving_active_tab {
-            send_telemetry_from_ctx!(TelemetryEvent::MoveActiveTab { direction }, ctx);
         } else {
-            send_telemetry_from_ctx!(TelemetryEvent::MoveTab { direction }, ctx);
         }
     }
 
@@ -14091,8 +13719,7 @@ impl Workspace {
             WorkspaceDecorationVisibility::HideFullscreen if is_fullscreen => hovered_visibility,
             // If the user always wants a tab bar OR the window isn't fullscreen, make it
             // persistently stacked above the content area.
-            _ => ShowTabBar::Stacked,
-        }
+            _ => ShowTabBar::Stacked}
     }
 
     #[cfg(target_os = "macos")]
@@ -14167,19 +13794,8 @@ impl Workspace {
                         );
                     }
                 }
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::NotificationsRequestPermissionsOutcome { outcome },
-                    ctx
-                );
             });
 
-            send_telemetry_from_ctx!(
-                TelemetryEvent::NotificationPermissionsRequested {
-                    source: NotificationsTurnedOnSource::Settings,
-                    trigger: None
-                },
-                ctx
-            );
         }
     }
 
@@ -14189,8 +13805,7 @@ impl Workspace {
         let new_mode = match previous_mode {
             NotificationsMode::Unset | NotificationsMode::Dismissed => NotificationsMode::Enabled,
             NotificationsMode::Enabled => NotificationsMode::Disabled,
-            NotificationsMode::Disabled => NotificationsMode::Enabled,
-        };
+            NotificationsMode::Disabled => NotificationsMode::Enabled};
 
         SessionSettings::handle(ctx).update(ctx, |settings, ctx| {
             let new_notifications = NotificationsSettings {
@@ -14373,8 +13988,7 @@ impl Workspace {
                     SessionSource::Set {
                         active_pane_id,
                         active_tab_id,
-                        active_window_id,
-                    },
+                        active_window_id},
                     ctx,
                 );
                 ctx.notify();
@@ -14501,25 +14115,19 @@ impl Workspace {
             PaletteMode::Command => self.open_command_palette(ctx),
             PaletteMode::Navigation => match source {
                 PaletteSource::CtrlTab {
-                    shift_pressed_initially,
-                } => {
+                    shift_pressed_initially} => {
                     let filter = match *KeysSettings::as_ref(ctx).ctrl_tab_behavior {
                         CtrlTabBehavior::CycleMostRecentTab => QueryFilter::Tabs,
-                        _ => QueryFilter::Sessions,
-                    };
+                        _ => QueryFilter::Sessions};
                     self.open_ctrl_tab_palette(filter, shift_pressed_initially, ctx);
                 }
-                _ => self.open_navigation_palette(ctx),
-            },
+                _ => self.open_navigation_palette(ctx)},
             PaletteMode::LaunchConfig => self.open_launch_config_palette(ctx),
             PaletteMode::WarpDrive => self.open_warp_drive_palette(ctx),
             PaletteMode::Files => self.open_files_palette(ctx),
-            PaletteMode::Conversations => self.open_conversations_palette(ctx),
-        }
+            PaletteMode::Conversations => self.open_conversations_palette(ctx)}
 
         ctx.focus(&self.palette);
-
-        send_telemetry_from_ctx!(TelemetryEvent::PaletteSearchOpened { mode, source }, ctx);
 
         ctx.notify();
     }
@@ -14578,8 +14186,7 @@ impl Workspace {
     fn handle_palette_event(&mut self, event: &CommandPaletteEvent, ctx: &mut ViewContext<Self>) {
         match event {
             CommandPaletteEvent::Close {
-                accepted_action_type,
-            } => self.close_palette(true, *accepted_action_type, ctx),
+                accepted_action_type} => self.close_palette(true, *accepted_action_type, ctx),
             CommandPaletteEvent::ExecuteWorkflow { id } => {
                 let Some(workflow) = CloudModel::as_ref(ctx).get_workflow(id) else {
                     log::warn!("Tried to execute workflow for id {id:?} but it does not exist");
@@ -14614,8 +14221,7 @@ impl Workspace {
             #[allow(unused_variables)]
             CommandPaletteEvent::OpenFile {
                 path,
-                line_and_column_arg,
-            } => {
+                line_and_column_arg} => {
                 #[cfg(feature = "local_fs")]
                 {
                     // Build a LocalOrRemotePath for the file. For remote sessions
@@ -14638,8 +14244,7 @@ impl Workspace {
                                         ),
                                     ))
                                 }
-                                LocalOrRemotePath::Local(_) => None,
-                            })
+                                LocalOrRemotePath::Local(_) => None})
                             .unwrap_or_else(|| LocalOrRemotePath::Local(PathBuf::from(path)))
                     };
 
@@ -14764,8 +14369,7 @@ impl Workspace {
         let mut request_type = None;
         let should_show_changelog = match event {
             ChangelogEvent::ChangelogRequestFailed {
-                request_type: ChangelogRequestType::UserAction,
-            }
+                request_type: ChangelogRequestType::UserAction}
             | ChangelogEvent::ChangelogRequestComplete {
                 request_type: ChangelogRequestType::UserAction,
                 ..
@@ -14789,13 +14393,10 @@ impl Workspace {
                         && !Settings::has_changelog_been_shown(version, ctx)
                         && !*opening_warp_drive_on_start_up
                 }
-                None => false,
-            },
+                None => false},
             ChangelogEvent::ChangelogRequestFailed {
-                request_type: ChangelogRequestType::WindowLaunch,
-            } => false,
-            ChangelogEvent::ImageRequestComplete => false,
-        } && show_changelog_setting;
+                request_type: ChangelogRequestType::WindowLaunch} => false,
+            ChangelogEvent::ImageRequestComplete => false} && show_changelog_setting;
 
         match (should_show_changelog, request_type) {
             (true, Some(ChangelogRequestType::WindowLaunch)) => {
@@ -14924,22 +14525,10 @@ impl Workspace {
             }
             SettingsViewEvent::OpenAIFactCollection => {
                 self.open_ai_fact_collection_pane(Some(Direction::Right), None, ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::KnowledgePaneOpened {
-                        entrypoint: KnowledgePaneEntrypoint::Settings,
-                    },
-                    ctx
-                );
             }
             SettingsViewEvent::OpenMCPServerCollection => {
                 self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::MCPServerCollectionPaneOpened {
-                        entrypoint: MCPServerCollectionPaneEntrypoint::Settings,
-                    },
-                    ctx
-                );
             }
             SettingsViewEvent::OpenCustomRouterEditor(router) => {
                 self.open_custom_router_editor_pane(None, router.clone(), ctx);
@@ -14955,8 +14544,7 @@ impl Workspace {
                 if let Some((first, rest)) = rule_paths.split_first() {
                     self.open_code(
                         CodeSource::ProjectRules {
-                            location: LocalOrRemotePath::Local(first.clone()),
-                        },
+                            location: LocalOrRemotePath::Local(first.clone())},
                         EditorLayout::SplitPane,
                         None,
                         false,
@@ -15099,8 +14687,7 @@ impl Workspace {
                                 } else {
                                     Some(PendingCloudLaunch {
                                         prompt,
-                                        attachments,
-                                    })
+                                        attachments})
                                 };
                                 (launch, entry_point)
                             })
@@ -15109,8 +14696,7 @@ impl Workspace {
                             WorkspaceAction::OpenLocalToCloudHandoffPane {
                                 launch,
                                 environment_id: Some(env_id),
-                                entry_point,
-                            },
+                                entry_point},
                         );
                     }
                 }
@@ -15337,8 +14923,7 @@ impl Workspace {
                 });
                 orchestrator_view
             }
-            _ => source_view.clone(),
-        };
+            _ => source_view.clone()};
 
         let agent_view_controller = target.as_ref(ctx).agent_view_controller().clone();
         if agent_view_controller
@@ -15442,11 +15027,9 @@ impl Workspace {
                 });
                 Some(PendingCloudLaunch {
                     prompt: String::new(),
-                    attachments,
-                })
+                    attachments})
             }
-            None => None,
-        };
+            None => None};
         let history = BlocklistAIHistoryModel::handle(ctx);
         let controller = source_view.as_ref(ctx).ai_controller().clone();
         let context = source_view.as_ref(ctx).ai_context_model().clone();
@@ -15589,8 +15172,7 @@ impl Workspace {
             forked_conversation_id,
             title,
             request,
-            cancel,
-        } = materialization;
+            cancel} = materialization;
         let local_fork = source_conversation
             .as_ref()
             .map(|source_conversation| {
@@ -15688,8 +15270,7 @@ impl Workspace {
         }
         let launch = launch.map(|launch| PendingCloudLaunch {
             prompt: launch.prompt,
-            attachments: HandoffLaunchAttachments::default(),
-        });
+            attachments: HandoffLaunchAttachments::default()});
         Self::restore_source_handoff_draft(source_view, launch, environment_id, ctx);
         let message = match error {
             HandoffPrepareError::LongRunningCommand => {
@@ -15743,9 +15324,7 @@ impl Workspace {
                 prompt: restoration.prompt,
                 attachments: HandoffLaunchAttachments {
                     request_attachments: Vec::new(),
-                    display_attachments: restoration.attachments,
-                },
-            };
+                    display_attachments: restoration.attachments}};
             Self::restore_source_handoff_draft(
                 source_view,
                 Some(launch),
@@ -15825,8 +15404,7 @@ impl Workspace {
             }
             pane_group::Event::SendNotification {
                 notification,
-                pane_id,
-            } => {
+                pane_id} => {
                 // Right now, all notifications are block-specific, but in the future,
                 // we might want to serialize a block-agnostic notification context.
                 let window_id = ctx.window_id();
@@ -15835,8 +15413,7 @@ impl Workspace {
                 let notification_data = NotificationContext::BlockOrigin {
                     window_id,
                     pane_group_id,
-                    pane_id,
-                };
+                    pane_id};
 
                 if let Ok(notification_data_str) = serde_json::to_string(&notification_data) {
                     // Read the notification sound setting from SessionSettings
@@ -15861,12 +15438,6 @@ impl Workspace {
                                         .context("Unknown error when sending notification")
                                 );
                             }
-                            send_telemetry_from_ctx!(
-                                TelemetryEvent::NotificationFailedToSend {
-                                    error: notification_error.clone()
-                                },
-                                ctx
-                            );
 
                             // Surface error to user
                             workspace.show_notification_error(
@@ -15931,12 +15502,6 @@ impl Workspace {
                     AIFactPage::Rules
                 };
                 self.open_ai_fact_collection_pane(None, Some(page), ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::KnowledgePaneOpened {
-                        entrypoint: KnowledgePaneEntrypoint::AIBlocklist,
-                    },
-                    ctx
-                );
             }
             pane_group::Event::OpenPromptEditor => {
                 self.open_prompt_editor(PromptEditorOpenSource::InputContextMenu, ctx);
@@ -15958,12 +15523,6 @@ impl Workspace {
                     Some(AIFactPage::RuleEditor { sync_id: None }),
                     ctx,
                 );
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::KnowledgePaneOpened {
-                        entrypoint: KnowledgePaneEntrypoint::SlashCommand,
-                    },
-                    ctx
-                );
             }
             #[cfg_attr(not(feature = "local_fs"), allow(unused_variables))]
             pane_group::Event::OpenFileInWarp { path, session } => {
@@ -15975,13 +15534,11 @@ impl Workspace {
             }
             pane_group::Event::MoveToSpace {
                 cloud_object_type_and_id,
-                space,
-            } => {
+                space} => {
                 self.move_to_drive_space(*cloud_object_type_and_id, *space, ctx);
             }
             pane_group::Event::OpenWarpDriveLink {
-                open_warp_drive_args,
-            } => {
+                open_warp_drive_args} => {
                 let object_found = CloudModel::as_ref(ctx)
                     .get_by_uid(&open_warp_drive_args.server_id.uid())
                     .is_some();
@@ -16035,8 +15592,7 @@ impl Workspace {
             pane_group::Event::OpenCodeInWarp {
                 source,
                 layout,
-                line_col,
-            } => {
+                line_col} => {
                 self.open_code(source.clone(), *layout, *line_col, false, &[], ctx);
             }
             #[cfg(feature = "local_fs")]
@@ -16086,8 +15642,7 @@ impl Workspace {
                 workflow,
                 workflow_source,
                 workflow_selection_source,
-                argument_override,
-            } => {
+                argument_override} => {
                 self.run_workflow_in_active_input(
                     workflow,
                     *workflow_source,
@@ -16099,8 +15654,7 @@ impl Workspace {
             }
             pane_group::Event::InvokeEnvVarCollection {
                 env_var_collection,
-                in_subshell,
-            } => self.invoke_environment_variables(
+                in_subshell} => self.invoke_environment_variables(
                 env_var_collection.as_cloud_env_var_collection().clone(),
                 *in_subshell,
                 ctx,
@@ -16110,8 +15664,7 @@ impl Workspace {
                     self.show_close_session_confirmation_dialog(
                         OpenDialogSource::ClosePane {
                             pane_group_id: pane_group.id(),
-                            pane_id: *pane_id,
-                        },
+                            pane_id: *pane_id},
                         ctx,
                     );
                 } else {
@@ -16350,8 +15903,7 @@ impl Workspace {
                     new_pane_group.update(ctx, |pg, _ctx| {
                         pg.set_child_agent_origin(ChildAgentOrigin {
                             source_pane_group,
-                            conversation_id,
-                        });
+                            conversation_id});
                     });
                 }
             }
@@ -16360,8 +15912,7 @@ impl Workspace {
                     match hovered_tab_index {
                         TabBarHoverIndex::BeforeTab {
                             index: workspace_tab_index,
-                            group,
-                        } => {
+                            group} => {
                             // If an editor tab is dropped into a new position in the workspace tab group,
                             // create a new pane and insert it into the group.
                             let pane = if let ActionOrigin::EditorTab(editor_tab_index) = origin {
@@ -16560,8 +16111,7 @@ impl Workspace {
             pane_group::Event::SwitchTabFocusAndMovePane {
                 tab_idx,
                 pane_id,
-                hidden_pane_preview_direction,
-            } => {
+                hidden_pane_preview_direction} => {
                 #[cfg(feature = "local_fs")]
                 let prefers_tabbed_editor_view = FeatureFlag::TabbedEditorView.is_enabled()
                     && *EditorSettings::as_ref(ctx)
@@ -16602,8 +16152,7 @@ impl Workspace {
             }
             pane_group::Event::UpdateHoveredTabIndex {
                 tab_hover_index,
-                drag_position,
-            } => {
+                drag_position} => {
                 self.hovered_tab_index =
                     Some(self.refine_hovered_tab_index(*tab_hover_index, *drag_position, ctx));
                 ctx.notify();
@@ -16624,8 +16173,7 @@ impl Workspace {
             pane_group::Event::OpenDriveObjectShareDialog {
                 cloud_object_type_and_id,
                 invitee_email,
-                source,
-            } => {
+                source} => {
                 self.open_object_sharing_settings(
                     *cloud_object_type_and_id,
                     invitee_email.clone(),
@@ -16636,14 +16184,12 @@ impl Workspace {
             pane_group::Event::OpenPalette {
                 mode,
                 source,
-                query,
-            } => self.open_palette_action(*mode, *source, query.as_deref(), ctx),
+                query} => self.open_palette_action(*mode, *source, query.as_deref(), ctx),
             pane_group::Event::FileUploadCommand {
                 upload_id,
                 command: _,
                 remote_pane_id,
-                local_pane_id,
-            } => {
+                local_pane_id} => {
                 self.file_upload_sessions
                     .local_to_remote_map
                     .insert(*local_pane_id, *remote_pane_id);
@@ -16683,8 +16229,7 @@ impl Workspace {
             }
             pane_group::Event::FileUploadFinished {
                 local_pane_id,
-                exit_code,
-            } => {
+                exit_code} => {
                 if let Some(remote_pane_id) = self
                     .file_upload_sessions
                     .local_to_remote_map
@@ -16714,8 +16259,7 @@ impl Workspace {
             }
             pane_group::Event::OpenFileUploadSession {
                 remote_pane_id,
-                upload_id,
-            } => {
+                upload_id} => {
                 // Find the local pane handling the upload.
                 let local_pane_id = *self
                     .file_upload_sessions
@@ -16749,8 +16293,7 @@ impl Workspace {
             }
             pane_group::Event::TerminateFileUploadSession {
                 remote_pane_id,
-                upload_id,
-            } => {
+                upload_id} => {
                 // Find the local pane handling the upload.
                 let local_pane_id = *self
                     .file_upload_sessions
@@ -16766,16 +16309,14 @@ impl Workspace {
             pane_group::Event::ShowToast {
                 message,
                 flavor,
-                pane_id,
-            } => {
+                pane_id} => {
                 let pane_group_id = pane_group.id();
                 self.toast_stack.update(ctx, |toast_stack, ctx| {
                     let mut toast = DismissibleToast::new(message.clone(), *flavor);
                     if let Some(pane_id) = pane_id {
                         let locator = PaneViewLocator {
                             pane_group_id,
-                            pane_id: *pane_id,
-                        };
+                            pane_id: *pane_id};
                         toast = toast.with_on_body_click(move |ctx| {
                             ctx.dispatch_typed_action(&WorkspaceAction::FocusPane(locator));
                         });
@@ -16824,14 +16365,12 @@ impl Workspace {
             }
             pane_group::Event::ToggleLeftPanel {
                 target_view,
-                force_open,
-            } => {
+                force_open} => {
                 let is_target_active =
                     self.left_panel_view
                         .read(ctx, |left_panel, _| match target_view {
                             LeftPanelTargetView::FileTree => left_panel.is_file_tree_active(),
-                            LeftPanelTargetView::WarpDrive => left_panel.is_warp_drive_active(),
-                        });
+                            LeftPanelTargetView::WarpDrive => left_panel.is_warp_drive_active()});
 
                 if self.active_tab_pane_group().as_ref(ctx).left_panel_open && is_target_active {
                     // No-op if we are forcing the target to open when it is already active.
@@ -16845,8 +16384,7 @@ impl Workspace {
                     self.left_panel_view.update(ctx, |left_panel, ctx| {
                         let action = match target_view {
                             LeftPanelTargetView::FileTree => LeftPanelAction::ProjectExplorer,
-                            LeftPanelTargetView::WarpDrive => LeftPanelAction::WarpDrive,
-                        };
+                            LeftPanelTargetView::WarpDrive => LeftPanelAction::WarpDrive};
                         left_panel.handle_action_with_force_open(&action, *force_open, ctx);
                     });
                 }
@@ -16855,8 +16393,7 @@ impl Workspace {
             pane_group::Event::OpenFileWithTarget {
                 path,
                 target,
-                line_col,
-            } => {
+                line_col} => {
                 self.open_file_with_target(
                     path.clone(),
                     target.clone(),
@@ -16868,8 +16405,7 @@ impl Workspace {
                         // `CodePane::pre_attach`) would otherwise open the file
                         // at the top instead of the requested line.
                         range_start: *line_col,
-                        range_end: None,
-                    },
+                        range_end: None},
                     ctx,
                 );
             }
@@ -16907,8 +16443,7 @@ impl Workspace {
                 repo_path,
                 comments,
                 diff_mode,
-                open_code_review,
-            } => {
+                open_code_review} => {
                 if let Some(open_code_review) = open_code_review {
                     self.open_code_review_panel_from_arg(open_code_review, pane_group.clone(), ctx);
                 }
@@ -16927,8 +16462,7 @@ impl Workspace {
             pane_group::Event::OpenCodeReviewPaneAndScrollToComment {
                 open_code_review,
                 comment,
-                diff_mode,
-            } => {
+                diff_mode} => {
                 self.open_code_review_panel_from_arg(open_code_review, pane_group.clone(), ctx);
 
                 let Some(repo_path) = &open_code_review.repo_path else {
@@ -16957,8 +16491,7 @@ impl Workspace {
             pane_group::Event::ImportAllCodeReviewComments {
                 comments,
                 diff_mode,
-                open_code_review,
-            } => {
+                open_code_review} => {
                 self.open_code_review_panel_from_arg(open_code_review, pane_group.clone(), ctx);
 
                 let Some(repo_path) = &open_code_review.repo_path else {
@@ -17069,8 +16602,7 @@ impl Workspace {
                         "".to_owned()
                     }
                 }
-                InitContent::Custom(query) => query.to_owned(),
-            };
+                InitContent::Custom(query) => query.to_owned()};
 
             let session_context = active_input_handle.as_ref().and_then(|input_handle| {
                 input_handle.read(ctx, |input, ctx| input.completion_session_context(ctx))
@@ -17087,12 +16619,6 @@ impl Workspace {
                 });
 
             if !self.current_workspace_state.is_command_search_open {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::CommandSearchOpened {
-                        has_initial_query: !initial_query.is_empty(),
-                    },
-                    ctx
-                );
             }
 
             // Make sure we close any already-open input suggestions panel.
@@ -17117,8 +16643,7 @@ impl Workspace {
 
             let tip = match query_filter {
                 Some(search::QueryFilter::History) => Tip::Action(TipAction::HistorySearch),
-                _ => Tip::Action(TipAction::CommandSearch),
-            };
+                _ => Tip::Action(TipAction::CommandSearch)};
 
             self.tips_completed.update(ctx, |tips_completed, ctx| {
                 mark_feature_used_and_write_to_user_defaults(tip, tips_completed, ctx);
@@ -17368,8 +16893,7 @@ impl Workspace {
             }
             DrivePanelEvent::InvokeEnvironmentVariables {
                 env_var_collection,
-                in_subshell,
-            } => {
+                in_subshell} => {
                 self.invoke_environment_variables(
                     env_var_collection.as_ref().clone(),
                     *in_subshell,
@@ -17378,12 +16902,10 @@ impl Workspace {
             }
             DrivePanelEvent::OpenImportModal {
                 owner,
-                initial_folder_id,
-            } => self.open_import_modal(*owner, initial_folder_id, ctx),
+                initial_folder_id} => self.open_import_modal(*owner, initial_folder_id, ctx),
             DrivePanelEvent::OpenWorkflowModalWithNew {
                 space,
-                initial_folder_id,
-            } => {
+                initial_folder_id} => {
                 self.open_workflow_modal(*space, *initial_folder_id, ctx);
             }
             DrivePanelEvent::OpenWorkflowModalWithCloudWorkflow(workflow_id) => {
@@ -17415,22 +16937,10 @@ impl Workspace {
             ),
             DrivePanelEvent::OpenAIFactCollection => {
                 self.open_ai_fact_collection_pane(None, None, ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::KnowledgePaneOpened {
-                        entrypoint: KnowledgePaneEntrypoint::WarpDrive,
-                    },
-                    ctx
-                );
             }
             DrivePanelEvent::OpenMCPServerCollection => {
                 self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::MCPServerCollectionPaneOpened {
-                        entrypoint: MCPServerCollectionPaneEntrypoint::WarpDrive,
-                    },
-                    ctx
-                );
             }
             DrivePanelEvent::FocusWarpDrive => {
                 ctx.focus(&self.left_panel_view);
@@ -17618,8 +17128,7 @@ impl Workspace {
             CodeSource::Link {
                 path: path.to_path_buf(),
                 range_start: None,
-                range_end: None,
-            },
+                range_end: None},
             ctx,
         );
     }
@@ -17744,14 +17253,6 @@ impl Workspace {
             TerminalSessionFallbackBehavior::default(),
             ctx,
         ) {
-            send_telemetry_from_ctx!(
-                TelemetryEvent::EnvVarCollectionInvoked(EnvVarTelemetryMetadata {
-                    object_id: env_var_collection.id.into_server().map(Into::into),
-                    team_uid: env_var_collection.permissions.owner.into(),
-                    space: env_var_collection.space(ctx).into(),
-                }),
-                ctx
-            );
             terminal_view_handle.update(ctx, |view, ctx| {
                 view.invoke_environment_variables(env_var_collection, in_subshell, ctx);
                 ctx.notify();
@@ -17771,8 +17272,7 @@ impl Workspace {
         match event {
             Close {
                 query: query_when_closed,
-                filter: filter_when_closed,
-            } => {
+                filter: filter_when_closed} => {
                 self.current_workspace_state.is_command_search_open = false;
 
                 active_input_handle.update(ctx, |input, ctx| {
@@ -17791,8 +17291,7 @@ impl Workspace {
                 match payload.as_ref() {
                     AcceptHistory(AcceptedHistoryItem {
                         command,
-                        linked_workflow_data,
-                    }) => {
+                        linked_workflow_data}) => {
                         // Switch to shell input mode so the history command is
                         // treated as a shell command, not an agent prompt.
                         active_input_handle.update(ctx, |input, ctx| {
@@ -17844,8 +17343,7 @@ impl Workspace {
                             }
                             AcceptedWorkflow::Local {
                                 workflow, source, ..
-                            } => ((**workflow).clone(), *source),
-                        };
+                            } => ((**workflow).clone(), *source)};
                         active_input_handle.update(ctx, |input, ctx| {
                             input.show_workflows_info_box_on_workflow_selection(
                                 workflow,
@@ -17885,8 +17383,7 @@ impl Workspace {
                             active_terminal_view.update(ctx, |terminal_view, ctx| {
                                 terminal_view.ask_blocklist_ai(
                                     &AskAIType::FromAICommandSearch {
-                                        query: Arc::new(query.to_owned()),
-                                    },
+                                        query: Arc::new(query.to_owned())},
                                     ctx,
                                 )
                             });
@@ -17897,8 +17394,7 @@ impl Workspace {
 
                             self.ask_ai_assistant(
                                 &AskAIType::FromAICommandSearch {
-                                    query: Arc::new(query.to_string()),
-                                },
+                                    query: Arc::new(query.to_string())},
                                 ctx,
                             );
                         }
@@ -18153,8 +17649,7 @@ impl Workspace {
                         OperationSuccessType::Denied(_) => {
                             let new_toast = DismissibleToast::error(message);
                             view.add_ephemeral_toast(new_toast, ctx);
-                        },
-                    })
+                        }})
         }
 
         // If this was a successful update on a workflow - caused by this client - then we may need
@@ -18237,8 +17732,7 @@ impl Workspace {
         let keep_theme = match mode {
             ThemeChooserMode::SystemAgnostic => true,
             ThemeChooserMode::SystemLight => Workspace::should_keep_theme(SystemTheme::Light, ctx),
-            ThemeChooserMode::SystemDark => Workspace::should_keep_theme(SystemTheme::Dark, ctx),
-        };
+            ThemeChooserMode::SystemDark => Workspace::should_keep_theme(SystemTheme::Dark, ctx)};
         if keep_theme {
             self.keep_theme(ctx);
         } else {
@@ -18631,14 +18125,12 @@ impl Workspace {
         match &event {
             KeybindingChangedEvent::BindingChanged {
                 binding_name,
-                new_trigger: new_trigger_option,
-            } => self
+                new_trigger: new_trigger_option} => self
                 .cached_keybindings
                 .entry(binding_name.to_owned())
                 .and_modify(|keystroke| {
                     *keystroke = new_trigger_option.as_ref().map(|key| key.displayed())
-                }),
-        };
+                })};
         ctx.notify()
     }
 
@@ -18720,8 +18212,7 @@ impl Workspace {
                 self.run_workflow_in_active_input(
                     &WorkflowType::AIGenerated {
                         workflow,
-                        origin: AIWorkflowOrigin::LegacyWarpAI,
-                    },
+                        origin: AIWorkflowOrigin::LegacyWarpAI},
                     WorkflowSource::WarpAI,
                     WorkflowSelectionSource::WarpAI,
                     None,
@@ -18827,10 +18318,8 @@ impl Workspace {
                 AISettings::handle(ctx).update(ctx, |settings, ctx| {
                     report_if_error!(settings.auto_handoff_on_sleep_enabled.set_value(true, ctx));
                 });
-                send_telemetry_from_ctx!(CloudAgentTelemetryEvent::SleepPromptEnabled, ctx);
             }
             AutoHandoffSleepModalEvent::Dismiss => {
-                send_telemetry_from_ctx!(CloudAgentTelemetryEvent::SleepPromptDismissed, ctx);
             }
         }
         OneTimeModalModel::handle(ctx).update(ctx, |model, ctx| {
@@ -18938,7 +18427,6 @@ impl Workspace {
 
                 self.current_workspace_state.is_codex_modal_open = false;
                 ctx.notify();
-                send_telemetry_from_ctx!(TelemetryEvent::CodexModalUseCodexClicked, ctx);
             }
         }
     }
@@ -18952,11 +18440,9 @@ impl Workspace {
     ) {
         use crate::terminal::model::rich_content::RichContentType;
         use crate::terminal::view::plugin_instructions_block::{
-            PluginInstructionsBlock, PluginInstructionsBlockEvent,
-        };
+            PluginInstructionsBlock, PluginInstructionsBlockEvent};
         use crate::terminal::view::rich_content::{
-            RichContentInsertionPosition, RichContentMetadata,
-        };
+            RichContentInsertionPosition, RichContentMetadata};
 
         let Some(manager) = plugin_manager_for(agent) else {
             return;
@@ -18964,8 +18450,7 @@ impl Workspace {
 
         let instructions = match kind {
             PluginModalKind::Install => manager.install_instructions(),
-            PluginModalKind::Update => manager.update_instructions(),
-        };
+            PluginModalKind::Update => manager.update_instructions()};
 
         // Read session metadata from the originating terminal before creating the instructions pane.
         let active_view = self
@@ -19013,8 +18498,7 @@ impl Workspace {
                         block,
                         Some(RichContentMetadata::PluginInstructionsBlock),
                         RichContentInsertionPosition::Append {
-                            insert_below_long_running_block: false,
-                        },
+                            insert_below_long_running_block: false},
                         ctx,
                     );
                 });
@@ -19027,7 +18511,6 @@ impl Workspace {
         self.current_workspace_state.is_codex_modal_open = true;
         ctx.focus(&self.codex_modal);
         ctx.notify();
-        send_telemetry_from_ctx!(TelemetryEvent::CodexModalOpened, ctx);
     }
 
     /// Opens a new tab and enters agent view with a prompt from a Linear deeplink.
@@ -19036,7 +18519,6 @@ impl Workspace {
         args: &crate::linear::LinearIssueWork,
         ctx: &mut ViewContext<Self>,
     ) {
-        send_telemetry_from_ctx!(TelemetryEvent::LinearIssueLinkOpened, ctx);
 
         self.add_new_session_tab_internal_with_default_session_mode_behavior(
             NewSessionSource::Tab,
@@ -19112,7 +18594,6 @@ impl Workspace {
             .is_cloud_agent_capacity_modal_open = true;
         ctx.focus(&self.cloud_agent_capacity_modal);
         ctx.notify();
-        send_telemetry_from_ctx!(TelemetryEvent::CloudAgentCapacityModalOpened, ctx);
     }
 
     fn ask_ai_assistant(&mut self, ask_type: &AskAIType, ctx: &mut ViewContext<Self>) {
@@ -19183,12 +18664,6 @@ impl Workspace {
         self.current_workspace_state.is_prompt_editor_open = true;
         ctx.focus(&self.prompt_editor_modal);
 
-        send_telemetry_from_ctx!(
-            TelemetryEvent::OpenPromptEditor {
-                entrypoint: open_source
-            },
-            ctx
-        );
     }
 
     fn open_agent_toolbar_editor(
@@ -19254,8 +18729,7 @@ impl Workspace {
                     log::warn!("Unable to open workflow modal due to unset personal drive");
                     return;
                 }
-            },
-        };
+            }};
         self.current_workspace_state.is_workflow_modal_open = true;
         self.workflow_modal.update(ctx, |workflow_modal, ctx| {
             workflow_modal.open_with_new(owner, initial_folder_id, ctx);
@@ -19284,8 +18758,7 @@ impl Workspace {
         let source = WorkflowOpenSource::NewFromWorkflow {
             workflow: workflow.into(),
             owner,
-            initial_folder_id: None,
-        };
+            initial_folder_id: None};
         self.open_workflow_in_pane(
             &source,
             &OpenWarpDriveObjectSettings::default(),
@@ -19305,8 +18778,7 @@ impl Workspace {
             content: Some(command),
             owner,
             initial_folder_id: None,
-            is_for_agent_mode: false,
-        };
+            is_for_agent_mode: false};
         self.open_workflow_in_pane(
             &source,
             &OpenWarpDriveObjectSettings::default(),
@@ -19430,8 +18902,7 @@ impl Workspace {
             .as_ref()
             .is_some_and(|hovered_index| match hovered_index {
                 TabBarHoverIndex::OverTab(idx) => *idx == tab_index,
-                TabBarHoverIndex::BeforeTab { .. } => false,
-            });
+                TabBarHoverIndex::BeforeTab { .. } => false});
 
         TabComponent::new(
             tab_index,
@@ -19658,8 +19129,7 @@ impl Workspace {
                 ctx.dispatch_typed_action(WorkspaceAction::DragGroup {
                     group_id,
                     position: rect,
-                    cursor_position,
-                });
+                    cursor_position});
             })
             .on_drop(move |ctx, _, _, _| {
                 ctx.dispatch_typed_action(WorkspaceAction::DropGroup);
@@ -19902,8 +19372,7 @@ impl Workspace {
         header = header.on_right_click(move |ctx, _, position| {
             ctx.dispatch_typed_action(WorkspaceAction::ToggleTabGroupRightClickMenu {
                 group_id,
-                anchor: TabContextMenuAnchor::Pointer(position),
-            });
+                anchor: TabContextMenuAnchor::Pointer(position)});
         });
         header.finish()
     }
@@ -19976,8 +19445,7 @@ impl Workspace {
                 active_tab_index: Some(tab_index),
                 is_any_tab_renaming: false,
                 is_any_tab_dragging: false,
-                hover_fixed_width: None,
-            };
+                hover_fixed_width: None};
             // `.for_drag_ghost()` makes the resulting element skip the
             // outer `SavePosition`, `Draggable`, and `DropTarget` wrappers
             // so the chip overlay doesn't pollute the target window's
@@ -20060,8 +19528,7 @@ impl Workspace {
                         ToolPanelView::ProjectExplorer => "Project explorer",
                         ToolPanelView::GlobalSearch { .. } => "Global search",
                         ToolPanelView::WarpDrive => "Warp Drive",
-                        ToolPanelView::ConversationListView => "Agent conversations",
-                    }
+                        ToolPanelView::ConversationListView => "Agent conversations"}
                 } else {
                     "Tools panel"
                 };
@@ -20114,8 +19581,7 @@ impl Workspace {
                 ToolPanelView::ProjectExplorer => "Project explorer",
                 ToolPanelView::GlobalSearch { .. } => "Global search",
                 ToolPanelView::WarpDrive => "Warp Drive",
-                ToolPanelView::ConversationListView => "Agent conversations",
-            }
+                ToolPanelView::ConversationListView => "Agent conversations"}
         } else {
             "Tools panel"
         };
@@ -20237,8 +19703,7 @@ impl Workspace {
                 top: 0.,
                 bottom: 0.,
                 left: header_padding_left,
-                right: header_padding_right,
-            }),
+                right: header_padding_right}),
             ..Default::default()
         };
 
@@ -20402,8 +19867,7 @@ impl Workspace {
             ctx.dispatch_typed_action(WorkspaceAction::OpenPalette {
                 mode: PaletteMode::Command,
                 source: PaletteSource::TitleBarSearchBar,
-                query: None,
-            });
+                query: None});
         })
         .finish()
     }
@@ -20456,8 +19920,7 @@ impl Workspace {
             let task_id = match content_type {
                 SimplifiedWasmTabBarContent::ConversationTranscript { task_id }
                 | SimplifiedWasmTabBarContent::SharedSession { task_id } => task_id,
-                SimplifiedWasmTabBarContent::WarpDriveObject => None,
-            };
+                SimplifiedWasmTabBarContent::WarpDriveObject => None};
 
             // Show info button for conversation transcripts and shared sessions (if there's content to display)
             let should_show_info_button =
@@ -20585,8 +20048,7 @@ impl Workspace {
             )
             .on_right_mouse_down(|ctx, _, position, _| {
                 ctx.dispatch_typed_action(WorkspaceAction::ShowHeaderToolbarContextMenu {
-                    position,
-                });
+                    position});
                 DispatchEventResult::StopPropagation
             })
             .finish();
@@ -20612,8 +20074,7 @@ impl Workspace {
                 is_any_tab_dragging: self.current_workspace_state.is_tab_being_dragged
                     || drag_model.is_active()
                     || is_any_group_dragging,
-                hover_fixed_width,
-            };
+                hover_fixed_width};
             // The detached-placeholder slot in this (source) window is
             // collapsed to zero width only while the dragged tab is actually
             // away (floating in the preview, or ghosted / handed off to
@@ -20636,8 +20097,7 @@ impl Workspace {
             for slot in &slots {
                 let start_index = match slot {
                     TabBarSlot::Single { index } => *index,
-                    TabBarSlot::Group { first_index, .. } => *first_index,
-                };
+                    TabBarSlot::Group { first_index, .. } => *first_index};
                 // Insert ghost slot before this slot's first tab if the drag
                 // would land here.
                 if ghost
@@ -20651,8 +20111,7 @@ impl Workspace {
                     TabBarSlot::Group {
                         group_id,
                         first_index,
-                        run_len,
-                    } => {
+                        run_len} => {
                         // Ungrouped insertion just before the group; a drop into
                         // the group highlights the group itself instead.
                         if show_before_indicator(self.hovered_tab_index, *first_index, None) {
@@ -20787,8 +20246,7 @@ impl Workspace {
                 EventHandler::new(inner)
                     .on_right_mouse_down(|ctx, _, position, _| {
                         ctx.dispatch_typed_action(WorkspaceAction::ShowHeaderToolbarContextMenu {
-                            position,
-                        });
+                            position});
                         DispatchEventResult::StopPropagation
                     })
                     .finish(),
@@ -20815,8 +20273,7 @@ impl Workspace {
                 icons::Icon::Inbox,
                 &self.mouse_states.notifications_mailbox,
                 WorkspaceAction::ToggleNotificationMailbox {
-                    select_first: false,
-                },
+                    select_first: false},
                 "Notifications".to_string(),
                 keybinding_name_to_display_string(TOGGLE_NOTIFICATION_MAILBOX_BINDING_NAME, ctx),
                 is_inbox_active,
@@ -20997,8 +20454,7 @@ impl Workspace {
             DropTarget::new(
                 self.render_tab_bar_contents(tab_fixed_width, appearance, ctx),
                 TabBarDropTargetData {
-                    tab_bar_location: TabBarLocation::AfterTabIndex(self.tabs.len()),
-                },
+                    tab_bar_location: TabBarLocation::AfterTabIndex(self.tabs.len())},
             )
             .finish(),
         )
@@ -21093,8 +20549,7 @@ impl Workspace {
                 )
                 .on_right_click(move |ctx, _, position| {
                     ctx.dispatch_typed_action(WorkspaceAction::ToggleNewSessionMenu {
-                        anchor: NewSessionMenuAnchor::AddTabButton(position),
-                    });
+                        anchor: NewSessionMenuAnchor::AddTabButton(position)});
                 })
                 .finish();
             return Container::new(
@@ -21163,8 +20618,7 @@ impl Workspace {
                     app.element_position_by_id_at_last_frame(window_id, NEW_TAB_BUTTON_POSITION_ID)
                 {
                     ctx.dispatch_typed_action(WorkspaceAction::ToggleNewSessionMenu {
-                        anchor: NewSessionMenuAnchor::AddTabButton(position.lower_left()),
-                    });
+                        anchor: NewSessionMenuAnchor::AddTabButton(position.lower_left())});
                 }
             })
             .finish();
@@ -21550,8 +21004,7 @@ impl Workspace {
                 .with_child(banner_element)
                 .with_child(Shrinkable::new(1., active_content).finish())
                 .finish(),
-            None => active_content,
-        };
+            None => active_content};
 
         let vertical_tabs_active =
             FeatureFlag::VerticalTabs.is_enabled() && *TabSettings::as_ref(app).use_vertical_tabs;
@@ -21680,12 +21133,10 @@ impl Workspace {
                 .then(|| WorkspaceBannerButtonDetails {
                     text: "Fix with Warp Agent".to_owned(),
                     action: WorkspaceAction::FixSettingsWithOz {
-                        error_description: error.to_string(),
-                    },
+                        error_description: error.to_string()},
                     variant: BannerButtonVariant::Naked,
                     icon: Some(Icon::Agent),
-                    more_info_button_action: None,
-                });
+                    more_info_button_action: None});
         Some(WorkspaceBannerFields {
             banner_type: WorkspaceBanner::InvalidSettings,
             severity: BannerSeverity::Warning,
@@ -21697,9 +21148,7 @@ impl Workspace {
                 action: WorkspaceAction::OpenSettingsFile,
                 variant: BannerButtonVariant::Outlined,
                 icon: None,
-                more_info_button_action: None,
-            }),
-        })
+                more_info_button_action: None})})
     }
 
     fn maybe_render_workspace_banner(
@@ -21727,9 +21176,7 @@ impl Workspace {
                 action: WorkspaceAction::Reauth,
                 variant: BannerButtonVariant::Outlined,
                 icon: None,
-                more_info_button_action: None,
-            }),
-        })
+                more_info_button_action: None})})
     }
 
     fn render_autoupdate_banner_element(&self, app: &AppContext) -> Option<WorkspaceBannerFields> {
@@ -21758,9 +21205,7 @@ impl Workspace {
                             action: WorkspaceAction::DownloadNewVersion,
                             variant: BannerButtonVariant::Outlined,
                             icon: None,
-                            more_info_button_action: Some(WorkspaceAction::AutoupdateFailureLink),
-                        }),
-                    })
+                            more_info_button_action: Some(WorkspaceAction::AutoupdateFailureLink)})})
                 }
                 AutoupdateStage::UnableToLaunchNewVersion { new_version }
                     if !self.autoupdate_unable_to_launch_new_version =>
@@ -21783,9 +21228,7 @@ impl Workspace {
                             action: WorkspaceAction::DownloadNewVersion,
                             variant: BannerButtonVariant::Outlined,
                             icon: None,
-                            more_info_button_action: Some(WorkspaceAction::AutoupdateFailureLink),
-                        }),
-                    })
+                            more_info_button_action: Some(WorkspaceAction::AutoupdateFailureLink)})})
                 }
                 AutoupdateStage::UpdateReady { new_version, .. }
                 | AutoupdateStage::UpdatedPendingRestart { new_version } => {
@@ -21801,9 +21244,7 @@ impl Workspace {
                                 action: WorkspaceAction::ApplyUpdate,
                                 variant: BannerButtonVariant::Outlined,
                                 icon: None,
-                                more_info_button_action: None,
-                            }),
-                        })
+                                more_info_button_action: None})})
                     } else if let Some(update_by) = new_version.update_by {
                         self.server_time.as_ref().and_then(|server_time| {
                             (server_time.current_time() > update_by).then(|| {
@@ -21819,9 +21260,7 @@ impl Workspace {
                                         action: WorkspaceAction::ApplyUpdate,
                                         variant: BannerButtonVariant::Outlined,
                                         icon: None,
-                                        more_info_button_action: None,
-                                    }),
-                                }
+                                        more_info_button_action: None})}
                             })
                         })
                     } else {
@@ -21833,8 +21272,7 @@ impl Workspace {
                 | AutoupdateStage::DownloadingUpdate
                 | AutoupdateStage::Updating { .. }
                 | AutoupdateStage::UnableToUpdateToNewVersion { .. }
-                | AutoupdateStage::UnableToLaunchNewVersion { .. } => None,
-            }
+                | AutoupdateStage::UnableToLaunchNewVersion { .. } => None}
         } else {
             None
         }
@@ -21848,8 +21286,7 @@ impl Workspace {
         let theme = appearance.theme();
         let bg_color = match fields.severity {
             BannerSeverity::Warning => theme.ansi_fg_yellow(),
-            BannerSeverity::Error => theme.ansi_fg_red(),
-        };
+            BannerSeverity::Error => theme.ansi_fg_red()};
         let text_color = theme.main_text_color(Fill::Solid(bg_color)).into_solid();
 
         // Left side: alert icon + bold heading + regular description, all inline.
@@ -21873,8 +21310,7 @@ impl Workspace {
             .unwrap_or(0);
         let combined_text = match fields.heading {
             Some(heading) => format!("{heading} {}", fields.description),
-            None => fields.description,
-        };
+            None => fields.description};
         let mut text = Text::new_inline(combined_text, ui_font_family, BANNER_FONT_SIZE)
             .with_color(text_color)
             .with_clip(ClipConfig::ellipsis());
@@ -21927,8 +21363,7 @@ impl Workspace {
                     action: more_info_button_action,
                     variant: BannerButtonVariant::Outlined,
                     icon: None,
-                    more_info_button_action: None,
-                };
+                    more_info_button_action: None};
                 banner.add_child(
                     Container::new(self.render_banner_action_button(
                         more_info_details,
@@ -22131,8 +21566,7 @@ impl Workspace {
 
         match side {
             PanelPosition::Left => container = container.with_margin_right(2.0),
-            PanelPosition::Right => container = container.with_margin_left(2.0),
-        };
+            PanelPosition::Right => container = container.with_margin_left(2.0)};
 
         container.finish()
     }
@@ -22350,8 +21784,7 @@ impl Workspace {
                 Some(ChildView::new(&self.right_panel_view).finish())
             }
             HeaderToolbarItemKind::AgentManagement
-            | HeaderToolbarItemKind::NotificationsMailbox => None,
-        }
+            | HeaderToolbarItemKind::NotificationsMailbox => None}
     }
 
     /// Renders the maximized code review panel if it is configured and maximized.
@@ -22422,8 +21855,7 @@ impl Workspace {
                 ParentOffsetBounds::WindowByPosition,
                 ParentAnchor::BottomRight,
                 ChildAnchor::BottomRight,
-            ),
-        }
+            )}
     }
 
     /// Offset positioning for the changelog chip while the feature-intro popover is
@@ -23074,8 +22506,7 @@ impl Workspace {
             .map_or(
                 SyncEvent {
                     source_view_id: ctx.view_id(),
-                    data: SyncInputType::StartSyncing,
-                },
+                    data: SyncInputType::StartSyncing},
                 |terminal_view_handle| {
                     terminal_view_handle
                         .as_ref(ctx)
@@ -23085,8 +22516,7 @@ impl Workspace {
 
         let stop_syncing_event = SyncEvent {
             source_view_id: ctx.view_id(),
-            data: terminal::view::SyncInputType::StopSyncing,
-        };
+            data: terminal::view::SyncInputType::StopSyncing};
 
         for tab in self.tab_views() {
             // We have to get the latest SyncInputStatus each iteration because
@@ -23285,8 +22715,7 @@ impl Workspace {
             && *CodeSettings::as_ref(ctx).show_global_search.value()
         {
             views.push(ToolPanelView::GlobalSearch {
-                entry_focus: GlobalSearchEntryFocus::Results,
-            });
+                entry_focus: GlobalSearchEntryFocus::Results});
         }
         if *WarpDriveSettings::as_ref(ctx).enable_warp_drive {
             views.push(ToolPanelView::WarpDrive);
@@ -23308,8 +22737,7 @@ impl Workspace {
     #[cfg(target_family = "wasm")]
     fn open_link_on_desktop(&mut self, url: &Url, ctx: &mut ViewContext<Self>) {
         use crate::settings::app_installation_detection::{
-            UserAppInstallDetectionSettings, UserAppInstallStatus,
-        };
+            UserAppInstallDetectionSettings, UserAppInstallStatus};
 
         // Check if the desktop app is installed
         let is_app_installed = *UserAppInstallDetectionSettings::as_ref(ctx)
@@ -23360,8 +22788,7 @@ impl TypedActionView for Workspace {
                     WarpA11yRole::UserAction,
                 ))
             }
-            _ => ActionAccessibilityContent::from_debug(),
-        }
+            _ => ActionAccessibilityContent::from_debug()}
     }
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
@@ -23419,8 +22846,7 @@ impl TypedActionView for Workspace {
                 self.rename_pane(
                     PaneViewLocator {
                         pane_group_id,
-                        pane_id,
-                    },
+                        pane_id},
                     ctx,
                 );
             }
@@ -23469,8 +22895,7 @@ impl TypedActionView for Workspace {
             ToggleVerticalTabsPaneContextMenu {
                 tab_index,
                 target,
-                position,
-            } => self.toggle_vertical_tabs_pane_context_menu(*tab_index, *target, *position, ctx),
+                position} => self.toggle_vertical_tabs_pane_context_menu(*tab_index, *target, *position, ctx),
             ToggleTabBarOverflowMenu => self.toggle_tab_bar_overflow_menu(ctx),
             ToggleBlockSnackbar => self.toggle_block_snackbar(ctx),
             ToggleWelcomeTips => self.toggle_welcome_tips_visiblity(ctx),
@@ -23495,8 +22920,7 @@ impl TypedActionView for Workspace {
             NewTabGroupFromTab(tab_index) => self.new_tab_group_from_tab(*tab_index, ctx),
             MoveTabToGroup {
                 tab_index,
-                group_id,
-            } => self.move_tab_to_group(*tab_index, *group_id, ctx),
+                group_id} => self.move_tab_to_group(*tab_index, *group_id, ctx),
             RemoveTabFromGroup(tab_index) => self.remove_tab_from_group(*tab_index, ctx),
             ShiftSelectTabRange { locator } => self.shift_select_tab_range(*locator, ctx),
             ToggleTabMultiSelection { locator } => self.toggle_tab_multi_selection(*locator, ctx),
@@ -23650,8 +23074,7 @@ impl TypedActionView for Workspace {
             OpenTabConfigErrorFile {
                 #[cfg_attr(not(feature = "local_fs"), allow(unused_variables))]
                 path,
-                toast_object_id,
-            } => {
+                toast_object_id} => {
                 #[cfg(feature = "local_fs")]
                 {
                     let settings = EditorSettings::as_ref(ctx);
@@ -23669,8 +23092,7 @@ impl TypedActionView for Workspace {
                         CodeSource::Link {
                             path: path.clone(),
                             range_start: None,
-                            range_end: None,
-                        },
+                            range_end: None},
                         ctx,
                     );
                 }
@@ -23680,8 +23102,7 @@ impl TypedActionView for Workspace {
                 mode,
                 tab_config_path,
                 #[cfg_attr(not(feature = "local_tty"), allow(unused_variables))]
-                shell,
-            } => {
+                shell} => {
                 AISettings::handle(ctx).update(ctx, |settings, ctx| {
                     report_if_error!(settings.default_session_mode_internal.set_value(*mode, ctx));
                     if let Some(path) = tab_config_path {
@@ -23703,8 +23124,7 @@ impl TypedActionView for Workspace {
             }
             TabConfigSidecarEditConfig {
                 #[cfg_attr(not(feature = "local_fs"), allow(unused_variables))]
-                path,
-            } => {
+                path} => {
                 #[cfg(feature = "local_fs")]
                 {
                     let settings = EditorSettings::as_ref(ctx);
@@ -23722,8 +23142,7 @@ impl TypedActionView for Workspace {
                         CodeSource::Link {
                             path: path.clone(),
                             range_start: None,
-                            range_end: None,
-                        },
+                            range_end: None},
                         ctx,
                     );
                 }
@@ -23748,8 +23167,7 @@ impl TypedActionView for Workspace {
             OpenLocalToCloudHandoffPane {
                 launch,
                 environment_id,
-                entry_point,
-            } => {
+                entry_point} => {
                 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
                 self.start_local_to_cloud_handoff(
                     launch.clone(),
@@ -23765,18 +23183,15 @@ impl TypedActionView for Workspace {
             AutoHandoffActiveAgentToCloud {
                 terminal_view_id,
                 conversation_id,
-                trigger,
-            } => {
+                trigger} => {
                 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
                 {
                     let intent = LocalToCloudHandoffIntent::Automatic {
                         trigger: *trigger,
-                        conversation_id: *conversation_id,
-                    };
+                        conversation_id: *conversation_id};
                     let launch = Some(PendingCloudLaunch {
                         prompt: AUTO_CLOUD_HANDOFF_PROMPT.to_owned(),
-                        attachments: HandoffLaunchAttachments::default(),
-                    });
+                        attachments: HandoffLaunchAttachments::default()});
                     match self.terminal_view(*terminal_view_id, ctx) {
                         Some(source_view) => {
                             self.start_local_to_cloud_handoff_from_source(
@@ -23835,8 +23250,7 @@ impl TypedActionView for Workspace {
                                         controller.send_slash_command_request(
                                             SlashCommandRequest::InvokeSkill {
                                                 skill,
-                                                user_query: Some(query),
-                                            },
+                                                user_query: Some(query)},
                                             ctx,
                                         );
                                     },
@@ -23886,8 +23300,7 @@ impl TypedActionView for Workspace {
             ShowSettingsPage(section) => self.show_settings_with_section(Some(*section), ctx),
             ShowSettingsPageWithSearch {
                 search_query,
-                section,
-            } => self.show_settings_with_search(search_query, *section, ctx),
+                section} => self.show_settings_with_search(search_query, *section, ctx),
             OpenPromptSuggestionsUnavailableModal => {}
             ShowThemeChooser(mode) => self.show_theme_chooser(Some(*mode), ctx),
             ShowThemeChooserForActiveTheme => self.show_theme_chooser_for_active_theme(ctx),
@@ -23900,12 +23313,10 @@ impl TypedActionView for Workspace {
             OpenPalette {
                 mode,
                 source,
-                query,
-            } => self.open_palette_action(*mode, *source, query.as_deref(), ctx),
+                query} => self.open_palette_action(*mode, *source, query.as_deref(), ctx),
             TogglePalette {
                 mode: palette_mode,
-                source,
-            } => self.toggle_palette(*palette_mode, *source, ctx),
+                source} => self.toggle_palette(*palette_mode, *source, ctx),
             JoinSlack => self.join_slack(ctx),
             ViewUserDocs => self.view_user_docs(ctx),
             ViewLatestChangelog => self.view_latest_changelog(ctx),
@@ -23956,8 +23367,7 @@ impl TypedActionView for Workspace {
             ToggleKeybindingsPage => self.toggle_keybindings_page(ctx),
             ShowCommandSearch(CommandSearchOptions {
                 filter,
-                init_content,
-            }) => self.show_command_search(*filter, init_content, ctx),
+                init_content}) => self.show_command_search(*filter, init_content, ctx),
             TriggerExternalCtrlTFileSearch => self.trigger_external_ctrl_t_file_search(ctx),
             ImportToPersonalDrive => {
                 if let Some(personal_drive) = UserWorkspaces::as_ref(ctx).personal_drive(ctx) {
@@ -23976,8 +23386,7 @@ impl TypedActionView for Workspace {
                         &NotebookSource::New {
                             title: None,
                             owner: personal_drive,
-                            initial_folder_id: None,
-                        },
+                            initial_folder_id: None},
                         &OpenWarpDriveObjectSettings::default(),
                         ctx,
                         true,
@@ -23990,8 +23399,7 @@ impl TypedActionView for Workspace {
                     self.update_warp_drive_view(ctx, |drive_panel, ctx| {
                         drive_panel.open_cloud_object_dialog(
                             DriveObjectType::Notebook {
-                                is_ai_document: false,
-                            },
+                                is_ai_document: false},
                             Space::Team { team_uid },
                             None,
                             ctx,
@@ -24007,8 +23415,7 @@ impl TypedActionView for Workspace {
                         &EnvVarCollectionSource::New {
                             title: None,
                             owner: personal_drive,
-                            initial_folder_id: None,
-                        },
+                            initial_folder_id: None},
                         false,
                         ctx,
                     );
@@ -24036,8 +23443,7 @@ impl TypedActionView for Workspace {
                         content: None,
                         owner: personal_drive,
                         initial_folder_id: None,
-                        is_for_agent_mode: false,
-                    };
+                        is_for_agent_mode: false};
                     self.open_workflow_in_pane(
                         &source,
                         &OpenWarpDriveObjectSettings::default(),
@@ -24054,8 +23460,7 @@ impl TypedActionView for Workspace {
                         content: None,
                         owner: Owner::Team { team_uid },
                         initial_folder_id: None,
-                        is_for_agent_mode: false,
-                    };
+                        is_for_agent_mode: false};
                     self.open_workflow_in_pane(
                         &source,
                         &OpenWarpDriveObjectSettings::default(),
@@ -24108,12 +23513,10 @@ impl TypedActionView for Workspace {
             DragGroup {
                 group_id,
                 position,
-                cursor_position,
-            } => {
+                cursor_position} => {
                 self.on_group_drag(*group_id, *position, *cursor_position, ctx);
             }
             DropGroup => {
-                send_telemetry_from_ctx!(TelemetryEvent::DragAndDropTabGroup, ctx);
                 ctx.notify();
             }
             OpenWarpDrive => {
@@ -24147,23 +23550,8 @@ impl TypedActionView for Workspace {
                     });
 
                     if file_tree_active {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::FileTreeToggled {
-                                source: FileTreeSource::LeftPanelToolbelt,
-                                is_code_mode_v2: true,
-                                cli_agent: None,
-                            },
-                            ctx
-                        );
                     } else if warp_drive_active {
                         // Tools panel opened with Warp Drive as the active view
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::WarpDriveOpened {
-                                source: WarpDriveSource::LeftPanelToolbelt,
-                                is_code_mode_v2: true
-                            },
-                            ctx
-                        );
                     }
                 }
             }
@@ -24203,8 +23591,7 @@ impl TypedActionView for Workspace {
                         if let Some(diff_state_model) = diff_state_model {
                             let context = CodeReviewPaneContext {
                                 repo_path,
-                                diff_state_model,
-                            };
+                                diff_state_model};
                             self.open_right_panel(
                                 &context,
                                 &pane_group_handle,
@@ -24270,12 +23657,6 @@ impl TypedActionView for Workspace {
                         .vertical_tabs_display_granularity
                         .set_value(granularity, ctx);
                 });
-                send_telemetry_from_ctx!(
-                    VerticalTabsTelemetryEvent::DisplayOptionChanged(
-                        VerticalTabsDisplayOption::DisplayGranularity(granularity),
-                    ),
-                    ctx
-                );
                 ctx.notify();
             }
             SetVerticalTabsTabItemMode(mode) => {
@@ -24283,12 +23664,6 @@ impl TypedActionView for Workspace {
                 TabSettings::handle(ctx).update(ctx, |settings, ctx| {
                     let _ = settings.vertical_tabs_tab_item_mode.set_value(mode, ctx);
                 });
-                send_telemetry_from_ctx!(
-                    VerticalTabsTelemetryEvent::DisplayOptionChanged(
-                        VerticalTabsDisplayOption::TabItemMode(mode),
-                    ),
-                    ctx
-                );
                 ctx.notify();
             }
             SetVerticalTabsViewMode(mode) => {
@@ -24296,12 +23671,6 @@ impl TypedActionView for Workspace {
                 TabSettings::handle(ctx).update(ctx, |settings, ctx| {
                     let _ = settings.vertical_tabs_view_mode.set_value(mode, ctx);
                 });
-                send_telemetry_from_ctx!(
-                    VerticalTabsTelemetryEvent::DisplayOptionChanged(
-                        VerticalTabsDisplayOption::ViewMode(mode),
-                    ),
-                    ctx
-                );
                 ctx.notify();
             }
             SetVerticalTabsPrimaryInfo(primary_info) => {
@@ -24311,12 +23680,6 @@ impl TypedActionView for Workspace {
                         .vertical_tabs_primary_info
                         .set_value(primary_info, ctx);
                 });
-                send_telemetry_from_ctx!(
-                    VerticalTabsTelemetryEvent::DisplayOptionChanged(
-                        VerticalTabsDisplayOption::PrimaryInfo(primary_info),
-                    ),
-                    ctx
-                );
                 ctx.notify();
             }
             SetVerticalTabsCompactSubtitle(subtitle) => {
@@ -24326,12 +23689,6 @@ impl TypedActionView for Workspace {
                         .vertical_tabs_compact_subtitle
                         .set_value(subtitle, ctx);
                 });
-                send_telemetry_from_ctx!(
-                    VerticalTabsTelemetryEvent::DisplayOptionChanged(
-                        VerticalTabsDisplayOption::CompactSubtitle(subtitle),
-                    ),
-                    ctx
-                );
                 ctx.notify();
             }
             ToggleVerticalTabsShowPrLink => {
@@ -24342,12 +23699,6 @@ impl TypedActionView for Workspace {
                         .set_value(new_value, ctx);
                     new_value
                 });
-                send_telemetry_from_ctx!(
-                    VerticalTabsTelemetryEvent::DisplayOptionChanged(
-                        VerticalTabsDisplayOption::ShowPrLink(new_value),
-                    ),
-                    ctx
-                );
                 ctx.notify();
             }
             ToggleVerticalTabsShowDiffStats => {
@@ -24358,12 +23709,6 @@ impl TypedActionView for Workspace {
                         .set_value(new_value, ctx);
                     new_value
                 });
-                send_telemetry_from_ctx!(
-                    VerticalTabsTelemetryEvent::DisplayOptionChanged(
-                        VerticalTabsDisplayOption::ShowDiffStats(new_value),
-                    ),
-                    ctx
-                );
                 ctx.notify();
             }
             ToggleVerticalTabsShowDetailsOnHover => {
@@ -24374,12 +23719,6 @@ impl TypedActionView for Workspace {
                         .set_value(new_value, ctx);
                     new_value
                 });
-                send_telemetry_from_ctx!(
-                    VerticalTabsTelemetryEvent::DisplayOptionChanged(
-                        VerticalTabsDisplayOption::ShowDetailsOnHover(new_value),
-                    ),
-                    ctx
-                );
                 ctx.notify();
             }
             ToggleAgentManagementView => {
@@ -24388,11 +23727,6 @@ impl TypedActionView for Workspace {
                 {
                     let is_open = !self.current_workspace_state.is_agent_management_view_open;
                     self.set_is_agent_management_view_open(is_open, ctx);
-
-                    send_telemetry_from_ctx!(
-                        AgentManagementTelemetryEvent::ViewToggled { is_open },
-                        ctx
-                    );
 
                     if is_open {
                         ctx.focus(&self.agent_management_view);
@@ -24443,27 +23777,13 @@ impl TypedActionView for Workspace {
             }
             NewTabInAgentMode {
                 entrypoint,
-                zero_state_prompt_suggestion_type,
-            } => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::AgentModeClickedEntrypoint {
-                        entrypoint: entrypoint.clone(),
-                    },
-                    ctx
-                );
+                zero_state_prompt_suggestion_type} => {
 
                 self.add_terminal_tab_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
             }
             NewPaneInAgentMode {
                 entrypoint,
-                zero_state_prompt_suggestion_type,
-            } => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::AgentModeClickedEntrypoint {
-                        entrypoint: entrypoint.clone(),
-                    },
-                    ctx
-                );
+                zero_state_prompt_suggestion_type} => {
 
                 self.add_terminal_pane_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
             }
@@ -24481,23 +23801,11 @@ impl TypedActionView for Workspace {
             }
             ToggleAIAssistant => {
                 self.toggle_ai_assistant_panel(ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::ToggleWarpAI {
-                        opened: self.current_workspace_state.is_ai_assistant_panel_open
-                    },
-                    ctx
-                );
             }
             ClickedAIAssistantIcon => {
                 if !FeatureFlag::AgentMode.is_enabled() {
                     self.toggle_ai_assistant_panel(ctx);
                     if self.current_workspace_state.is_ai_assistant_panel_open {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::OpenedWarpAI {
-                                source: OpenedWarpAISource::GlobalEntryButton
-                            },
-                            ctx
-                        );
                     }
                 }
             }
@@ -24507,17 +23815,10 @@ impl TypedActionView for Workspace {
             }
             ClickedAIAssistantWarmWelcome => {
                 self.toggle_ai_assistant_panel(ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::OpenedWarpAI {
-                        source: OpenedWarpAISource::WarmWelcome
-                    },
-                    ctx
-                );
             }
             DragTab {
                 tab_index,
-                tab_position,
-            } => self.on_tab_drag(*tab_index, *tab_position, ctx),
+                tab_position} => self.on_tab_drag(*tab_index, *tab_position, ctx),
             DropTab => {
                 let is_cross_window = CrossWindowTabDrag::as_ref(ctx).is_active();
                 let handed_off_tab_index =
@@ -24548,7 +23849,6 @@ impl TypedActionView for Workspace {
                         tab.pinned = false;
                     }
                 }
-                send_telemetry_from_ctx!(TelemetryEvent::DragAndDropTab, ctx);
                 if is_cross_window {
                     let drop_result =
                         CrossWindowTabDrag::handle(ctx).update(ctx, |drag, ctx| drag.on_drop(ctx));
@@ -24625,11 +23925,6 @@ impl TypedActionView for Workspace {
                     view.add_ephemeral_toast(new_toast, ctx);
                 });
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::ToggleSyncAllPanesInAllTabs { enabled },
-                    ctx
-                );
-
                 self.process_updated_sync_state(ctx);
             }
             ToggleSyncTerminalInputsInTab => {
@@ -24658,8 +23953,6 @@ impl TypedActionView for Workspace {
                     view.add_ephemeral_toast(new_toast, ctx);
                 });
 
-                send_telemetry_from_ctx!(TelemetryEvent::ToggleSyncAllPanesInTab { enabled }, ctx);
-
                 self.process_updated_sync_state(ctx);
             }
             DisableTerminalInputSync => {
@@ -24674,14 +23967,12 @@ impl TypedActionView for Workspace {
                         DismissibleToast::success("Disabled all synchronized inputs.".to_string());
                     view.add_ephemeral_toast(new_toast, ctx);
                 });
-                send_telemetry_from_ctx!(TelemetryEvent::DisableInputSync, ctx);
             }
             Reauth => {
                 AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
                     let sign_in_url = auth_manager.sign_in_url();
                     ctx.open_url(&sign_in_url);
                 });
-                send_telemetry_from_ctx!(TelemetryEvent::InitiateReauth, ctx);
             }
             SignupAnonymousUser => {
                 self.initiate_user_signup(AnonymousUserSignupEntrypoint::SignUpButton, ctx);
@@ -24794,8 +24085,7 @@ impl TypedActionView for Workspace {
                 self.run_workflow_in_active_input(
                     &WorkflowType::AIGenerated {
                         workflow,
-                        origin: AIWorkflowOrigin::AgentMode,
-                    },
+                        origin: AIWorkflowOrigin::AgentMode},
                     WorkflowSource::WarpAI,
                     WorkflowSelectionSource::WarpAI,
                     None,
@@ -24812,8 +24102,7 @@ impl TypedActionView for Workspace {
             InsertInInput {
                 content,
                 replace_buffer,
-                ensure_agent_mode,
-            } => {
+                ensure_agent_mode} => {
                 self.insert_in_input(content, *replace_buffer, false, *ensure_agent_mode, ctx);
                 ctx.notify();
             }
@@ -24845,30 +24134,17 @@ impl TypedActionView for Workspace {
             }
             OpenAIFactCollection => {
                 self.open_ai_fact_collection_pane(None, None, ctx);
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::KnowledgePaneOpened {
-                        entrypoint: KnowledgePaneEntrypoint::Global,
-                    },
-                    ctx
-                );
             }
             OpenMCPServerCollection => {
                 self.show_settings_with_section(Some(SettingsSection::AgentMCPServers), ctx);
 
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::MCPServerCollectionPaneOpened {
-                        entrypoint: MCPServerCollectionPaneEntrypoint::Global,
-                    },
-                    ctx
-                );
             }
             OpenEnvironmentManagementPane => {
                 self.open_environment_management_pane(None, EnvironmentsPage::Create, ctx);
             }
             ToggleAIDocumentPane {
                 document_id,
-                document_version,
-            } => {
+                document_version} => {
                 let conversation_id =
                     AIDocumentModel::as_ref(ctx).get_conversation_id_for_document_id(document_id);
 
@@ -24890,8 +24166,7 @@ impl TypedActionView for Workspace {
             }
             OpenAIDocumentPane {
                 document_id,
-                document_version,
-            } => {
+                document_version} => {
                 let conversation_id =
                     AIDocumentModel::as_ref(ctx).get_conversation_id_for_document_id(document_id);
 
@@ -24933,8 +24208,7 @@ impl TypedActionView for Workspace {
 
                 self.handle_action(
                     &WorkspaceAction::FocusTerminalViewInWorkspace {
-                        terminal_view_id: *terminal_view_id,
-                    },
+                        terminal_view_id: *terminal_view_id},
                     ctx,
                 );
             }
@@ -24972,8 +24246,7 @@ impl TypedActionView for Workspace {
                         {
                             let locator = PaneViewLocator {
                                 pane_group_id: pane_group_handle.id(),
-                                pane_id,
-                            };
+                                pane_id};
                             if tab_idx == tab_index {
                                 self.focus_pane(locator, ctx);
                                 break;
@@ -25000,8 +24273,7 @@ impl TypedActionView for Workspace {
             }
             OpenFileInNewTab {
                 full_path,
-                line_and_column,
-            } => {
+                line_and_column} => {
                 self.add_tab_for_code_file(full_path.clone(), *line_and_column, ctx);
             }
             OpenRepository { path } => {
@@ -25023,8 +24295,7 @@ impl TypedActionView for Workspace {
                 workflow,
                 workflow_source,
                 workflow_selection_source,
-                argument_override,
-            } => self.run_workflow_in_active_input(
+                argument_override} => self.run_workflow_in_active_input(
                 workflow,
                 *workflow_source,
                 *workflow_selection_source,
@@ -25037,8 +24308,7 @@ impl TypedActionView for Workspace {
                 window_id,
                 conversation_id,
                 terminal_view_id,
-                restore_layout,
-            } => {
+                restore_layout} => {
                 self.restore_or_navigate_to_conversation(
                     *conversation_id,
                     *window_id,
@@ -25050,8 +24320,7 @@ impl TypedActionView for Workspace {
             }
             OpenOrAttachAmbientAgentConversation {
                 session_id,
-                task_id,
-            } => {
+                task_id} => {
                 // An existing pane for this run is only reusable if it can host the live session.
                 // A read-only pane (e.g. a conversation transcript viewer opened earlier for the
                 // same run) must not be reused: focusing it would leave the user staring at a
@@ -25079,13 +24348,11 @@ impl TypedActionView for Workspace {
                 match attached_locator {
                     Some(locator) => self.focus_pane(locator, ctx),
                     // Attaching to a known ambient run: build the pane in ambient mode.
-                    None => self.add_tab_for_joining_shared_session(*session_id, true, ctx),
-                }
+                    None => self.add_tab_for_joining_shared_session(*session_id, true, ctx)}
             }
             OpenConversationTranscriptViewer {
                 conversation_id,
-                ambient_agent_task_id,
-            } => {
+                ambient_agent_task_id} => {
                 // Check if there's already a terminal viewing this conversation's task.
                 if let Some(task_id) = ambient_agent_task_id
                     && let Some((_, locator)) =
@@ -25107,8 +24374,7 @@ impl TypedActionView for Workspace {
                 summarization_prompt,
                 initial_prompt,
                 initial_attachments,
-                destination,
-            } => {
+                destination} => {
                 self.fork_ai_conversation(
                     *conversation_id,
                     *fork_from_exchange,
@@ -25139,8 +24405,7 @@ impl TypedActionView for Workspace {
             }
             SummarizeAIConversation {
                 prompt,
-                initial_prompt,
-            } => {
+                initial_prompt} => {
                 self.summarize_active_ai_conversation(prompt.clone(), initial_prompt.clone(), ctx);
             }
             InsertForkSlashCommand => {
@@ -25182,8 +24447,7 @@ impl TypedActionView for Workspace {
                         content: None,
                         owner: personal_drive,
                         initial_folder_id: None,
-                        is_for_agent_mode: true,
-                    };
+                        is_for_agent_mode: true};
                     self.open_workflow_in_pane(
                         &source,
                         &OpenWarpDriveObjectSettings::default(),
@@ -25200,8 +24464,7 @@ impl TypedActionView for Workspace {
                         content: None,
                         owner: Owner::Team { team_uid },
                         initial_folder_id: None,
-                        is_for_agent_mode: true,
-                    };
+                        is_for_agent_mode: true};
                     self.open_workflow_in_pane(
                         &source,
                         &OpenWarpDriveObjectSettings::default(),
@@ -25424,8 +24687,7 @@ impl TypedActionView for Workspace {
                         let entry = format!("file://{}", plugin_path.display());
                         set_opencode_warp_plugin(&entry)
                     }
-                    None => "Failed to determine home directory".to_string(),
-                };
+                    None => "Failed to determine home directory".to_string()};
                 self.toast_stack.update(ctx, |view, ctx| {
                     view.add_ephemeral_toast(DismissibleToast::default(message), ctx);
                 });
@@ -25564,8 +24826,7 @@ impl TypedActionView for Workspace {
                     );
                     self.toggle_left_panel_view(
                         &LeftPanelAction::GlobalSearch {
-                            entry_focus: GlobalSearchEntryFocus::QueryEditor,
-                        },
+                            entry_focus: GlobalSearchEntryFocus::QueryEditor},
                         is_showing,
                         ctx,
                     );
@@ -25594,8 +24855,7 @@ impl TypedActionView for Workspace {
 
                     self.open_left_panel_view(
                         &LeftPanelAction::GlobalSearch {
-                            entry_focus: GlobalSearchEntryFocus::QueryEditor,
-                        },
+                            entry_focus: GlobalSearchEntryFocus::QueryEditor},
                         ctx,
                     );
                 }
@@ -25619,22 +24879,19 @@ impl TypedActionView for Workspace {
             ShowRewindConfirmationDialog {
                 ai_block_view_id,
                 exchange_id,
-                conversation_id,
-            } => {
+                conversation_id} => {
                 self.show_rewind_confirmation_dialog(
                     RewindDialogSource {
                         ai_block_view_id: *ai_block_view_id,
                         exchange_id: *exchange_id,
-                        conversation_id: *conversation_id,
-                    },
+                        conversation_id: *conversation_id},
                     ctx,
                 );
             }
             ExecuteRewindAIConversation {
                 ai_block_view_id,
                 exchange_id,
-                conversation_id,
-            } => {
+                conversation_id} => {
                 // Extract the user query before the rewind to prefill the input
                 let user_query = BlocklistAIHistoryModel::as_ref(ctx)
                     .conversation(conversation_id)
@@ -25652,8 +24909,7 @@ impl TypedActionView for Workspace {
                             &TerminalAction::ExecuteRewindAIConversation {
                                 ai_block_view_id: *ai_block_view_id,
                                 exchange_id: *exchange_id,
-                                conversation_id: *conversation_id,
-                            },
+                                conversation_id: *conversation_id},
                             ctx,
                         );
                     });
@@ -25666,8 +24922,7 @@ impl TypedActionView for Workspace {
             }
             ExecuteDeleteConversation {
                 conversation_id,
-                terminal_view_id,
-            } => {
+                terminal_view_id} => {
                 // Exit agent view first if this conversation is currently expanded.
                 // This must happen before updating BlocklistAIHistoryModel to avoid
                 // circular model references.
@@ -25696,7 +24951,6 @@ impl TypedActionView for Workspace {
 
                 conversation_utils::delete_conversation(*conversation_id, *terminal_view_id, ctx);
 
-                send_telemetry_from_ctx!(TelemetryEvent::ConversationListItemDeleted, ctx);
                 ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
                     toast_stack.add_ephemeral_toast(
                         DismissibleToast::success("Conversation deleted".to_string()),
@@ -25725,12 +24979,10 @@ impl TypedActionView for Workspace {
             }
             OpenLightbox {
                 images,
-                initial_index,
-            } => {
+                initial_index} => {
                 let params = LightboxParams {
                     images: images.clone(),
-                    initial_index: *initial_index,
-                };
+                    initial_index: *initial_index};
                 if let Some(handle) = &self.lightbox_view {
                     handle.update(ctx, |view, ctx| view.update_params(params, ctx));
                 } else {
@@ -26170,8 +25422,7 @@ impl View for Workspace {
                 bounds,
                 parent_anchor,
                 child_anchor,
-                sidecar,
-            }) = render_detail_sidecar(
+                sidecar}) = render_detail_sidecar(
                 &self.vertical_tabs_panel,
                 self,
                 Self::tabs_panel_side(&TabSettings::as_ref(app).header_toolbar_chip_selection),
@@ -26348,8 +25599,7 @@ impl View for Workspace {
                             ))
                         }
                         // The kebab anchor only exists in the vertical tabs panel.
-                        TabContextMenuAnchor::VerticalTabsKebab => None,
-                    }
+                        TabContextMenuAnchor::VerticalTabsKebab => None}
                 };
                 if let Some(positioning) = positioning {
                     stack.add_positioned_overlay_child(
@@ -26373,8 +25623,7 @@ impl View for Workspace {
                 let position = match anchor {
                     TabContextMenuAnchor::Pointer(position) => position,
                     // The selection menu is never opened via the kebab button.
-                    TabContextMenuAnchor::VerticalTabsKebab => Vector2F::zero(),
-                };
+                    TabContextMenuAnchor::VerticalTabsKebab => Vector2F::zero()};
                 // Vertical-tabs anchors against the window; the horizontal tab
                 // bar uses unbounded positioning to match the single-tab menu.
                 let bounds = if is_vertical {
@@ -26440,8 +25689,7 @@ impl View for Workspace {
                     })
                 }
                 // The kebab anchor only exists in the vertical tabs panel.
-                (false, TabContextMenuAnchor::VerticalTabsKebab) => None,
-            };
+                (false, TabContextMenuAnchor::VerticalTabsKebab) => None};
             if let Some(positioning) = positioning {
                 stack.add_positioned_overlay_child(
                     ChildView::new(&self.tab_right_click_menu).finish(),
@@ -26513,8 +25761,7 @@ impl View for Workspace {
                     menu.hovered_index().and_then(|idx| {
                         menu.items().get(idx).and_then(|item| match item {
                             MenuItem::Item(fields) => Some(fields.label().to_string()),
-                            _ => None,
-                        })
+                            _ => None})
                     })
                 });
 
@@ -26563,8 +25810,7 @@ impl View for Workspace {
                     menu.hovered_index().and_then(|idx| {
                         menu.items().get(idx).and_then(|item| match item {
                             MenuItem::Item(fields) => Some(fields.label().to_string()),
-                            _ => None,
-                        })
+                            _ => None})
                     })
                 });
 
@@ -27170,8 +26416,7 @@ impl View for Workspace {
                     ParentOffsetBounds::WindowByPosition,
                     ParentAnchor::BottomRight,
                     ChildAnchor::BottomRight,
-                ),
-            };
+                )};
             stack.add_positioned_overlay_child(
                 SavePosition::new(
                     ChildView::new(&self.feature_intro_modal).finish(),
@@ -27239,8 +26484,7 @@ impl View for Workspace {
                     },
                     Some(MouseInBehavior {
                         fire_on_synthetic_events: false,
-                        fire_when_covered: true,
-                    }),
+                        fire_when_covered: true}),
                 )
                 .finish()
         } else {
@@ -27278,8 +26522,7 @@ impl View for Workspace {
             event_handler.on_modifier_state_changed(|ctx, _app, key_code, state| {
                 ctx.dispatch_typed_action(WorkspaceAction::SetTabShortcutModifierKey {
                     key_code: *key_code,
-                    pressed: matches!(state, KeyState::Pressed),
-                });
+                    pressed: matches!(state, KeyState::Pressed)});
                 DispatchEventResult::PropagateToParent
             });
 
@@ -27346,8 +26589,7 @@ impl Workspace {
             right_panel_open,
             is_right_panel_maximized,
             draggable_state,
-            vertical_tabs_panel_open,
-        })
+            vertical_tabs_panel_open})
     }
 
     pub fn get_tab_transfer_info(&self, index: usize, ctx: &AppContext) -> Option<TransferredTab> {
@@ -27495,12 +26737,10 @@ impl Workspace {
                     slots.push(TabBarSlot::Group {
                         group_id,
                         first_index: idx,
-                        run_len: 1,
-                    });
+                        run_len: 1});
                 }
                 // This tab is not part of a group. Push a "Single" slot.
-                None => slots.push(TabBarSlot::Single { index: idx }),
-            }
+                None => slots.push(TabBarSlot::Single { index: idx })}
         }
         slots
     }
@@ -27954,8 +27194,7 @@ impl Workspace {
 
             let window_bounds = match ctx.window_bounds(&ctx.window_id()) {
                 Some(bounds) => bounds,
-                None => return,
-            };
+                None => return};
             let source_window_origin = window_bounds.origin();
             let drag_origin_in_window = vec2f(position.min_x(), position.min_y());
             let drag_origin_on_screen = vec2f(
@@ -28191,16 +27430,14 @@ impl Workspace {
                 self.focus_active_tab(ctx);
             }
             DropResult::CloseSourceWindow {
-                transferred_tab_index,
-            } => {
+                transferred_tab_index} => {
                 if let Some(tab) = self.tabs.get(transferred_tab_index) {
                     ctx.unsubscribe_to_view(&tab.pane_group);
                 }
                 self.close_window_for_content_transfer(ctx);
             }
             DropResult::RemoveSourceTab {
-                transferred_tab_index,
-            } => {
+                transferred_tab_index} => {
                 if let Some(tab) = self.tabs.get(transferred_tab_index) {
                     ctx.unsubscribe_to_view(&tab.pane_group);
                 } else {
@@ -28215,8 +27452,7 @@ impl Workspace {
             }
             DropResult::RemoveSourceTabAndClosePreview {
                 transferred_tab_index,
-                preview_window_id,
-            } => {
+                preview_window_id} => {
                 if let Some(tab) = self.tabs.get(transferred_tab_index) {
                     ctx.unsubscribe_to_view(&tab.pane_group);
                 } else {
@@ -28479,8 +27715,7 @@ impl Workspace {
             // to resolve its midpoint.
             let header_mid_x = match last_member_rect {
                 Some(member) => rect.min_x() + member.width() / 2.,
-                None => (rect.min_x() + rect.max_x()) / 2.,
-            };
+                None => (rect.min_x() + rect.max_x()) / 2.};
 
             // Leading: entering and leaving both pivot on the header's midpoint.
             let leading = header_mid_x;
@@ -28722,8 +27957,7 @@ fn render_group_member_icon_collage(
         return render_summary_pane_kind_icons(
             SummaryPaneKindIcons::Pair {
                 primary: kinds[0].clone(),
-                secondary: kinds[1].clone(),
-            },
+                secondary: kinds[1].clone()},
             total_size,
             appearance,
         );
@@ -28780,8 +28014,7 @@ fn render_group_member_icon_collage(
                     / 2.0;
                 positions[idx] + vec2f(shift, shift)
             }
-            _ => positions[idx],
-        };
+            _ => positions[idx]};
         stack.add_positioned_child(
             mini,
             OffsetPositioning::offset_from_parent(
@@ -28993,10 +28226,8 @@ fn set_opencode_warp_plugin(new_entry: &str) -> String {
         match std::fs::read_to_string(&config_path) {
             Ok(contents) => match serde_json::from_str(&contents) {
                 Ok(val) => val,
-                Err(e) => return format!("Failed to parse opencode.json: {e}"),
-            },
-            Err(e) => return format!("Failed to read opencode.json: {e}"),
-        }
+                Err(e) => return format!("Failed to parse opencode.json: {e}")},
+            Err(e) => return format!("Failed to read opencode.json: {e}")}
     } else {
         serde_json::json!({
             "$schema": "https://opencode.ai/config.json"
@@ -29028,8 +28259,6 @@ fn set_opencode_warp_plugin(new_entry: &str) -> String {
     match serde_json::to_string_pretty(&config) {
         Ok(json_str) => match std::fs::write(&config_path, format!("{json_str}\n")) {
             Ok(()) => format!("OpenCode plugin set to: {new_entry}"),
-            Err(e) => format!("Failed to write opencode.json: {e}"),
-        },
-        Err(e) => format!("Failed to serialize opencode.json: {e}"),
-    }
+            Err(e) => format!("Failed to write opencode.json: {e}")},
+        Err(e) => format!("Failed to serialize opencode.json: {e}")}
 }

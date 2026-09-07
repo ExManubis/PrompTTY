@@ -6,8 +6,7 @@ use mcp::oauth::{
     self, AuthContext, CallbackResult, FILE_BASED_MCP_CREDENTIALS_KEY,
     FileBasedPersistedCredentialsMap, OAuthCallbackMode, PersistedCredentials,
     PersistedCredentialsMap, TEMPLATABLE_MCP_CREDENTIALS_KEY, load_credentials_from_secure_storage,
-    write_to_secure_storage,
-};
+    write_to_secure_storage};
 use mcp::runtime::{error_to_user_message, spawn_server};
 use parking_lot::Mutex;
 use simple_logger::manager::LogManager;
@@ -25,8 +24,7 @@ use warpui::{AppContext, ModelContext, SingletonEntity};
 
 use super::{
     MCPServerState, SpawnedServerInfo, TemplatableMCPServerInfo, TemplatableMCPServerManager,
-    TemplatableMCPServerManagerEvent,
-};
+    TemplatableMCPServerManagerEvent};
 use crate::ai::mcp::file_based_manager::FileBasedMCPManagerEvent;
 use crate::ai::mcp::parsing::resolve_json;
 use crate::ai::mcp::templatable::{CloudTemplatableMCPServer, GalleryData};
@@ -35,41 +33,35 @@ use crate::ai::mcp::templatable_manager::FigmaMcpStatus;
 use crate::ai::mcp::{
     Author, CloudMCPServer, FileBasedMCPManager, JsonTemplate, MCPGalleryManager, MCPServer,
     MCPServerExt, MCPServerUpdate, ParsedTemplatableMCPServerResult, StaticEnvVar,
-    TemplatableMCPServer, TemplatableMCPServerInstallation, TransportType, builtin, logs,
-};
+    TemplatableMCPServer, TemplatableMCPServerInstallation, TransportType, builtin, logs};
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::{AuthManager, AuthManagerEvent};
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::cloud_object::{
     CloudObject, CloudObjectLocation, CloudObjectLookup as _, CloudObjectMetadataExt,
-    CloudObjectUuidLookup as _, GenericStringObjectFormat, JsonObjectType, Space,
-};
+    CloudObjectUuidLookup as _, GenericStringObjectFormat, JsonObjectType, Space};
 use crate::drive::CloudObjectTypeAndId;
 use crate::persistence::{
-    ModelEvent, database_file_path_for_current_scope, establish_ro_connection,
-};
+    ModelEvent, database_file_path_for_current_scope, establish_ro_connection};
 use crate::server::cloud_objects::update_manager::{InitiatedBy, UpdateManager};
 use crate::server::ids::{ClientId, ServerId, SyncId};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::telemetry::{
-    MCPServerModel, MCPServerTelemetryTransportType, MCPTemplateCreationSource, TelemetryEvent,
-};
+    MCPServerModel, MCPServerTelemetryTransportType, MCPTemplateCreationSource, TelemetryEvent};
 use crate::settings::AISettings;
 use crate::view_components::DismissibleToast;
 use crate::workspace::ToastStack;
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::{GlobalResourceHandlesProvider, send_telemetry_from_ctx};
+use crate::{GlobalResourceHandlesProvider};
 
 /// Controls the behavior of `spawn_server_impl`.
 enum SpawnMode {
     /// Initial spawn - clears logs and sends telemetry.
     Initial {
         /// Whether to persist running state to SQLite.
-        persist_running_state_to_sqlite: bool,
-    },
+        persist_running_state_to_sqlite: bool},
     /// Reconnection after transport closed - preserves logs, no telemetry.
-    Reconnect,
-}
+    Reconnect}
 
 impl SpawnMode {
     fn should_send_telemetry(&self) -> bool {
@@ -93,21 +85,18 @@ enum LegacyToTemplatableMCPConversionError {
     #[error("failed to connect to database")]
     NoDBConnection,
     #[error("created template successfully, but could not create installation")]
-    InstallationFailed,
-}
+    InstallationFailed}
 
 /// An MCP server integration that Warp ships with bundled skills for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum McpIntegration {
-    Figma,
-}
+    Figma}
 
 impl TemplatableMCPServerManager {
     /// Returns `true` if the given MCP integration is currently running.
     pub fn is_mcp_server_running(&self, integration: McpIntegration) -> bool {
         match integration {
-            McpIntegration::Figma => self.get_figma_mcp_status() == FigmaMcpStatus::Running,
-        }
+            McpIntegration::Figma => self.get_figma_mcp_status() == FigmaMcpStatus::Running}
     }
 
     /// Handles an incoming OAuth callback URL.
@@ -138,12 +127,9 @@ impl TemplatableMCPServerManager {
                 code: code.to_string(),
                 // Pass the state value through as the CSRF token; rmcp will validate it
                 // against the token it stored when generating the authorization URL.
-                csrf_token: state.to_string(),
-            },
+                csrf_token: state.to_string()},
             None => CallbackResult::Error {
-                error: error.map(|e| e.to_string()),
-            },
-        };
+                error: error.map(|e| e.to_string())}};
 
         let Some(&server_uuid) = self.pending_oauth_csrf.get(state.as_ref() as &str) else {
             anyhow::bail!("No active OAuth flow found for state={state}");
@@ -177,8 +163,7 @@ impl TemplatableMCPServerManager {
                 &self.file_based_server_credentials,
             );
             app.emit(TemplatableMCPServerManagerEvent::CredentialsChanged {
-                uuid: installation_uuid,
-            });
+                uuid: installation_uuid});
             return;
         }
 
@@ -190,8 +175,7 @@ impl TemplatableMCPServerManager {
                 &self.server_credentials,
             );
             app.emit(TemplatableMCPServerManagerEvent::CredentialsChanged {
-                uuid: installation_uuid,
-            });
+                uuid: installation_uuid});
         } else {
             report_error!(
                 "Corresponding file or cloud-based server not found for installation UUID",
@@ -213,8 +197,7 @@ impl TemplatableMCPServerManager {
                 &self.file_based_server_credentials,
             );
             app.emit(TemplatableMCPServerManagerEvent::CredentialsChanged {
-                uuid: installation_uuid,
-            });
+                uuid: installation_uuid});
             return;
         }
         if let Some(template_uuid) = self.get_template_uuid(installation_uuid) {
@@ -225,8 +208,7 @@ impl TemplatableMCPServerManager {
                 &self.server_credentials,
             );
             app.emit(TemplatableMCPServerManagerEvent::CredentialsChanged {
-                uuid: installation_uuid,
-            });
+                uuid: installation_uuid});
         } else {
             report_error!(
                 "No template UUID found for installation UUID",
@@ -253,8 +235,7 @@ impl TemplatableMCPServerManager {
                 me.despawn_file_based_servers(installation_uuids.clone(), ctx);
             }
             FileBasedMCPManagerEvent::PurgeCredentials {
-                installation_hashes,
-            } => {
+                installation_hashes} => {
                 me.purge_file_based_server_credentials(installation_hashes, ctx);
             }
             // Notification for cloud-environment / initial-global-scan readiness; handled by
@@ -273,58 +254,46 @@ impl TemplatableMCPServerManager {
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                        id: _,
-                    },
-                source: _,
-            }
+                        id: _},
+                source: _}
             | CloudModelEvent::ObjectTrashed {
                 type_and_id:
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                        id: _,
-                    },
-                source: _,
-            }
+                        id: _},
+                source: _}
             | CloudModelEvent::ObjectUntrashed {
                 type_and_id:
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                        id: _,
-                    },
-                source: _,
-            }
+                        id: _},
+                source: _}
             | CloudModelEvent::ObjectDeleted {
                 type_and_id:
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                        id: _,
-                    },
-                folder_id: _,
-            }
+                        id: _},
+                folder_id: _}
             | CloudModelEvent::ObjectSynced {
                 type_and_id:
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                        id: _,
-                    },
+                        id: _},
                 client_id: _,
-                server_id: _,
-            }
+                server_id: _}
             | CloudModelEvent::ObjectMoved {
                 type_and_id:
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                        id: _,
-                    },
+                        id: _},
                 source: _,
                 from_folder: _,
-                to_folder: _,
-            } => {
+                to_folder: _} => {
                 me.fetch_cloud_servers(ctx);
             },
             CloudModelEvent::ObjectCreated {
@@ -333,8 +302,7 @@ impl TemplatableMCPServerManager {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
                         id: new_sync_id
-                    },
-            } => {
+                    }} => {
                 log::debug!("A new MCP server template was found with sync id {new_sync_id}");
                 if let Some(new_server) = CloudTemplatableMCPServer::get_by_id(new_sync_id, ctx) {
                     let uuid = new_server.model().string_model.uuid;
@@ -409,8 +377,7 @@ impl TemplatableMCPServerManager {
             cli_spawned_server_uuids: Default::default(),
             builtin_server_uuids: Default::default(),
             builtin_server_token: Default::default(),
-            server_loggers: Default::default(),
-        };
+            server_loggers: Default::default()};
 
         me.fetch_cloud_servers(ctx);
 
@@ -494,8 +461,7 @@ impl TemplatableMCPServerManager {
     pub fn is_server_installation_shared(&self, installation_uuid: Uuid, app: &AppContext) -> bool {
         match self.get_installed_server(&installation_uuid) {
             Some(installation) => self.is_server_template_shared(installation.template_uuid(), app),
-            None => false,
-        }
+            None => false}
     }
 
     pub fn change_server_state(
@@ -515,8 +481,7 @@ impl TemplatableMCPServerManager {
         self.server_states.insert(installation_uuid, new_state);
         ctx.emit(TemplatableMCPServerManagerEvent::StateChanged {
             uuid: installation_uuid,
-            state: new_state,
-        });
+            state: new_state});
     }
 
     pub fn is_server_template_shared(&self, template_uuid: Uuid, app: &AppContext) -> bool {
@@ -524,8 +489,7 @@ impl TemplatableMCPServerManager {
             Some(Space::Personal) => false,
             Some(Space::Team { team_uid: _ }) => true,
             Some(Space::Shared) => true,
-            None => false,
-        }
+            None => false}
     }
 
     fn get_space(&self, template_uuid: Uuid, app: &AppContext) -> Option<Space> {
@@ -619,8 +583,7 @@ impl TemplatableMCPServerManager {
         if let Some(cloud_templatable_mcp_server) = cloud_templatable_mcp_server {
             let cloud_object_type_and_id = CloudObjectTypeAndId::GenericStringObject {
                 object_type: GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                id: cloud_templatable_mcp_server.id,
-            };
+                id: cloud_templatable_mcp_server.id};
 
             let update_manager = UpdateManager::handle(ctx);
             update_manager.update(ctx, |update_manager, ctx| {
@@ -640,8 +603,7 @@ impl TemplatableMCPServerManager {
         // during conversion.
         let cloud_object_type_and_id = CloudObjectTypeAndId::GenericStringObject {
             object_type: GenericStringObjectFormat::Json(JsonObjectType::MCPServer),
-            id: sync_id,
-        };
+            id: sync_id};
 
         let update_manager = UpdateManager::handle(ctx);
         update_manager.update(ctx, |update_manager, ctx| {
@@ -722,8 +684,7 @@ impl TemplatableMCPServerManager {
         };
         let event = ModelEvent::UpdateMCPInstallationRunning {
             installation_uuid,
-            running,
-        };
+            running};
         if let Err(err) = sender.send(event) {
             report_error!(anyhow::Error::new(err).context(
                 "Failed to save TemplatableMCPServerInstallation running status to database"
@@ -749,8 +710,7 @@ impl TemplatableMCPServerManager {
         self.spawn_server_impl(
             installation,
             SpawnMode::Initial {
-                persist_running_state_to_sqlite: false,
-            },
+                persist_running_state_to_sqlite: false},
             ctx,
         );
     }
@@ -862,8 +822,7 @@ impl TemplatableMCPServerManager {
         self.spawn_server_impl(
             installation,
             SpawnMode::Initial {
-                persist_running_state_to_sqlite: true,
-            },
+                persist_running_state_to_sqlite: true},
             ctx,
         );
     }
@@ -957,8 +916,7 @@ impl TemplatableMCPServerManager {
                     0,
                     StaticEnvVar {
                         name: "PATH".to_string(),
-                        value: execution_path,
-                    },
+                        value: execution_path},
                 );
             }
 
@@ -1037,8 +995,7 @@ impl TemplatableMCPServerManager {
                         "{}://mcp/oauth2callback",
                         ChannelState::url_scheme()
                     ),
-                    result_rx: oauth_result_rx,
-                }
+                    result_rx: oauth_result_rx}
             };
 
             AuthContext {
@@ -1078,8 +1035,7 @@ impl TemplatableMCPServerManager {
                                 manager.authorization_urls.insert(uuid, auth_url.clone());
                                 ctx.emit(
                                     TemplatableMCPServerManagerEvent::AuthenticationRequired {
-                                        uuid,
-                                    },
+                                        uuid},
                                 );
                                 ctx.open_url(&auth_url);
                                 manager.change_server_state(uuid, MCPServerState::Authenticating, ctx);
@@ -1118,8 +1074,7 @@ impl TemplatableMCPServerManager {
                             })?;
                         Ok(())
                     })
-                })),
-            }
+                }))}
         });
 
         // Extract values from mode before moving it into the closure.
@@ -1186,19 +1141,6 @@ impl TemplatableMCPServerManager {
                 };
 
                 if should_send_telemetry {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::MCPServerSpawned {
-                            transport_type: match server.transport_type {
-                                TransportType::CLIServer { .. } =>
-                                    MCPServerTelemetryTransportType::CLIServer,
-                                TransportType::ServerSentEvents { .. } =>
-                                    MCPServerTelemetryTransportType::ServerSentEvents,
-                            },
-                            server_model: MCPServerModel::Templatable,
-                            error
-                        },
-                        ctx
-                    );
                 }
             },
         );
@@ -1207,8 +1149,7 @@ impl TemplatableMCPServerManager {
             installation_uuid,
             SpawnedServerInfo {
                 abort_handle: task.abort_handle(),
-                oauth_result_tx,
-            },
+                oauth_result_tx},
         );
 
         log::debug!(
@@ -1304,8 +1245,7 @@ impl TemplatableMCPServerManager {
 
         if let Some(sender) = &global_resource_handles.model_event_sender {
             let event = ModelEvent::UpsertMCPServerInstallation {
-                mcp_server_installation: mcp_server_installation.clone(),
-            };
+                mcp_server_installation: mcp_server_installation.clone()};
             if let Err(err) = sender.send(event) {
                 report_error!(
                     anyhow::Error::new(err)
@@ -1390,8 +1330,7 @@ impl TemplatableMCPServerManager {
 
         if let Some(sender) = &global_resource_handles.model_event_sender {
             let event = ModelEvent::DeleteMCPServerInstallations {
-                installation_uuids: installation_uuids.clone(),
-            };
+                installation_uuids: installation_uuids.clone()};
             if let Err(err) = sender.send(event) {
                 report_error!(
                     anyhow::Error::new(err)
@@ -1428,15 +1367,13 @@ impl TemplatableMCPServerManager {
             let creator = self.get_creator(templatable_mcp_server.uuid, app);
             match creator {
                 Some(creator) => Author::OtherUser { name: creator },
-                None => Author::Unknown,
-            }
+                None => Author::Unknown}
         };
 
         Some(MCPServerUpdate::CloudTemplate {
             publisher: author,
             new_version_ts: templatable_mcp_server.version,
-            json_template: templatable_mcp_server.template.clone(),
-        })
+            json_template: templatable_mcp_server.template.clone()})
     }
 
     fn get_update_from_gallery(
@@ -1448,8 +1385,7 @@ impl TemplatableMCPServerManager {
 
         let GalleryData {
             gallery_item_id,
-            version: installed_gallery_version,
-        } = installation.templatable_mcp_server().gallery_data?;
+            version: installed_gallery_version} = installation.templatable_mcp_server().gallery_data?;
 
         let gallery_item = MCPGalleryManager::as_ref(app).get_gallery_item(gallery_item_id)?;
 
@@ -1464,8 +1400,7 @@ impl TemplatableMCPServerManager {
         Some(MCPServerUpdate::Gallery {
             name: gallery_item.title(),
             new_version: gallery_item.version(),
-            json_template: gallery_templatable_mcp_server.template.clone(),
-        })
+            json_template: gallery_templatable_mcp_server.template.clone()})
     }
 
     fn deduplicate_updates(
@@ -1489,8 +1424,7 @@ impl TemplatableMCPServerManager {
         for (index, update) in updates.iter().enumerate() {
             let json_template = match update {
                 MCPServerUpdate::CloudTemplate { json_template, .. } => json_template,
-                MCPServerUpdate::Gallery { json_template, .. } => json_template,
-            };
+                MCPServerUpdate::Gallery { json_template, .. } => json_template};
 
             // De-duplicate those that are the same as the currently installed template
             if installed_template == json_template {
@@ -1526,8 +1460,7 @@ impl TemplatableMCPServerManager {
                             new_version: other_new_version,
                             ..
                         },
-                    ) => new_version > other_new_version,
-                };
+                    ) => new_version > other_new_version};
 
                 if should_replace {
                     templates_to_keep.insert(json_template.clone(), index);
@@ -1732,20 +1665,11 @@ impl TemplatableMCPServerManager {
             );
             match result {
                 Ok(result) => {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::MCPTemplateCreated {
-                            source: MCPTemplateCreationSource::Conversion,
-                            variables: result.templatable_mcp_server.template.variables,
-                            name: result.templatable_mcp_server.name,
-                        },
-                        ctx
-                    );
                 }
                 Err(e) => report_error!(
                     anyhow::Error::new(e)
                         .context("Failed to convert legacy MCP server to templatable")
-                ),
-            }
+                )}
         }
     }
 
@@ -1762,8 +1686,7 @@ impl TemplatableMCPServerManager {
         if let Some(sync_id) = sync_id {
             let object_type_and_id = CloudObjectTypeAndId::GenericStringObject {
                 object_type: GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                id: sync_id,
-            };
+                id: sync_id};
             UpdateManager::handle(ctx).update(ctx, |update_manager, ctx| {
                 update_manager.move_object_to_location(
                     object_type_and_id,
@@ -1771,7 +1694,6 @@ impl TemplatableMCPServerManager {
                     ctx,
                 );
             });
-            send_telemetry_from_ctx!(TelemetryEvent::MCPTemplateShared, ctx);
         }
     }
 
@@ -1799,8 +1721,7 @@ impl TemplatableMCPServerManager {
 
             let object_type_and_id = CloudObjectTypeAndId::GenericStringObject {
                 object_type: GenericStringObjectFormat::Json(JsonObjectType::TemplatableMCPServer),
-                id: sync_id,
-            };
+                id: sync_id};
             UpdateManager::handle(ctx).update(ctx, |update_manager, ctx| {
                 update_manager.move_object_to_location(
                     object_type_and_id,

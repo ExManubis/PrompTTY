@@ -16,23 +16,19 @@ use crate::{
     ai::{
         agent::{AIAgentAction, AIAgentActionResultType, CallMCPToolResult},
         blocklist::{BlocklistAIPermissions, action_model::AIAgentActionType},
-        mcp::TemplatableMCPServerManager,
-    },
-    send_telemetry_from_app_ctx,
-};
+        mcp::TemplatableMCPServerManager},
+    send_telemetry_from_app_ctx};
 
 pub struct CallMCPToolExecutor {
     _active_session: ModelHandle<ActiveSession>,
     #[allow(dead_code)]
-    terminal_view_id: EntityId,
-}
+    terminal_view_id: EntityId}
 
 impl CallMCPToolExecutor {
     pub fn new(_active_session: ModelHandle<ActiveSession>, terminal_view_id: EntityId) -> Self {
         Self {
             _active_session,
-            terminal_view_id,
-        }
+            terminal_view_id}
     }
 
     #[cfg_attr(target_family = "wasm", allow(unused_variables), allow(dead_code))]
@@ -57,8 +53,7 @@ impl CallMCPToolExecutor {
                             },
                         ..
                     },
-                conversation_id,
-            } = input
+                conversation_id} = input
             else {
                 return false;
             };
@@ -92,8 +87,7 @@ impl CallMCPToolExecutor {
                     AIAgentActionType::CallMCPTool {
                         server_id,
                         name,
-                        input,
-                    },
+                        input},
                 ..
             } = input.action
             else {
@@ -202,8 +196,7 @@ fn schema_declares_integer(schema: &serde_json::Value) -> bool {
         Some(serde_json::Value::Array(types)) => {
             types.iter().any(|t| t.as_str() == Some("integer"))
         }
-        _ => false,
-    }
+        _ => false}
 }
 
 /// In-place coerces a whole-number `f64` `Number` to `i64`.
@@ -326,42 +319,14 @@ fn handle_call_tool_result(
                             content_str
                         }
                     });
-                send_telemetry_from_app_ctx!(
-                    TelemetryEvent::MCPToolCallAccepted {
-                        server_output_id,
-                        tool_call: tool_name,
-                        error: Some(
-                            crate::server::telemetry::MCPServerTelemetryError::ResponseError(
-                                error_message.clone()
-                            )
-                        ),
-                    },
-                    ctx
-                );
                 CallMCPToolResult::Error(error_message)
             } else {
-                send_telemetry_from_app_ctx!(
-                    TelemetryEvent::MCPToolCallAccepted {
-                        server_output_id,
-                        tool_call: tool_name,
-                        error: None,
-                    },
-                    ctx
-                );
                 CallMCPToolResult::Success { result }
             }
         }
         Err(e) => {
             let error_message = e.to_string();
             log::warn!("Executing MCP tool resulted in error: {e:?}");
-            send_telemetry_from_app_ctx!(
-                TelemetryEvent::MCPToolCallAccepted {
-                    server_output_id,
-                    tool_call: tool_name,
-                    error: Some(rmcp::RmcpError::Service(e).into()),
-                },
-                ctx
-            );
             CallMCPToolResult::Error(error_message)
         }
     };

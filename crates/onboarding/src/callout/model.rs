@@ -1,4 +1,3 @@
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warpui_core::{Entity, ModelContext};
 
@@ -16,8 +15,7 @@ pub enum FinalState {
     /// User chose to initialize the project (AgentModality with project)
     Initialize,
     /// User chose to go back to terminal (AgentModality without project)
-    BackToTerminal,
-}
+    BackToTerminal}
 
 impl std::fmt::Display for FinalState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -26,8 +24,7 @@ impl std::fmt::Display for FinalState {
             FinalState::Skip => write!(f, "skipped"),
             FinalState::Finish => write!(f, "finished"),
             FinalState::Initialize => write!(f, "initialize"),
-            FinalState::BackToTerminal => write!(f, "back_to_terminal"),
-        }
+            FinalState::BackToTerminal => write!(f, "back_to_terminal")}
     }
 }
 
@@ -39,8 +36,7 @@ pub enum OnboardingQuery {
     /// An agent prompt that should be executed in agent mode
     AgentPrompt(String),
     /// No prompt (empty state)
-    None,
-}
+    None}
 
 #[derive(Clone, Copy, Debug)]
 pub(super) enum OnboardingCalloutModelEvent {
@@ -48,8 +44,7 @@ pub(super) enum OnboardingCalloutModelEvent {
     Completed(FinalState),
     EnterAgentModality,
     /// Emitted when the user toggles the natural language detection checkbox.
-    NaturalLanguageDetectionToggled(bool),
-}
+    NaturalLanguageDetectionToggled(bool)}
 
 /// State for the UniversalInput onboarding flow (non-AgentModality).
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -58,8 +53,7 @@ pub(super) enum UniversalInputCalloutState {
     Off,
     MeetInput,
     TalkToAgent,
-    Complete(FinalState),
-}
+    Complete(FinalState)}
 
 /// State for the AgentModality onboarding flow.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -71,14 +65,12 @@ pub(super) enum AgentModalityCalloutState {
     /// Step 2: "Agent Mode" (Agent intention only).
     AgentMode,
     /// Terminal state
-    Complete(FinalState),
-}
+    Complete(FinalState)}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum OnboardingCalloutState {
     UniversalInput(UniversalInputCalloutState),
-    AgentModality(AgentModalityCalloutState),
-}
+    AgentModality(AgentModalityCalloutState)}
 
 pub(super) struct OnboardingCalloutModel {
     state: OnboardingCalloutState,
@@ -88,8 +80,7 @@ pub(super) struct OnboardingCalloutModel {
     /// Used to determine which callout variant to show.
     initial_natural_language_detection_enabled: bool,
     /// The current value of natural language detection (may change via checkbox toggle).
-    natural_language_detection_enabled: bool,
-}
+    natural_language_detection_enabled: bool}
 
 impl OnboardingCalloutModel {
     /// Create a new model for UniversalInput onboarding flow.
@@ -102,8 +93,7 @@ impl OnboardingCalloutModel {
             intention: OnboardingIntention::AgentDrivenDevelopment,
             has_project,
             initial_natural_language_detection_enabled,
-            natural_language_detection_enabled: initial_natural_language_detection_enabled,
-        }
+            natural_language_detection_enabled: initial_natural_language_detection_enabled}
     }
 
     /// Create a new model for AgentModality onboarding flow.
@@ -117,8 +107,7 @@ impl OnboardingCalloutModel {
             intention,
             has_project,
             initial_natural_language_detection_enabled,
-            natural_language_detection_enabled: initial_natural_language_detection_enabled,
-        }
+            natural_language_detection_enabled: initial_natural_language_detection_enabled}
     }
 
     pub fn has_project(&self) -> bool {
@@ -149,7 +138,6 @@ impl OnboardingCalloutModel {
     }
 
     pub fn next(&mut self, ctx: &mut ModelContext<Self>) {
-        send_telemetry_from_ctx!(OnboardingEvent::CalloutNext, ctx);
         match &self.state {
             OnboardingCalloutState::UniversalInput(universal_input_state) => {
                 self.next_universal_input(*universal_input_state, ctx);
@@ -171,8 +159,7 @@ impl OnboardingCalloutModel {
             UniversalInputCalloutState::TalkToAgent => {
                 Some(UniversalInputCalloutState::Complete(FinalState::Submit))
             }
-            UniversalInputCalloutState::Complete(_) => None,
-        };
+            UniversalInputCalloutState::Complete(_) => None};
         if let Some(next_state) = next_state {
             self.set_state(OnboardingCalloutState::UniversalInput(next_state), ctx);
         }
@@ -214,8 +201,7 @@ impl OnboardingCalloutModel {
                     false,
                 )
             }
-            AgentModalityCalloutState::Complete(_) => (None, false),
-        };
+            AgentModalityCalloutState::Complete(_) => (None, false)};
         if let Some(next_state) = next_state {
             self.set_state(OnboardingCalloutState::AgentModality(next_state), ctx);
         }
@@ -248,8 +234,7 @@ impl OnboardingCalloutModel {
             _ => report_error!(
                 "Skip action called in an unskippable state",
                 extra: { "state" => ?self.state }
-            ),
-        }
+            )}
     }
 
     pub fn finish(&mut self, ctx: &mut ModelContext<Self>) {
@@ -285,8 +270,7 @@ impl OnboardingCalloutModel {
             _ => report_error!(
                 "Finish action called in an invalid state",
                 extra: { "state" => ?self.state }
-            ),
-        }
+            )}
     }
 
     /// Handle "Back to terminal" action (ESC in IntroducingAgentExperience).
@@ -303,8 +287,7 @@ impl OnboardingCalloutModel {
             _ => report_error!(
                 "BackToTerminal action called in an invalid state",
                 extra: { "state" => ?self.state }
-            ),
-        }
+            )}
     }
 
     pub fn is_onboarding_active(&self) -> bool {
@@ -316,8 +299,7 @@ impl OnboardingCalloutModel {
             OnboardingCalloutState::AgentModality(state) => !matches!(
                 state,
                 AgentModalityCalloutState::Off | AgentModalityCalloutState::Complete(_)
-            ),
-        }
+            )}
     }
 
     pub fn state(&self) -> OnboardingCalloutState {
@@ -341,15 +323,8 @@ impl OnboardingCalloutModel {
             OnboardingCalloutState::AgentModality(AgentModalityCalloutState::AgentMode) => {
                 Some("introducing_agent_experience")
             }
-            _ => None,
-        };
+            _ => None};
         if let Some(callout) = callout_name {
-            send_telemetry_from_ctx!(
-                OnboardingEvent::CalloutDisplayed {
-                    callout: callout.to_string(),
-                },
-                ctx
-            );
         }
     }
 
@@ -367,16 +342,9 @@ impl OnboardingCalloutModel {
                 OnboardingCalloutState::AgentModality(AgentModalityCalloutState::Complete(fs)) => {
                     Some(fs)
                 }
-                _ => None,
-            };
+                _ => None};
 
             if let Some(final_state) = final_state {
-                send_telemetry_from_ctx!(
-                    OnboardingEvent::CalloutCompleted {
-                        completion_type: final_state.to_string(),
-                    },
-                    ctx
-                );
                 ctx.emit(OnboardingCalloutModelEvent::Completed(final_state));
             }
         }
@@ -386,8 +354,7 @@ impl OnboardingCalloutModel {
     pub fn prompt_string(&self) -> String {
         match self.prompt() {
             OnboardingQuery::TerminalCommand(text) | OnboardingQuery::AgentPrompt(text) => text,
-            OnboardingQuery::None => String::new(),
-        }
+            OnboardingQuery::None => String::new()}
     }
 
     /// Returns the prompt information including type for the current state
@@ -396,8 +363,7 @@ impl OnboardingCalloutModel {
             OnboardingCalloutState::UniversalInput(state) => {
                 self.prompt_for_universal_input(*state)
             }
-            OnboardingCalloutState::AgentModality(state) => self.prompt_for_agent_modality(*state),
-        }
+            OnboardingCalloutState::AgentModality(state) => self.prompt_for_agent_modality(*state)}
     }
 
     fn prompt_for_universal_input(&self, state: UniversalInputCalloutState) -> OnboardingQuery {
@@ -415,8 +381,7 @@ impl OnboardingCalloutModel {
                         .to_string(),
                 )
             }
-            UniversalInputCalloutState::Complete(_) => OnboardingQuery::None,
-        }
+            UniversalInputCalloutState::Complete(_) => OnboardingQuery::None}
     }
 
     fn prompt_for_agent_modality(&self, state: AgentModalityCalloutState) -> OnboardingQuery {
@@ -433,8 +398,7 @@ impl OnboardingCalloutModel {
                 }
             }
             // All completion states should return None so the input gets cleared
-            AgentModalityCalloutState::Complete(_) => OnboardingQuery::None,
-        }
+            AgentModalityCalloutState::Complete(_) => OnboardingQuery::None}
     }
 
     pub fn start_onboarding(&mut self, ctx: &mut ModelContext<Self>) {

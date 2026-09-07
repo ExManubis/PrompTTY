@@ -21,7 +21,7 @@ use warpui::SingletonEntity;
 use warpui::r#async::executor;
 
 use super::server_model::{ConnectionId, ServerModel};
-use crate::{TelemetryEvent, send_telemetry_from_app_ctx};
+use crate::{TelemetryEvent};
 
 /// Run the `remote-server-daemon` subcommand.
 ///
@@ -32,8 +32,7 @@ use crate::{TelemetryEvent, send_telemetry_from_app_ctx};
 /// happen in [`launch_daemon`], called from `launch()`.
 pub fn run_daemon(identity_key: String) -> anyhow::Result<()> {
     let result = crate::run_internal(crate::LaunchMode::RemoteServerDaemon {
-        identity_key: identity_key.clone(),
-    });
+        identity_key: identity_key.clone()});
 
     // Clean up socket and PID files after the event loop exits.
     let socket_path = proxy::socket_path(&identity_key);
@@ -88,10 +87,6 @@ pub(crate) fn launch_daemon(identity_key: &str, ctx: &mut warpui::AppContext) {
             timer.mark_interval_end("DAEMON_SOCKET_BOUND");
             timer.compute_stats()
         });
-    send_telemetry_from_app_ctx!(
-        TelemetryEvent::RemoteServerDaemonStartup { timing_data },
-        ctx
-    );
 
     let _ = std::fs::write(&pid_path, std::process::id().to_string());
 
@@ -124,8 +119,7 @@ pub(crate) fn launch_daemon(identity_key: &str, ctx: &mut warpui::AppContext) {
                             ))
                             .detach();
                     }
-                    Err(e) => report_error!(anyhow::Error::new(e).context("Daemon: accept error")),
-                }
+                    Err(e) => report_error!(anyhow::Error::new(e).context("Daemon: accept error"))}
             }
         })
         .detach();
@@ -254,10 +248,8 @@ pub(super) async fn handle_daemon_connection(
                 message: Some(remote_server::proto::server_message::Message::Error(
                     remote_server::proto::ErrorResponse {
                         code: remote_server::proto::ErrorCode::Internal.into(),
-                        message: format!("Response could not be delivered: {e}"),
-                    },
-                )),
-            };
+                        message: format!("Response could not be delivered: {e}")},
+                ))};
             if let Err(e2) =
                 remote_server::protocol::write_server_message(&mut writer, &error_msg).await
             {
@@ -314,8 +306,7 @@ fn is_disconnect_io_error(e: &std::io::Error) -> bool {
 fn is_disconnect_error(e: &remote_server::protocol::ProtocolError) -> bool {
     match e {
         remote_server::protocol::ProtocolError::Io(io_err) => is_disconnect_io_error(io_err),
-        _ => false,
-    }
+        _ => false}
 }
 
 /// Alias for [`is_disconnect_error`] — used in the write path for clarity.

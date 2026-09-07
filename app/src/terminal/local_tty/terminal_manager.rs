@@ -36,7 +36,6 @@ use crate::context_chips::ContextChipKind;
 use crate::context_chips::prompt::Prompt;
 use crate::features::FeatureFlag;
 use crate::persistence::ModelEvent;
-use crate::send_telemetry_on_executor;
 use crate::server::telemetry::{PtySpawnMode as TelemetryPtySpawnMode, TelemetryEvent};
 use crate::settings::{DebugSettings, PrivacySettings, SshSettings};
 use crate::terminal::available_shells::{AvailableShell, AvailableShells};
@@ -60,21 +59,18 @@ use crate::terminal::terminal_manager::BlockSpacing;
 use crate::terminal::warpify::settings::WarpifySettings;
 use crate::terminal::writeable_pty::pty_controller::{EventLoopSendError, EventLoopSender};
 use crate::terminal::writeable_pty::terminal_manager_util::{
-    init_pty_controller_model, init_remote_server_controller, wire_up_pty_controller_with_surface,
-};
+    init_pty_controller_model, init_remote_server_controller, wire_up_pty_controller_with_surface};
 use crate::terminal::writeable_pty::{self, Message, PtyIntentEvent, TerminalSurface};
 use crate::terminal::{
     PTY_READS_BROADCAST_CHANNEL_SIZE, ShellLaunchData, ShellLaunchState, SizeInfo,
-    TerminalManager as TerminalManagerTrait, TerminalModel, terminal_manager,
-};
+    TerminalManager as TerminalManagerTrait, TerminalModel, terminal_manager};
 
 type PtyController = writeable_pty::PtyController<mio_channel::Sender<Message>>;
 type RemoteServerController =
     writeable_pty::remote_server_controller::RemoteServerController<mio_channel::Sender<Message>>;
 
 struct AppPtySpawnHooks {
-    is_crash_reporting_enabled: bool,
-}
+    is_crash_reporting_enabled: bool}
 
 impl PtySpawnHooks for AppPtySpawnHooks {
     fn before_spawn(&self) {
@@ -93,10 +89,8 @@ impl PtySpawnHooks for AppPtySpawnHooks {
         let mode = match mode {
             PtySpawnMode::TerminalServer => TelemetryPtySpawnMode::TerminalServer,
             PtySpawnMode::FallbackToDirect => TelemetryPtySpawnMode::FallbackToDirect,
-            PtySpawnMode::Direct => TelemetryPtySpawnMode::Direct,
-        };
-        crate::send_telemetry_from_app_ctx!(TelemetryEvent::PtySpawned { mode }, ctx);
-    }
+            PtySpawnMode::Direct => TelemetryPtySpawnMode::Direct};
+        crate::    }
 }
 
 /// Owns a local terminal session: the terminal model, PTY event loop, PTY
@@ -138,8 +132,7 @@ pub struct TerminalManager<S> {
 
     /// The sharer side of the session sharing protocol. [`Some`] only when a
     /// shared session connection is ongoing.
-    pub(super) session_sharer: Rc<RefCell<Option<ModelHandle<Network>>>>,
-}
+    pub(super) session_sharer: Rc<RefCell<Option<ModelHandle<Network>>>>}
 
 /// Shared inputs needed to construct a terminal surface for a local PTY.
 pub struct TerminalSurfaceInit {
@@ -149,8 +142,7 @@ pub struct TerminalSurfaceInit {
     pub sessions: ModelHandle<Sessions>,
     pub size_info: SizeInfo,
     pub colors: ColorList,
-    pub inactive_pty_reads_rx: InactiveReceiver<Arc<Vec<u8>>>,
-}
+    pub inactive_pty_reads_rx: InactiveReceiver<Arc<Vec<u8>>>}
 
 #[cfg(any(test, all(feature = "tui", feature = "test-util")))]
 impl TerminalSurfaceInit {
@@ -174,30 +166,26 @@ impl TerminalSurfaceInit {
             sessions,
             size_info,
             colors,
-            inactive_pty_reads_rx: pty_reads_rx.deactivate(),
-        }
+            inactive_pty_reads_rx: pty_reads_rx.deactivate()}
     }
 }
 
 /// A newly constructed terminal surface and its manager post-wiring callback.
 pub struct TerminalSurfaceResult<S, PostWire> {
     pub surface: ViewHandle<S>,
-    pub post_wire: PostWire,
-}
+    pub post_wire: PostWire}
 
 /// One-shot resources consumed when the shell is determined and the PTY starts.
 struct ShellStartupResources {
     event_loop_rx: mio_channel::Receiver<Message>,
     channel_event_proxy: ChannelEventListener,
     #[cfg(unix)]
-    model_events: ModelHandle<ModelEventDispatcher>,
-}
+    model_events: ModelHandle<ModelEventDispatcher>}
 
 /// Handles created for a local terminal manager and its surface.
 pub struct TerminalManagerInit<S> {
     pub manager: ModelHandle<Box<dyn TerminalManagerTrait>>,
-    pub surface: ViewHandle<S>,
-}
+    pub surface: ViewHandle<S>}
 /// Adapts a TUI-owned surface manager to Warp's type-erased manager contract.
 struct TuiTerminalManager<S>(TerminalManager<S>);
 
@@ -377,8 +365,7 @@ impl<S> TerminalManager<S> {
                 display_name: wsl_name_or_shell_starter
                     .as_ref()
                     .map(|wsl_name_or_shell_starter| wsl_name_or_shell_starter.name())
-                    .unwrap_or(ShellName::LessDescriptive("Shell".to_owned())),
-            },
+                    .unwrap_or(ShellName::LessDescriptive("Shell".to_owned()))},
             block_spacing,
             ctx,
         );
@@ -404,13 +391,6 @@ impl<S> TerminalManager<S> {
                         && model.is_active_block_bootstrapped()
                 },
                 move |max_bytes_per_second| {
-                    send_telemetry_on_executor!(
-                        auth_state,
-                        TelemetryEvent::PtyThroughput {
-                            max_bytes_per_second,
-                        },
-                        telemetry_executor
-                    );
                 },
                 ctx.background_executor().to_owned(),
             );
@@ -459,8 +439,7 @@ impl<S> TerminalManager<S> {
                 sessions: sessions.clone(),
                 size_info,
                 colors,
-                inactive_pty_reads_rx: inactive_pty_reads_rx.clone(),
-            },
+                inactive_pty_reads_rx: inactive_pty_reads_rx.clone()},
             ctx,
         );
         wire_up_pty_controller_with_surface(
@@ -483,8 +462,7 @@ impl<S> TerminalManager<S> {
             #[cfg(feature = "integration_tests")]
             pid: None,
             inactive_pty_reads_rx,
-            session_sharer: Rc::new(RefCell::new(None)),
-        };
+            session_sharer: Rc::new(RefCell::new(None))};
 
         // Run surface-specific wiring after the manager exists, because this
         // step may need manager-owned controllers and retained handles.
@@ -495,8 +473,7 @@ impl<S> TerminalManager<S> {
             event_loop_rx,
             channel_event_proxy,
             #[cfg(unix)]
-            model_events,
-        };
+            model_events};
 
         let terminal_manager_model = ctx.add_model(|ctx| {
             let terminal_manager = box_manager(terminal_manager);
@@ -504,8 +481,7 @@ impl<S> TerminalManager<S> {
                 async move {
                     match wsl_name_or_shell_starter {
                         Some(starter_source) => starter_source.to_shell_starter_source().await,
-                        None => None,
-                    }
+                        None => None}
                 },
                 move |terminal_manager: &mut Box<dyn TerminalManagerTrait>,
                       shell_starter_source,
@@ -534,8 +510,7 @@ impl<S> TerminalManager<S> {
 
         TerminalManagerInit {
             manager: terminal_manager_model,
-            surface: terminal_surface,
-        }
+            surface: terminal_surface}
     }
 
     /// Returns the terminal model owned by this manager.
@@ -647,20 +622,15 @@ fn on_shell_determined<S: TerminalSurface>(
     let shell_launch_data = match &shell_starter {
         ShellStarter::Direct(shell_starter) => ShellLaunchData::Executable {
             executable_path: shell_starter.logical_shell_path().to_owned(),
-            shell_type: shell_starter.shell_type(),
-        },
+            shell_type: shell_starter.shell_type()},
         ShellStarter::DockerSandbox(docker_starter) => ShellLaunchData::Executable {
             executable_path: docker_starter.logical_shell_path().to_owned(),
-            shell_type: docker_starter.shell_type(),
-        },
+            shell_type: docker_starter.shell_type()},
         ShellStarter::Wsl(shell_starter) => ShellLaunchData::WSL {
-            distro: shell_starter.distribution().to_owned(),
-        },
+            distro: shell_starter.distribution().to_owned()},
         ShellStarter::MSYS2(shell_starter) => ShellLaunchData::MSYS2 {
             executable_path: shell_starter.logical_shell_path().to_owned(),
-            shell_type: shell_starter.shell_type(),
-        },
-    };
+            shell_type: shell_starter.shell_type()}};
 
     // This needs to be done before bootstrapping starts (i.e. before spawning the event loop below).
     manager
@@ -674,8 +644,7 @@ fn on_shell_determined<S: TerminalSurface>(
     let generated_session_id = match &shell_starter {
         ShellStarter::Direct(starter) | ShellStarter::MSYS2(starter) => starter.session_id(),
         ShellStarter::DockerSandbox(starter) => starter.session_id(),
-        ShellStarter::Wsl(starter) => starter.session_id(),
-    };
+        ShellStarter::Wsl(starter) => starter.session_id()};
     manager
         .model()
         .lock()
@@ -687,8 +656,7 @@ fn on_shell_determined<S: TerminalSurface>(
         event_loop_rx,
         channel_event_proxy,
         #[cfg(unix)]
-        model_events,
-    } = shell_startup_resources;
+        model_events} = shell_startup_resources;
     let model = manager.model();
     #[cfg(windows)]
     let event_loop_tx = manager.event_loop_tx.lock().clone();
@@ -724,8 +692,7 @@ fn on_shell_determined<S: TerminalSurface>(
     model.lock().set_shell_process_info(ShellProcessInfo {
         pid,
         #[cfg(unix)]
-        pty_leader_fd: Some(fd),
-    });
+        pty_leader_fd: Some(fd)});
 
     // Create the channel above and pass the receving side to the event loop.
     let event_loop_handle = TerminalManager::<S>::start_pty_event_loop(
@@ -866,12 +833,10 @@ impl<S> TerminalManager<S> {
             shell_debug_mode: is_shell_debug_mode_enabled,
             honor_ps1: is_honor_ps1_enabled,
             node_version_chip_enabled,
-            close_fds: true,
-        };
+            close_fds: true};
 
         let hooks = AppPtySpawnHooks {
-            is_crash_reporting_enabled,
-        };
+            is_crash_reporting_enabled};
         Pty::new(
             options,
             &hooks,
@@ -1043,16 +1008,8 @@ fn get_shell_starter_internal(
         }
         ShellStarterSource::Fallback {
             unsupported_shell,
-            starter,
-        } => {
+            starter} => {
             if let Some(unsupported_shell) = unsupported_shell {
-                send_telemetry_on_executor!(
-                    auth_state,
-                    TelemetryEvent::UnsupportedShell {
-                        shell: unsupported_shell
-                    },
-                    background_executor
-                );
             }
 
             ShellStarter::Direct(starter)
@@ -1063,7 +1020,6 @@ fn get_shell_starter_internal(
 impl EventLoopSender for mio_channel::Sender<Message> {
     fn send(&self, message: Message) -> Result<(), EventLoopSendError> {
         self.send(message).map_err(|error| match error {
-            SendError(_) => EventLoopSendError::Disconnected,
-        })
+            SendError(_) => EventLoopSendError::Disconnected})
     }
 }

@@ -24,13 +24,11 @@ use smol_str::SmolStr;
 use typed_path::{TypedPath, TypedPathBuf, WindowsPath};
 use version_compare::Version;
 use warp_completer::completer::{
-    CommandExitStatus, CommandOutput, PathSeparators, TopLevelCommandCaseSensitivity,
-};
+    CommandExitStatus, CommandOutput, PathSeparators, TopLevelCommandCaseSensitivity};
 use warp_errors::{ErrorExt, register_error};
 use warp_util::path::{
     ShellFamily, convert_msys2_to_windows_native_path, convert_wsl_to_windows_host_path,
-    msys2_exe_to_root,
-};
+    msys2_exe_to_root};
 use warpui::platform::OperatingSystem;
 use warpui::{Entity, ModelContext, SingletonEntity};
 
@@ -65,9 +63,7 @@ enum ReadHistoryContentsError {
     #[error("Error running PowerShell commands and reading from filesystem to read history file.")]
     PowerShellAndAsyncFsError {
         powershell_error: anyhow::Error,
-        async_fs_error: std::io::Error,
-    },
-}
+        async_fs_error: std::io::Error}}
 
 impl ErrorExt for ReadHistoryContentsError {
     fn is_actionable(&self) -> bool {
@@ -136,8 +132,7 @@ pub struct Sessions {
 
     /// Tracks the remote server setup state for SSH sessions that have the
     /// `SshRemoteServer` feature flag enabled. Keyed by the pending session ID.
-    remote_server_setup_states: HashMap<SessionId, RemoteServerSetupState>,
-}
+    remote_server_setup_states: HashMap<SessionId, RemoteServerSetupState>}
 
 #[derive(Clone, Debug)]
 pub struct SessionBootstrappedEvent {
@@ -145,8 +140,7 @@ pub struct SessionBootstrappedEvent {
     pub spawning_command: String,
     pub shell: Shell,
     pub subshell_info: Option<SubshellInitializationInfo>,
-    pub session_type: BootstrapSessionType,
-}
+    pub session_type: BootstrapSessionType}
 
 /// Set of events produced the [`Sessions`] model.
 #[derive(Clone, Debug)]
@@ -157,8 +151,7 @@ pub enum SessionsEvent {
     /// A new session was successfully bootstrapped.
     SessionBootstrapped(Box<SessionBootstrappedEvent>),
     /// The environment variables were updated.
-    EnvironmentVariablesUpdated { session_id: SessionId },
-}
+    EnvironmentVariablesUpdated { session_id: SessionId }}
 
 impl Entity for Sessions {
     type Event = SessionsEvent;
@@ -180,8 +173,7 @@ impl Sessions {
             ctx.subscribe_to_model(&mgr, |sessions, _, event, ctx| match event {
                 RemoteServerManagerEvent::SessionConnected {
                     session_id: sid,
-                    host_id,
-                } => {
+                    host_id} => {
                     if let Some(session) = sessions.sessions.get(sid) {
                         session.set_remote_host_id(Some(host_id.clone()));
                     }
@@ -254,8 +246,7 @@ impl Sessions {
             in_band_command_output_tx_map: Default::default(),
             executor_for_all_sessions: None,
             env_vars: Default::default(),
-            remote_server_setup_states: Default::default(),
-        }
+            remote_server_setup_states: Default::default()}
     }
 
     pub fn is_any_session_remote(&self) -> bool {
@@ -279,8 +270,7 @@ impl Sessions {
             in_band_command_output_tx_map: Default::default(),
             executor_for_all_sessions: None,
             env_vars: Default::default(),
-            remote_server_setup_states: Default::default(),
-        }
+            remote_server_setup_states: Default::default()}
     }
 
     #[cfg(test)]
@@ -304,8 +294,7 @@ impl Sessions {
             (None, None) => false,
             (None, Some(new_vars)) => !new_vars.is_empty(),
             (Some(old_vars), None) => !old_vars.is_empty(),
-            (Some(old_vars), Some(new_vars)) => old_vars != *new_vars,
-        };
+            (Some(old_vars), Some(new_vars)) => old_vars != *new_vars};
         if did_change {
             ctx.emit(SessionsEvent::EnvironmentVariablesUpdated { session_id })
         }
@@ -343,8 +332,7 @@ impl Sessions {
         self.pending_session_start_times
             .insert(session_info.session_id, Instant::now());
         ctx.emit(SessionsEvent::SessionInitialized {
-            session_id: session_info.session_id,
-        })
+            session_id: session_info.session_id})
     }
 
     pub fn initialize_bootstrapped_session(
@@ -419,31 +407,14 @@ impl Sessions {
         let warp_attributed_bootstrap_duration_seconds =
             match (bootstrap_duration_seconds, rcfiles_duration_seconds) {
                 (Some(total), Some(rcfiles)) => Some(total - rcfiles),
-                _ => None,
-            };
+                _ => None};
         let was_triggered_by_rc_file = session
             .subshell_info()
             .clone()
             .map(|info| info.was_triggered_by_rc_file_snippet)
             .unwrap_or(false);
 
-        crate::send_telemetry_from_ctx!(
-            TelemetryEvent::BootstrappingSucceeded(BootstrappingInfo {
-                shell: session.shell().shell_type().name(),
-                shell_version: session.shell().version().clone(),
-                is_ssh: session.is_ssh_wrapper_session(),
-                was_triggered_by_rc_file,
-                is_subshell: session.subshell_info().is_some(),
-                is_wsl: session.is_wsl(),
-                bootstrap_duration_seconds,
-                rcfiles_duration_seconds,
-                warp_attributed_bootstrap_duration_seconds,
-                is_msys2: session.is_msys2(),
-                terminal_session_id: Some(session.id()),
-            }),
-            ctx
-        );
-
+        crate::
         History::handle(ctx).update(ctx, |history, ctx| {
             let session_id = session.id();
             let shell_host = ShellHost::from_session(session.as_ref());
@@ -470,8 +441,7 @@ impl Sessions {
                 spawning_command,
                 shell: session_info.shell,
                 subshell_info: session_info.subshell_info,
-                session_type: session_info.session_type,
-            },
+                session_type: session_info.session_type},
         )))
     }
 
@@ -553,8 +523,7 @@ impl From<SessionType> for command_corrections::SessionType {
     fn from(session_type: SessionType) -> Self {
         match session_type {
             SessionType::WarpifiedRemote { .. } => command_corrections::SessionType::Remote,
-            SessionType::Local => command_corrections::SessionType::Local,
-        }
+            SessionType::Local => command_corrections::SessionType::Local}
     }
 }
 
@@ -562,8 +531,7 @@ impl From<&SessionType> for command_corrections::SessionType {
     fn from(session_type: &SessionType) -> Self {
         match session_type {
             SessionType::WarpifiedRemote { .. } => command_corrections::SessionType::Remote,
-            SessionType::Local => command_corrections::SessionType::Local,
-        }
+            SessionType::Local => command_corrections::SessionType::Local}
     }
 }
 
@@ -586,17 +554,14 @@ pub enum IsSSHWrapperSession {
         /// already had running (the SSH wrapper attached to it instead of
         /// creating a Warp-owned one). Warp must not tear down such a
         /// master on session exit.
-        external_control_master: bool,
-    },
-    No,
-}
+        external_control_master: bool},
+    No}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct HostInfo {
     // TODO(CORE-2219): This should be an enum instead of a string
     pub os_category: Option<String>,
-    pub linux_distribution: Option<String>,
-}
+    pub linux_distribution: Option<String>}
 
 impl HostInfo {
     // TODO(CORE-2219): Once we have a struct instead of a string type,
@@ -648,8 +613,7 @@ pub struct SessionInfo {
     pub host_info: HostInfo,
     pub wsl_name: Option<String>,
     /// If this is a subshell or remote session, e.g. ssh, store the parent session ID here.
-    pub spawning_session_id: Option<SessionId>,
-}
+    pub spawning_session_id: Option<SessionId>}
 
 impl SessionInfo {
     /// Returns a partially populated `SessionInfo` constructed from data contained in the given
@@ -669,10 +633,8 @@ impl SessionInfo {
         let is_ssh_wrapper_session = match ssh_wrapper_session {
             Some(ssh_value) => IsSSHWrapperSession::Yes {
                 socket_path: ssh_value.socket_path,
-                external_control_master: ssh_value.external_control_master,
-            },
-            None => IsSSHWrapperSession::No,
-        };
+                external_control_master: ssh_value.external_control_master},
+            None => IsSSHWrapperSession::No};
 
         if launch_data.is_none() && is_ssh_wrapper_session == IsSSHWrapperSession::No {
             log::warn!("pending_local_shell_path was None for a local session");
@@ -715,8 +677,7 @@ impl SessionInfo {
             keywords: Default::default(),
             host_info: Default::default(),
             wsl_name: init_shell_value.wsl_name,
-            spawning_session_id,
-        }
+            spawning_session_id}
     }
 
     #[cfg(not(feature = "remote_tty"))]
@@ -771,8 +732,7 @@ impl SessionInfo {
                 }
                 value
             }
-            None => self.shell.shell_type(),
-        };
+            None => self.shell.shell_type()};
 
         let home_dir = bootstrapped_value.home_dir;
 
@@ -802,8 +762,7 @@ impl SessionInfo {
             // a separate line.
             let split = match &self.shell.shell_type() {
                 ShellType::Zsh | ShellType::PowerShell => names.split(' '),
-                ShellType::Bash | ShellType::Fish => names.split('\n'),
-            };
+                ShellType::Bash | ShellType::Fish => names.split('\n')};
             split.map(Into::into).collect::<HashSet<_>>()
         });
 
@@ -846,11 +805,9 @@ impl SessionInfo {
             subshell_info: self.subshell_info.take(),
             host_info: HostInfo {
                 os_category: bootstrapped_value.os_category,
-                linux_distribution: bootstrapped_value.linux_distribution,
-            },
+                linux_distribution: bootstrapped_value.linux_distribution},
             wsl_name: bootstrapped_value.wsl_name,
-            spawning_session_id: self.spawning_session_id,
-        }
+            spawning_session_id: self.spawning_session_id}
     }
 
     /// Returns the name of the WSL distribution, or `None` if this session is not a WSL session.
@@ -862,8 +819,7 @@ impl SessionInfo {
                 .as_ref()
                 .and_then(|launch_data| match launch_data {
                     ShellLaunchData::WSL { distro } => Some(distro.as_str()),
-                    _ => None,
-                }))
+                    _ => None}))
     }
 
     /// If the path is for a session inside some emulation layer, like a VM for WSL, convert a
@@ -900,8 +856,7 @@ pub enum BootstrapSessionType {
     Local,
 
     /// The session host is a different host from where Warp is running.
-    WarpifiedRemote,
-}
+    WarpifiedRemote}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SessionType {
@@ -915,15 +870,13 @@ pub enum SessionType {
     /// `RemoteServerManager` has completed the connection handshake. It is
     /// `None` when the feature flag is off or the connection hasn't been
     /// established yet.
-    WarpifiedRemote { host_id: Option<warp_core::HostId> },
-}
+    WarpifiedRemote { host_id: Option<warp_core::HostId> }}
 
 impl From<BootstrapSessionType> for SessionType {
     fn from(bst: BootstrapSessionType) -> Self {
         match bst {
             BootstrapSessionType::Local => SessionType::Local,
-            BootstrapSessionType::WarpifiedRemote => SessionType::WarpifiedRemote { host_id: None },
-        }
+            BootstrapSessionType::WarpifiedRemote => SessionType::WarpifiedRemote { host_id: None }}
     }
 }
 
@@ -953,8 +906,7 @@ pub struct Session {
     /// [`BootstrapSessionType`] in `SessionInfo` and updated by [`Sessions`]
     /// when `RemoteServerManager` reports a connected session (to fill in the
     /// `host_id`). Interior mutability allows updating through `Arc<Session>`.
-    session_type: Mutex<SessionType>,
-}
+    session_type: Mutex<SessionType>}
 
 impl Session {
     pub fn new(session_info: SessionInfo, command_executor: Arc<dyn CommandExecutor>) -> Self {
@@ -979,8 +931,7 @@ impl Session {
             load_all_function_names_future: Default::default(),
             load_all_builtins_future: Default::default(),
             command_case_sensitivity,
-            session_type: Mutex::new(session_type),
-        }
+            session_type: Mutex::new(session_type)}
     }
 
     pub fn id(&self) -> SessionId {
@@ -1023,8 +974,7 @@ impl Session {
     pub fn path_separators(&self) -> PathSeparators {
         match self.shell().shell_type() {
             ShellType::Zsh | ShellType::Bash | ShellType::Fish => PathSeparators::for_unix(),
-            ShellType::PowerShell => PathSeparators::for_os(),
-        }
+            ShellType::PowerShell => PathSeparators::for_os()}
     }
 
     pub fn home_dir(&self) -> Option<&str> {
@@ -1256,8 +1206,7 @@ impl Session {
 
         match future_cell.try_insert(receiver.boxed().shared()) {
             Ok(_) => load_future.await,
-            Err((existing_receiver, _)) => existing_receiver.clone().await,
-        };
+            Err((existing_receiver, _)) => existing_receiver.clone().await};
     }
 
     /// Asynchronously loads the external commands.
@@ -1342,8 +1291,7 @@ impl Session {
             .try_insert(receiver.boxed().shared())
         {
             Ok(_) => load_future.await,
-            Err((existing_receiver, _)) => existing_receiver.clone().await,
-        };
+            Err((existing_receiver, _)) => existing_receiver.clone().await};
     }
 
     /// All of the top-level commands within this session. This includes executables on the
@@ -1454,8 +1402,7 @@ impl Session {
         let powershell_error =
             match Self::read_history_via_powershell(history_file.as_os_str()).await {
                 Ok(result) => return Ok(result),
-                Err(e) => e,
-            };
+                Err(e) => e};
         // Log the detailed error locally as a breadcrumb only; the failure is reported once at the
         // sink via the registered `ReadHistoryContentsError`, whose static message keeps Sentry
         // grouping stable and omits the (potentially sensitive/lengthy) PowerShell stderr.
@@ -1471,8 +1418,7 @@ impl Session {
         async_fs::read(history_file).await.map_err(|e| {
             ReadHistoryContentsError::PowerShellAndAsyncFsError {
                 powershell_error,
-                async_fs_error: e,
-            }
+                async_fs_error: e}
         })
     }
 
@@ -1500,8 +1446,7 @@ impl Session {
             Err(e) => Err(anyhow::anyhow!(
                 "Failed to execute command to read history file: {:#}",
                 e
-            )),
-        }
+            ))}
     }
 
     async fn read_history_for_remote_session(&self) -> Vec<String> {
@@ -1569,8 +1514,7 @@ impl Session {
                 self.read_history_for_local_session(is_kaspersky_running)
                     .await
             }
-            BootstrapSessionType::WarpifiedRemote => self.read_history_for_remote_session().await,
-        }
+            BootstrapSessionType::WarpifiedRemote => self.read_history_for_remote_session().await}
     }
 
     pub fn environment_variable_names(&self) -> &HashSet<SmolStr> {
@@ -1683,8 +1627,7 @@ impl Session {
             // Cases: WSL, MSYS2, warpified bash
             ShellFamily::Posix => TypedPathBuf::from_unix(pwd),
             // Cases: powershell sessions
-            ShellFamily::PowerShell => TypedPathBuf::from_windows(pwd),
-        }
+            ShellFamily::PowerShell => TypedPathBuf::from_windows(pwd)}
     }
 
     /// Returns whether `cwd` (a working directory reported for this session)
@@ -1746,8 +1689,7 @@ pub mod testing {
                 cdpath: None,
                 host_info: Default::default(),
                 wsl_name: None,
-                spawning_session_id: None,
-            }
+                spawning_session_id: None}
         }
 
         pub fn with_aliases(mut self, aliases: HashMap<SmolStr, String>) -> Self {
@@ -1811,8 +1753,7 @@ pub mod testing {
             }
             self.is_ssh_wrapper_session = IsSSHWrapperSession::Yes {
                 socket_path,
-                external_control_master: false,
-            };
+                external_control_master: false};
             self
         }
 
@@ -1871,8 +1812,7 @@ pub mod testing {
                 additional_function_names: Default::default(),
                 load_all_function_names_future: Default::default(),
                 additional_builtin_names: Default::default(),
-                load_all_builtins_future: Default::default(),
-            }
+                load_all_builtins_future: Default::default()}
         }
 
         pub fn test_remote() -> Self {
@@ -1890,8 +1830,7 @@ pub mod testing {
                 additional_function_names: Default::default(),
                 load_all_function_names_future: Default::default(),
                 additional_builtin_names: Default::default(),
-                load_all_builtins_future: Default::default(),
-            }
+                load_all_builtins_future: Default::default()}
         }
 
         pub fn set_shell_options(&mut self, options: Option<HashSet<String>>) {

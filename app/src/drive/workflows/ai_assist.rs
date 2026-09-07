@@ -1,14 +1,12 @@
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use warp_graphql::mutations::generate_metadata_for_command::{
-    GenerateMetadataForCommandFailureType, GenerateMetadataForCommandSuccess,
-};
+    GenerateMetadataForCommandFailureType, GenerateMetadataForCommandSuccess};
 use warpui::{SingletonEntity, ViewContext};
 
 use super::arguments::ArgumentsState;
 use super::modal::{AiAssistState, WorkflowModal, WorkflowModalEvent};
 use crate::ai::AIRequestUsageModel;
-use crate::send_telemetry_from_ctx;
 use crate::server::telemetry::TelemetryEvent;
 use crate::workflows::workflow::{Argument, Workflow};
 
@@ -18,16 +16,14 @@ pub struct GeneratedCommandMetadata {
     pub command: String,
     pub title: String,
     pub description: String,
-    pub arguments: Vec<GeneratedArgument>,
-}
+    pub arguments: Vec<GeneratedArgument>}
 
 /// Metadata for a parameter in the workflow.
 #[derive(Debug)]
 pub struct GeneratedArgument {
     pub name: String,
     pub description: String,
-    pub default_value: String,
-}
+    pub default_value: String}
 
 impl From<GenerateMetadataForCommandSuccess> for GeneratedCommandMetadata {
     fn from(value: GenerateMetadataForCommandSuccess) -> Self {
@@ -41,10 +37,8 @@ impl From<GenerateMetadataForCommandSuccess> for GeneratedCommandMetadata {
                 .map(|p| GeneratedArgument {
                     name: p.name,
                     description: p.description,
-                    default_value: p.value,
-                })
-                .collect_vec(),
-        }
+                    default_value: p.value})
+                .collect_vec()}
     }
 }
 
@@ -56,8 +50,7 @@ pub enum GeneratedCommandMetadataError {
     AiProviderError,
     /// User is over rate limit.
     RateLimited,
-    Other,
-}
+    Other}
 
 impl GeneratedCommandMetadataError {
     pub fn user_facing_message(&self) -> String {
@@ -67,8 +60,7 @@ impl GeneratedCommandMetadataError {
             }
             Self::AiProviderError => "Something went wrong. Please try again.",
             Self::RateLimited => "Looks like you're out of AI credits. Please try again later.",
-            Self::Other => "Something went wrong. Please try again.",
-        }
+            Self::Other => "Something went wrong. Please try again."}
         .to_string()
     }
 }
@@ -79,8 +71,7 @@ impl From<GenerateMetadataForCommandFailureType> for GeneratedCommandMetadataErr
             GenerateMetadataForCommandFailureType::BadCommand => Self::BadCommand,
             GenerateMetadataForCommandFailureType::AiProviderError => Self::AiProviderError,
             GenerateMetadataForCommandFailureType::RateLimited => Self::RateLimited,
-            GenerateMetadataForCommandFailureType::Other => Self::Other,
-        }
+            GenerateMetadataForCommandFailureType::Other => Self::Other}
     }
 }
 
@@ -106,8 +97,7 @@ impl WorkflowModal {
                                 name: parameter.name,
                                 description: Some(parameter.description),
                                 default_value: Some(parameter.default_value),
-                                arg_type: Default::default(),
-                            })
+                                arg_type: Default::default()})
                             .collect_vec();
 
                         let workflow = Workflow::Command {
@@ -120,10 +110,7 @@ impl WorkflowModal {
                             author: None,
                             author_url: None,
                             shells: vec![],
-                            environment_variables: None,
-                        };
-
-                        send_telemetry_from_ctx!(TelemetryEvent::AutoGenerateMetadataSuccess, ctx);
+                            environment_variables: None};
 
                         modal.populate_missing_field_with_suggestion(workflow, ctx);
                         ctx.notify();
@@ -137,13 +124,6 @@ impl WorkflowModal {
                         } else {
                             ctx.emit(WorkflowModalEvent::AiAssistError(message.clone()));
                         }
-
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::AutoGenerateMetadataError {
-                                error_payload: serde_json::json!(err)
-                            },
-                            ctx
-                        );
 
                         modal.ai_metadata_assist_state = AiAssistState::PreRequest;
                         modal.enable_editors(ctx);

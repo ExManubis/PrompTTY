@@ -26,7 +26,6 @@ use std::sync::Arc;
 use anyhow::Context as _;
 use futures::channel::oneshot;
 use futures::future::{Either, select};
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warp_util::standardized_path::StandardizedPath;
 use warpui::{AppContext, EntityId, ModelHandle, SingletonEntity};
@@ -38,25 +37,21 @@ use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::agent::{CancellationReason, extract_user_query_mode};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::ambient_agents::telemetry::{
-    CloudAgentTelemetryEvent, HandoffEntryPoint, HandoffInjectionPath, HandoffSurface,
-};
+    CloudAgentTelemetryEvent, HandoffEntryPoint, HandoffInjectionPath, HandoffSurface};
 use crate::ai::blocklist::orchestration_topology::descendant_conversation_ids_in_spawn_order;
 use crate::ai::blocklist::{
-    BlocklistAIContextModel, BlocklistAIController, BlocklistAIHistoryModel, PendingAttachment,
-};
+    BlocklistAIContextModel, BlocklistAIController, BlocklistAIHistoryModel, PendingAttachment};
 use crate::ai::cloud_environments::CloudAmbientAgentEnvironment;
 use crate::ai::execution_profiles::resolve_cloud_agent_computer_use_state;
 use crate::ai::llms::{LLMId, LLMPreferences};
 use crate::ai::orchestration::{
     CloudAgentStartupBlocker, CloudAgentStartupFailure, CloudAgentStartupIssue,
     classify_cloud_agent_startup_error, oz_run_url, resolve_default_environment_id,
-    resolve_default_host_slug, should_disable_snapshot,
-};
+    resolve_default_host_slug, should_disable_snapshot};
 use crate::cloud_object::CloudObjectLookup as _;
 use crate::server::ids::{ServerId, SyncId};
 use crate::server::server_api::ai::{
-    AIClient, AgentConfigSnapshot, AttachmentInput, InitialSnapshotToken, SpawnAgentRequest,
-};
+    AIClient, AgentConfigSnapshot, AttachmentInput, InitialSnapshotToken, SpawnAgentRequest};
 use crate::settings::AISettings;
 use crate::workspaces::user_workspaces::ResolvedTeamScope;
 
@@ -87,8 +82,7 @@ pub struct HandoffPrepareInput {
     entry_point: HandoffEntryPoint,
     surface: HandoffSurface,
     cancellation_reason: CancellationReason,
-    require_in_progress_source: bool,
-}
+    require_in_progress_source: bool}
 
 impl HandoffPrepareInput {
     pub fn new(
@@ -117,8 +111,7 @@ impl HandoffPrepareInput {
             entry_point,
             surface,
             cancellation_reason: CancellationReason::ManuallyCancelled,
-            require_in_progress_source: false,
-        }
+            require_in_progress_source: false}
     }
 
     pub fn with_expected_conversation_id(
@@ -212,8 +205,7 @@ pub enum HandoffPrepareError {
     /// The selected environment is no longer present in the current catalog.
     InvalidEnvironment,
     /// The selected model cannot run as a cloud Oz model.
-    InvalidModel,
-}
+    InvalidModel}
 
 /// Immutable values a frontend needs while presenting a prepared handoff.
 ///
@@ -224,8 +216,7 @@ pub struct HandoffPresentationSnapshot {
     pub source_conversation_id: Option<AIConversationId>,
     pub environment_id: Option<SyncId>,
     pub model_id: String,
-    pub forked_existing_conversation: bool,
-}
+    pub forked_existing_conversation: bool}
 
 /// Source-input state that can be restored after handoff fails.
 ///
@@ -236,8 +227,7 @@ pub struct HandoffPresentationSnapshot {
 pub struct HandoffRestoration {
     pub prompt: String,
     pub attachments: Vec<PendingAttachment>,
-    pub environment_id: Option<SyncId>,
-}
+    pub environment_id: Option<SyncId>}
 
 /// Data supplied after the server conversation-fork decision is complete.
 ///
@@ -250,8 +240,7 @@ pub struct HandoffTargetMaterialization {
     /// Pre-snapshot request used to present the queued prompt immediately.
     pub request: SpawnAgentRequest,
     /// One-shot signal the frontend consumes when the user cancels the handoff.
-    pub cancel: oneshot::Sender<()>,
-}
+    pub cancel: oneshot::Sender<()>}
 
 /// One-shot frontend callback that materializes the destination handoff UI.
 ///
@@ -290,8 +279,7 @@ pub struct PendingHandoff {
     config: AgentConfigSnapshot,
     snapshot_target: SnapshotUploadTarget,
     snapshot_disabled: bool,
-    orchestration_handoff: Option<bool>,
-}
+    orchestration_handoff: Option<bool>}
 
 impl PendingHandoff {
     /// Returns the values needed to render or materialize this pending handoff.
@@ -300,8 +288,7 @@ impl PendingHandoff {
             source_conversation_id: self.source_conversation.as_ref().map(AIConversation::id),
             environment_id: self.selected_environment_id,
             model_id: self.selected_model_id.clone(),
-            forked_existing_conversation: self.source_conversation.is_some(),
-        }
+            forked_existing_conversation: self.source_conversation.is_some()}
     }
 
     /// Applies an environment selection to the final agent configuration.
@@ -406,8 +393,7 @@ pub fn prepare_handoff(
         entry_point,
         surface,
         cancellation_reason,
-        require_in_progress_source,
-    } = input;
+        require_in_progress_source} = input;
 
     let selected_id = match (expected_conversation_id, source_conversation_id) {
         (Some(expected_conversation_id), _) => Some(expected_conversation_id),
@@ -419,8 +405,7 @@ pub fn prepare_handoff(
                 history
                     .as_ref(ctx)
                     .active_conversation_id(terminal_surface_id)
-            }),
-    };
+            })};
     let source_conversation = selected_id
         .and_then(|id| history.as_ref(ctx).conversation(&id))
         .cloned();
@@ -496,16 +481,14 @@ pub fn prepare_handoff(
 
     let HandoffLaunchAttachments {
         request_attachments,
-        display_attachments,
-    } = launch
+        display_attachments} = launch
         .as_ref()
         .map(|launch| launch.attachments.clone())
         .unwrap_or_default();
     let restoration = Some(HandoffRestoration {
         prompt: prompt.clone(),
         attachments: display_attachments,
-        environment_id: selected_environment_id,
-    });
+        environment_id: selected_environment_id});
 
     if source_conversation_active {
         let conversation_id = source_conversation
@@ -567,16 +550,6 @@ pub fn prepare_handoff(
     } else {
         HandoffInjectionPath::SnapshotRehydration
     };
-    send_telemetry_from_ctx!(
-        CloudAgentTelemetryEvent::HandoffInitiated {
-            entry_point,
-            surface,
-            forked_existing_conversation: source_conversation.is_some(),
-            empty_prompt,
-            injection_path,
-        },
-        ctx
-    );
 
     Ok(PendingHandoff {
         source_conversation,
@@ -597,8 +570,7 @@ pub fn prepare_handoff(
         config,
         snapshot_target,
         snapshot_disabled,
-        orchestration_handoff,
-    })
+        orchestration_handoff})
 }
 
 /// Successful cloud-run creation returned by [`execute_handoff`].
@@ -613,8 +585,7 @@ pub struct HandoffCreated {
     pub at_capacity: bool,
     pub request: SpawnAgentRequest,
     pub derived_workspace_had_content: bool,
-    pub snapshot_failed: bool,
-}
+    pub snapshot_failed: bool}
 
 /// Failure after handoff execution has begun external work.
 ///
@@ -626,23 +597,20 @@ pub struct HandoffCommitFailure {
     pub request: Option<SpawnAgentRequest>,
     pub restoration: Option<HandoffRestoration>,
     pub derived_workspace_had_content: Option<bool>,
-    pub snapshot_failed: bool,
-}
+    pub snapshot_failed: bool}
 
 /// Result of consuming a [`PendingHandoff`] through [`execute_handoff`].
 pub enum HandoffCommitOutcome {
     /// Mutable configuration became invalid before any async external work.
     Rejected {
         pending: Box<PendingHandoff>,
-        error: HandoffPrepareError,
-    },
+        error: HandoffPrepareError},
     /// Fork, materialization, or spawn failed after execution began.
     Failed(HandoffCommitFailure),
     /// The frontend cancelled execution before the cloud run was created.
     Cancelled,
     /// The cloud run was created and is ready for frontend monitoring.
-    Created(HandoffCreated),
-}
+    Created(HandoffCreated)}
 
 pub fn handoff_dispatch_error(issue: &CloudAgentStartupIssue) -> String {
     match issue {
@@ -655,15 +623,13 @@ pub fn handoff_dispatch_error(issue: &CloudAgentStartupIssue) -> String {
             | CloudAgentStartupFailure::OutOfCredits { message }
             | CloudAgentStartupFailure::ServerOverloaded { message }
             | CloudAgentStartupFailure::Other { message },
-        ) => message.clone(),
-    }
+        ) => message.clone()}
 }
 
 /// State after selecting or creating the server-side conversation fork.
 struct ForkedHandoff {
     pending: PendingHandoff,
-    forked_conversation_id: Option<String>,
-}
+    forked_conversation_id: Option<String>}
 
 /// State after snapshot upload has settled and spawn inputs are complete.
 struct SnapshotSettledHandoff {
@@ -672,8 +638,7 @@ struct SnapshotSettledHandoff {
     initial_snapshot_token: Option<InitialSnapshotToken>,
     restoration: Option<HandoffRestoration>,
     derived_workspace_had_content: bool,
-    snapshot_failed: bool,
-}
+    snapshot_failed: bool}
 
 /// Consumes a prepared handoff and begins its execution lifecycle.
 ///
@@ -708,8 +673,7 @@ pub fn execute_handoff(
         return Box::pin(async move {
             HandoffCommitOutcome::Rejected {
                 pending: Box::new(pending),
-                error,
-            }
+                error}
         });
     }
 
@@ -729,8 +693,7 @@ async fn execute_validated_handoff(
 ) -> HandoffCommitOutcome {
     let mut forked = match fork_source_conversation(pending, &ai_client).await {
         Ok(forked) => forked,
-        Err(failure) => return HandoffCommitOutcome::Failed(failure),
-    };
+        Err(failure) => return HandoffCommitOutcome::Failed(failure)};
     let mut cancellation = caller_cancellation;
     if let Some(materialize_handoff_target) = materialize_handoff_target {
         debug_assert!(
@@ -750,13 +713,11 @@ async fn execute_validated_handoff(
                     title: forked.pending.title.clone(),
                     attachments: forked.pending.request_attachments.clone(),
                     snapshot_disabled: forked.pending.snapshot_disabled,
-                    orchestration_handoff: forked.pending.orchestration_handoff,
-                },
+                    orchestration_handoff: forked.pending.orchestration_handoff},
                 forked.forked_conversation_id.clone(),
                 None,
             ),
-            cancel,
-        };
+            cancel};
         if let Err(error) = materialize_handoff_target(materialization)
             .await
             .context("Failed to materialize handoff target")
@@ -766,8 +727,7 @@ async fn execute_validated_handoff(
                 request: None,
                 restoration: forked.pending.take_restoration(),
                 derived_workspace_had_content: None,
-                snapshot_failed: false,
-            });
+                snapshot_failed: false});
         }
         cancellation = Some(receiver);
     }
@@ -781,11 +741,9 @@ async fn execute_validated_handoff(
                     (settled, Some(*Pin::into_inner(cancellation)))
                 }
                 Either::Right((Ok(()), _)) => return HandoffCommitOutcome::Cancelled,
-                Either::Right((Err(_), snapshot)) => (snapshot.await, None),
-            }
+                Either::Right((Err(_), snapshot)) => (snapshot.await, None)}
         }
-        None => (prepare_snapshot_for_spawn(forked).await, None),
-    };
+        None => (prepare_snapshot_for_spawn(forked).await, None)};
 
     if cancellation
         .as_mut()
@@ -823,8 +781,7 @@ async fn execute_validated_handoff(
                 request: Some(request),
                 restoration: settled.restoration.take(),
                 derived_workspace_had_content: Some(settled.derived_workspace_had_content),
-                snapshot_failed: settled.snapshot_failed,
-            });
+                snapshot_failed: settled.snapshot_failed});
         }
     };
 
@@ -835,15 +792,13 @@ async fn execute_validated_handoff(
         at_capacity: response.at_capacity,
         request,
         derived_workspace_had_content: settled.derived_workspace_had_content,
-        snapshot_failed: settled.snapshot_failed,
-    })
+        snapshot_failed: settled.snapshot_failed})
 }
 
 fn handoff_cancellation_requested(cancellation: &mut oneshot::Receiver<()>) -> bool {
     match cancellation.try_recv() {
         Ok(Some(())) => true,
-        Ok(None) | Err(_) => false,
-    }
+        Ok(None) | Err(_) => false}
 }
 
 /// Forks an existing server conversation or records that this is a fresh launch.
@@ -866,16 +821,13 @@ async fn fork_source_conversation(
                     request: None,
                     restoration: pending.take_restoration(),
                     derived_workspace_had_content: None,
-                    snapshot_failed: false,
-                });
+                    snapshot_failed: false});
             }
         },
-        None => None,
-    };
+        None => None};
     Ok(ForkedHandoff {
         pending,
-        forked_conversation_id,
-    })
+        forked_conversation_id})
 }
 
 /// Uploads workspace state and converts the fork stage into spawn-ready data.
@@ -902,8 +854,7 @@ async fn prepare_snapshot_for_spawn(forked: ForkedHandoff) -> SnapshotSettledHan
         config,
         snapshot_target,
         snapshot_disabled,
-        orchestration_handoff,
-    } = forked.pending;
+        orchestration_handoff} = forked.pending;
     let (workspace, snapshot_result) = upload_handoff_snapshot(source_paths, snapshot_target).await;
     let derived_workspace_had_content =
         !workspace.repos.is_empty() || !workspace.orphan_files.is_empty();
@@ -924,14 +875,12 @@ async fn prepare_snapshot_for_spawn(forked: ForkedHandoff) -> SnapshotSettledHan
             title,
             attachments: request_attachments,
             snapshot_disabled,
-            orchestration_handoff,
-        },
+            orchestration_handoff},
         forked_conversation_id: forked.forked_conversation_id,
         initial_snapshot_token,
         restoration,
         derived_workspace_had_content,
-        snapshot_failed,
-    }
+        snapshot_failed}
 }
 
 /// Request inputs that no longer depend on source, fork, or snapshot work.
@@ -942,8 +891,7 @@ struct SpawnReadyHandoff {
     title: Option<String>,
     attachments: Vec<AttachmentInput>,
     snapshot_disabled: bool,
-    orchestration_handoff: Option<bool>,
-}
+    orchestration_handoff: Option<bool>}
 
 fn build_spawn_request(
     handoff: SpawnReadyHandoff,
@@ -957,8 +905,7 @@ fn build_spawn_request(
         title,
         attachments,
         snapshot_disabled,
-        orchestration_handoff,
-    } = handoff;
+        orchestration_handoff} = handoff;
     let has_snapshot_content = initial_snapshot_token
         .as_ref()
         .is_some_and(|token| !token.as_str().is_empty());
@@ -970,15 +917,13 @@ fn build_spawn_request(
         )),
         (None, true, false) => Some(HANDOFF_CONTINUE_PROMPT.to_owned()),
         (None, false, true) => Some(HANDOFF_APPLY_SNAPSHOT_PROMPT.to_owned()),
-        (None, false, false) => None,
-    };
+        (None, false, false) => None};
     let (prompt, mode) = match raw_wire_prompt {
         Some(prompt) => {
             let (prompt, mode) = extract_user_query_mode(prompt);
             (Some(prompt), mode)
         }
-        None => (None, Default::default()),
-    };
+        None => (None, Default::default())};
 
     SpawnAgentRequest {
         prompt,
@@ -996,8 +941,7 @@ fn build_spawn_request(
         initial_snapshot_token,
         agent_identity_uid: None,
         snapshot_disabled: snapshot_disabled.then_some(true),
-        orchestration_handoff,
-    }
+        orchestration_handoff}
 }
 
 #[cfg(test)]

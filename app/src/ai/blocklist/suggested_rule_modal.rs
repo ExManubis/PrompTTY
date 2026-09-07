@@ -4,15 +4,13 @@ use warp_editor::editor::NavigationKey;
 use warpui::elements::{
     Align, Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ClippedScrollable,
     ConstrainedBox, Container, CornerRadius, Flex, OffsetPositioning, ParentElement,
-    PositionedElementAnchor, PositionedElementOffsetBounds, Radius, ScrollbarWidth,
-};
+    PositionedElementAnchor, PositionedElementOffsetBounds, Radius, ScrollbarWidth};
 use warpui::fonts::Weight;
 use warpui::keymap::FixedBinding;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle,
-};
+    ViewHandle};
 
 use crate::ai::agent::SuggestedRule;
 use crate::ai::facts::{AIFact, AIMemory, CloudAIFactModel};
@@ -22,14 +20,11 @@ use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::drive::CloudObjectTypeAndId;
 use crate::editor::{
     EditorOptions, EditorView, EnterAction, EnterSettings, Event as EditorEvent, InteractionState,
-    PropagateAndNoOpNavigationKeys, SingleLineEditorOptions, TextOptions,
-};
+    PropagateAndNoOpNavigationKeys, SingleLineEditorOptions, TextOptions};
 use crate::modal::{Modal, ModalEvent};
 use crate::network::NetworkStatus;
-use crate::send_telemetry_from_ctx;
 use crate::server::cloud_objects::update_manager::{
-    ObjectOperation, OperationSuccessType, UpdateManager, UpdateManagerEvent,
-};
+    ObjectOperation, OperationSuccessType, UpdateManager, UpdateManagerEvent};
 use crate::server::ids::SyncId;
 use crate::server::telemetry::TelemetryEvent;
 use crate::ui_components::blended_colors;
@@ -52,15 +47,13 @@ pub fn init(app: &mut AppContext) {
 #[derive(Debug, Clone, Copy)]
 enum EditorType {
     Name,
-    Content,
-}
+    Content}
 
 #[derive(Debug, Clone)]
 pub enum SuggestedRuleModalEvent {
     AddNewRule { rule: SuggestedRule },
     OpenRuleForEditing { rule: SuggestedRule },
-    Close,
-}
+    Close}
 
 /// A modal component for displaying and managing suggested rules.
 /// This component wraps a SuggestedRuleView in a modal dialog with proper styling
@@ -79,8 +72,7 @@ pub enum SuggestedRuleModalEvent {
 ///
 pub struct SuggestedRuleModal {
     modal: ViewHandle<Modal<SuggestedRuleView>>,
-    view: ViewHandle<SuggestedRuleView>,
-}
+    view: ViewHandle<SuggestedRuleView>}
 
 impl SuggestedRuleModal {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -105,8 +97,7 @@ impl SuggestedRuleModal {
                         top: 8.,
                         bottom: 0.,
                         left: 24.,
-                        right: 24.,
-                    }),
+                        right: 24.}),
                     font_size: Some(16.),
                     font_weight: Some(Weight::Bold),
                     ..Default::default()
@@ -116,8 +107,7 @@ impl SuggestedRuleModal {
                         top: 0.,
                         bottom: 24.,
                         left: 24.,
-                        right: 24.,
-                    }),
+                        right: 24.}),
                     ..Default::default()
                 })
                 .with_background_opacity(100)
@@ -130,8 +120,7 @@ impl SuggestedRuleModal {
 
         Self {
             modal,
-            view: view_handle,
-        }
+            view: view_handle}
     }
 
     pub fn set_rule_and_id(
@@ -163,8 +152,7 @@ impl SuggestedRuleModal {
             SuggestedRuleDialogEvent::OpenRuleForEditing { rule } => {
                 ctx.emit(SuggestedRuleModalEvent::OpenRuleForEditing { rule: rule.clone() })
             }
-            SuggestedRuleDialogEvent::Close => ctx.emit(SuggestedRuleModalEvent::Close),
-        }
+            SuggestedRuleDialogEvent::Close => ctx.emit(SuggestedRuleModalEvent::Close)}
     }
 
     fn handle_modal_event(&mut self, event: &ModalEvent, ctx: &mut ViewContext<Self>) {
@@ -200,21 +188,18 @@ impl TypedActionView for SuggestedRuleModal {
 enum SuggestedRuleDialogAction {
     Add,
     Edit,
-    Close,
-}
+    Close}
 
 #[derive(Debug, Clone)]
 pub enum SuggestedRuleDialogEvent {
     AddNewRule { rule: SuggestedRule },
     OpenRuleForEditing { rule: SuggestedRule },
-    Close,
-}
+    Close}
 
 #[derive(Debug, Clone)]
 pub struct SuggestedRuleAndId {
     pub rule: SuggestedRule,
-    pub sync_id: SyncId,
-}
+    pub sync_id: SyncId}
 
 struct SuggestedRuleView {
     rule_and_id: Option<SuggestedRuleAndId>,
@@ -225,8 +210,7 @@ struct SuggestedRuleView {
     content_editor: ViewHandle<EditorView>,
     add_button: ViewHandle<ActionButton>,
     edit_button: ViewHandle<ActionButton>,
-    clipped_scroll_state: ClippedScrollStateHandle,
-}
+    clipped_scroll_state: ClippedScrollStateHandle}
 
 impl SuggestedRuleView {
     fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -326,8 +310,7 @@ impl SuggestedRuleView {
             content_editor,
             add_button,
             edit_button,
-            clipped_scroll_state: Default::default(),
-        }
+            clipped_scroll_state: Default::default()}
     }
 
     pub fn set_rule_and_id(
@@ -353,8 +336,7 @@ impl SuggestedRuleView {
     fn handle_editor_event(&mut self, event: &EditorEvent, ctx: &mut ViewContext<Self>) {
         let (current_editor, next_editor, next_editor_type) = match self.current_editor {
             EditorType::Name => (&self.name_editor, &self.content_editor, EditorType::Content),
-            EditorType::Content => (&self.content_editor, &self.name_editor, EditorType::Name),
-        };
+            EditorType::Content => (&self.content_editor, &self.name_editor, EditorType::Name)};
 
         match event {
             EditorEvent::Escape => {
@@ -370,13 +352,6 @@ impl SuggestedRuleView {
             EditorEvent::Edited(_) => {
                 // todo this seems noisy?
                 if let Some(SuggestedRuleAndId { rule, .. }) = &self.rule_and_id {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::AISuggestedRuleContentChanged {
-                            rule_id: rule.logging_id.clone(),
-                            is_saved: self.is_saved
-                        },
-                        ctx
-                    );
                 }
             }
             EditorEvent::Navigate(NavigationKey::Tab)
@@ -415,8 +390,7 @@ impl SuggestedRuleView {
         {
             self.rule_and_id = Some(SuggestedRuleAndId {
                 rule: rule_and_id.rule.clone(),
-                sync_id: SyncId::ServerId(server_id),
-            });
+                sync_id: SyncId::ServerId(server_id)});
             // Reload the rule from the cloud model.
             self.load_rule(ctx);
         }
@@ -519,8 +493,7 @@ impl SuggestedRuleView {
                 is_autogenerated: false,
                 name,
                 content,
-                suggested_logging_id: Some(rule.logging_id.clone()),
-            });
+                suggested_logging_id: Some(rule.logging_id.clone())});
             update_manager.update(ctx, |update_manager, ctx| {
                 if let Some(client_id) = sync_id.into_client() {
                     update_manager.create_ai_fact(ai_fact, client_id, owner, ctx);
@@ -615,8 +588,7 @@ impl View for SuggestedRuleView {
             } else {
                 match self.current_editor {
                     EditorType::Name => ctx.focus(&self.name_editor),
-                    EditorType::Content => ctx.focus(&self.content_editor),
-                }
+                    EditorType::Content => ctx.focus(&self.content_editor)}
             }
         }
     }

@@ -3,18 +3,15 @@ use std::default::Default;
 use std::sync::Arc;
 
 use pathfinder_geometry::vector::vec2f;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warpui::elements::{
-    ChildAnchor, Empty, OffsetPositioning, PositionedElementAnchor, PositionedElementOffsetBounds,
-};
+    ChildAnchor, Empty, OffsetPositioning, PositionedElementAnchor, PositionedElementOffsetBounds};
 use warpui::fonts::Weight;
 use warpui::keymap::FixedBinding;
 use warpui::presenter::ChildView;
 use warpui::ui_components::components::{Coords, UiComponentStyles};
 use warpui::{
-    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
-};
+    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
 
 use crate::TelemetryEvent;
 use crate::ai::agent::SuggestedAgentModeWorkflow;
@@ -35,20 +32,17 @@ const SUGGESTED_PROMPT_MODAL_HEADER: &str = "Prompt";
 pub struct SuggestedAgentModeWorkflowModal {
     modal: Option<ViewHandle<Modal<WorkflowView>>>,
     workflow_view: Option<ViewHandle<WorkflowView>>,
-    workflow_and_id: Option<SuggestedAgentModeWorkflowAndId>,
-}
+    workflow_and_id: Option<SuggestedAgentModeWorkflowAndId>}
 
 #[derive(Debug, Clone)]
 pub struct SuggestedAgentModeWorkflowAndId {
     pub workflow: SuggestedAgentModeWorkflow,
-    pub sync_id: SyncId,
-}
+    pub sync_id: SyncId}
 
 #[derive(Debug, Clone)]
 pub enum SuggestedAgentModeWorkflowModalAction {
     /// Triggered when the modal should be cancelled/closed
-    Cancel,
-}
+    Cancel}
 
 #[derive(Debug, Clone)]
 pub enum SuggestedAgentModeWorkflowModalEvent {
@@ -61,9 +55,7 @@ pub enum SuggestedAgentModeWorkflowModalEvent {
         workflow: Arc<WorkflowType>,
         source: Box<WorkflowSource>,
         argument_override: Option<HashMap<String, String>>,
-        workflow_selection_source: WorkflowSelectionSource,
-    },
-}
+        workflow_selection_source: WorkflowSelectionSource}}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -127,8 +119,7 @@ impl SuggestedAgentModeWorkflowModal {
                     top: 8.,
                     bottom: 0.,
                     left: 24.,
-                    right: 24.,
-                }),
+                    right: 24.}),
                 font_size: Some(16.),
                 font_weight: Some(Weight::Bold),
                 ..Default::default()
@@ -138,8 +129,7 @@ impl SuggestedAgentModeWorkflowModal {
                     top: 0.,
                     bottom: 24.,
                     left: 24.,
-                    right: 24.,
-                }),
+                    right: 24.}),
                 ..Default::default()
             })
             .with_background_opacity(100)
@@ -184,26 +174,18 @@ impl SuggestedAgentModeWorkflowModal {
                     && sync_id == created_workflow_id
                 {
                     ctx.emit(SuggestedAgentModeWorkflowModalEvent::WorkflowCreated);
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::AISuggestedAgentModeWorkflowAdded {
-                            logging_id: workflow.logging_id.clone(),
-                        },
-                        ctx
-                    );
                 }
                 self.close(ctx);
             }
             WorkflowViewEvent::RunWorkflow {
                 workflow,
                 source,
-                argument_override,
-            } => {
+                argument_override} => {
                 ctx.emit(SuggestedAgentModeWorkflowModalEvent::RunWorkflow {
                     workflow: workflow.clone(),
                     source: Box::new(*source),
                     argument_override: argument_override.clone(),
-                    workflow_selection_source: WorkflowSelectionSource::WorkflowView,
-                });
+                    workflow_selection_source: WorkflowSelectionSource::WorkflowView});
                 self.close(ctx);
             }
             _ => {}
@@ -243,7 +225,6 @@ impl TypedActionView for SuggestedAgentModeWorkflowModal {
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         match action {
-            SuggestedAgentModeWorkflowModalAction::Cancel => self.close(ctx),
-        }
+            SuggestedAgentModeWorkflowModalAction::Cancel => self.close(ctx)}
     }
 }

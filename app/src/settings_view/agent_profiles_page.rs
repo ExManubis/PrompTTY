@@ -20,41 +20,34 @@ use warp_errors::{report_error, report_if_error};
 use warpui::elements::{
     ChildView, ConstrainedBox, Container, CrossAxisAlignment, Dismiss, Element, Flex,
     FormattedTextElement, HighlightedHyperlink, HyperlinkLens, HyperlinkUrl, MainAxisAlignment,
-    MainAxisSize, MouseStateHandle, ParentElement, Shrinkable, Text,
-};
+    MainAxisSize, MouseStateHandle, ParentElement, Shrinkable, Text};
 use warpui::keymap::ContextPredicate;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::slider::SliderStateHandle;
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{
     Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
-    WeakViewHandle, id,
-};
+    WeakViewHandle, id};
 
 use super::ai_shared::{
     render_ai_setting_description, render_ai_setting_label, render_ai_setting_toggle,
-    should_show_mcp_servers, styles, update_editor_interaction_state,
-};
+    should_show_mcp_servers, styles, update_editor_interaction_state};
 use super::execution_profile_view::{ExecutionProfileView, ExecutionProfileViewEvent};
 use super::settings_page::{
     CONTENT_FONT_SIZE, HEADER_PADDING, InputListItem, LocalOnlyIconState, MatchData, PageType,
     SettingsPageMeta, SettingsPageViewHandle, SettingsWidget, ToggleState, build_sub_header,
     render_body_item_label, render_body_item_label_with_icon, render_custom_size_header,
     render_dropdown_item, render_dropdown_item_label, render_input_list, render_separator,
-    render_settings_info_banner,
-};
+    render_settings_info_banner};
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::ai::blocklist::BlocklistAIPermissions;
 use crate::ai::execution_profiles::model_menu_items::{
-    CollapsedModelVariants, available_model_menu_items,
-};
+    CollapsedModelVariants, available_model_menu_items};
 use crate::ai::execution_profiles::profiles::{
-    AIExecutionProfilesModel, AIExecutionProfilesModelEvent,
-};
+    AIExecutionProfilesModel, AIExecutionProfilesModelEvent};
 use crate::ai::execution_profiles::{
     AIExecutionProfile, AIExecutionProfileAppExt, ActionPermission, ExecutionProfileId,
-    WriteToPtyPermission, long_context_pricing_warning_title,
-};
+    WriteToPtyPermission, long_context_pricing_warning_title};
 use crate::ai::llms::{LLMContextWindow, LLMId, LLMPreferences, LLMPreferencesEvent};
 use crate::ai::mcp::TemplatableMCPServerManager;
 use crate::ai::paths::host_native_absolute_path;
@@ -70,8 +63,7 @@ use crate::server::telemetry::AutonomySettingToggleSource;
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AgentModeCodingPermissionsType,
     AgentModeCommandExecutionDenylist, AgentModeCommandExecutionPredicate, CodeSettings,
-    CodebaseContextEnabled,
-};
+    CodebaseContextEnabled};
 use crate::terminal::session_settings::{SessionSettings, SessionSettingsChangedEvent};
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
@@ -80,10 +72,9 @@ use crate::view_components::action_button::{ActionButton, ButtonSize, SecondaryT
 use crate::view_components::dropdown::DropdownAction;
 use crate::view_components::{
     Dropdown, DropdownItem, FilterableDropdown, SubmittableTextInput, SubmittableTextInputEvent,
-    WarningBoxConfig, render_warning_box,
-};
+    WarningBoxConfig, render_warning_box};
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, TeamContext, UserWorkspacesEvent};
-use crate::{TelemetryEvent, UserWorkspaces, send_telemetry_from_ctx};
+use crate::{TelemetryEvent, UserWorkspaces};
 
 const AI_SETTINGS_DROPDOWN_WIDTH: f32 = 250.;
 const AI_SETTINGS_DROPDOWN_MAX_HEIGHT: f32 = 250.;
@@ -137,8 +128,7 @@ pub struct AgentProfilesPageView {
     dragged_context_window_value: Option<u32>,
 
     profile_views: Vec<ViewHandle<ExecutionProfileView>>,
-    add_profile_button: ViewHandle<ActionButton>,
-}
+    add_profile_button: ViewHandle<ActionButton>}
 
 impl AgentProfilesPageView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -354,8 +344,7 @@ impl AgentProfilesPageView {
                         me.reset_execution_profile_mouse_state_handles(ctx);
                         me.sync_context_window_editor(ctx, false);
                     }
-                    AIExecutionProfilesModelEvent::UpdatedActiveProfile { .. } => (),
-                }
+                    AIExecutionProfilesModelEvent::UpdatedActiveProfile { .. } => ()}
                 ctx.notify();
             },
         );
@@ -511,8 +500,7 @@ impl AgentProfilesPageView {
                         .map(|_| Default::default())
                         .collect();
                 }
-                _ => (),
-            }
+                _ => ()}
             ctx.notify();
         });
 
@@ -919,8 +907,7 @@ impl AgentProfilesPageView {
             mcp_denylist_dropdown,
             mcp_denylist_mouse_state_handles,
             profile_views,
-            add_profile_button,
-        }
+            add_profile_button}
     }
 
     fn build_page(ctx: &mut ViewContext<Self>) -> PageType<Self> {
@@ -1022,8 +1009,7 @@ impl AgentProfilesPageView {
                     self.context_window_editor.as_ref(ctx).buffer_text(ctx)
                         == last_value.to_string()
                 }
-                None => true,
-            }
+                None => true}
         };
 
         if should_update {
@@ -1288,8 +1274,7 @@ impl AgentProfilesPageView {
             let active = match current_permission {
                 ActionPermission::AgentDecides | ActionPermission::Unknown => 0,
                 ActionPermission::AlwaysAllow => 1,
-                ActionPermission::AlwaysAsk => 2,
-            };
+                ActionPermission::AlwaysAsk => 2};
 
             menu.set_selected_by_index(active, ctx);
             ctx.notify();
@@ -1313,8 +1298,7 @@ impl AgentProfilesPageView {
             let active = match current_permission {
                 WriteToPtyPermission::AlwaysAllow => 0,
                 WriteToPtyPermission::AlwaysAsk | WriteToPtyPermission::Unknown => 1,
-                WriteToPtyPermission::AskOnFirstWrite => 2,
-            };
+                WriteToPtyPermission::AskOnFirstWrite => 2};
 
             menu.set_selected_by_index(active, ctx);
             ctx.notify();
@@ -1471,8 +1455,7 @@ impl View for AgentProfilesPageView {
 pub enum AgentProfilesPageEvent {
     FocusModal,
     OpenMCPServerCollection,
-    OpenExecutionProfileEditor(ExecutionProfileId),
-}
+    OpenExecutionProfileEditor(ExecutionProfileId)}
 
 impl Entity for AgentProfilesPageView {
     type Event = AgentProfilesPageEvent;
@@ -1511,16 +1494,14 @@ pub enum AgentProfilesPageAction {
     RemoveFromMCPAllowlist(uuid::Uuid),
     AddToMCPDenylist(uuid::Uuid),
     RemoveFromMCPDenylist(uuid::Uuid),
-    CreateProfile,
-}
+    CreateProfile}
 
 impl From<&AgentProfilesPageAction> for LoginGatedFeature {
     fn from(val: &AgentProfilesPageAction) -> LoginGatedFeature {
         use AgentProfilesPageAction::*;
         match val {
             AttemptLoginGatedUpgrade => "Upgrade AI Usage",
-            _ => "Unknown reason",
-        }
+            _ => "Unknown reason"}
     }
 }
 
@@ -1534,12 +1515,6 @@ impl TypedActionView for AgentProfilesPageView {
                     settings.codebase_context_enabled.toggle_and_save_value(ctx)
                 }) {
                     Ok(new_value) => {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::ToggleCodebaseContext {
-                                is_codebase_context_enabled: new_value
-                            },
-                            ctx
-                        );
                     }
                     Err(e) => {
                         log::warn!("Failed to set value for Codebase Context: {e:?}");
@@ -1636,31 +1611,16 @@ impl TypedActionView for AgentProfilesPageView {
                         ctx,
                     ) {
                         Ok(_) => {
-                            send_telemetry_from_ctx!(
-                                TelemetryEvent::ToggledAgentModeAutoexecuteReadonlyCommandsSetting {
-                                    src: AutonomySettingToggleSource::SettingsPage,
-                                    enabled: readonly_cmd_execution_enabled,
-                                },
-                                ctx);
                         }
-                        Err(e) => report_error!(e),
-                    }
+                        Err(e) => report_error!(e)}
                 });
             }
             AgentProfilesPageAction::SetCodingPermission(p) => {
                 BlocklistAIPermissions::handle(ctx).update(ctx, |model, ctx| {
                     match model.set_coding_permissions(*p, ctx) {
                         Ok(_) => {
-                            send_telemetry_from_ctx!(
-                                TelemetryEvent::ChangedAgentModeCodingPermissions {
-                                    src: AutonomySettingToggleSource::SettingsPage,
-                                    new: *p,
-                                },
-                                ctx
-                            );
                         }
-                        Err(e) => report_error!(e),
-                    }
+                        Err(e) => report_error!(e)}
                 });
             }
             AgentProfilesPageAction::SetApplyCodeDiffs(permission) => {
@@ -1894,14 +1854,12 @@ fn render_ai_list(
 }
 
 struct UsageWidget {
-    view_handle: WeakViewHandle<AgentProfilesPageView>,
-}
+    view_handle: WeakViewHandle<AgentProfilesPageView>}
 
 impl UsageWidget {
     fn new(ctx: &ViewContext<AgentProfilesPageView>) -> Self {
         Self {
-            view_handle: ctx.handle(),
-        }
+            view_handle: ctx.handle()}
     }
     fn render_request_usage_count(
         &self,
@@ -1953,8 +1911,7 @@ impl UsageWidget {
                         top: 0.,
                         bottom: 0.,
                         left: 8.,
-                        right: 0.,
-                    }),
+                        right: 0.}),
                     ..Default::default()
                 })
                 .build()
@@ -2015,8 +1972,7 @@ impl UsageWidget {
                                             top: 0.,
                                             bottom: 4.,
                                             left: 0.,
-                                            right: 0.,
-                                        }),
+                                            right: 0.}),
                                         ..Default::default()
                                     })
                                     .build()
@@ -2128,8 +2084,7 @@ impl SettingsWidget for UsageWidget {
 struct AgentsWidget {
     codebase_context_toggle: SwitchStateHandle,
     codebase_context_link_index: HighlightedHyperlink,
-    show_in_prompt_checkbox: MouseStateHandle,
-}
+    show_in_prompt_checkbox: MouseStateHandle}
 
 impl SettingsWidget for AgentsWidget {
     type View = AgentProfilesPageView;
@@ -2380,8 +2335,7 @@ impl AgentsWidget {
                         top: 6.,
                         bottom: 6.,
                         left: 10.,
-                        right: 10.,
-                    }),
+                        right: 10.}),
                     margin: Some(Coords::default().left(12.)),
                     background: Some(appearance.theme().surface_2().into()),
                     ..Default::default()
@@ -2680,8 +2634,7 @@ impl AgentsWidget {
                             cmd,
                         ),
                         is_disabled: is_org || ai_disabled,
-                        tooltip_mouse_state,
-                    }
+                        tooltip_mouse_state}
                 }),
             Some(&view.command_denylist_editor),
             appearance,
@@ -2718,8 +2671,7 @@ impl AgentsWidget {
                         cmd,
                     ),
                     is_disabled: disabled,
-                    tooltip_mouse_state: None,
-                }),
+                    tooltip_mouse_state: None}),
             Some(&view.command_allowlist_editor),
             appearance,
         );
@@ -2757,8 +2709,7 @@ impl AgentsWidget {
                         path,
                     ),
                     is_disabled: disabled,
-                    tooltip_mouse_state: None,
-                }),
+                    tooltip_mouse_state: None}),
             Some(&view.directory_allowlist_editor),
             appearance,
         );
@@ -2961,8 +2912,7 @@ impl AgentsWidget {
                         HyperlinkLens::Url(url) => {
                             ctx.dispatch_typed_action(AgentProfilesPageAction::HyperlinkClick(
                                 HyperlinkUrl {
-                                    url: url.to_owned(),
-                                },
+                                    url: url.to_owned()},
                             ));
                         }
                         HyperlinkLens::Action(action_ref) => {
@@ -3100,8 +3050,7 @@ impl AgentsWidget {
                         mouse_state_handle,
                         on_remove_action: action(uuid),
                         is_disabled: disabled,
-                        tooltip_mouse_state: None,
-                    })
+                        tooltip_mouse_state: None})
                 }),
             None,
             appearance,

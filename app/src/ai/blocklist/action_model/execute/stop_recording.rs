@@ -16,13 +16,8 @@ use crate::ai::{
         action_model::{
             RecordingTelemetryEvent,
             recording_controller::{RecordingController, StopRecordingControllerError},
-            recording_finalize::{FinalizeReason, finalize_recording_by_id},
-        },
-    },
-};
+            recording_finalize::{FinalizeReason, finalize_recording_by_id}}}};
 #[cfg(not(target_family = "wasm"))]
-use crate::send_telemetry_from_ctx;
-
 pub struct StopRecordingExecutor;
 
 impl StopRecordingExecutor {
@@ -56,12 +51,10 @@ impl StopRecordingExecutor {
         {
             let ExecuteActionInput {
                 action,
-                conversation_id,
-            } = input;
+                conversation_id} = input;
             let AIAgentActionType::StopRecording {
                 recording_id,
-                should_persist,
-            } = &action.action
+                should_persist} = &action.action
             else {
                 return ActionExecution::<()>::InvalidAction.into();
             };
@@ -118,10 +111,6 @@ impl StopRecordingExecutor {
                     RecordingController::handle(ctx).update(ctx, |controller, _| {
                         controller.consume_finalized(&recording_id);
                     });
-                    send_telemetry_from_ctx!(
-                        recording_stopped_telemetry(&recording_id, actual_reason, &result),
-                        ctx
-                    );
                     AIAgentActionResultType::StopRecording(result)
                 },
             )
@@ -172,28 +161,23 @@ fn recording_stopped_telemetry(
             outcome: "success".to_string(),
             duration_secs: Some(duration.as_secs_f64()),
             size_bytes: Some(*size_bytes),
-            termination_reason,
-        },
+            termination_reason},
         StopRecordingResult::Discarded => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "cancelled".to_string(),
             duration_secs: None,
             size_bytes: None,
-            termination_reason,
-        },
+            termination_reason},
         StopRecordingResult::Cancelled => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "cancelled".to_string(),
             duration_secs: None,
             size_bytes: None,
-            termination_reason,
-        },
+            termination_reason},
         StopRecordingResult::Error(_) => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "error".to_string(),
             duration_secs: None,
             size_bytes: None,
-            termination_reason,
-        },
-    }
+            termination_reason}}
 }

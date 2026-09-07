@@ -8,7 +8,6 @@ use warp_util::path::{ShellFamily, is_posix_portable_pathname};
 use warpui::AppContext;
 
 use crate::root_view::SubshellCommandArg;
-use crate::send_telemetry_from_app_ctx;
 use crate::server::telemetry::TelemetryEvent;
 use crate::terminal::shell::ShellType;
 
@@ -74,8 +73,7 @@ pub fn open_docker_container(url: &Url, ctx: &mut AppContext) -> Result<()> {
     let user = match query_params.get("user") {
         Some(user) if username_pattern.is_match(user.as_str()) => Some(user),
         Some(_) => anyhow::bail!("Invalid user parameter found."),
-        None => None,
-    };
+        None => None};
 
     // Command example: docker exec -it --user 'admin' 'container_id' 'zsh'.
     // TODO(CORE-2658): This [`ShellFamily::shell_escape`] function is built with `bash` in mind but we need to
@@ -104,13 +102,7 @@ pub fn open_docker_container(url: &Url, ctx: &mut AppContext) -> Result<()> {
         "root_view:open_new_tab_insert_subshell_command_and_bootstrap_if_supported",
         &SubshellCommandArg {
             command: docker_exec_command,
-            shell_type,
-        },
-    );
-
-    send_telemetry_from_app_ctx!(
-        TelemetryEvent::OpenAndWarpifyDockerSubshell { shell_type },
-        ctx
+            shell_type},
     );
 
     Ok(())

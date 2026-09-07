@@ -8,8 +8,7 @@ use std::time::Duration;
 use ai::agent::action::{RunAgentsAgentRunConfig, RunAgentsExecutionMode, RunAgentsRequest};
 use ai::agent::action_result::{
     RunAgentsAgentOutcome, RunAgentsAgentOutcomeKind, RunAgentsLaunchedExecutionMode,
-    RunAgentsResult,
-};
+    RunAgentsResult};
 use ai::agent::orchestration_config::OrchestrationConfig;
 use ai::skills::SkillReference;
 use futures::FutureExt;
@@ -17,7 +16,6 @@ use futures::future::BoxFuture;
 use warp_cli::agent::Harness;
 use warp_core::execution_mode::AppExecutionMode;
 use warp_core::telemetry::TelemetryEvent as _;
-use warp_core::{send_telemetry_from_app_ctx, send_telemetry_from_ctx};
 use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::start_agent::{StartAgentExecutor, StartAgentOutcome};
@@ -25,20 +23,16 @@ use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessA
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionId, AIAgentActionResultType, AIAgentActionType, AIAgentInput,
-    StartAgentExecutionMode,
-};
+    StartAgentExecutionMode};
 use crate::ai::blocklist::telemetry::{
-    BlocklistOrchestrationTelemetryEvent, run_agents_completed_event,
-};
+    BlocklistOrchestrationTelemetryEvent, run_agents_completed_event};
 use crate::ai::blocklist::{BlocklistAIHistoryModel, BlocklistAIPermissions};
 use crate::ai::document::plan_publication::{
-    prepare_plan_publications, wait_for_plan_publications,
-};
+    prepare_plan_publications, wait_for_plan_publications};
 use crate::ai::local_harness_setup::local_harness_product_disabled_message;
 use crate::ai::orchestration::{
     OrchestrationConfigState, can_execute_with_auth_secret,
-    populate_default_auth_secret_for_execution,
-};
+    populate_default_auth_secret_for_execution};
 use crate::features::FeatureFlag;
 
 /// Per-child spawn timeout. If a child agent doesn't report back within
@@ -50,38 +44,31 @@ const SPAWN_TIMEOUT: Duration = Duration::from_secs(30);
 /// [`RunAgentsExecutorEvent::SpawningStarted`].
 #[derive(Debug, Clone, Copy)]
 pub struct RunAgentsSpawningSnapshot {
-    pub agent_count: usize,
-}
+    pub agent_count: usize}
 
 /// In-flight tracking per `RunAgents` action (idempotency guard).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PendingRunAgents {
     Publishing,
-    Spawning,
-}
+    Spawning}
 #[derive(Debug, Clone)]
 struct ExistingLaunchedAgent {
     name: String,
-    agent_id: String,
-}
+    agent_id: String}
 
 pub struct RunAgentsExecutor {
     pending: HashMap<AIAgentActionId, PendingRunAgents>,
     launched_agents: HashMap<AIConversationId, HashMap<String, ExistingLaunchedAgent>>,
     start_agent_executor: ModelHandle<StartAgentExecutor>,
-    terminal_view_id: EntityId,
-}
+    terminal_view_id: EntityId}
 
 /// Lifecycle events for in-flight dispatches.
 pub enum RunAgentsExecutorEvent {
     SpawningStarted {
         action_id: AIAgentActionId,
-        snapshot: RunAgentsSpawningSnapshot,
-    },
+        snapshot: RunAgentsSpawningSnapshot},
     SpawningFinished {
-        action_id: AIAgentActionId,
-    },
-}
+        action_id: AIAgentActionId}}
 
 impl Entity for RunAgentsExecutor {
     type Event = RunAgentsExecutorEvent;
@@ -96,8 +83,7 @@ impl RunAgentsExecutor {
             pending: HashMap::new(),
             launched_agents: HashMap::new(),
             start_agent_executor,
-            terminal_view_id,
-        }
+            terminal_view_id}
     }
 
     pub fn is_pending(&self, action_id: &AIAgentActionId) -> bool {
@@ -116,8 +102,7 @@ impl RunAgentsExecutor {
         ) {
             self.pending.remove(action_id);
             ctx.emit(RunAgentsExecutorEvent::SpawningFinished {
-                action_id: action_id.clone(),
-            });
+                action_id: action_id.clone()});
         }
     }
 
@@ -140,8 +125,7 @@ impl RunAgentsExecutor {
                     normalized_name,
                     ExistingLaunchedAgent {
                         name: agent.name.clone(),
-                        agent_id: agent_id.clone(),
-                    },
+                        agent_id: agent_id.clone()},
                 );
         }
     }
@@ -184,14 +168,12 @@ impl RunAgentsExecutor {
         let pending_plan_publications = prepare_plan_publications(parent_conversation_id, ctx);
 
         let snapshot = RunAgentsSpawningSnapshot {
-            agent_count: request.agent_run_configs.len(),
-        };
+            agent_count: request.agent_run_configs.len()};
         self.pending
             .insert(action_id.clone(), PendingRunAgents::Publishing);
         ctx.emit(RunAgentsExecutorEvent::SpawningStarted {
             action_id: action_id.clone(),
-            snapshot,
-        });
+            snapshot});
 
         let action_id_for_wait = action_id.clone();
         ctx.spawn(
@@ -311,8 +293,7 @@ impl RunAgentsExecutor {
                                 )) => RunAgentsAgentOutcomeKind::Failed { error },
                                 futures::future::Either::Left((Err(_), _)) => {
                                     RunAgentsAgentOutcomeKind::Failed {
-                                        error: "Cancelled before launch".to_string(),
-                                    }
+                                        error: "Cancelled before launch".to_string()}
                                 }
                                 futures::future::Either::Right((_, _)) => {
                                     log::warn!(
@@ -324,8 +305,7 @@ impl RunAgentsExecutor {
                                             "Agent failed to start within {} seconds. \
                                              The harness binary may not be installed.",
                                             SPAWN_TIMEOUT.as_secs()
-                                        ),
-                                    }
+                                        )}
                                 }
                             }
                         }
@@ -344,8 +324,7 @@ impl RunAgentsExecutor {
                         // resolved_model_id is populated by the server in the
                         // RunAgentsResult proto; the client fills it as empty here
                         // and the real value arrives via convert_conversation.
-                        resolved_model_id: String::new(),
-                    })
+                        resolved_model_id: String::new()})
                     .collect();
                 me.record_launched_agents(parent_conversation_id_for_result, &agents);
                 let launched_mode = match &run_execution_mode_for_aggr {
@@ -354,24 +333,19 @@ impl RunAgentsExecutor {
                         environment_id,
                         worker_host,
                         computer_use_enabled,
-                        runner_id,
-                    } => RunAgentsLaunchedExecutionMode::Remote {
+                        runner_id} => RunAgentsLaunchedExecutionMode::Remote {
                         environment_id: environment_id.clone(),
                         worker_host: worker_host.clone(),
                         computer_use_enabled: *computer_use_enabled,
-                        runner_id: runner_id.clone(),
-                    },
-                };
+                        runner_id: runner_id.clone()}};
                 let result = RunAgentsResult::Launched {
                     model_id: run_model_id,
                     harness_type: run_harness_type,
                     execution_mode: launched_mode,
-                    agents,
-                };
+                    agents};
                 me.pending.remove(&action_id_for_aggr);
                 ctx.emit(RunAgentsExecutorEvent::SpawningFinished {
-                    action_id: action_id_for_aggr,
-                });
+                    action_id: action_id_for_aggr});
                 let _ = sender.try_send(result);
             },
         );
@@ -397,12 +371,6 @@ impl RunAgentsExecutor {
             ctx,
         ) {
             let result = RunAgentsResult::Denied { reason };
-            send_telemetry_from_ctx!(
-                BlocklistOrchestrationTelemetryEvent::RunAgentsCompleted(
-                    run_agents_completed_event(parent_conversation_id, &request, &result)
-                ),
-                ctx
-            );
             return ActionExecution::Sync(AIAgentActionResultType::RunAgents(result));
         }
         let telemetry_request = request.clone();
@@ -413,14 +381,7 @@ impl RunAgentsExecutor {
         ActionExecution::new_async(async move { receiver.recv().await }, move |result, ctx| {
             let result = match result {
                 Ok(result) => result,
-                Err(_) => RunAgentsResult::Cancelled,
-            };
-            send_telemetry_from_app_ctx!(
-                BlocklistOrchestrationTelemetryEvent::RunAgentsCompleted(
-                    run_agents_completed_event(parent_conversation_id, &telemetry_request, &result,)
-                ),
-                ctx
-            );
+                Err(_) => RunAgentsResult::Cancelled};
             AIAgentActionResultType::RunAgents(result)
         })
     }
@@ -479,8 +440,7 @@ mod tests;
 
 enum ChildSlot {
     Failed(String),
-    Pending(async_channel::Receiver<StartAgentOutcome>),
-}
+    Pending(async_channel::Receiver<StartAgentOutcome>)}
 
 fn approved_orchestration_config_can_autoexecute(
     request: &RunAgentsRequest,
@@ -643,8 +603,7 @@ fn existing_launched_agents_for_conversation(
                     existing_agents.entry(normalized_name).or_insert_with(|| {
                         ExistingLaunchedAgent {
                             name: agent.name.clone(),
-                            agent_id: agent_id.clone(),
-                        }
+                            agent_id: agent_id.clone()}
                     });
                 }
             }
@@ -707,8 +666,7 @@ pub fn compose_run_agents_child_prompt(base_prompt: &str, per_agent_prompt: &str
         (false, false) => format!("{base_prompt}\n\n{per_agent_prompt}"),
         (false, true) => base_prompt.to_string(),
         (true, false) => per_agent_prompt.to_string(),
-        (true, true) => String::new(),
-    }
+        (true, true) => String::new()}
 }
 
 /// Translates run-wide config into a per-child
@@ -748,8 +706,7 @@ pub fn run_agents_to_start_agent_mode(
             if trimmed.is_empty() || trimmed.eq_ignore_ascii_case("oz") {
                 Ok(StartAgentExecutionMode::Local {
                     harness_type: None,
-                    model_id,
-                })
+                    model_id})
             } else {
                 if let Some(harness) = Harness::parse_local_child_harness(trimmed)
                     && let Some(message) = local_harness_product_disabled_message(harness)
@@ -758,16 +715,14 @@ pub fn run_agents_to_start_agent_mode(
                 }
                 Ok(StartAgentExecutionMode::Local {
                     harness_type: Some(trimmed.to_string()),
-                    model_id,
-                })
+                    model_id})
             }
         }
         RunAgentsExecutionMode::Remote {
             environment_id,
             worker_host,
             computer_use_enabled,
-            runner_id,
-        } => {
+            runner_id} => {
             // OpenCode is unsupported on Remote.
             if run_harness_type.eq_ignore_ascii_case("opencode") {
                 return Err(
@@ -793,8 +748,7 @@ pub fn run_agents_to_start_agent_mode(
                     .filter(|s| !s.trim().is_empty()),
                 runner_id: runner_id.clone(),
                 agent_identity_uid: Some(cfg.agent_identity_uid.clone())
-                    .filter(|s| !s.trim().is_empty()),
-            })
+                    .filter(|s| !s.trim().is_empty())})
         }
     }
 }

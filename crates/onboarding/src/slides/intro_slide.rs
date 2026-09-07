@@ -2,25 +2,21 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use ui_components::{Component as _, Options as _, button};
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::Icon;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::color::internal_colors;
 use warpui_core::elements::shimmering_text::{
-    ShimmerConfig, ShimmeringTextElement, ShimmeringTextStateHandle,
-};
+    ShimmerConfig, ShimmeringTextElement, ShimmeringTextStateHandle};
 use warpui_core::elements::{
     Align, ChildAnchor, ConstrainedBox, Container, CrossAxisAlignment, Flex, FormattedTextElement,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
-    ParentElement, ParentOffsetBounds, Stack,
-};
+    ParentElement, ParentOffsetBounds, Stack};
 use warpui_core::keymap::Keystroke;
 use warpui_core::text_layout::TextAlignment;
 use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
 use warpui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
-    ViewContext,
-};
+    ViewContext};
 
 use super::OnboardingSlide;
 use crate::OnboardingEvent;
@@ -28,21 +24,18 @@ use crate::model::OnboardingStateModel;
 
 #[derive(Clone, Debug)]
 pub enum IntroSlideEvent {
-    LoginRequested,
-}
+    LoginRequested}
 
 #[derive(Clone, Debug)]
 pub enum IntroSlideAction {
     GetStartedClicked,
-    LoginClicked,
-}
+    LoginClicked}
 
 pub struct IntroSlide {
     onboarding_state: ModelHandle<OnboardingStateModel>,
     get_started_button: button::Button,
     shimmering_title_handle: ShimmeringTextStateHandle,
-    login_mouse_state: MouseStateHandle,
-}
+    login_mouse_state: MouseStateHandle}
 
 impl IntroSlide {
     pub(crate) fn new(onboarding_state: ModelHandle<OnboardingStateModel>) -> Self {
@@ -50,8 +43,7 @@ impl IntroSlide {
             onboarding_state,
             get_started_button: button::Button::default(),
             shimmering_title_handle: ShimmeringTextStateHandle::new(),
-            login_mouse_state: MouseStateHandle::default(),
-        }
+            login_mouse_state: MouseStateHandle::default()}
     }
 }
 
@@ -125,16 +117,7 @@ impl View for IntroSlide {
 
 impl IntroSlide {
     fn get_started_clicked(&mut self, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(OnboardingEvent::GetStartedClicked, ctx);
         if FeatureFlag::AccountFirstOnboarding.is_enabled() {
-            send_telemetry_from_ctx!(
-                OnboardingEvent::OnboardingAction {
-                    slide_name: "welcome".to_string(),
-                    action: "get_started".to_string(),
-                    account_class: None,
-                },
-                ctx
-            );
         }
 
         self.onboarding_state.update(ctx, |model, ctx| {
@@ -195,8 +178,7 @@ impl IntroSlide {
                         ctx.dispatch_typed_action(IntroSlideAction::GetStartedClicked);
                     })),
                     ..button::Options::default(appearance)
-                },
-            },
+                }},
         );
 
         Flex::column()
@@ -224,7 +206,6 @@ impl TypedActionView for IntroSlide {
                 self.get_started_clicked(ctx);
             }
             IntroSlideAction::LoginClicked => {
-                send_telemetry_from_ctx!(OnboardingEvent::WelcomeLoginClicked, ctx);
                 ctx.emit(IntroSlideEvent::LoginRequested);
             }
         }

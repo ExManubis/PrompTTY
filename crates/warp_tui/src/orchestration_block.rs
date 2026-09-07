@@ -24,27 +24,23 @@ use warp::tui_export::{
     RunAgentsRequest, RunAgentsSpawningSnapshot, TeamContextResolver, UserWorkspaces,
     persist_host_selection, resolve_auth_secret_selection_for_harness,
     resolve_default_environment_id, resolve_default_host_slug, run_agents_card_decision_event,
-    should_show_auth_secret_picker,
-};
+    should_show_auth_secret_picker};
 use warpui::SingletonEntity;
 use warpui_core::elements::tui::TuiElement;
 use warpui_core::keymap::macros::*;
 use warpui_core::keymap::{self, FixedBinding};
 use warpui_core::{
     AppContext, Entity, EntityId, FocusContext, ModelHandle, TuiView, TypedActionView, ViewContext,
-    ViewHandle,
-};
+    ViewHandle};
 mod configuration;
 mod render;
 
 use configuration::{
-    ConfigPage, ModelOrchestrationBlockController, OrchestrationBlockController, build_request,
-};
+    ConfigPage, ModelOrchestrationBlockController, OrchestrationBlockController, build_request};
 
 use crate::keybindings::TUI_BINDING_GROUP;
 use crate::option_selector::{
-    OptionSelectorHeader, OptionSelectorPage, TuiOptionSelector, TuiOptionSelectorEvent,
-};
+    OptionSelectorHeader, OptionSelectorPage, TuiOptionSelector, TuiOptionSelectorEvent};
 use crate::orchestrated_agent_identity_styling::AgentIdentity;
 use crate::tui_ask_question_view::PageNavigationDirection;
 use crate::tui_builder::TuiUiBuilder;
@@ -104,8 +100,7 @@ pub(crate) fn init(app: &mut AppContext) {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum CardMode {
     Acceptance,
-    Configuring { page: ConfigPage },
-}
+    Configuring { page: ConfigPage }}
 
 /// Events emitted to the owning agent block.
 #[derive(Clone, Debug)]
@@ -116,8 +111,7 @@ pub(crate) enum TuiOrchestrationBlockEvent {
     /// the active blocker and re-measure the card.
     BlockingStateChanged,
     /// The active selector page changed intrinsic height.
-    LayoutInvalidated,
-}
+    LayoutInvalidated}
 
 /// Typed actions bound to the card's keybindings.
 #[derive(Clone, Debug)]
@@ -128,8 +122,7 @@ pub(crate) enum TuiOrchestrationBlockAction {
     CommitAndNextPage,
     NextPage,
     Back,
-    Reject,
-}
+    Reject}
 
 /// The TUI orchestration confirmation block. See the module docs.
 pub(crate) struct TuiOrchestrationBlock {
@@ -170,8 +163,7 @@ pub(crate) struct TuiOrchestrationBlock {
     identity_palette: Vec<AgentIdentity>,
     /// Resolves this card's team context on demand, so host-slug reads follow the window's team
     /// rather than an ambient, unscoped workspace read.
-    team_context_resolver: TeamContextResolver,
-}
+    team_context_resolver: TeamContextResolver}
 
 impl TuiOrchestrationBlock {
     /// Creates a block for one pending `RunAgents` action and wires its model
@@ -195,8 +187,7 @@ impl TuiOrchestrationBlock {
         ctx.subscribe_to_model(&run_agents_executor, move |me, _, event, ctx| match event {
             RunAgentsExecutorEvent::SpawningStarted {
                 action_id,
-                snapshot,
-            } if action_id == &action_id_for_executor => {
+                snapshot} if action_id == &action_id_for_executor => {
                 me.spawning = Some(*snapshot);
                 me.mode = CardMode::Acceptance;
                 ctx.emit(TuiOrchestrationBlockEvent::BlockingStateChanged);
@@ -339,8 +330,7 @@ impl TuiOrchestrationBlock {
             entered_event_emitted: false,
             decision_event_emitted: false,
             identity_palette,
-            team_context_resolver,
-        }
+            team_context_resolver}
     }
 
     /// Seeds the run-wide edit state from the streamed request. An approved
@@ -439,16 +429,7 @@ impl TuiOrchestrationBlock {
             return;
         }
         self.entered_event_emitted = true;
-        warp::send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::OrchestrationEntered(OrchestrationEnteredEvent {
-                conversation_id: self.conversation_id,
-                plan_id: (!self.request_fields.plan_id.is_empty())
-                    .then(|| self.request_fields.plan_id.clone()),
-                entry_source: OrchestrationEntrySource::RunAgentsCardShown,
-            }),
-            ctx
-        );
-    }
+        warp::    }
 
     fn emit_decision(&mut self, decision: RunAgentsCardDecision, ctx: &mut ViewContext<Self>) {
         if self.decision_event_emitted || self.is_restored {
@@ -464,11 +445,7 @@ impl TuiOrchestrationBlock {
             &self.request_fields,
             self.active_config.as_ref(),
         );
-        warp::send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::RunAgentsCardDecision(event),
-            ctx
-        );
-    }
+        warp::    }
 
     /// Whether this card still awaits a user decision.
     pub(super) fn is_awaiting_confirmation(&self, ctx: &AppContext) -> bool {
@@ -523,12 +500,10 @@ impl TuiOrchestrationBlock {
             header: Some(OptionSelectorHeader {
                 field_label: "Edit agent configuration".to_string(),
                 position: (position, sequence.len()),
-                prompt: page.question(self.request_fields.agent_run_configs.len()),
-            }),
+                prompt: page.question(self.request_fields.agent_run_configs.len())}),
             snapshot: self.snapshot_for_page(page, ctx),
             searchable: page.is_searchable(),
-            row_shortcuts: Default::default(),
-        };
+            row_shortcuts: Default::default()};
         self.selector.update(ctx, |selector, ctx| {
             selector.set_page(selector_page, ctx);
         });
@@ -601,13 +576,11 @@ impl TuiOrchestrationBlock {
                 .checked_sub(1)
                 .and_then(|index| sequence.get(index))
                 .copied(),
-            Some(PageNavigationDirection::Next) | None => sequence.get(index + 1).copied(),
-        };
+            Some(PageNavigationDirection::Next) | None => sequence.get(index + 1).copied()};
         match target {
             Some(target) => self.open_page(target, ctx),
             None if navigation.is_some() => self.open_page(page, ctx),
-            None => self.return_to_acceptance(ctx),
-        }
+            None => self.return_to_acceptance(ctx)}
     }
 
     /// Moves to the next page without applying the current selection.
@@ -652,8 +625,7 @@ impl TuiOrchestrationBlock {
             }
             TuiOptionSelectorEvent::CustomTextSubmitted { value } => {
                 if let CardMode::Configuring {
-                    page: ConfigPage::Host,
-                } = self.mode
+                    page: ConfigPage::Host} = self.mode
                 {
                     self.orchestration_edit_state
                         .orchestration_config_state
@@ -800,8 +772,7 @@ impl TuiView for TuiOrchestrationBlock {
         context.set.insert(Self::ui_name());
         match self.mode {
             CardMode::Acceptance => context.set.insert(ACCEPTANCE_CONTEXT_FLAG),
-            CardMode::Configuring { .. } => context.set.insert(CONFIGURING_CONTEXT_FLAG),
-        };
+            CardMode::Configuring { .. } => context.set.insert(CONFIGURING_CONTEXT_FLAG)};
         context
     }
 
@@ -825,8 +796,7 @@ impl TypedActionView for TuiOrchestrationBlock {
             }
             TuiOrchestrationBlockAction::NextPage => self.navigate_page(true, ctx),
             TuiOrchestrationBlockAction::Back => self.handle_back(ctx),
-            TuiOrchestrationBlockAction::Reject => self.handle_reject(ctx),
-        }
+            TuiOrchestrationBlockAction::Reject => self.handle_reject(ctx)}
     }
 }
 

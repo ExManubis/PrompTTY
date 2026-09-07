@@ -11,23 +11,20 @@ use warpui::clipboard::ClipboardContent;
 use warpui::elements::{
     ChildAnchor, ChildView, ConstrainedBox, Container, CrossAxisAlignment, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentElement,
-    PositionedElementAnchor, PositionedElementOffsetBounds, SavePosition, Stack,
-};
+    PositionedElementAnchor, PositionedElementOffsetBounds, SavePosition, Stack};
 use warpui::keymap::{EditableBinding, FixedBinding};
 use warpui::text_layout::ClipConfig;
 use warpui::ui_components::button::ButtonTooltipPosition;
 use warpui::ui_components::components::UiComponent;
 use warpui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle, id,
-};
+    ViewContext, ViewHandle, id};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
 use crate::ai::document::ai_document_model::{
     AIDocumentId, AIDocumentInstance, AIDocumentModel, AIDocumentModelEvent, AIDocumentSaveStatus,
-    AIDocumentUpdateSource, AIDocumentUserEditStatus, AIDocumentVersion,
-};
+    AIDocumentUpdateSource, AIDocumentUserEditStatus, AIDocumentVersion};
 use crate::ai::document::orchestration_config_block::OrchestrationConfigBlockView;
 use crate::appearance::Appearance;
 use crate::drive::CloudObjectTypeAndId;
@@ -43,8 +40,7 @@ use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::view;
 use crate::pane_group::pane::view::header::components::{
     CenteredHeaderEdgeWidth, render_pane_header_buttons, render_pane_header_title_text,
-    render_three_column_header,
-};
+    render_three_column_header};
 use crate::pane_group::pane::view::header::{PaneHeaderAction, toolbelt_button_position_id};
 use crate::pane_group::{BackingView, PaneConfiguration, PaneEvent};
 use crate::server::telemetry::TelemetryEvent;
@@ -56,10 +52,9 @@ use crate::ui_components::icons::Icon;
 use crate::util::bindings::keybinding_name_to_keystroke;
 use crate::view_components::DismissibleToast;
 use crate::view_components::action_button::{
-    ActionButton, ButtonSize, NakedTheme, PrimaryTheme, SecondaryTheme, TooltipAlignment,
-};
+    ActionButton, ButtonSize, NakedTheme, PrimaryTheme, SecondaryTheme, TooltipAlignment};
 use crate::workspace::ToastStack;
-use crate::{BlocklistAIHistoryModel, send_telemetry_from_ctx};
+use crate::{BlocklistAIHistoryModel};
 
 pub fn init(app: &mut AppContext) {
     app.register_editable_bindings([EditableBinding::new(
@@ -109,8 +104,7 @@ pub enum AIDocumentAction {
     CopyLink(String),
     CopyPlanId,
     ShowInWarpDrive,
-    AttachToActiveSession,
-}
+    AttachToActiveSession}
 
 #[derive(Debug, Clone)]
 pub enum AIDocumentEvent {
@@ -121,16 +115,13 @@ pub enum AIDocumentEvent {
     OpenCodeInWarp {
         source: CodeSource,
         layout: EditorLayout,
-        line_col: Option<LineAndColumnArg>,
-    },
+        line_col: Option<LineAndColumnArg>},
     #[cfg(feature = "local_fs")]
     OpenFileWithTarget {
         path: std::path::PathBuf,
         target: FileTarget,
-        line_col: Option<LineAndColumnArg>,
-    },
-    AttachPlanAsContext(AIDocumentId),
-}
+        line_col: Option<LineAndColumnArg>},
+    AttachPlanAsContext(AIDocumentId)}
 
 impl From<PaneEvent> for AIDocumentEvent {
     fn from(event: PaneEvent) -> Self {
@@ -142,8 +133,7 @@ impl From<PaneEvent> for AIDocumentEvent {
 struct VersionMenuEntry {
     version: AIDocumentVersion,
     created_at: chrono::DateTime<chrono::Local>,
-    restored_from: Option<AIDocumentVersion>,
-}
+    restored_from: Option<AIDocumentVersion>}
 
 pub struct AIDocumentView {
     document_id: AIDocumentId,
@@ -163,8 +153,7 @@ pub struct AIDocumentView {
     synced_status_mouse_state: MouseStateHandle,
     view_position_id: String,
     version_button: ViewHandle<ActionButton>,
-    orchestration_config_block: Option<ViewHandle<OrchestrationConfigBlockView>>,
-}
+    orchestration_config_block: Option<ViewHandle<OrchestrationConfigBlockView>>}
 
 impl AIDocumentView {
     pub fn new(
@@ -183,8 +172,7 @@ impl AIDocumentView {
                 AIDocumentModelEvent::DocumentUpdated {
                     document_id,
                     version,
-                    source,
-                } => {
+                    source} => {
                     // Only handle updates for our document.
                     // If the agent created a new version, auto update this view to the newest version.
                     if document_id == &me.document_id {
@@ -229,8 +217,7 @@ impl AIDocumentView {
                 }
                 AIDocumentModelEvent::DocumentUserEditStatusUpdated {
                     document_id: id,
-                    status,
-                } => {
+                    status} => {
                     if *id != document_id {
                         return;
                     }
@@ -276,8 +263,7 @@ impl AIDocumentView {
                     }
                     BlocklistAIHistoryEvent::RestoredConversations {
                         terminal_surface_id,
-                        conversation_ids,
-                    } => {
+                        conversation_ids} => {
                         // Try to populate terminal view if conversations were restored
                         me.maybe_populate_terminal_view(
                             *terminal_surface_id,
@@ -287,8 +273,7 @@ impl AIDocumentView {
                     }
                     BlocklistAIHistoryEvent::OrchestrationConfigUpdated {
                         conversation_id: cid,
-                        from_restore,
-                    } => {
+                        from_restore} => {
                         let our_conv = AIDocumentModel::as_ref(ctx)
                             .get_conversation_id_for_document_id(&document_id);
                         if our_conv.as_ref() == Some(cid) {
@@ -479,8 +464,7 @@ impl AIDocumentView {
             synced_status_mouse_state: MouseStateHandle::default(),
             view_position_id,
             version_button,
-            orchestration_config_block,
-        };
+            orchestration_config_block};
         // Force update the editor view based on the initial document version
         me.refresh(ctx);
 
@@ -827,8 +811,7 @@ impl AIDocumentView {
             right_row.finish(),
             CenteredHeaderEdgeWidth {
                 min: button_count as f32 * ICON_DIMENSIONS,
-                max: 180.0,
-            },
+                max: 180.0},
             header_ctx.header_left_inset,
             header_ctx.draggable_state.is_dragging(),
         )
@@ -887,16 +870,14 @@ impl AIDocumentView {
             versions.push(VersionMenuEntry {
                 version: current.version,
                 created_at: current.created_at,
-                restored_from: current.restored_from,
-            });
+                restored_from: current.restored_from});
         }
 
         if let Some(earlier_versions) = model.get_earlier_document_versions(&self.document_id) {
             versions.extend(earlier_versions.iter().rev().map(|v| VersionMenuEntry {
                 version: v.version,
                 created_at: v.created_at,
-                restored_from: v.restored_from,
-            }));
+                restored_from: v.restored_from}));
         }
 
         if versions.is_empty() {
@@ -954,25 +935,21 @@ impl AIDocumentView {
             EditorViewEvent::OpenFile {
                 path,
                 line_and_column_num,
-                force_open_in_warp,
-            } => {
+                force_open_in_warp} => {
                 use crate::util::file::external_editor::EditorSettings;
                 use crate::util::openable_file_type::{
-                    is_supported_image_file, resolve_file_target,
-                };
+                    is_supported_image_file, resolve_file_target};
 
                 if *force_open_in_warp {
                     let layout = *EditorSettings::as_ref(ctx).open_file_layout;
                     let source = CodeSource::Link {
                         path: path.clone(),
                         range_start: *line_and_column_num,
-                        range_end: None,
-                    };
+                        range_end: None};
                     ctx.emit(AIDocumentEvent::OpenCodeInWarp {
                         source,
                         layout,
-                        line_col: *line_and_column_num,
-                    });
+                        line_col: *line_and_column_num});
                 } else {
                     let settings = EditorSettings::as_ref(ctx);
                     let target = if is_supported_image_file(path) {
@@ -983,12 +960,10 @@ impl AIDocumentView {
                     ctx.emit(AIDocumentEvent::OpenFileWithTarget {
                         path: path.clone(),
                         target,
-                        line_col: *line_and_column_num,
-                    });
+                        line_col: *line_and_column_num});
                 }
             }
-            _ => (),
-        }
+            _ => ()}
     }
 
     pub fn focus(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1156,10 +1131,6 @@ impl TypedActionView for AIDocumentView {
             }
             AIDocumentAction::CreateWarpDriveNotebook => self.create_warp_drive_notebook(ctx),
             AIDocumentAction::CopyLink(link) => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::ObjectLinkCopied { link: link.clone() },
-                    ctx
-                );
                 ctx.clipboard()
                     .write(ClipboardContent::plain_text(link.to_owned()));
 
@@ -1384,7 +1355,6 @@ impl BackingView for AIDocumentView {
     ) -> view::HeaderContent {
         view::HeaderContent::Custom {
             element: self.render_plan_header(header_ctx, app),
-            has_custom_draggable_behavior: false,
-        }
+            has_custom_draggable_behavior: false}
     }
 }

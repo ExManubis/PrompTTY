@@ -1,14 +1,11 @@
 use ai::agent::action::{RunAgentsExecutionMode, RunAgentsRequest};
 use ai::agent::action_result::{
-    RunAgentsAgentOutcomeKind, RunAgentsLaunchedExecutionMode, RunAgentsResult,
-};
+    RunAgentsAgentOutcomeKind, RunAgentsLaunchedExecutionMode, RunAgentsResult};
 use ai::agent::orchestration_config::{
-    OrchestrationConfig, OrchestrationConfigStatus, OrchestrationExecutionMode,
-};
+    OrchestrationConfig, OrchestrationConfigStatus, OrchestrationExecutionMode};
 use serde::Serialize;
 use serde_json::{Value, json};
 use strum_macros::{EnumDiscriminants, EnumIter};
-use warp_core::send_telemetry_from_app_ctx;
 use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
 use warpui::AppContext;
 
@@ -25,31 +22,27 @@ pub enum BlocklistOrchestrationTelemetryEvent {
     RunAgentsCompleted(RunAgentsCompletedEvent),
     PillBarInteraction(PillBarInteractionEvent),
     OrchestrationEntered(OrchestrationEnteredEvent),
-    AgentProposedConfig(AgentProposedConfigEvent),
-}
+    AgentProposedConfig(AgentProposedConfigEvent)}
 
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 #[allow(dead_code)]
 pub enum TeamAgentCommunicationKind {
     Message,
-    LifecycleEvent,
-}
+    LifecycleEvent}
 
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 #[allow(dead_code)]
 pub enum TeamAgentCommunicationTransport {
     Local,
-    ServerApi,
-}
+    ServerApi}
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 #[allow(dead_code)]
 pub enum TeamAgentOrchestrationVersion {
     V1,
-    V2,
-}
+    V2}
 
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -60,8 +53,7 @@ pub enum TeamAgentCommunicationFailureReason {
     MissingSourceIdentifier,
     UnknownAgent,
     NoTargets,
-    RequestFailed,
-}
+    RequestFailed}
 
 #[derive(Debug, Serialize)]
 pub struct TeamAgentCommunicationFailedEvent {
@@ -77,8 +69,7 @@ pub struct TeamAgentCommunicationFailedEvent {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lifecycle_event_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub error_message: Option<String>,
-}
+    pub error_message: Option<String>}
 
 /// Coarse approval transition for the plan card's
 /// `Use orchestration` toggle.
@@ -86,8 +77,7 @@ pub struct TeamAgentCommunicationFailedEvent {
 #[serde(rename_all = "snake_case")]
 pub enum OrchestrationApprovalStatus {
     Approved,
-    Disapproved,
-}
+    Disapproved}
 
 /// Run-wide execution mode reported on telemetry payloads. A flat
 /// enum so the payload stays metadata-only and never carries an
@@ -96,8 +86,7 @@ pub enum OrchestrationApprovalStatus {
 #[serde(rename_all = "snake_case")]
 pub enum OrchestrationExecutionModeKind {
     Local,
-    Remote,
-}
+    Remote}
 
 impl OrchestrationExecutionModeKind {
     pub fn from_run_agents(mode: &RunAgentsExecutionMode) -> Self {
@@ -120,8 +109,7 @@ pub enum OrchestrationHarnessKind {
     Codex,
     OpenCode,
     Gemini,
-    Unknown,
-}
+    Unknown}
 
 impl OrchestrationHarnessKind {
     pub fn from_str(harness_type: &str) -> Self {
@@ -131,8 +119,7 @@ impl OrchestrationHarnessKind {
             "codex" => Self::Codex,
             "opencode" | "open-code" | "open_code" => Self::OpenCode,
             "gemini" => Self::Gemini,
-            _ => Self::Unknown,
-        }
+            _ => Self::Unknown}
     }
 }
 
@@ -162,8 +149,7 @@ pub struct PlanConfigApprovalToggledEvent {
     pub has_model: bool,
     pub has_environment: bool,
     pub has_worker_host: bool,
-    pub has_auth_secret: bool,
-}
+    pub has_auth_secret: bool}
 
 /// Decision a user took on the run_agents confirmation card.
 #[derive(Clone, Copy, Debug, Serialize)]
@@ -171,8 +157,7 @@ pub struct PlanConfigApprovalToggledEvent {
 pub enum RunAgentsCardDecision {
     Accept,
     AcceptWithoutOrchestration,
-    Reject,
-}
+    Reject}
 
 #[derive(Debug, Serialize)]
 pub struct RunAgentsCardDecisionEvent {
@@ -193,8 +178,7 @@ pub struct RunAgentsCardDecisionEvent {
     pub modified_fields_from_active_config: Vec<&'static str>,
     pub had_active_config: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub active_config_status: Option<OrchestrationApprovalStatus>,
-}
+    pub active_config_status: Option<OrchestrationApprovalStatus>}
 
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -202,8 +186,7 @@ pub enum RunAgentsResultKind {
     Launched,
     Failure,
     Denied,
-    Cancelled,
-}
+    Cancelled}
 
 #[derive(Debug, Serialize)]
 pub struct RunAgentsCompletedEvent {
@@ -215,8 +198,7 @@ pub struct RunAgentsCompletedEvent {
     pub failed_agent_count: usize,
     pub result: RunAgentsResultKind,
     pub harness: OrchestrationHarnessKind,
-    pub execution_mode: OrchestrationExecutionModeKind,
-}
+    pub execution_mode: OrchestrationExecutionModeKind}
 
 /// Surface that first introduced orchestration into a conversation.
 ///
@@ -230,16 +212,14 @@ pub enum OrchestrationEntrySource {
     /// `/orchestrate` slash-command mode on a user query.
     SlashCommandOrchestrate,
     /// `run_agents` confirmation card was shown (not auto-launched).
-    RunAgentsCardShown,
-}
+    RunAgentsCardShown}
 
 #[derive(Debug, Serialize)]
 pub struct OrchestrationEnteredEvent {
     pub conversation_id: AIConversationId,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub plan_id: Option<String>,
-    pub entry_source: OrchestrationEntrySource,
-}
+    pub entry_source: OrchestrationEntrySource}
 
 /// Fires when an agent-authored orchestration config snapshot first
 /// becomes visible to the user on a plan card. One emission per
@@ -253,8 +233,7 @@ pub struct AgentProposedConfigEvent {
     pub execution_mode: OrchestrationExecutionModeKind,
     pub has_model: bool,
     pub has_environment: bool,
-    pub has_worker_host: bool,
-}
+    pub has_worker_host: bool}
 
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -263,8 +242,7 @@ pub enum PillBarPillKind {
     Child,
     /// A leading breadcrumb pill navigating back up the drill-down tree
     /// (to the tree root or the anchor's parent level).
-    Breadcrumb,
-}
+    Breadcrumb}
 
 /// Concrete user actions against an orchestration pill bar entry.
 #[derive(Clone, Copy, Debug, Serialize)]
@@ -284,8 +262,7 @@ pub enum PillBarActionKind {
     TogglePinOn,
     TogglePinOff,
     ViewInOz,
-    OpenMenu,
-}
+    OpenMenu}
 
 /// Outcome of a pill-body click. Closed enum so future navigation
 /// outcomes can be added without splitting `Switch` into multiple
@@ -297,8 +274,7 @@ pub enum PillSwitchOutcome {
     SwitchedInPlace,
     /// Target conversation was already owned by another visible
     /// terminal view; focus moved there instead of switching in place.
-    FocusedExistingPane,
-}
+    FocusedExistingPane}
 
 #[derive(Debug, Serialize)]
 pub struct PillBarInteractionEvent {
@@ -319,8 +295,7 @@ pub struct PillBarInteractionEvent {
     /// pill-body click navigated within the current pane or moved
     /// focus to an existing pane already owning the conversation.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub switch_outcome: Option<PillSwitchOutcome>,
-}
+    pub switch_outcome: Option<PillSwitchOutcome>}
 
 pub fn run_agents_card_decision_event(
     conversation_id: AIConversationId,
@@ -349,8 +324,7 @@ pub fn run_agents_card_decision_event(
                 };
                 (true, telemetry_status, modified_fields)
             }
-            None => (false, None, Vec::new()),
-        };
+            None => (false, None, Vec::new())};
     RunAgentsCardDecisionEvent {
         conversation_id,
         plan_id,
@@ -361,8 +335,7 @@ pub fn run_agents_card_decision_event(
         modified_fields_from_tool_call,
         modified_fields_from_active_config,
         had_active_config,
-        active_config_status,
-    }
+        active_config_status}
 }
 
 pub fn run_agents_completed_event(
@@ -419,8 +392,7 @@ pub fn run_agents_completed_event(
                 OrchestrationExecutionModeKind::from_run_agents(&request.execution_mode),
                 0,
                 0,
-            ),
-        };
+            )};
     RunAgentsCompletedEvent {
         conversation_id,
         plan_id: (!request.plan_id.is_empty()).then(|| request.plan_id.clone()),
@@ -429,8 +401,7 @@ pub fn run_agents_completed_event(
         failed_agent_count,
         result: result_kind,
         harness,
-        execution_mode,
-    }
+        execution_mode}
 }
 
 pub(crate) fn send_run_agents_completed_telemetry(
@@ -444,14 +415,6 @@ pub(crate) fn send_run_agents_completed_telemetry(
     else {
         return;
     };
-    send_telemetry_from_app_ctx!(
-        BlocklistOrchestrationTelemetryEvent::RunAgentsCompleted(run_agents_completed_event(
-            conversation_id,
-            request,
-            result,
-        )),
-        ctx
-    );
 }
 
 fn diverged_orchestration_fields(
@@ -549,8 +512,7 @@ impl TelemetryEvent for BlocklistOrchestrationTelemetryEvent {
             Self::RunAgentsCompleted(event) => Some(json!(event)),
             Self::PillBarInteraction(event) => Some(json!(event)),
             Self::OrchestrationEntered(event) => Some(json!(event)),
-            Self::AgentProposedConfig(event) => Some(json!(event)),
-        }
+            Self::AgentProposedConfig(event) => Some(json!(event))}
     }
 
     fn description(&self) -> &'static str {
@@ -581,8 +543,7 @@ impl TelemetryEventDesc for BlocklistOrchestrationTelemetryEventDiscriminants {
             Self::RunAgentsCompleted => "AgentMode.Orchestration.RunAgentsCompleted",
             Self::PillBarInteraction => "AgentMode.Orchestration.PillBarInteraction",
             Self::OrchestrationEntered => "AgentMode.Orchestration.Entered",
-            Self::AgentProposedConfig => "AgentMode.Orchestration.AgentProposedConfig",
-        }
+            Self::AgentProposedConfig => "AgentMode.Orchestration.AgentProposedConfig"}
     }
 
     fn description(&self) -> &'static str {
