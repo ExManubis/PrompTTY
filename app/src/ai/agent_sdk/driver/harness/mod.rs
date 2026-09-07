@@ -52,7 +52,6 @@ use claude_transcript::ClaudeResumeInfo;
 use codex::CodexHarness;
 use codex_transcript::CodexResumeInfo;
 use gemini::GeminiHarness;
-pub(crate) use telemetry::ThirdPartyHarnessTelemetryEvent;
 
 /// Harness-agnostic payload describing how to resume an existing conversation.
 ///

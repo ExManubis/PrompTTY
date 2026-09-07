@@ -460,7 +460,6 @@ pub struct AIAgentOutput {
     /// Telemetry events related to the AI Agent Output that we want to send after completion.
     #[derivative(Debug = "ignore")]
     #[derivative(PartialEq = "ignore")]
-    pub telemetry_events: Vec<TelemetryEvent>,
 
     /// The number of requests that the request cost.
     pub request_cost: Option<RequestCost>,

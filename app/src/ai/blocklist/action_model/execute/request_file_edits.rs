@@ -1,3 +1,4 @@
+mod edit_events;
 mod apply_diff_model;
 mod diff_application;
 use std::collections::HashMap;
@@ -11,13 +12,12 @@ use futures::FutureExt;
 use futures::channel::oneshot;
 use futures::future::BoxFuture;
 use itertools::Itertools;
-pub(crate) use telemetry::MalformedFinalLineProxyEvent;
-#[allow(unused_imports)]
-pub use telemetry::{EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent};
-pub use telemetry::{
-    EditReceivedEvent, EditResolvedEvent, EditStats, RequestFileEditsFormatKind,
-    RequestFileEditsTelemetryEvent,
+pub use edit_events::{
+    EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats,
+    RequestFileEditsFormatKind,
 };
+pub(crate) use edit_events::MalformedFinalLineProxyEvent;
+#[allow(unused_imports)]
 use vec1::{Vec1, vec1};
 use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 

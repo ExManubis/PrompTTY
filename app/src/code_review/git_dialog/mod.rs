@@ -31,9 +31,6 @@ use crate::code::editor::{add_color, remove_color};
 use crate::code_review::diff_state::{
     CommitChainMode, DiffStateModel, DiffStateModelEvent, GitOpResult,
 };
-use crate::code_review::telemetry_event::{
-    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind,
-};
 use crate::settings::AISettings;
 use crate::ui_components::dialog::{Dialog, dialog_styles};
 use crate::ui_components::icons::Icon;

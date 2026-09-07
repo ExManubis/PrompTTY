@@ -99,7 +99,6 @@ use super::ConversationSelectionHandle;
 use super::context_model::BlocklistAIContextModel;
 use super::history_model::BlocklistAIHistoryModel;
 use super::input_mode_policy::{InputModePolicyHandle, PolicyConfigUpdate};
-use super::telemetry_banner::should_collect_ai_ugc_telemetry;
 use crate::input_classifier::InputClassifierModel;
 use crate::settings::{AISettings, AISettingsChangedEvent, InputBoxType, InputSettings};
 use crate::terminal::cli_agent_sessions::{
@@ -829,7 +828,7 @@ impl BlocklistAIInputModel {
                     );
                     if current_input_type != new_input_type {
                         let buffer_length = other_buffer_cloned.len();
-                        let input_buffer_text_for_telemetry = should_collect_ai_ugc_telemetry(
+                        let input_buffer_text_for_telemetry = (
                             ctx,
                             PrivacySettings::as_ref(ctx).is_telemetry_enabled,
                         )

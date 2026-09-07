@@ -48,10 +48,7 @@ use crate::ai::agent::{
 use crate::ai::agent_sdk::driver::harness::exit_escalation::{
     ExitEscalation, ExitEscalationAction, ExitEscalationEvent, driver_result_after_harness_run,
 };
-use crate::ai::agent_sdk::driver::harness::{
-    HarnessCleanupDisposition, HarnessKind, HarnessRunner, ResumePayload, SavePoint,
-    ThirdPartyHarness, ThirdPartyHarnessTelemetryEvent, harness_model_env_vars, task_env_vars,
-};
+use crate::ai::agent_sdk::driver::harness::{HarnessCleanupDisposition, HarnessKind, HarnessRunner, ResumePayload, SavePoint, ThirdPartyHarness, harness_model_env_vars, task_env_vars};
 use crate::ai::agent_sdk::environment_snapshot::{
     EnvironmentSnapshot, EnvironmentSnapshotReporter,
 };
@@ -3171,10 +3168,7 @@ impl AgentDriver {
                         let _ = foreground
                             .spawn(move |_, ctx| {
                                 let event =
-                                    ThirdPartyHarnessTelemetryEvent::RuntimeErrorDetected {
-                                        harness: telemetry_harness,
-                                        pattern: telemetry_pattern,
-                                    };
+                                    
                             })
                             .await;
                         let session_status = foreground
@@ -3404,7 +3398,7 @@ impl AgentDriver {
         let harness = harness_name.to_owned();
         let _ = foreground
             .spawn(move |_, ctx| {
-                let event = ThirdPartyHarnessTelemetryEvent::ExitEscalation { harness, method };
+
             })
             .await;
     }

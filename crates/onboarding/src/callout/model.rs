@@ -2,7 +2,6 @@ use warp_errors::report_error;
 use warpui_core::{Entity, ModelContext};
 
 use crate::OnboardingIntention;
-use crate::telemetry::OnboardingEvent;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FinalState {

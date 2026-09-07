@@ -163,7 +163,7 @@ impl OnboardingMainView {
         ctx: &mut ViewContext<Self>,
     ) {
         match event {
-            AgentOnboardingEvent::ThemeSelected { theme_name } => {
+            Agent=> {
                 let theme = match theme_name.as_str() {
                     "Phenomenon" => phenomenon(),
                     "Dark" => dark_theme(),
@@ -176,33 +176,26 @@ impl OnboardingMainView {
                     appearance.set_theme(theme, ctx);
                 });
             }
-            AgentOnboardingEvent::OnboardingCompleted(selected_settings) => {
+            Agent=> {
                 let finished_view = ctx.add_typed_action_view(|_| {
                     FinishedOnboardingView::new(Some(selected_settings.clone()))
                 });
                 self.state = OnboardingMainState::Finished(finished_view);
                 ctx.notify();
             }
-            AgentOnboardingEvent::OnboardingSkipped => {
+            Agent=> {
                 let finished_view =
                     ctx.add_typed_action_view(|_| FinishedOnboardingView::new(None));
                 self.state = OnboardingMainState::Finished(finished_view);
                 ctx.notify();
             }
-            AgentOnboardingEvent::OfferAiSellSatisfied { .. }
-            | AgentOnboardingEvent::OfferSetUpLaterSelected { .. } => {
+            Agent| Agent=> {
                 let finished_view =
                     ctx.add_typed_action_view(|_| FinishedOnboardingView::new(None));
                 self.state = OnboardingMainState::Finished(finished_view);
                 ctx.notify();
             }
-            AgentOnboardingEvent::SyncWithOsToggled { .. }
-            | AgentOnboardingEvent::UpgradeRequested
-            | AgentOnboardingEvent::UpgradeCopyUrlRequested
-            | AgentOnboardingEvent::UpgradePasteTokenFromClipboardRequested
-            | AgentOnboardingEvent::LoginFromWelcomeRequested
-            | AgentOnboardingEvent::PrivacySettingsFromTerminalThemeSlideRequested
-            | AgentOnboardingEvent::AppBecameActive => {
+            Agent| Agent| Agent| Agent| Agent| Agent| Agent=> {
                 // No-op in the standalone demo binary
             }
         }

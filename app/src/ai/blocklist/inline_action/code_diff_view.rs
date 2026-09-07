@@ -53,11 +53,7 @@ use crate::ai::agent::{
     AIAgentActionId, AIIdentifiers, FileEdit, RequestFileEditsResult, ServerOutputId,
 };
 use crate::ai::blocklist::RequestedEditResolution;
-use crate::ai::blocklist::action_model::{
-    AIActionStatus, BlocklistAIActionEvent, BlocklistAIActionModel,
-    EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats,
-    MalformedFinalLineProxyEvent, RequestFileEditsFormatKind, RequestFileEditsTelemetryEvent,
-};
+use crate::ai::blocklist::action_model::{AIActionStatus, BlocklistAIActionEvent, BlocklistAIActionModel, EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats, MalformedFinalLineProxyEvent, RequestFileEditsFormatKind};
 use crate::ai::blocklist::diff_storage::{
     DiffStorage, DiffStorageHelper, FileSnapshot, RegisteredDiffStorage, SaveFuture,
     UpdatedFileState,

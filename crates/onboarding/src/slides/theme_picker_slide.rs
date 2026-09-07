@@ -22,7 +22,6 @@ use super::OnboardingSlide;
 use crate::OnboardingIntention;
 use crate::model::{OnboardingStateEvent, OnboardingStateModel};
 use crate::slides::{bottom_nav, layout, slide_content};
-use crate::telemetry::OnboardingEvent;
 
 #[derive(Debug, Clone)]
 pub enum ThemePickerSlideEvent {

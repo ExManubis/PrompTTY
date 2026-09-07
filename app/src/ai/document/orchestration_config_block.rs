@@ -31,10 +31,6 @@ use crate::ai::blocklist::inline_action::orchestration_controls::{
     self as oc, AuthSecretSelection, OrchestrationConfigState, OrchestrationControlAction,
     OrchestrationEditState, OrchestrationPickerHandles,
 };
-use crate::ai::blocklist::telemetry::{
-    AgentProposedConfigEvent, BlocklistOrchestrationTelemetryEvent, OrchestrationApprovalStatus,
-    OrchestrationExecutionModeKind, OrchestrationHarnessKind, PlanConfigApprovalToggledEvent,
-};
 use crate::ai::connected_self_hosted_workers::{
     ConnectedSelfHostedWorkersEvent, ConnectedSelfHostedWorkersModel,
 };

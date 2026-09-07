@@ -610,17 +610,8 @@ impl View {
         let buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
         let filter = self.active_query_filter(ctx);
         let event = if let Some(result_type) = accepted_action_type {
-            TelemetryEvent::PaletteSearchResultAccepted {
-                result_type,
-                filter,
-                buffer_length,
-            }
-        } else {
-            TelemetryEvent::PaletteSearchExited {
-                filter,
-                buffer_length,
-            }
-        };
+            } else {
+            };
 
         self.state.clipped_scroll_state = Default::default();
         self.reset(ctx);

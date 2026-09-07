@@ -14,7 +14,6 @@ use crate::ai::{
     blocklist::{
         BlocklistAIHistoryModel,
         action_model::{
-            RecordingTelemetryEvent,
             recording_controller::{RecordingController, StopRecordingControllerError},
             recording_finalize::{FinalizeReason, finalize_recording_by_id},
         },
@@ -154,35 +153,30 @@ fn recording_stopped_telemetry(
     recording_id: &str,
     reason: FinalizeReason,
     result: &StopRecordingResult,
-) -> RecordingTelemetryEvent {
     let termination_reason = reason.telemetry_key().to_string();
     match result {
         StopRecordingResult::Success(RecordingStopped {
             duration,
             size_bytes,
             ..
-        }) => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "success".to_string(),
             duration_secs: Some(duration.as_secs_f64()),
             size_bytes: Some(*size_bytes),
             termination_reason,
         },
-        StopRecordingResult::Discarded => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "cancelled".to_string(),
             duration_secs: None,
             size_bytes: None,
             termination_reason,
         },
-        StopRecordingResult::Cancelled => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "cancelled".to_string(),
             duration_secs: None,
             size_bytes: None,
             termination_reason,
         },
-        StopRecordingResult::Error(_) => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "error".to_string(),
             duration_secs: None,

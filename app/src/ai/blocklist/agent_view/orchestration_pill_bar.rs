@@ -51,10 +51,6 @@ use crate::ai::blocklist::orchestration_topology::{
     LoadedSubtreeRollup, aggregated_orchestrator_status, child_conversations_in_pill_order,
     loaded_subtree_rollup, orchestration_root_conversation_id,
 };
-use crate::ai::blocklist::telemetry::{
-    BlocklistOrchestrationTelemetryEvent, PillBarActionKind, PillBarInteractionEvent,
-    PillBarPillKind, PillSwitchOutcome,
-};
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};
 use crate::ai::harness_display;
 use crate::features::FeatureFlag;

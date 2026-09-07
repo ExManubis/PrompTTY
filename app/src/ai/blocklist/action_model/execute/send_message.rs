@@ -18,11 +18,6 @@ use crate::ai::agent::{
 };
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::history_model::BlocklistAIHistoryModel;
-use crate::ai::blocklist::telemetry::{
-    BlocklistOrchestrationTelemetryEvent, TeamAgentCommunicationFailedEvent,
-    TeamAgentCommunicationFailureReason, TeamAgentCommunicationKind,
-    TeamAgentCommunicationTransport, TeamAgentOrchestrationVersion,
-};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::ai::{SendAgentMessageRequest, SendAgentMessageResponse};
 

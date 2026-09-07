@@ -641,29 +641,12 @@ impl SharingDialog {
         let event = match self.target.as_ref() {
             Some(ShareableObject::WarpDriveObject(id)) => {
                 match CloudModel::as_ref(ctx).get_by_uid(&id.uid()) {
-                    Some(object) => TelemetryEvent::OpenedSharingDialog(OpenedSharingDialogEvent {
-                        source,
-                        object_metadata: Some(CloudObjectTelemetryMetadata {
-                            object_type: (&object.cloud_object_type_and_id()).into(),
-                            object_uid: object.sync_id().into_server(),
-                            space: Some(object.space(ctx).into()),
-                            team_uid: match object.permissions().owner {
-                                Owner::Team { team_uid, .. } => Some(team_uid),
-                                Owner::User { .. } => None,
-                            },
-                        }),
-                        session_id: None,
-                    }),
+                    Some(object) => {}
                     None => return,
                 }
             }
             Some(ShareableObject::Session { session_id, .. }) => {
-                TelemetryEvent::OpenedSharingDialog(OpenedSharingDialogEvent {
-                    source,
-                    object_metadata: None,
-                    session_id: Some(*session_id),
-                })
-            }
+                }
             // Skip telemetry for AI conversations
             Some(ShareableObject::AIConversation(_)) => return,
             None => return,
@@ -963,14 +946,10 @@ impl SharingDialog {
         if let Some(url) = self.target.as_ref().and_then(|target| target.link(ctx)) {
             let event = match self.target {
                 Some(ShareableObject::Session { .. }) => {
-                    Some(TelemetryEvent::CopiedSharedSessionLink {
-                        source: SharedSessionActionSource::SharingDialog,
-                    })
-                }
+                    None}
                 Some(ShareableObject::WarpDriveObject(_))
                 | Some(ShareableObject::AIConversation(_)) => {
-                    Some(TelemetryEvent::ObjectLinkCopied { link: url.clone() })
-                }
+                    None}
                 None => None,
             };
             if let Some(event) = event {

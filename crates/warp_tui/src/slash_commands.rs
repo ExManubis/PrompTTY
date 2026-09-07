@@ -11,12 +11,7 @@ use warp::editor::{CodeEditorModel, CodeEditorModelEvent};
 use warp::search::data_source::QueryResult;
 use warp::search::mixer::SearchMixerEvent;
 use warp::settings::{AISettings, AppEditorSettings, TuiTheme, TuiThemeSettings};
-use warp::tui_export::{
-    AcceptSlashCommandOrSavedPrompt, Appearance, ConversationSelectionHandle,
-    ParsedSlashCommandInput, SlashCommandDataSource as _, SlashCommandMixer, SlashMenuSource,
-    TelemetryEvent, TuiSlashCommandDataSource, UpdatedActiveCommands,
-    should_close_slash_command_menu_for_exact_match, slash_command_query, slash_commands,
-};
+use warp::tui_export::{AcceptSlashCommandOrSavedPrompt, Appearance, ConversationSelectionHandle, ParsedSlashCommandInput, SlashCommandDataSource as _, SlashCommandMixer, SlashMenuSource, TuiSlashCommandDataSource, UpdatedActiveCommands, should_close_slash_command_menu_for_exact_match, slash_command_query, slash_commands};
 use warp_editor::model::CoreEditorModel;
 use warp_search_core::inline_menu::{InlineMenuResultsUpdate, InputDrivenInlineMenuLifecycle};
 use warpui::SingletonEntity;

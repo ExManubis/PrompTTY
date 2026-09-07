@@ -58,7 +58,6 @@ use crate::ai::blocklist::{
 };
 use crate::ai::llms::LLMPreferences;
 use crate::ai::skills::SkillDescriptor;
-use crate::code_review::CodeReviewTelemetryEvent;
 use crate::notebooks::NotebookId;
 use crate::persistence::ModelEvent;
 use crate::persistence::model::{
@@ -4699,7 +4698,6 @@ impl AIAgentExchange {
                         server_output_id: Some(server_output_id),
                         api_metadata_bytes: None,
                         suggestions: None,
-                        telemetry_events: vec![],
                         model_info: None,
                         request_cost: None,
                     }));

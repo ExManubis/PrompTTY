@@ -12,7 +12,6 @@ use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessA
 use crate::terminal::model::session::active_session::ActiveSession;
 #[cfg(not(target_family = "wasm"))]
 use crate::{
-    TelemetryEvent,
     ai::{
         agent::{AIAgentAction, AIAgentActionResultType, CallMCPToolResult},
         blocklist::{BlocklistAIPermissions, action_model::AIAgentActionType},

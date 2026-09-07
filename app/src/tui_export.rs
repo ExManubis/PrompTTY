@@ -97,11 +97,6 @@ pub use crate::ai::blocklist::orchestration_topology::{
     orchestration_root_conversation_id, orchestrator_agent_id_for_conversation,
     resolve_orchestration_participant,
 };
-pub use crate::ai::blocklist::telemetry::{
-    BlocklistOrchestrationTelemetryEvent, OrchestrationEnteredEvent, OrchestrationEntrySource,
-    PillBarActionKind, PillBarInteractionEvent, PillBarPillKind, PillSwitchOutcome,
-    RunAgentsCardDecision, run_agents_card_decision_event,
-};
 pub use crate::ai::blocklist::view_util::{
     FAILED_OUTPUT_USAGE_NOTICE_TEXT, FailedOutputPresentation, failed_output_presentation,
     format_credits, should_show_failed_output_usage_notice,

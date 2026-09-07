@@ -22,7 +22,6 @@ use warpui_core::{
 };
 
 use super::OnboardingSlide;
-use crate::OnboardingEvent;
 use crate::model::OnboardingStateModel;
 
 #[derive(Clone, Debug)]

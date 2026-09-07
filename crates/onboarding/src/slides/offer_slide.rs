@@ -23,7 +23,6 @@ use super::OnboardingSlide;
 use super::upgrade_auth_prompt::render_upgrade_auth_prompt_bar;
 use crate::model::OnboardingStateModel;
 use crate::slides::{layout, slide_content};
-use crate::telemetry::OnboardingEvent;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OfferVariant {

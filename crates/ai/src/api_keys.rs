@@ -23,10 +23,6 @@ pub use crate::geap_credentials::{
     GEAP_MINT_FAILURE_COOLDOWN, GEAP_REFRESH_LEAD_TIME, GeapCredentials, GeapCredentialsState,
     GeapFederation, GeapMintBinding, LoadGeapCredentialsError,
 };
-use crate::telemetry::{
-    AITelemetryEvent, ProviderCredentialTelemetryAction, ProviderCredentialTelemetryKind,
-    ProviderCredentialTelemetryProvider,
-};
 
 const SECURE_STORAGE_KEY: &str = "AiApiKeys";
 const CUSTOM_ENDPOINT_KEYS_SECURE_STORAGE_KEY: &str = "AiCustomEndpointKeys";

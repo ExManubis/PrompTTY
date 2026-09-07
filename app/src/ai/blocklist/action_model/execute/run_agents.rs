@@ -25,9 +25,6 @@ use crate::ai::agent::{
     AIAgentAction, AIAgentActionId, AIAgentActionResultType, AIAgentActionType, AIAgentInput,
     StartAgentExecutionMode,
 };
-use crate::ai::blocklist::telemetry::{
-    BlocklistOrchestrationTelemetryEvent, run_agents_completed_event,
-};
 use crate::ai::blocklist::{BlocklistAIHistoryModel, BlocklistAIPermissions};
 use crate::ai::document::plan_publication::{
     prepare_plan_publications, wait_for_plan_publications,

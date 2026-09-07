@@ -490,7 +490,6 @@ use crate::terminal::view::ssh_remote_server_failed_banner::{
 use crate::terminal::view::ssh_tmux_deprecation_banner::{
     SshTmuxDeprecationBanner, SshTmuxDeprecationBannerEvent,
 };
-use crate::terminal::view::telemetry::PromptSuggestionFallbackReason;
 use crate::terminal::view::zero_state_block::TerminalViewZeroStateBlock;
 use crate::terminal::warpify::SubshellSource;
 use crate::terminal::warpify::render::render_subshell_separator;
@@ -10060,7 +10059,6 @@ impl TerminalView {
         title: &str,
         lowercase_title: &str,
         warpify_keybinding: Option<Keystroke>,
-        telemetry_event: TelemetryEvent,
         ctx: &mut ViewContext<Self>,
     ) {
         if FeatureFlag::WarpifyFooter.is_enabled() {
@@ -27010,7 +27008,7 @@ impl TypedActionView for TerminalView {
                     "Subshell",
                     "subshell",
                     warpify_keybinding,
-                    TelemetryEvent::ShowSubshellBanner,
+                    
                     ctx,
                 );
             }
@@ -28787,12 +28785,7 @@ impl Drop for TerminalView {
             let task = self.background_executor.spawn(async move {
                 if let Err(error) = server_api
                     .send_telemetry_event(
-                        TelemetryEvent::SessionAbandonedBeforeBootstrap {
-                            pending_shell,
-                            has_pending_ssh_session,
-                            was_ever_visible,
-                            duration_since_start,
-                        },
+                        
                         privacy_settings_snapshot,
                     )
                     .await

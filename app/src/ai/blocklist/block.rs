@@ -84,7 +84,6 @@ use super::inline_action::requested_command_attribution::is_command_copied_from_
 use super::permissions::is_agent_mode_autonomy_allowed;
 use super::suggested_agent_mode_workflow_modal::SuggestedAgentModeWorkflowAndId;
 use super::suggested_rule_modal::SuggestedRuleAndId;
-use super::telemetry_banner::should_collect_ai_ugc_telemetry;
 use super::{
     BlocklistAIActionModel, BlocklistAIController, BlocklistAIHistoryEvent,
     BlocklistAIHistoryModel, BlocklistAIPermissions, ResponseStreamId,
@@ -161,7 +160,6 @@ use crate::cloud_object::model::persistence::CloudModel;
 use crate::code::editor::comment_editor::create_readonly_comment_markdown_editor;
 use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEditorView};
 use crate::code::editor_management::CodeSource;
-use crate::code_review::CodeReviewTelemetryEvent;
 use crate::code_review::comment_rendering::{CommentViewCard, HeaderClickHandler};
 use crate::code_review::comments::{
     AttachedReviewComment, CommentId, CommentOrigin, attach_pending_imported_comments,

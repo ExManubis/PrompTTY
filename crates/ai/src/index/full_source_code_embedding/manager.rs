@@ -18,7 +18,6 @@ cfg_if::cfg_if! {
         use watcher::{BulkFilesystemWatcher, BulkFilesystemWatcherEvent};
         use warpui_core::r#async::Timer;
         use warp_errors::report_if_error;
-        use crate::telemetry::AITelemetryEvent;
         use instant::Instant;
         use warp_core::channel::ChannelState;
         use warp_core::safe_warn;

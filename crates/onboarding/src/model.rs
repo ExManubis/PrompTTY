@@ -3,7 +3,6 @@ use warpui_core::{Entity, ModelContext};
 
 use crate::OnboardingIntention;
 use crate::slides::{AgentAutonomy, AgentDevelopmentSettings, OfferVariant, OnboardingModelInfo};
-use crate::telemetry::OnboardingEvent;
 
 /// UI customization settings chosen during the "Customize your UI" onboarding slide.
 #[derive(Clone, Debug)]

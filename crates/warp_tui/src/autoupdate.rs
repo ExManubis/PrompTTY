@@ -598,13 +598,8 @@ impl TuiAutoupdater {
         self.last_reported_outcome = Some(kind);
 
         let event = match result {
-            Ok(outcome) => TuiAutoupdateTelemetryEvent::CheckCompleted {
-                outcome: kind,
-                version: outcome.version().map(ToOwned::to_owned),
-            },
-            Err(error) => TuiAutoupdateTelemetryEvent::CheckFailed {
-                error: format!("{error:#}"),
-            },
+            Ok(outcome) => {}
+            Err(error) => {}
         };
     }
 }

@@ -220,8 +220,6 @@ use url::Url;
 pub use warp_core::r#async::debounce;
 use warp_core::execution_mode::{AppExecutionMode, ExecutionMode};
 // Re-export the send_telemetry_from_ctx macro at the crate root level
-pub use warp_core::send_telemetry_from_app_ctx;
-pub use warp_core::send_telemetry_from_ctx;
 // Re-export the safe logging macros at the crate root level for backwards compatibility
 pub use warp_core::{safe_debug, safe_error, safe_info, safe_warn};
 use warp_errors::{report_error, report_if_error};
@@ -1778,13 +1776,7 @@ pub(crate) fn initialize_app(
                 timer.mark_interval_end("FIRST_FRAME_DRAWN");
                 timer.compute_stats()
             });
-            let event = TelemetryEvent::AppStartup(AppStartupInfo {
-                is_session_restoration_on: user_defaults_on_startup.should_restore_session,
-                is_screen_reader_enabled,
-                from_relaunch,
-                is_crash_reporting_enabled,
-                timing_data,
-            });
+            let event = 
 
             GPUState::handle(ctx).update(ctx, |gpu_state, ctx| {
                 gpu_state

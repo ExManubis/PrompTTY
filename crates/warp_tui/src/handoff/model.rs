@@ -13,16 +13,7 @@ use chrono::Local;
 use futures::channel::oneshot;
 use parking_lot::FairMutex;
 use warp::settings::{AISettings, PrivacySettings, PrivacySettingsChangedEvent};
-use warp::tui_export::{
-    AIConversationId, AISettingsChangedEvent, AttachmentInput, BlocklistAIContextModel,
-    BlocklistAIController, BlocklistAIHistoryModel, CloudAgentTelemetryEvent,
-    CloudEnvironmentCatalog, HandoffCommitOutcome, HandoffEntryPoint, HandoffLaunchAttachments,
-    HandoffPrepareError, HandoffPrepareInput, HandoffRestoration, HandoffSurface, LLMId,
-    LLMPreferences, LLMPreferencesEvent, OptionRow, OptionSnapshot, OptionSourceStatus,
-    PendingCloudLaunch, PendingHandoff, ServerApiProvider, SnapshotUploadTarget, TerminalModel,
-    UserWorkspaces, UserWorkspacesEvent, execute_handoff, handoff_dispatch_error,
-    oz_model_snapshot, prepare_handoff, suggest_handoff_environment,
-};
+use warp::tui_export::{AIConversationId, AISettingsChangedEvent, AttachmentInput, BlocklistAIContextModel, BlocklistAIController, BlocklistAIHistoryModel, CloudEnvironmentCatalog, HandoffCommitOutcome, HandoffEntryPoint, HandoffLaunchAttachments, HandoffPrepareError, HandoffPrepareInput, HandoffRestoration, HandoffSurface, LLMId, LLMPreferences, LLMPreferencesEvent, OptionRow, OptionSnapshot, OptionSourceStatus, PendingCloudLaunch, PendingHandoff, ServerApiProvider, SnapshotUploadTarget, TerminalModel, UserWorkspaces, UserWorkspacesEvent, execute_handoff, handoff_dispatch_error, oz_model_snapshot, prepare_handoff, suggest_handoff_environment};
 use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 
 /// Editable selector pages in their handoff configuration order.

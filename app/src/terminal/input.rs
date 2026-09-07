@@ -9530,11 +9530,7 @@ impl Input {
     // TODO - Implement PageUp functionality for input suggestions menu
     fn editor_page_up(&mut self, ctx: &mut ViewContext<Self>) {
         let event = self.editor.read(ctx, |editor, ctx| {
-            TelemetryEvent::PageUpDownInEditorPressed {
-                is_empty_editor: editor.is_empty(ctx),
-                is_down: false,
-            }
-        });
+            });
         if self.suggestions_mode_model.as_ref(ctx).is_visible() {
             self.editor
                 .update(ctx, |input, ctx| input.move_page_up(ctx));
@@ -9853,11 +9849,7 @@ impl Input {
     // TODO - Implement PageDown functionality for input suggestions menu
     fn editor_page_down(&mut self, ctx: &mut ViewContext<Self>) {
         let event = self.editor.read(ctx, |editor, ctx| {
-            TelemetryEvent::PageUpDownInEditorPressed {
-                is_empty_editor: editor.is_empty(ctx),
-                is_down: true,
-            }
-        });
+            });
         if self.suggestions_mode_model.as_ref(ctx).is_visible() {
             self.editor
                 .update(ctx, |input, ctx| input.move_page_down(ctx));

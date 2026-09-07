@@ -105,7 +105,6 @@ pub(crate) fn add_test_action_model_and_events(
     if !app.read(|ctx| ctx.has_singleton_model::<Appearance>()) {
         app.add_singleton_model(|_| Appearance::mock());
     }
-    if !app.read(|ctx| ctx.has_singleton_model::<warp_core::telemetry::TelemetryContextModel>()) {
     }
     add_test_semantic_selection(app);
     // Read as a singleton by the action model's executors.

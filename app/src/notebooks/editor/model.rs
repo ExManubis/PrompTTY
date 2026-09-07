@@ -41,7 +41,6 @@ use warpui::{
     AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity, WindowId,
 };
 
-use super::super::telemetry::SelectionMode as TelemetrySelectionMode;
 use super::NotebookWorkflow;
 use super::embedding_model::NotebookEmbed;
 use super::interaction_state_model::InteractionStateModel;
