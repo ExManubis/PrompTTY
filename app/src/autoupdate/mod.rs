@@ -1119,6 +1119,7 @@ pub fn is_incoming_version_past_current(version: Option<&str>) -> bool {
 
 /// Returns the base URL that contains release assets for the given version
 /// of this app bundle.
+#[cfg_attr(target_family = "wasm", allow(dead_code))]
 fn release_assets_directory_url(channel: Channel, version: &str) -> String {
     unreachable!("{channel} autoupdate not supported (version {version})");
 }

@@ -59,6 +59,7 @@ use crate::workspace::{
     PaneViewLocator, TabBarDropTargetData, TabBarLocation, TabContextMenuAnchor, WorkspaceAction,
 };
 
+#[cfg_attr(target_family = "wasm", allow(dead_code))]
 pub const TAB_BAR_BORDER_HEIGHT: f32 = 1.0;
 pub(crate) const TAB_INDICATOR_HEIGHT: f32 = 14.0;
 const TAB_SHORTCUT_HINT_REVEAL_DELAY: Duration = Duration::from_millis(750);
