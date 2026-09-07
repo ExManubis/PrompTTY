@@ -14,6 +14,11 @@ pub(crate) mod queued_prompts_panel;
 #[path = "view/queued_prompts_tests.rs"]
 mod queued_prompts_tests;
 use ai::agent::action::InsertReviewComment;
+use crate::shared_enums::AgentModeRewindEntrypoint;
+use crate::code_review::CodeReviewPaneEntrypoint;
+use crate::shared_enums::PromptSuggestionFallbackReason;
+use crate::shared_enums::PromptSuggestionViewType;
+use crate::shared_enums::ToggleBlockFilterSource;
 pub use load_ai_conversation::ConversationRestorationInNewPaneType;
 // TODO(advait): if we align on prompt suggestions banner in Input, move code out of inline_banner mod.
 pub(crate) mod init_environment;
@@ -7511,14 +7516,7 @@ impl TerminalView {
 
                 let workflow_telem_metadata = associated_workflow.map(|workflow| {
                     let workflow_data = &workflow.model().data;
-                    WorkflowTelemetryMetadata {
-                        workflow_source: workflow.space(ctx).into(),
-                        workflow_categories: workflow_data.tags().cloned(),
-                        workflow_selection_source: WorkflowSelectionSource::AgentMode,
-                        workflow_id: workflow.sync_id().into_server().map(Into::into),
-                        workflow_space: Some(workflow.space(ctx).into()),
-                        enum_ids: workflow_data.get_server_enum_ids(),
-                    }
+                    (),
                 });
 
                 let agent_metadata =

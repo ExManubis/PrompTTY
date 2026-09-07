@@ -9,6 +9,7 @@ use warp_errors::report_error;
 use warpui::elements::{
     ClippedScrollStateHandle, Container, Element, Flex, MouseStateHandle, ParentElement, Text,
 };
+use crate::code_review::GitDialogStatus;
 use warpui::{SingletonEntity, ViewContext};
 
 use crate::code_review::git_dialog::{

@@ -35,6 +35,8 @@ use model::AIBlockOutputStatus;
 use parking_lot::{FairMutex, Mutex, RwLock};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
+use crate::shared_enums::AgentModeRewindEntrypoint;
+use crate::code_review::CodeReviewPaneEntrypoint;
 pub use pending_user_query_block::{PendingUserQueryBlock, PendingUserQueryBlockEvent};
 #[cfg(not(target_family = "wasm"))]
 use repo_metadata::repositories::DetectedRepositories;
@@ -2905,7 +2907,7 @@ impl AIBlock {
         let surfaced_citations = output
             .citations
             .iter()
-            .filter_map(|citation| citation.for_telemetry(ctx))
+            .filter_map(|_citation| None::<()> )
             .collect_vec();
         if !surfaced_citations.is_empty() {
         }
@@ -6580,8 +6582,7 @@ impl TypedActionView for AIBlock {
                     .status(ctx)
                     .output_to_render()
                     .and_then(|output| output.get().server_output_id.clone());
-                if let Some(citation) = citation.for_telemetry(ctx) {
-                }
+                
             }
             AIBlockAction::OpenAIFactCollection => {
                 ctx.emit(AIBlockEvent::OpenAIFactCollection { sync_id: None });

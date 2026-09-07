@@ -33,6 +33,9 @@ use warpui::clipboard::ClipboardContent;
 use warpui::elements::new_scrollable::{
     NewScrollable, NewScrollableElement, ScrollableAppearance, SingleAxisConfig,
 };
+use crate::code_review::CodeReviewContextDestination;
+use crate::code_review::DiffSetContextScope;
+use crate::shared_enums::PaneStateChange;
 use warpui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ConstrainedBox,
     Container, CornerRadius, CrossAxisAlignment, DEFAULT_UI_LINE_HEIGHT_RATIO, DispatchEventResult,

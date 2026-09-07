@@ -3,6 +3,7 @@ use warpui::AppContext;
 use warpui::keymap::{
     BindingDescription, ContextPredicate, EditableBinding, FixedBinding, PerPlatformKeystroke,
 };
+use crate::shared_enums::ToggleBlockFilterSource;
 use warpui::platform::OperatingSystem;
 use warpui::units::IntoLines;
 

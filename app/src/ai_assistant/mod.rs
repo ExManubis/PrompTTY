@@ -11,6 +11,7 @@ use warp_graphql::ai::{
     RequestLimitInfo as RequestLimitInfoGraphql,
     RequestLimitRefreshDuration as RequestLimitRefreshDurationGraphql,
 };
+use crate::shared_enums::OpenedWarpAISource;
 use warp_graphql::mutations::generate_commands::{GenerateCommandsFailureType, GeneratedCommand};
 
 use crate::ai::{RequestLimitInfo, RequestLimitRefreshDuration};

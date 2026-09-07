@@ -14,6 +14,7 @@ use warpui::elements::{
     CrossAxisAlignment, Element, Empty, Expanded, Flex, Highlight, HighlightedRange,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
 };
+use crate::ai::agent_management::setup_guide_step::SetupGuideStep;
 use warpui::fonts::{Properties, Weight};
 use warpui::prelude::ChildView;
 use warpui::text_layout::TextStyle;

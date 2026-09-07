@@ -16,6 +16,7 @@ use warpui::elements::{
     CrossAxisAlignment, Element, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
     MouseStateHandle, ParentElement, Radius, ScrollbarWidth, Text,
 };
+use crate::code_review::GitDialogStatus;
 use warpui::platform::Cursor;
 
 use crate::code::editor::{add_color, remove_color};

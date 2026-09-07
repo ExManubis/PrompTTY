@@ -90,6 +90,60 @@ impl PtySpawnHooks for AppPtySpawnHooks {
     fn spawned(&self, _mode: PtySpawnMode, _ctx: &mut AppContext) {}
 }
 
+/// Owns a local terminal session: the terminal model, PTY event loop, PTY
+/// controller, and a terminal surface.
+///
+/// Holds onto data that needs to live as long as the session does (e.g. the
+/// event loop join handle).
+pub struct TerminalManager<S> {
+    event_loop_tx: Arc<Mutex<mio_channel::Sender<Message>>>,
+    /// This is an `Option` so that we can take ownership of the inner
+    /// `JoinHandle` in `TerminalManager::drop`.
+    event_loop_handle: Option<JoinHandle<()>>,
+    pub(super) model: Arc<FairMutex<TerminalModel>>,
+    pub(super) view: ViewHandle<S>,
+
+    /// The manager is responsible for managing the lifetime
+    /// of the terminal attributes poller. None if the event loop has not yet started.
+    #[cfg(unix)]
+    #[allow(dead_code)]
+    terminal_attributes_poller: Option<ModelHandle<TerminalAttributesPoller>>,
+
+    /// The manager is responsible for managing the lifetime
+    /// of the PTY controller.
+    pty_controller: ModelHandle<PtyController>,
+
+    /// The manager is responsible for managing the lifetime of the remote server controller.
+    remote_server_controller: ModelHandle<RemoteServerController>,
+
+    /// The process ID of the PTY. Purely used for integration tests. None if the PTY has not yet
+    /// been started.
+    #[cfg(feature = "integration_tests")]
+    pub(super) pid: Option<u32>,
+
+    /// An inactive receiver for PTY reads that we can upgrade to an active
+    /// receiver as needed. We prefer to not create active receivers eagerly
+    /// to avoid unnecessary allocations of data coming from the PTY (high throughput).
+    /// Note that we need to hold onto the inactive receiver so that the channel isn't closed prematurely.
+    inactive_pty_reads_rx: InactiveReceiver<Arc<Vec<u8>>>,
+
+    /// The sharer side of the session sharing protocol. [`Some`] only when a
+    /// shared session connection is ongoing.
+    pub(super) session_sharer: Rc<RefCell<Option<ModelHandle<Network>>>>,
+}
+
+/// Shared inputs needed to construct a terminal surface for a local PTY.
+pub struct TerminalSurfaceInit {
+    pub wakeups_rx: async_channel::Receiver<()>,
+    pub model_events: ModelHandle<ModelEventDispatcher>,
+    pub model: Arc<FairMutex<TerminalModel>>,
+    pub sessions: ModelHandle<Sessions>,
+    pub size_info: SizeInfo,
+    pub colors: ColorList,
+    pub inactive_pty_reads_rx: InactiveReceiver<Arc<Vec<u8>>>,
+}
+
+
 /// A newly constructed terminal surface and its manager post-wiring callback.
 pub struct TerminalSurfaceResult<S, PostWire> {
     pub surface: ViewHandle<S>,

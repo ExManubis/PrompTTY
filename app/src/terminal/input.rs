@@ -64,6 +64,10 @@ use warp_completer::completer::{
     ExplicitTabCompletion, MatchStrategy, MatchType, PathSeparators, PreparedSuggestion,
     SuggestionResults,
 };
+use crate::shared_enums::AICommandSearchEntrypoint;
+use crate::shared_enums::AgentModeAutoDetectionFalsePositivePayload;
+use crate::shared_enums::CommandXRayTrigger;
+use crate::shared_enums::QueuedPromptSendNowTrigger;
 use warp_completer::meta::{HasSpan, Span, Spanned};
 use warp_completer::parsers::LiteCommand;
 use warp_completer::parsers::simple::command_at_cursor_position;
@@ -8593,14 +8597,7 @@ impl Input {
                 if let Some(env_vars_id) = env_vars {
                     let env_vars_object =
                         CloudModel::as_ref(ctx).get_env_var_collection(env_vars_id);
-                    let telemetry_metadata = EnvVarTelemetryMetadata {
-                        object_id: env_vars_id.into_server().map(Into::into),
-                        team_uid: env_vars_object
-                            .and_then(|object| object.permissions.owner.into()),
-                        space: env_vars_object
-                            .map_or(Space::Personal, |object| object.space(ctx))
-                            .into(),
-                    };
+                    let telemetry_metadata = (),;
                 }
             }
         }

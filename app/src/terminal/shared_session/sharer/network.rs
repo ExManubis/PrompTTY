@@ -863,7 +863,7 @@ impl Network {
                         selection: network.cached_latest_state.selection.clone(),
                         init_block_id: config.init_block_id.into(),
                         input_replica_id: config.input_replica_id.into(),
-                        telemetry_context: Some(TelemetryContext(telemetry_context().as_value())),
+                        telemetry_context: None,
                         universal_developer_input_context: Some(UniversalDeveloperInputContext {
                             selected_model: Some(SelectedAgentModel::new(config.selected_model_id)),
                             ..universal_developer_input_context

@@ -8,6 +8,7 @@ use ai::diff_validation::{
     DiffDelta, DiffType, ParsedDiff, SearchAndReplace, V4AHunk, fuzzy_match_diffs,
     fuzzy_match_v4a_diffs, parse_line_numbers,
 };
+use crate::code_review::CodeReviewPaneEntrypoint;
 use anyhow::Result;
 use futures::FutureExt;
 use futures::future::BoxFuture;

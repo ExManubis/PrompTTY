@@ -4,6 +4,9 @@ use std::path::PathBuf;
 
 use ai::skills::SkillReference;
 use command_corrections::Correction;
+use crate::shared_enums::AgentModeRewindEntrypoint;
+use crate::code_review::CodeReviewPaneEntrypoint;
+use crate::shared_enums::ToggleBlockFilterSource;
 pub use onboarding::OnboardingIntention;
 use pathfinder_geometry::vector::Vector2F;
 use session_sharing_protocol::common::Role;

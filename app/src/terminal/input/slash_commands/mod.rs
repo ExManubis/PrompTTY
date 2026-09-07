@@ -8,6 +8,7 @@ pub(super) mod view;
 use std::path::PathBuf;
 
 use ai::skills::SkillReference;
+use crate::code_review::CodeReviewPaneEntrypoint;
 pub use cloud_mode_v2_view::{CloudModeV2SlashCommandView, Section as CloudModeV2Section};
 pub use data_source::*;
 pub use mixer::{SlashCommandMixer, build_slash_command_mixer, slash_command_query};

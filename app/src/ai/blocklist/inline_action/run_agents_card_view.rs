@@ -22,6 +22,7 @@ use warpui::{
     ViewHandle,
 };
 
+use crate::ai::blocklist::analytics_kinds::RunAgentsCardDecision;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIAgentActionId, AIAgentActionResultType, icons};
 use crate::ai::blocklist::action_model::{
@@ -749,15 +750,6 @@ impl RunAgentsCardView {
         let Some(conversation_id) = self.block_model.conversation_id(ctx) else {
             return;
         };
-        let event = run_agents_card_decision_event(
-            conversation_id,
-            (!self.card.plan_id.is_empty()).then(|| self.card.plan_id.clone()),
-            decision,
-            self.card.agent_run_configs.len(),
-            &self.orchestration_edit_state.orchestration_config_state,
-            &self.original_tool_call_request,
-            self.active_config.as_ref(),
-        );
     }
 
     /// Auto-pops the create-key modal once per card per harness/mode

@@ -1,4 +1,4 @@
-pub use warp_terminal::local_tty::PtySpawnMode;
+pub use warp_terminal::local_tty::spawner::PtySpawnMode;
 
 use serde::{Deserialize, Serialize};
 
@@ -348,4 +348,45 @@ pub enum VerticalTabsChipEntrypoint {
     Tab,
     /// The chip was rendered inside the detail sidecar that appears on row hover.
     DetailsSidecar,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub enum AICommandSearchEntrypoint {
+    ShortHandTrigger,
+    Keybinding,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AgentModeAutoDetectionFalsePositivePayload {
+    /// Payload includes input text for dogfood channels.
+    InternalDogfoodUsers { input_text: String },
+
+    /// Do not include the misclassified input text in stable channels due to privacy concerns.
+    ExternalUsers,
+}
+
+
+#[derive(Clone, Copy, Debug, Serialize)]
+pub enum PaneStateChange {
+    /// Pane was minimized.
+    #[serde(rename = "minimized")]
+    Minimized,
+    /// Pane was maximized.
+    #[serde(rename = "maximized")]
+    Maximized,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum PromptChoice {
+    PS1,
+    Default,
+    Custom { builtin_chips: Vec<String> },
+}
+
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WorktreeBranchNamingMode {
+    Auto,
+    Manual,
 }

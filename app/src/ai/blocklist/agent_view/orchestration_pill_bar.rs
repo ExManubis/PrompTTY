@@ -35,6 +35,7 @@ use warpui::{
     ViewHandle,
 };
 
+use crate::ai::blocklist::analytics_kinds::{PillBarActionKind, PillBarPillKind, PillSwitchOutcome};
 use crate::ai::agent::conversation::{
     AIConversation, AIConversationId, ConversationStatus, StatusColorStyle,
 };

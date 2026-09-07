@@ -50,8 +50,6 @@ impl CustomSecretRegexUpdater {
             .user_secret_regex_list
             .iter()
             .map(CustomSecretRegex::pattern);
-
-        update_telemetry_secrets_regex(user_secrets, enterprise_secrets);
     }
 }
 

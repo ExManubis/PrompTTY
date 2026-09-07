@@ -72,3 +72,50 @@ pub enum CodeReviewContextDestination {
     #[serde(rename = "rich_input")]
     RichInput,
 }
+
+#[derive(Clone, Copy, Debug, Serialize)]
+#[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
+pub enum DiffSetContextScope {
+    /// Attach the full diff set for the current review.
+    #[serde(rename = "all")]
+    All,
+    /// Attach the diff set for a single file.
+    #[serde(rename = "file")]
+    File,
+}
+
+#[derive(Clone, Copy, Debug, Serialize)]
+pub enum GitDialogStatus {
+    /// User confirmed the dialog and the underlying git operation succeeded.
+    #[serde(rename = "succeeded")]
+    Succeeded,
+    /// User confirmed the dialog and the underlying git operation failed.
+    #[serde(rename = "failed")]
+    Failed,
+    /// User cancelled the dialog (ESC / close button / cancel button) before
+    /// the async op ran.
+    #[serde(rename = "cancelled")]
+    Cancelled,
+}
+
+#[derive(Clone, Copy, Debug, Serialize)]
+pub enum GitOperationKind {
+    /// Commit dialog with the commit-only intent.
+    #[serde(rename = "commit_only")]
+    CommitOnly,
+    /// Commit dialog with the commit-and-push intent.
+    #[serde(rename = "commit_and_push")]
+    CommitAndPush,
+    /// Commit dialog with the commit-and-create-PR intent.
+    #[serde(rename = "commit_and_create_pr")]
+    CommitAndCreatePr,
+    /// Standalone push dialog.
+    #[serde(rename = "push")]
+    Push,
+    /// Standalone publish dialog (push that also sets upstream).
+    #[serde(rename = "publish")]
+    Publish,
+    /// Standalone create-PR dialog.
+    #[serde(rename = "create_pr")]
+    CreatePr,
+}

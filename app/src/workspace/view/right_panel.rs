@@ -14,6 +14,7 @@ use warpui::elements::{
     PositionedElementAnchor, Resizable, ResizableStateHandle, Shrinkable, Text,
     resizable_state_handle,
 };
+use crate::code_review::CodeReviewContextDestination;
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::EditableBinding;
 use warpui::platform::Cursor;

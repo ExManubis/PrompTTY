@@ -15,6 +15,7 @@ use warpui::elements::{
     FormattedTextElement, HighlightedHyperlink, MainAxisAlignment, MainAxisSize, ParentElement,
     Text,
 };
+use crate::shared_enums::MCPTemplateInstallationSource;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{

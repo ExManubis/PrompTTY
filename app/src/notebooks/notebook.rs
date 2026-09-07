@@ -114,10 +114,6 @@ const SAVE_PERIOD: Duration = Duration::from_secs(2);
 /// * By using a more advanced diff algorithm
 const MEANINGFUL_EDIT_THRESHOLD: usize = 30;
 
-#[cfg(not(test))]
-// Use a shorter window to make testing reasonable.
-#[cfg(test)]
-
 lazy_static! {
     // This is used to replace any backslash followed by a punctuation character with just the punctuation character.
     static ref ESCAPE_PUNCTUATION_REGEX: Regex =

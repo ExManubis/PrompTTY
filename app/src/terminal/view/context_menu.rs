@@ -1,13 +1,13 @@
 use warpui::{SingletonEntity, UpdateView};
 
+use crate::shared_enums::AgentModeRewindEntrypoint;
 use super::{
-    AIAgentExchangeId, AIConversationId, AgentModeRewindEntrypoint, AppContext,
-    BlocklistAIHistoryModel, CONTEXT_MENU_WIDTH, ClipboardContent, ContextMenuAction,
-    ContextMenuState, ContextMenuType, EntityId, FeatureFlag, ForkAIConversationParams,
-    ForkFromExchange, ForkedConversationDestination, MenuItem, MenuItemFields, RichContentLink,
-    ServerConversationToken, ServerOutputId, ShareableObject, TerminalAction, TerminalModel,
-    TerminalView, Tip, TipHint, Vector2F, ViewContext, fork_label_for_query,
-    mark_feature_used_and_write_to_user_defaults,
+    AIAgentExchangeId, AIConversationId, AppContext, BlocklistAIHistoryModel, CONTEXT_MENU_WIDTH,
+    ClipboardContent, ContextMenuAction, ContextMenuState, ContextMenuType, EntityId, FeatureFlag,
+    ForkAIConversationParams, ForkFromExchange, ForkedConversationDestination, MenuItem,
+    MenuItemFields, RichContentLink, ServerConversationToken, ServerOutputId, ShareableObject,
+    TerminalAction, TerminalModel, TerminalView, Tip, TipHint, Vector2F, ViewContext,
+    fork_label_for_query, mark_feature_used_and_write_to_user_defaults,
 };
 
 impl TerminalView {

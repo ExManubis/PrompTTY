@@ -18,6 +18,7 @@ use warpui::elements::{
     Icon as IconElement, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
     ParentAnchor, ParentElement, ParentOffsetBounds, Radius, ScrollbarWidth, Stack, Text,
 };
+use crate::code_review::GitOperationKind;
 use warpui::keymap::{self, FixedBinding};
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};

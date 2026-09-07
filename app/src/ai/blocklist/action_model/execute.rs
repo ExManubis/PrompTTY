@@ -904,12 +904,6 @@ impl BlocklistAIActionExecutor {
                 });
             }
             let result = running.action.action.cancelled_result();
-            send_run_agents_completed_telemetry(
-                running.conversation_id,
-                &running.action.action,
-                &result,
-                ctx,
-            );
             ctx.emit(BlocklistAIActionExecutorEvent::FinishedAction {
                 result: Arc::new(AIAgentActionResult {
                     id: running.action.id.clone(),

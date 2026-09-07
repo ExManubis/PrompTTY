@@ -881,21 +881,6 @@ impl WorkflowView {
 
     /// Generic object telemetry metadata for the currently-open object.
     #[cfg_attr(not(target_family = "wasm"), allow(dead_code))]
-    fn telemetry_metadata(&self, ctx: &mut ViewContext<Self>) -> CloudObjectTelemetryMetadata {
-        let space = CloudModel::as_ref(ctx)
-            .get_workflow(&self.workflow_id)
-            .map(|workflow| workflow.space(ctx));
-
-        CloudObjectTelemetryMetadata {
-            object_type: TelemetryCloudObjectType::Workflow,
-            object_uid: self.workflow_id.into_server(),
-            space: space.map(Into::into),
-            team_uid: match self.owner {
-                Some(Owner::Team { team_uid, .. }) => Some(team_uid),
-                _ => None,
-            },
-        }
-    }
 
     pub fn is_team_workflow(&self) -> bool {
         matches!(self.owner, Some(Owner::Team { .. }))
