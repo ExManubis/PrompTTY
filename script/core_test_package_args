@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Print cargo `-p` / `--features` args for the core test suite.
+#
+# Core = emulator, parsers, and utilities that survive gutting Warp account,
+# telemetry, Drive, and product chrome. Not `app`, `warp_tui`, AI/cloud crates.
+#
+# Full inherited suite:
+#   cargo nextest run --workspace --exclude command-signatures-v2
+
+set -euo pipefail
+
+packages=(
+  warp_terminal
+  warp_editor
+  markdown_parser
+  warp_completer
+  warpui_core
+  persistence
+  vim
+  fuzzy_match
+  input_classifier
+  secret_redaction
+  sum_tree
+  ipynb_parser
+  settings
+  settings_value
+  warp_util
+)
+
+args=()
+for package in "${packages[@]}"; do
+  args+=(-p "$package")
+done
+# TUI element tests in warpui_core are behind this feature. Package-qualified so
+# other crates in the same invocation are not asked for a `tui` feature.
+args+=(--features warpui_core/tui)
+
+printf '%s\n' "${args[*]}"
