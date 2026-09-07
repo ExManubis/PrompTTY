@@ -43,7 +43,8 @@ use crate::palette::PaletteMode;
 use crate::root_view::RootView;
 use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::sync_queue::SyncQueue;
-use crate::server::telemetry::{PaletteSource, TelemetryEvent};
+use crate::shared_enums::PaletteSource;
+use crate::server::telemetry::TelemetryEvent;
 use crate::session_management::{RunningSessionSummary, SessionNavigationData};
 use crate::settings::{
     AISettings, CRASH_REPORTING_ENABLED_DEFAULTS_KEY, CloudPreferencesSettings, PrivacySettings,
