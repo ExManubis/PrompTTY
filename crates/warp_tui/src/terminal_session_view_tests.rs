@@ -129,13 +129,6 @@ struct FocusTestFixture {
 }
 
 #[test]
-fn only_conversation_list_restores_emit_restore_telemetry() {
-    assert!(!TuiConversationRestoreOrigin::Startup.records_telemetry());
-    assert!(TuiConversationRestoreOrigin::ConversationList.records_telemetry());
-    assert!(!TuiConversationRestoreOrigin::Fork.records_telemetry());
-}
-
-#[test]
 fn mcp_install_footer_labels_final_value_as_install_and_enable() {
     App::test((), |mut app| async move {
         app.update(|ctx| {

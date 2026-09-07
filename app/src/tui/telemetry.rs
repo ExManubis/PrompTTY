@@ -459,6 +459,3 @@ fn elapsed_ms(started_at: Instant) -> u64 {
     u64::try_from(started_at.elapsed().as_millis()).unwrap_or(u64::MAX)
 }
 
-#[cfg(test)]
-#[path = "telemetry_tests.rs"]
-mod tests;

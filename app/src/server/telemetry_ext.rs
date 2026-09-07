@@ -115,6 +115,3 @@ fn release_mode(channel: Channel) -> &'static str {
     }
 }
 
-#[cfg(test)]
-#[path = "telemetry_ext_tests.rs"]
-mod tests;

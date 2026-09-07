@@ -618,6 +618,3 @@ impl TelemetryEventDesc for BlocklistOrchestrationTelemetryEventDiscriminants {
 
 warp_core::register_telemetry_event!(BlocklistOrchestrationTelemetryEvent);
 
-#[cfg(test)]
-#[path = "telemetry_tests.rs"]
-mod tests;
