@@ -320,11 +320,6 @@ struct IncrementalUpdateResult {
     build_result: IncrementalUpdateBuildResult,
 }
 
-impl IncrementalUpdateResult {
-            }
-        }
-    }
-}
 
 enum IncrementalUpdateBuildResult {
     Success {

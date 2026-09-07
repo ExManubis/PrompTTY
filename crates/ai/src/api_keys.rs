@@ -555,36 +555,8 @@ pub struct CustomEndpointParams {
     pub models: Vec<(String, Option<String>, Option<String>)>,
     pub schema: CustomEndpointSchema,
 }
-fn provider_credential_action(is_present: bool) -> ProviderCredentialTelemetryAction {
-    if is_present {
-        ProviderCredentialTelemetryAction::Added
-    } else {
-        ProviderCredentialTelemetryAction::Removed
-    }
-}
 
-fn provider_telemetry_provider(
-    provider: LLMProvider,
-) -> Option<ProviderCredentialTelemetryProvider> {
-    match provider {
-        LLMProvider::OpenAI => Some(ProviderCredentialTelemetryProvider::OpenAi),
-        LLMProvider::Anthropic => Some(ProviderCredentialTelemetryProvider::Anthropic),
-        LLMProvider::Google => Some(ProviderCredentialTelemetryProvider::Google),
-        LLMProvider::Xai => Some(ProviderCredentialTelemetryProvider::Xai),
-        LLMProvider::Unknown => None,
-    }
-}
 
-fn send_provider_credential_telemetry(
-    provider: LLMProvider,
-    credential_kind: ProviderCredentialTelemetryKind,
-    action: ProviderCredentialTelemetryAction,
-    ctx: &mut ModelContext<ApiKeyManager>,
-) {
-    let Some(provider) = provider_telemetry_provider(provider) else {
-        return;
-    };
-}
 
 impl ApiKeyManager {
     pub fn new(ctx: &mut ModelContext<Self>) -> Self {
@@ -751,12 +723,6 @@ impl ApiKeyManager {
             self.keys = keys;
             ctx.emit(ApiKeyManagerEvent::KeysUpdated);
             if was_present != is_present {
-                send_provider_credential_telemetry(
-                    provider,
-                    ProviderCredentialTelemetryKind::PastedKey,
-                    provider_credential_action(is_present),
-                    ctx,
-                );
             }
         }
         Ok(())
@@ -802,12 +768,6 @@ impl ApiKeyManager {
         ctx.emit(ApiKeyManagerEvent::KeysUpdated);
         self.write_grok_tokens_to_secure_storage(ctx);
         if was_connected != is_connected {
-            send_provider_credential_telemetry(
-                LLMProvider::Xai,
-                ProviderCredentialTelemetryKind::Oauth,
-                provider_credential_action(is_connected),
-                ctx,
-            );
         }
     }
 
@@ -825,12 +785,6 @@ impl ApiKeyManager {
         self.write_keys_to_secure_storage(ctx);
         let is_present = provider.api_key(&self.keys).is_some();
         if was_present != is_present {
-            send_provider_credential_telemetry(
-                provider,
-                ProviderCredentialTelemetryKind::PastedKey,
-                provider_credential_action(is_present),
-                ctx,
-            );
         }
     }
 
