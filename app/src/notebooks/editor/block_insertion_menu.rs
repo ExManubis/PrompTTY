@@ -20,7 +20,7 @@ use crate::cloud_object::model::persistence::CloudModel;
 use crate::cloud_object::{ObjectIdType, Space};
 use crate::drive::CloudObjectTypeAndId;
 use crate::menu::{self, Menu, MenuItemFields};
-use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
+use crate::notebooks::types::EmbeddedObjectInfo;
 use crate::search::notebook_embedding::searcher::EmbeddingSearchItemAction;
 use crate::search::notebook_embedding::view::{EmbeddingSearchEvent, EmbeddingSearchMenu};
 use crate::server::ids::SyncId;

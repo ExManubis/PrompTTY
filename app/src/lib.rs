@@ -296,8 +296,8 @@ use crate::settings::manager::SettingsManager;
 use crate::settings::{AISettings, AccessibilitySettings, ScrollSettings, SelectionSettings};
 use crate::settings_view::DisplayCount;
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
+use crate::shared_enums::PaletteSource;
 pub use crate::shared_enums::{AgentModeEntrypoint, AgentModeEntrypointSelectionType};
-use crate::shared_enums::{CloseTarget, PaletteSource};
 use crate::suggestions::ignored_suggestions_model::IgnoredSuggestionsModel;
 use crate::system::SystemStats;
 use crate::tab::TabShortcutModifierState;
@@ -390,6 +390,7 @@ pub(crate) enum LaunchMode {
         computer_use_override: Option<bool>,
     },
     /// Run a test - this may be an integration test or an eval.
+    #[allow(dead_code)]
     Test {
         driver: Box<Option<TestDriver>>,
         is_integration_test: bool,

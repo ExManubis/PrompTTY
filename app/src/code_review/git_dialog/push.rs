@@ -109,12 +109,12 @@ pub(super) fn start_confirm(me: &mut GitDialog, ctx: &mut ViewContext<GitDialog>
 
 /// Shared push completion: toast + telemetry + close.
 pub(super) fn finish_push(
-    me: &GitDialog,
+    _me: &GitDialog,
     publish: bool,
     result: anyhow::Result<()>,
     ctx: &mut ViewContext<GitDialog>,
 ) {
-    let (status, error) = match &result {
+    let (_status, _error) = match &result {
         Ok(_) => (GitDialogStatus::Succeeded, None),
         Err(err) => (GitDialogStatus::Failed, Some(err.to_string())),
     };

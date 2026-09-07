@@ -1,6 +1,6 @@
 //! Keep-types formerly co-located with product-analytics telemetry.
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]

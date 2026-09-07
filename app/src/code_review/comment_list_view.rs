@@ -301,9 +301,6 @@ impl CommentListView {
         }
     }
 
-    fn repo_is_local(&self) -> Option<bool> {
-        self.repo_path.as_ref().map(LocalOrRemotePath::is_local)
-    }
 
     pub fn debug_state(&self, ctx: &AppContext) -> CommentListDebugState {
         let user_workspaces = UserWorkspaces::as_ref(ctx);

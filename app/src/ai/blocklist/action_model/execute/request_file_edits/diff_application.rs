@@ -179,10 +179,10 @@ fn append_fuzzy_match_failure(message: &mut String, failure: &DiffMatchFailure) 
 pub(crate) async fn apply_edits<F, Fut>(
     edits: Vec<FileEdit>,
     session_context: &SessionContext,
-    ai_identifiers: &AIIdentifiers,
-    background_executor: Arc<Background>,
-    auth_state: Arc<AuthState>,
-    passive_diff: bool,
+    _ai_identifiers: &AIIdentifiers,
+    _background_executor: Arc<Background>,
+    _auth_state: Arc<AuthState>,
+    _passive_diff: bool,
     read_file: F,
 ) -> Result<Vec<AIRequestedCodeDiff>, Vec1<DiffApplicationError>>
 where
@@ -191,57 +191,12 @@ where
 {
     let result = apply_edits_internal(edits, session_context, &read_file).await;
 
-    // Send telemetry for all diff application errors.
-
-    // Count of attempts to edit a file that doesn't exist or create a file that already exists.
-    let mut invalid_file_count = 0;
-
-    for error in result.errors.iter() {
-        match error {
-            DiffApplicationError::UnmatchedDiffs { match_failures, .. } => {}
-            DiffApplicationError::MissingFile { .. }
-            | DiffApplicationError::ReadFailed { .. }
-            | DiffApplicationError::AlreadyExists { .. }
-            | DiffApplicationError::MultipleFileCreation { .. }
-            | DiffApplicationError::MutatedDeletedFile { .. }
-            | DiffApplicationError::MultipleFileRenames { .. }
-            | DiffApplicationError::RemoteFileOperationsUnsupported => {
-                invalid_file_count += 1;
-            }
-            DiffApplicationError::EmptyDiff => {}
-        }
-    }
-
-    if invalid_file_count > 0 {}
-
-    // Send telemetry for any warnings, which don't necessarily prevent diff application.
-
-    let total_missing_line_numbers: u8 = result
-        .warnings
-        .iter()
-        .map(|warning| match warning {
-            DiffWarning::MissingLineNumbers { count, .. } => *count,
-        })
-        .sum();
-
-    if total_missing_line_numbers > 0 {}
-
     match Vec1::try_from_vec(result.errors) {
         Ok(errors) => Err(errors),
         Err(vec1::Size0Error) => Ok(result.diffs),
     }
 }
 
-/// Warnings are issues that don't necessarily prevent diff application, but indicate an unexpected
-/// response from the LLM.
-///
-/// For example, we expect the search string in a diff to include line numbers, but can rely on
-/// fuzzy matching if they're missing.
-#[derive(Debug, Clone)]
-pub enum DiffWarning {
-    /// Search blocks that are missing line numbers.
-    MissingLineNumbers { count: u8 },
-}
 
 #[derive(Default)]
 struct DiffResult {
@@ -249,8 +204,6 @@ struct DiffResult {
     diffs: Vec<AIRequestedCodeDiff>,
     /// All errors that occurred while applying diffs.
     errors: Vec<DiffApplicationError>,
-    /// All warnings that occurred while applying diffs.
-    warnings: Vec<DiffWarning>,
 }
 
 /// A pending file-creation request. Allow content replacement on existing file when
@@ -260,8 +213,7 @@ struct NewFileRequest {
     allow_overwrite: bool,
 }
 
-/// You generally want to use `apply_edits`, however, if you don't want to report telemetry or be as
-/// strict, this is available.  For example, we use this when debug importing conversations.
+/// Internal helper for applying edits. Prefer [`apply_edits`].
 async fn apply_edits_internal<F, Fut>(
     edits: Vec<FileEdit>,
     session_context: &SessionContext,
@@ -667,16 +619,6 @@ async fn apply_search_replace<F, Fut>(
                 full: ("Matching diffs for: {file_path:?}")
             );
             let fuzzy_match_diffs = fuzzy_match_diffs(&file_path, &deltas, file_content);
-
-            // Add warnings from the failure info - the `DiffMatchFailures` type includes both
-            // fatal and non-fatal errors.
-            if let Some(failures) = fuzzy_match_diffs.failures.as_ref()
-                && failures.missing_line_numbers > 0
-            {
-                result.warnings.push(DiffWarning::MissingLineNumbers {
-                    count: failures.missing_line_numbers,
-                });
-            }
 
             if fuzzy_match_diffs.warrants_failure()
                 && let Some(failures) = fuzzy_match_diffs.failures.as_ref()

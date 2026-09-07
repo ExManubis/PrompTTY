@@ -3387,11 +3387,11 @@ impl AgentDriver {
     /// reconstructable from logs.
     async fn send_harness_exit_telemetry(
         harness_name: &str,
-        method: &'static str,
+        _method: &'static str,
         foreground: &ModelSpawner<Self>,
     ) {
-        let harness = harness_name.to_owned();
-        let _ = foreground.spawn(move |_, ctx| {}).await;
+        let _harness = harness_name.to_owned();
+        let _ = foreground.spawn(move |_, _ctx| {}).await;
     }
 
     /// Configure the active terminal session with the specified profile.

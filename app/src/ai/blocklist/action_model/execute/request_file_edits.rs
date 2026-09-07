@@ -1,6 +1,5 @@
 mod apply_diff_model;
 mod diff_application;
-mod edit_events;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -8,15 +7,9 @@ use ai::diff_validation::AIRequestedCodeDiff;
 use apply_diff_model::ApplyDiffModel;
 use diff_application::DiffApplicationError;
 pub(crate) use diff_application::{FileReadResult, apply_edits};
-pub(crate) use edit_events::MalformedFinalLineProxyEvent;
-pub use edit_events::{
-    EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats,
-    RequestFileEditsFormatKind,
-};
 use futures::FutureExt;
 use futures::channel::oneshot;
 use futures::future::BoxFuture;
-use itertools::Itertools;
 #[allow(unused_imports)]
 use vec1::{Vec1, vec1};
 use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
@@ -27,9 +20,9 @@ use crate::ai::agent::{
     AIAgentAction, AIAgentActionId, AIAgentActionResultType, AIAgentActionType,
     AIAgentOutputMessage, AIAgentOutputMessageType, AIIdentifiers, RequestFileEditsResult,
 };
+use crate::ai::blocklist::BlocklistAIPermissions;
 use crate::ai::blocklist::diff_storage::RegisteredDiffStorage;
 use crate::ai::blocklist::diff_types::{DiffSessionType, FileDiff};
-use crate::ai::blocklist::{BlocklistAIPermissions, RequestedEditResolution};
 use crate::ai::paths::host_native_absolute_path;
 use crate::terminal::model::session::SessionType;
 use crate::terminal::model::session::active_session::ActiveSession;
@@ -173,20 +166,20 @@ impl RequestFileEditsExecutor {
         };
         let result_future = storage.accept_and_save(ctx);
 
-        let identifiers = self
+        let _identifiers = self
             .generate_ai_identifiers(&input.conversation_id, id, ctx)
             .unwrap_or_else(|| AIIdentifiers {
                 client_conversation_id: Some(input.conversation_id),
                 ..Default::default()
             });
-        let passive_diff = BlocklistAIHistoryModel::as_ref(ctx)
+        let _passive_diff = BlocklistAIHistoryModel::as_ref(ctx)
             .is_entirely_passive_conversation(&input.conversation_id);
 
-        ActionExecution::new_async(result_future, move |result, ctx| {
+        ActionExecution::new_async(result_future, move |result, _ctx| {
             if let RequestFileEditsResult::Success {
-                updated_files,
-                lines_added,
-                lines_removed,
+                updated_files: _,
+                lines_added: _,
+                lines_removed: _,
                 ..
             } = &result
             {}

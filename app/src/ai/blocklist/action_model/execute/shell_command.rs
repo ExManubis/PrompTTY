@@ -186,7 +186,7 @@ impl ShellCommandExecutor {
                     scope,
                     ctx,
                 );
-                if let CommandExecutionPermission::Allowed(reason) = autoexecution_permission {
+                if let CommandExecutionPermission::Allowed(_reason) = autoexecution_permission {
                 } else if let CommandExecutionPermission::Denied(reason) = autoexecution_permission
                     && AppExecutionMode::as_ref(ctx).is_autonomous()
                 {
@@ -203,7 +203,7 @@ impl ShellCommandExecutor {
                     // will be returned.
                     true
                 } else {
-                    let should_autoexecute = match blocklist_permissions.can_write_to_pty(
+                    match blocklist_permissions.can_write_to_pty(
                         &input.conversation_id,
                         Some(self.terminal_view_id),
                         scope,
@@ -215,11 +215,7 @@ impl ShellCommandExecutor {
                             .active_block()
                             .has_agent_written_to_block(),
                         _ => false,
-                    };
-
-                    if should_autoexecute {}
-
-                    should_autoexecute
+                    }
                 }
             }
             AIAgentActionType::ReadShellCommandOutput { .. } => true,

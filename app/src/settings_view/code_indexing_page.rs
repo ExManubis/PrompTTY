@@ -499,7 +499,7 @@ impl TypedActionView for CodeIndexingPageView {
 
                 CodeSettings::handle(ctx).update(ctx, |settings, ctx| {
                     match settings.codebase_context_enabled.toggle_and_save_value(ctx) {
-                        Ok(new_value) => {}
+                        Ok(_new_value) => {}
                         Err(e) => {
                             log::warn!("Failed to set value for Codebase Context: {e:?}");
                         }
@@ -511,7 +511,7 @@ impl TypedActionView for CodeIndexingPageView {
             CodeIndexingPageAction::ToggleAutoIndexing => {
                 CodeSettings::handle(ctx).update(ctx, |settings, ctx| {
                     match settings.auto_indexing_enabled.toggle_and_save_value(ctx) {
-                        Ok(new_value) => {}
+                        Ok(_new_value) => {}
                         Err(e) => {
                             log::warn!("Failed to set value for auto indexing: {e:?}");
                         }
@@ -584,7 +584,7 @@ impl TypedActionView for CodeIndexingPageView {
                 ctx.notify();
             }
             CodeIndexingPageAction::RestartLspServer { server } => {
-                let server_name = server.as_ref(ctx).server_name();
+                let _server_name = server.as_ref(ctx).server_name();
                 server.update(ctx, |server, ctx| {
                     server.restart(ctx);
                 });

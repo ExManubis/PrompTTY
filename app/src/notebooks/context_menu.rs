@@ -12,7 +12,7 @@ use super::editor::keys::custom_action_to_display;
 use super::editor::view::RichTextEditorView;
 use crate::editor::EditorView;
 use crate::menu::{self, Menu, MenuItem, MenuItemFields};
-use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
+use crate::notebooks::types::ActionEntrypoint;
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::{PaneEvent, SplitPaneState};
 use crate::util::bindings::{

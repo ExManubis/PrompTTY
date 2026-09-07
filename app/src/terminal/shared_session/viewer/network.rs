@@ -19,7 +19,7 @@ use session_sharing_protocol::common::{
     LinkAccessLevelUpdateResponse, ParticipantId, ParticipantList, ParticipantPresenceUpdate,
     RemoveGuestResponse, Role, RoleRequestId, RoleRequestResponse, Selection, SelectionUpdate,
     ServerConversationToken, SessionId, TeamAccessLevelUpdateResponse, TeamAclData,
-    TelemetryContext, UniversalDeveloperInputContext, UniversalDeveloperInputContextUpdate,
+    UniversalDeveloperInputContext, UniversalDeveloperInputContextUpdate,
     UpdatePendingUserRoleResponse, UserID, WindowSize, WriteToPtyFailureReason,
     WriteToPtyRequestId, WriteToPtySeqNo,
 };

@@ -44,7 +44,6 @@ use crate::code::language_server_shutdown_manager::LanguageServerShutdownManager
 #[cfg(feature = "local_fs")]
 use crate::persistence::ModelEvent;
 #[cfg(feature = "local_fs")]
-#[cfg(feature = "local_fs")]
 use crate::server::server_api::ServerApiProvider;
 use crate::settings::CodeSettings;
 use crate::terminal::TerminalView;
@@ -1116,7 +1115,7 @@ impl PersistedWorkspace {
 
         for server in servers {
             let workspace_root_display = workspace_root_display.clone();
-            let server_type_name = server.as_ref(ctx).server_name();
+            let _server_type_name = server.as_ref(ctx).server_name();
             ctx.subscribe_to_model(&server, move |_me, _, event, ctx| match event {
                 LspEvent::Started => {
                 }

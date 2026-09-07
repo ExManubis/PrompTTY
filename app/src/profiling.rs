@@ -89,8 +89,7 @@ pub async fn dump_heap_profile_to_disk() -> anyhow::Result<std::path::PathBuf> {
 /// `pprof` binary to fetch and symbolicate the heap profile from the local
 /// HTTP server.
 #[cfg(feature = "heap_usage_tracking")]
-pub async fn dump_jemalloc_heap_profile(memory_breakdown: serde_json::Value) {
-    let _ = memory_breakdown;
+pub async fn dump_jemalloc_heap_profile() {
     match dump_heap_profile_to_disk().await {
         Ok(path) => log::warn!(
             "Excessive memory usage detected; wrote heap profile to {}",

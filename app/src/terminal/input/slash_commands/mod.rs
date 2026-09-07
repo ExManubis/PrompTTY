@@ -124,9 +124,9 @@ pub fn should_close_slash_command_menu_for_exact_match(
 
 /// Records a static slash command accepted from either the GUI or TUI surface.
 pub fn record_static_slash_command_accepted(
-    command_name: &str,
-    is_in_agent_view: bool,
-    ctx: &mut AppContext,
+    _command_name: &str,
+    _is_in_agent_view: bool,
+    _ctx: &mut AppContext,
 ) {
 }
 
@@ -136,13 +136,13 @@ pub fn record_static_slash_command_accepted(
 /// Mirrors the `SettingsPage` and `Banner` origins used by the GUI toggle paths,
 /// but reports the toggle as originating from a TUI slash command.
 pub fn record_autodetection_toggle_from_slash_command(
-    is_autodetection_enabled: bool,
-    ctx: &mut AppContext,
+    _is_autodetection_enabled: bool,
+    _ctx: &mut AppContext,
 ) {
 }
 
 /// Records a saved prompt accepted from either the GUI or TUI slash menu.
-pub fn record_saved_prompt_accepted(is_in_agent_view: bool, ctx: &mut AppContext) {}
+pub fn record_saved_prompt_accepted(_is_in_agent_view: bool, _ctx: &mut AppContext) {}
 
 pub fn saved_prompt_text_for_id(id: &SyncId, ctx: &AppContext) -> Option<String> {
     let workflow = CloudModel::as_ref(ctx).get_workflow(id)?;

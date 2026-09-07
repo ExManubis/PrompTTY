@@ -16,22 +16,12 @@ use tracing::Instrument as _;
 use warp_cli::agent::{
     AgentCommand, AgentProfileCommand, Harness, OutputFormat, Prompt, RunAgentArgs,
 };
-use warp_cli::api_key::ApiKeyCommand;
-use warp_cli::artifact::ArtifactCommand;
 use warp_cli::environment::{EnvironmentCommand, ImageCommand};
-use warp_cli::federate::FederateCommand;
-use warp_cli::harness_support::{HarnessSupportCommand, ReportArtifactCommand, TaskStatus};
-use warp_cli::integration::IntegrationCommand;
 use warp_cli::mcp::MCPCommand;
-use warp_cli::memory_store::{MemoryCommand, MemoryStoreCommand};
 use warp_cli::model::ModelCommand;
-use warp_cli::provider::ProviderCommand;
-use warp_cli::runner::RunnerCommand;
-use warp_cli::schedule::ScheduleSubcommand;
-use warp_cli::secret::SecretCommand;
 use warp_cli::share::ShareRequest;
-use warp_cli::task::{MessageCommand, TaskCommand};
-use warp_cli::{CliCommand, GlobalOptions, OZ_HARNESS_ENV};
+use warp_cli::task::TaskCommand;
+use warp_cli::{CliCommand, GlobalOptions};
 use warp_core::features::FeatureFlag;
 use warp_errors::report_error;
 use warp_graphql::object_permissions::OwnerType;
@@ -1780,22 +1770,6 @@ fn report_fatal_error(err: anyhow::Error, ctx: &mut AppContext) {
     let error = anyhow::anyhow!(message);
     ctx.terminate_app(TerminationMode::ForceTerminate, Some(Err(error)));
 }
-
-fn resolve_orchestration_harness_label() -> &'static str {
-    let Ok(raw) = std::env::var(OZ_HARNESS_ENV) else {
-        return "unknown";
-    };
-    match Harness::parse_orchestration_harness(&raw) {
-        Some(Harness::Oz) => "oz",
-        Some(Harness::Claude) => "claude",
-        Some(Harness::OpenCode) => "opencode",
-        Some(Harness::Gemini) => "gemini",
-        Some(Harness::Codex) => "codex",
-        Some(Harness::Unknown) | None => "unknown",
-    }
-}
-
-/// Map each CLI command into a telemetry event to emit when it's executed.
 
 #[cfg(test)]
 #[path = "mod_tests.rs"]

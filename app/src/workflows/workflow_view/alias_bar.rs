@@ -18,7 +18,6 @@ use warpui::{
     ViewHandle,
 };
 
-use crate::cloud_object::CloudObject;
 use crate::editor::{
     EditOrigin, EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys,
     SingleLineEditorOptions, TextOptions, ValidInputType,
@@ -121,8 +120,6 @@ impl AliasBar {
             deleted_aliases: Default::default(),
         }
     }
-
-    /// The current workflow's space for telemetry events.
 
     fn mark_dirty(&mut self, is_dirty: bool, ctx: &mut ViewContext<Self>) {
         self.is_dirty = is_dirty;

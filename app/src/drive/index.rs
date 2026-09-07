@@ -83,7 +83,7 @@ use crate::settings::SharedObjectLimitBannerSettings;
 use crate::settings::app_installation_detection::{
     UserAppInstallDetectionSettings, UserAppInstallStatus,
 };
-use crate::shared_enums::{AnonymousUserSignupEntrypoint, SharingDialogSource};
+use crate::shared_enums::{AnonymousUserSignupEntrypoint};
 use crate::ui_components::blended_colors;
 use crate::ui_components::buttons::{highlight, icon_button};
 use crate::ui_components::icons::{ICON_DIMENSIONS, Icon};
@@ -4618,7 +4618,6 @@ impl DriveIndex {
         &mut self,
         warp_drive_item_id: &WarpDriveItemId,
         invitee_email: Option<String>,
-        source: SharingDialogSource,
         ctx: &mut ViewContext<Self>,
     ) {
         let WarpDriveItemId::Object(cloud_object_type_and_id) = warp_drive_item_id else {
@@ -4644,7 +4643,6 @@ impl DriveIndex {
                 if let Some(invitee_email) = invitee_email {
                     sharing_dialog.add_invitee_email(invitee_email, ctx);
                 }
-                sharing_dialog.report_open(source, ctx);
             });
             ctx.focus(&self.sharing_dialog);
         }
@@ -5338,7 +5336,6 @@ impl TypedActionView for DriveIndex {
                 self.toggle_share_dialog(
                     warp_drive_item_id,
                     None,
-                    SharingDialogSource::DriveIndex,
                     ctx,
                 );
             }

@@ -62,10 +62,8 @@ cfg_if::cfg_if! {
 #[cfg(feature = "local_fs")]
 use warp_errors::report_error;
 
-#[cfg(feature = "local_fs")]
-use super::DiffOperation;
 use super::{
-    BackendOrigin, CommitChainMode, DiffHunk, DiffLine, DiffLineType, DiffMetadata,
+    CommitChainMode, DiffHunk, DiffLine, DiffLineType, DiffMetadata,
     DiffMetadataAgainstBase, DiffMode, DiffState, DiffStateError, DiffStateModelEvent, DiffStats,
     FileDiff, FileDiffAndContent, FileStatusInfo, GitDiffData, GitDiffWithBaseContent,
     GitFileStatus, GitOpResult,
@@ -199,7 +197,6 @@ pub struct LocalDiffStateModel {
     #[cfg(feature = "local_fs")]
     subscriber_id: Option<SubscriberId>,
     state: InternalDiffState,
-    backend_origin: BackendOrigin,
     mode: DiffMode,
     metadata: Option<DiffMetadata>,
     computing_diffs_abort_handle: Option<SpawnedFutureHandle>,
@@ -229,8 +226,7 @@ impl LocalDiffStateModel {
     #[cfg(feature = "local_fs")]
     pub fn new(
         repo_path: Option<String>,
-        backend_origin: BackendOrigin,
-        ctx: &mut ModelContext<Self>,
+            ctx: &mut ModelContext<Self>,
     ) -> Self {
         // Set up file invalidation queue and subscribe to results
         // so the model can emit SingleFileUpdated events.
@@ -272,7 +268,6 @@ impl LocalDiffStateModel {
             },
             subscriber_id: None,
             mode: DiffMode::default(),
-            backend_origin,
             metadata: None,
             computing_diffs_abort_handle: None,
             computing_metadata_abort_handle: None,
@@ -316,12 +311,10 @@ impl LocalDiffStateModel {
     #[cfg(not(feature = "local_fs"))]
     pub fn new(
         _repo_path: Option<String>,
-        backend_origin: BackendOrigin,
         _ctx: &mut ModelContext<Self>,
     ) -> Self {
         Self {
             state: InternalDiffState::default(),
-            backend_origin,
             mode: DiffMode::default(),
             metadata: None,
             computing_diffs_abort_handle: None,
@@ -1664,7 +1657,7 @@ impl LocalDiffStateModel {
                 .take()
                 .map(|start| start.elapsed()),
             Err(e) => {
-                let load_duration = self
+                let _load_duration = self
                     .tracked_diff_load_start_time
                     .take()
                     .map(|start| start.elapsed());
@@ -2979,7 +2972,6 @@ impl LocalDiffStateModel {
             state: InternalDiffState::default(),
             #[cfg(feature = "local_fs")]
             subscriber_id: None,
-            backend_origin: BackendOrigin::ClientLocal,
             mode: DiffMode::default(),
             metadata: None,
             computing_diffs_abort_handle: None,

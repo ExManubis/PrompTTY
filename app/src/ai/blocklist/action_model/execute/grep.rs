@@ -12,15 +12,13 @@ use warpui::r#async::FutureExt as AsyncFutureExt;
 use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::{
-    ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput,
-    get_server_output_id, is_file_path, is_git_repository,
+    ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput, is_file_path,
+    is_git_repository,
 };
-use crate::PrivacySettings;
 use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::agent::redaction::redact_secrets;
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionResultType, AIAgentActionType, GrepFileMatch, GrepLineMatch,
-    GrepResult, ServerOutputId,
+    GrepResult,
 };
 use crate::ai::blocklist::BlocklistAIPermissions;
 use crate::ai::paths::{host_native_absolute_path, shell_native_absolute_path};

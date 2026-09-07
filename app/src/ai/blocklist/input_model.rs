@@ -99,7 +99,6 @@ use super::ConversationSelectionHandle;
 use super::context_model::BlocklistAIContextModel;
 use super::history_model::BlocklistAIHistoryModel;
 use super::input_mode_policy::{InputModePolicyHandle, PolicyConfigUpdate};
-use crate::PrivacySettings;
 use crate::input_classifier::InputClassifierModel;
 use crate::settings::{AISettings, AISettingsChangedEvent, InputBoxType, InputSettings};
 use crate::terminal::cli_agent_sessions::{
@@ -705,10 +704,10 @@ impl BlocklistAIInputModel {
             .then(|| BlocklistAIHistoryModel::as_ref(ctx).prompt_history_candidates());
 
         let buffer_cloned = input.buffer_text.clone();
-        let other_buffer_cloned = buffer_cloned.clone();
+        let _other_buffer_cloned = buffer_cloned.clone();
         let current_input_type = self.input_type();
 
-        let is_udi_enabled = InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
+        let _is_udi_enabled = InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
 
         // Determine if the input is a follow-up to an AI block.
         let is_agent_follow_up = {

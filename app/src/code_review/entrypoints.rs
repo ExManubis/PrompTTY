@@ -92,10 +92,6 @@ pub enum GitDialogStatus {
     /// User confirmed the dialog and the underlying git operation failed.
     #[serde(rename = "failed")]
     Failed,
-    /// User cancelled the dialog (ESC / close button / cancel button) before
-    /// the async op ran.
-    #[serde(rename = "cancelled")]
-    Cancelled,
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]

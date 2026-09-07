@@ -968,8 +968,8 @@ impl GlobalSearchView {
                 search_id,
                 total_match_count,
                 capped,
-                local_source_failed,
-                remote_source_failures,
+                local_source_failed: _,
+                remote_source_failures: _,
             } => {
                 if Some(*search_id) != self.current_search_id {
                     return;
@@ -979,7 +979,7 @@ impl GlobalSearchView {
                 self.total_match_count = *total_match_count;
                 self.capped_matches |= capped;
 
-                if let Some(started_at) = self.search_started_at.take() {}
+                if let Some(_started_at) = self.search_started_at.take() {}
                 ctx.notify();
             }
             GlobalSearchEvent::Failed { search_id, error } => {

@@ -667,7 +667,7 @@ impl AuthManager {
 
     pub fn attempt_login_gated_feature(
         &self,
-        feature: LoginGatedFeature,
+        _feature: LoginGatedFeature,
         auth_view_variant: AuthViewVariant,
         ctx: &mut ModelContext<Self>,
     ) {
@@ -686,7 +686,7 @@ impl AuthManager {
 
     pub fn initiate_anonymous_user_linking(
         &self,
-        entrypoint: AnonymousUserSignupEntrypoint,
+        _entrypoint: AnonymousUserSignupEntrypoint,
         ctx: &mut ModelContext<Self>,
     ) {
         let auth_client = self.auth_client.clone();

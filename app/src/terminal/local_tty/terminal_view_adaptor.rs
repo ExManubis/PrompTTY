@@ -485,8 +485,8 @@ fn wire_up_terminal_view_session_sharing(
                     }
                 }
                 AgentViewControllerEvent::ExitedAgentView {
-                    origin,
-                    final_exchange_count,
+                    origin: _,
+                    final_exchange_count: _,
                     ..
                 } => {
                     if conversation_remote_update_guard.should_broadcast() {

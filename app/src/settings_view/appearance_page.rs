@@ -753,7 +753,7 @@ impl TypedActionView for AppearanceSettingsPageView {
                         .focus_panes_on_hover
                         .toggle_and_save_value(ctx)
                     {
-                        Ok(new_val) => {}
+                        Ok(_new_val) => {}
                         Err(e) => {
                             report_error!(e);
                         }
@@ -1908,10 +1908,9 @@ impl AppearanceSettingsPageView {
     fn set_opacity(
         &mut self,
         opacity_value: f32,
-        should_set_defaults: bool,
+        _should_set_defaults: bool,
         ctx: &mut ViewContext<Self>,
     ) {
-        if should_set_defaults {}
         WindowSettings::handle(ctx).update(ctx, |window_settings, ctx| {
             report_if_error!(
                 window_settings
@@ -1925,11 +1924,9 @@ impl AppearanceSettingsPageView {
     fn set_blur(
         &mut self,
         blur_value: f32,
-        should_set_defaults: bool,
+        _should_set_defaults: bool,
         ctx: &mut ViewContext<Self>,
     ) {
-        if should_set_defaults {}
-
         ctx.windows()
             .set_all_windows_background_blur_radius(blur_value as u8);
 
@@ -1966,16 +1963,16 @@ impl AppearanceSettingsPageView {
         let appearance = Appearance::as_ref(ctx);
         let current_line_height = appearance.ui_builder().line_height_ratio();
 
-        if (current_line_height - new_line_height).abs() > f32::EPSILON {
-            if (MIN_LINE_SPACING..=MAX_LINE_SPACING).contains(&new_line_height) {
-                FontSettings::handle(ctx).update(ctx, |font_settings, ctx| {
-                    report_if_error!(
-                        font_settings
-                            .line_height_ratio
-                            .set_value(new_line_height, ctx)
-                    );
-                });
-            }
+        if (current_line_height - new_line_height).abs() > f32::EPSILON
+            && (MIN_LINE_SPACING..=MAX_LINE_SPACING).contains(&new_line_height)
+        {
+            FontSettings::handle(ctx).update(ctx, |font_settings, ctx| {
+                report_if_error!(
+                    font_settings
+                        .line_height_ratio
+                        .set_value(new_line_height, ctx)
+                );
+            });
         }
     }
 
@@ -2316,7 +2313,7 @@ impl AppearanceSettingsPageView {
                 .should_dim_inactive_panes
                 .toggle_and_save_value(ctx)
             {
-                Ok(new_value) => {}
+                Ok(_new_value) => {}
                 Err(e) => {
                     report_error!(e);
                 }
@@ -2357,7 +2354,7 @@ impl AppearanceSettingsPageView {
         from_binding: bool,
         ctx: &mut ViewContext<Self>,
     ) {
-        let old_mode = *InputModeSettings::as_ref(ctx).input_mode.value();
+        let _old_mode = *InputModeSettings::as_ref(ctx).input_mode.value();
         InputModeSettings::handle(ctx).update(ctx, |input_mode, ctx| {
             report_if_error!(input_mode.input_mode.set_value(new_mode, ctx));
         });
@@ -2385,7 +2382,7 @@ impl AppearanceSettingsPageView {
             self.input_type_radio_state
                 .set_selected_idx(new_type as usize);
 
-            let is_udi_enabled = new_type == InputBoxType::Universal;
+            let _is_udi_enabled = new_type == InputBoxType::Universal;
 
             // Selecting classic mode must also enable honor_ps1 so the mode takes
             // effect immediately (input_type() requires honor_ps1 to return classic).
@@ -2499,7 +2496,7 @@ impl AppearanceSettingsPageView {
         new_value: WorkspaceDecorationVisibility,
         ctx: &mut ViewContext<Self>,
     ) {
-        let previous_value = TabSettings::handle(ctx).update(ctx, |tab_settings, ctx| {
+        let _previous_value = TabSettings::handle(ctx).update(ctx, |tab_settings, ctx| {
             let prev_value = *tab_settings.workspace_decoration_visibility.value();
             report_if_error!(
                 tab_settings
@@ -2512,7 +2509,7 @@ impl AppearanceSettingsPageView {
 
     /// Toggle among the supported workspace decoration visibility values.
     fn toggle_workspace_decoration_visiblity(&mut self, ctx: &mut ViewContext<Self>) {
-        let (new_value, previous_value) =
+        let (_new_value, _previous_value) =
             TabSettings::handle(ctx).update(ctx, |tab_settings, ctx| {
                 let previous_value = *tab_settings.workspace_decoration_visibility.value();
                 let new_value = previous_value.toggled();

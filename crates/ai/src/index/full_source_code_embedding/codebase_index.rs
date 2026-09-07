@@ -9,7 +9,6 @@ use async_channel;
 use chrono::{DateTime, Utc};
 use futures::stream::AbortHandle;
 use ignore::gitignore::Gitignore;
-use instant::Instant;
 use repo_metadata::Repository;
 #[cfg(feature = "local_fs")]
 use repo_metadata::entry::{BudgetExceededBehavior, IgnoredPathStrategy};
@@ -114,7 +113,6 @@ struct SnapshotLoaded {
     fragment_metadata: LeafToFragmentMetadata,
     changed_files: ChangedFiles,
     gitignores: Vec<Arc<Gitignore>>,
-    diff_duration: Duration,
 }
 
 /// Error loading a codebase snapshot.
@@ -492,7 +490,6 @@ impl CodebaseIndex {
 
         let embedding_config = self.embedding_config();
         let repo_metadata = self.repo_metadata();
-        let sync_start_time = Instant::now();
         let sync_queue = SyncQueue::as_ref(ctx).clone();
         let sync_progress_tx = self.sync_progress_tx.clone();
         let embedding_generation_batch_size = self.embedding_generation_batch_size;
@@ -1109,8 +1106,6 @@ impl CodebaseIndex {
             }
         };
 
-        let sync_start_time = Instant::now();
-
         let store_client = self.store_client.clone();
         let repo_metadata = self.repo_metadata();
 
@@ -1191,17 +1186,8 @@ impl CodebaseIndex {
                 tree,
                 leaf_to_fragment_metadata,
                 server_sync_result,
-                time_tracker,
+                time_tracker: _,
             }) => {
-                // Emit telemetries for the initial sync result.
-                if let Some(sync_time) = time_tracker.compute_duration_for_interval(SYNC_TIME) {}
-
-                if let Some((file_traversal_duration, merkle_tree_parse_duration)) = time_tracker
-                    .compute_duration_for_interval(FILE_TRAVERSAL_TIME)
-                    .zip(time_tracker.compute_duration_for_interval(MERKLE_TREE_BUILD_TIME))
-                {
-                }
-
                 if let SyncOperationResult::Error(SyncOperationError::ReadFragmentError(
                     changed_files,
                 )) = &server_sync_result
@@ -1667,7 +1653,6 @@ impl CodebaseIndex {
                     log::info!(
                         "Diffing filesystem with tree from snapshot for repo {repo_path:?}"
                     );
-                    let diff_start_time = Instant::now();
                     let (changed_files, gitignores) = Self::diff_filesystem_with_tree(
                         repo_path.clone(),
                         &tree,
@@ -1681,7 +1666,6 @@ impl CodebaseIndex {
                         fragment_metadata,
                         changed_files,
                         gitignores,
-                        diff_duration: diff_start_time.elapsed(),
                     })
                 },
                 move |me, load_result, ctx| match load_result {
@@ -1691,7 +1675,6 @@ impl CodebaseIndex {
                         fragment_metadata,
                         changed_files,
                         gitignores,
-                        diff_duration,
                     }) => {
                         let tree = *boxed_tree;
 

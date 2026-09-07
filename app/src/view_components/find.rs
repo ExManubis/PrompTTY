@@ -23,7 +23,6 @@ use crate::editor::{
     TextOptions,
 };
 use crate::settings::InputModeSettings;
-use crate::shared_enums::FindOption;
 use crate::themes::theme::Fill;
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;

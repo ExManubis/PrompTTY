@@ -1825,7 +1825,7 @@ impl TypedActionView for CodeFooterView {
                         _ => None,
                     };
 
-                    if let Some(st) = server_type {}
+                    if let Some(_st) = server_type {}
 
                     if needed_install {
                         ctx.emit(CodeFooterViewEvent::InstallAndEnableLSP {
@@ -1842,7 +1842,7 @@ impl TypedActionView for CodeFooterView {
             }
             CodeFooterViewAction::OpenLogs => {
                 self.is_lsp_menu_open = false;
-                let server_name = self
+                let _server_name = self
                     .lsp_servers
                     .first()
                     .and_then(|w| w.upgrade(ctx))

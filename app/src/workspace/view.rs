@@ -175,9 +175,8 @@ use crate::ai::agent_management::view::{AgentManagementView, AgentManagementView
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent_sdk::driver::harness::{claude_transcript, codex_transcript};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
-use crate::ai::ambient_agents::handoff_types::CloudModeEntryPoint;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
-use crate::ai::ambient_agents::handoff_types::{HandoffEntryPoint, HandoffSurface};
+use crate::ai::ambient_agents::handoff_types::HandoffEntryPoint;
 use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
 use crate::ai::blocklist::agent_view::agent_input_footer::editor::AgentToolbarEditorMode;
 use crate::ai::blocklist::agent_view::editor::{AgentToolbarEditorEvent, AgentToolbarEditorModal};
@@ -248,7 +247,6 @@ use crate::code::editor::{add_color, remove_color};
 #[cfg(feature = "local_fs")]
 use crate::code::editor_management::CodeManager;
 use crate::code::editor_management::CodeSource;
-use crate::code_review::CodeReviewPaneEntrypoint;
 #[cfg(feature = "local_fs")]
 use crate::code_review::GlobalCodeReviewModel;
 use crate::code_review::diff_state::DiffStateModel;
@@ -341,9 +339,8 @@ use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
 use crate::settings_view::pane_manager::SettingsPaneManager;
 use crate::settings_view::{SettingsSection, SettingsView, SettingsViewEvent, flags};
 use crate::shared_enums::{
-    AddTabWithShellSource, AnonymousUserSignupEntrypoint, CloseTarget, FileTreeSource,
-    KnowledgePaneEntrypoint, LaunchConfigUiLocation, MCPServerCollectionPaneEntrypoint,
-    PaletteSource, SharingDialogSource, WarpDriveSource, WorktreeBranchNamingMode,
+    AddTabWithShellSource, AnonymousUserSignupEntrypoint, LaunchConfigUiLocation, PaletteSource,
+    WorktreeBranchNamingMode,
 };
 #[cfg(all(target_os = "windows", feature = "local_tty"))]
 use crate::shell_indicator::ShellIndicatorType;
@@ -351,8 +348,7 @@ use crate::tab::{
     COMPACT_TAB_WIDTH_THRESHOLD, ColorPickerTarget, MOVE_TO_GROUP_LABEL, NewSessionMenuItem,
     PaneNameMenuTarget, SelectedTabColor, TAB_INDICATOR_HEIGHT, TAB_PIN_INDICATOR_ICON_SIZE,
     TAB_PIN_VANISH_THRESHOLD, TabBarState, TabComponent, TabData, TabShortcutModifierState,
-    TabTelemetryAction, color_picker_menu_items, next_tab_color, tab_position_id,
-    uses_vertical_tabs,
+    color_picker_menu_items, next_tab_color, tab_position_id, uses_vertical_tabs,
 };
 use crate::tab_configs::action_sidecar::SidecarItemKind;
 use crate::tab_configs::remove_confirmation_dialog::{
@@ -779,13 +775,6 @@ enum LocalToCloudHandoffIntent {
 
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 impl LocalToCloudHandoffIntent {
-    fn entry_point(self) -> HandoffEntryPoint {
-        match self {
-            Self::UserInitiated(entry_point) => entry_point,
-            Self::Automatic { .. } => HandoffEntryPoint::Automatic,
-        }
-    }
-
     fn shows_user_feedback(self) -> bool {
         matches!(self, Self::UserInitiated(_))
     }
@@ -911,8 +900,6 @@ struct CodeReviewPaneContext {
 struct RightPanelUpdateParams<'a> {
     pane_group: &'a ViewHandle<PaneGroup>,
     target_open_state: bool,
-    entrypoint: Option<CodeReviewPaneEntrypoint>,
-    cli_agent: Option<crate::terminal::CLIAgent>,
     review_pane_context: Option<&'a CodeReviewPaneContext>,
 }
 
@@ -1824,10 +1811,10 @@ impl Workspace {
         ctx: &mut ViewContext<Self>,
     ) {
         match event {
-            SuggestedRuleModalEvent::AddNewRule { rule } => {
+            SuggestedRuleModalEvent::AddNewRule => {
                 self.current_workspace_state.is_suggested_rule_modal_open = false;
             }
-            SuggestedRuleModalEvent::OpenRuleForEditing { rule } => {
+            SuggestedRuleModalEvent::OpenRuleForEditing => {
                 self.current_workspace_state.is_suggested_rule_modal_open = false;
                 self.open_ai_fact_collection_pane(Some(Direction::Right), None, ctx);
             }
@@ -6916,7 +6903,7 @@ impl Workspace {
         ctx: &mut ViewContext<Self>,
     ) {
         if tab_config.params.is_empty() {
-            let is_worktree_config = tab_config.is_worktree();
+            let _is_worktree_config = tab_config.is_worktree();
             let worktree_branch_name = self.maybe_generate_worktree_name(&tab_config);
             let param_values = tab_config.default_param_values();
             self.open_tab_config_with_params(
@@ -7964,7 +7951,7 @@ impl Workspace {
 
             // Add telemetry banner for new users BEFORE the agentic onboarding blocks.
             if let Some(terminal_view_handle) = self.active_session_view(ctx) {
-                terminal_view_handle.update(ctx, |terminal_view, ctx| {});
+                terminal_view_handle.update(ctx, |_terminal_view, _ctx| {});
             }
 
             // After onboarding is triggered, mark the user as onboarded
@@ -8118,7 +8105,6 @@ impl Workspace {
                 self.open_object_sharing_settings(
                     CloudObjectTypeAndId::from_id_and_type(*sync_id, ObjectType::Notebook),
                     Some(invitee_email),
-                    SharingDialogSource::InviteeRequest,
                     ctx,
                 );
             }
@@ -9304,8 +9290,6 @@ impl Workspace {
         self.open_right_panel(
             &context,
             &pane_group,
-            panel_context.entrypoint,
-            panel_context.cli_agent,
             ctx,
         );
 
@@ -9412,8 +9396,6 @@ impl Workspace {
             RightPanelUpdateParams {
                 pane_group: pane_group_handle,
                 target_open_state,
-                entrypoint: Some(CodeReviewPaneEntrypoint::RightPanel),
-                cli_agent: None,
                 review_pane_context: context.as_ref(),
             },
             ctx,
@@ -9425,8 +9407,6 @@ impl Workspace {
         &mut self,
         context: &CodeReviewPaneContext,
         pane_group_handle: &ViewHandle<PaneGroup>,
-        entrypoint: CodeReviewPaneEntrypoint,
-        cli_agent: Option<crate::terminal::CLIAgent>,
         ctx: &mut ViewContext<Self>,
     ) {
         if pane_group_handle.as_ref(ctx).right_panel_open {
@@ -9442,8 +9422,6 @@ impl Workspace {
             RightPanelUpdateParams {
                 pane_group: pane_group_handle,
                 target_open_state: true,
-                entrypoint: Some(entrypoint),
-                cli_agent,
                 review_pane_context: Some(context),
             },
             ctx,
@@ -9460,8 +9438,6 @@ impl Workspace {
         &mut self,
         _context: &CodeReviewPaneContext,
         _pane_group_handle: &ViewHandle<PaneGroup>,
-        _entrypoint: CodeReviewPaneEntrypoint,
-        _cli_agent: Option<crate::terminal::CLIAgent>,
         _ctx: &mut ViewContext<Self>,
     ) {
     }
@@ -9475,8 +9451,6 @@ impl Workspace {
             RightPanelUpdateParams {
                 pane_group: pane_group_handle,
                 target_open_state: false,
-                entrypoint: None,
-                cli_agent: None,
                 review_pane_context: None,
             },
             ctx,
@@ -10503,7 +10477,7 @@ impl Workspace {
         match event {
             TabConfigParamsModalEvent::Submit { config, params } => {
                 let pending_intention = self.pending_onboarding_intention.take();
-                let should_track_existing_config_open =
+                let _should_track_existing_config_open =
                     self.pending_session_config_replacement.is_none();
                 let worktree_name = self.maybe_generate_worktree_name(config);
                 self.open_tab_config_with_params(
@@ -10512,7 +10486,7 @@ impl Workspace {
                     worktree_name.as_deref(),
                     ctx,
                 );
-                if should_track_existing_config_open {}
+
                 self.close_tab_config_params_modal(ctx);
                 self.complete_pending_session_config_replacement(ctx);
 
@@ -10735,7 +10709,7 @@ impl Workspace {
 
         match toml::from_str::<crate::tab_configs::TabConfig>(&toml_content) {
             Ok(tab_config) => {
-                let naming_mode = if worktree_branch_name.is_some() {
+                let _naming_mode = if worktree_branch_name.is_some() {
                     WorktreeBranchNamingMode::Manual
                 } else {
                     WorktreeBranchNamingMode::Auto
@@ -12227,7 +12201,7 @@ impl Workspace {
     fn add_tab_with_shell(
         &mut self,
         shell: AvailableShell,
-        source: AddTabWithShellSource,
+        _source: AddTabWithShellSource,
         ctx: &mut ViewContext<Self>,
     ) {
         self.add_new_session_tab_with_default_mode(
@@ -13836,9 +13810,7 @@ impl Workspace {
         let moving_active_tab = index == self.active_tab_index;
         self.hop_tab_to_index(index, target, ctx);
 
-        if moving_active_tab {
-        } else {
-        }
+        if moving_active_tab {}
     }
 
     /// How to render the tab bar.
@@ -14522,13 +14494,12 @@ impl Workspace {
         &mut self,
         object_id: CloudObjectTypeAndId,
         invitee_email: Option<String>,
-        source: SharingDialogSource,
         ctx: &mut ViewContext<Self>,
     ) {
         self.view_in_warp_drive(WarpDriveItemId::Object(object_id), ctx);
         self.update_warp_drive_view(ctx, |warp_drive, ctx| {
             warp_drive.reset_and_open_to_main_index(ctx);
-            warp_drive.open_object_sharing_settings(object_id, invitee_email, source, ctx);
+            warp_drive.open_object_sharing_settings(object_id, invitee_email, ctx);
         });
 
         ctx.notify();
@@ -15259,8 +15230,6 @@ impl Workspace {
             controller,
             context,
             snapshot_target,
-            intent.entry_point(),
-            HandoffSurface::Gui,
         )
         .with_expected_conversation_id(intent.expected_conversation_id())
         .with_source_conversation_id(source_conversation_id)
@@ -16393,12 +16362,11 @@ impl Workspace {
             pane_group::Event::OpenDriveObjectShareDialog {
                 cloud_object_type_and_id,
                 invitee_email,
-                source,
+                source: _,
             } => {
                 self.open_object_sharing_settings(
                     *cloud_object_type_and_id,
                     invitee_email.clone(),
-                    *source,
                     ctx,
                 );
             }
@@ -16854,8 +16822,6 @@ impl Workspace {
                 .map_or_else(MenuPositioning::default, |input_handle| {
                     input_handle.read(ctx, |input, ctx| input.menu_positioning(ctx))
                 });
-
-            if !self.current_workspace_state.is_command_search_open {}
 
             // Make sure we close any already-open input suggestions panel.
             if let Some(input_handle) = &active_input_handle {
@@ -18875,7 +18841,7 @@ impl Workspace {
 
     fn open_prompt_editor(
         &mut self,
-        open_source: PromptEditorOpenSource,
+        _open_source: PromptEditorOpenSource,
         ctx: &mut ViewContext<Self>,
     ) {
         // Try to get a prompt preview from an active session. Otherwise, read it from the settings
@@ -23908,8 +23874,6 @@ impl TypedActionView for Workspace {
                             self.open_right_panel(
                                 &context,
                                 &pane_group_handle,
-                                CodeReviewPaneEntrypoint::GitDiffChip,
-                                None,
                                 ctx,
                             );
                         }
@@ -24005,7 +23969,7 @@ impl TypedActionView for Workspace {
                 ctx.notify();
             }
             ToggleVerticalTabsShowPrLink => {
-                let new_value = TabSettings::handle(ctx).update(ctx, |settings, ctx| {
+                let _new_value = TabSettings::handle(ctx).update(ctx, |settings, ctx| {
                     let new_value = !*settings.vertical_tabs_show_pr_link.value();
                     let _ = settings
                         .vertical_tabs_show_pr_link
@@ -24015,7 +23979,7 @@ impl TypedActionView for Workspace {
                 ctx.notify();
             }
             ToggleVerticalTabsShowDiffStats => {
-                let new_value = TabSettings::handle(ctx).update(ctx, |settings, ctx| {
+                let _new_value = TabSettings::handle(ctx).update(ctx, |settings, ctx| {
                     let new_value = !*settings.vertical_tabs_show_diff_stats.value();
                     let _ = settings
                         .vertical_tabs_show_diff_stats
@@ -24025,7 +23989,7 @@ impl TypedActionView for Workspace {
                 ctx.notify();
             }
             ToggleVerticalTabsShowDetailsOnHover => {
-                let new_value = TabSettings::handle(ctx).update(ctx, |settings, ctx| {
+                let _new_value = TabSettings::handle(ctx).update(ctx, |settings, ctx| {
                     let new_value = !*settings.vertical_tabs_show_details_on_hover.value();
                     let _ = settings
                         .vertical_tabs_show_details_on_hover
@@ -24089,13 +24053,13 @@ impl TypedActionView for Workspace {
                 ctx.open_file_path(path);
             }
             NewTabInAgentMode {
-                entrypoint,
+                entrypoint: _,
                 zero_state_prompt_suggestion_type,
             } => {
                 self.add_terminal_tab_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
             }
             NewPaneInAgentMode {
-                entrypoint,
+                entrypoint: _,
                 zero_state_prompt_suggestion_type,
             } => {
                 self.add_terminal_pane_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
@@ -24373,8 +24337,8 @@ impl TypedActionView for Workspace {
                 // Focus newly created object in WD
                 self.view_in_and_focus_warp_drive(*item_id, ctx);
             }
-            OpenObjectSharingSettings { object_id, source } => {
-                self.open_object_sharing_settings(*object_id, None, *source, ctx);
+            OpenObjectSharingSettings { object_id, source: _ } => {
+                self.open_object_sharing_settings(*object_id, None, ctx);
             }
             UndoTrash(cloud_object_type_and_id) => {
                 self.update_warp_drive_view(ctx, |warp_drive, ctx| {

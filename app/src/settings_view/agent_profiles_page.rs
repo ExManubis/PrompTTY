@@ -1532,7 +1532,7 @@ impl TypedActionView for AgentProfilesPageView {
                 match CodeSettings::handle(ctx).update(ctx, |settings, ctx| {
                     settings.codebase_context_enabled.toggle_and_save_value(ctx)
                 }) {
-                    Ok(new_value) => {}
+                    Ok(_new_value) => {}
                     Err(e) => {
                         log::warn!("Failed to set value for Codebase Context: {e:?}");
                     }

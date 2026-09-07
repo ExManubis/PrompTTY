@@ -2,7 +2,6 @@
 mod action_model;
 pub mod agent_view;
 pub mod analytics_kinds;
-pub use analytics_kinds::*;
 pub mod block;
 mod child_agent_launch;
 pub mod code_block;
@@ -55,7 +54,7 @@ pub use action_model::{
 };
 #[cfg_attr(target_family = "wasm", allow(unused_imports))]
 pub(crate) use action_model::{
-    FileReadResult, ReadFileContextResult, RequestFileEditsFormatKind, apply_edits,
+    FileReadResult, ReadFileContextResult, apply_edits,
     read_local_file_context,
 };
 // Consumed by `tui_export` for the `warp_tui` frontend.
@@ -73,7 +72,7 @@ pub use action_model::{
 };
 #[cfg(any(test, feature = "integration_tests"))]
 pub(crate) use block::model::testing::FakeAIBlockModel;
-pub(crate) use block::{AIBlock, AIBlockEvent, RequestedEditResolution, init, model};
+pub(crate) use block::{AIBlock, AIBlockEvent, init, model};
 pub use block::{keyboard_navigable_buttons, toggleable_items};
 pub use child_agent_launch::inherit_child_agent_settings;
 #[cfg(not(target_family = "wasm"))]
@@ -122,9 +121,9 @@ pub(crate) use passive_suggestions::{
     LegacyPassiveSuggestionsEvent, LegacyPassiveSuggestionsModel, MaaPassiveSuggestionsEvent,
     MaaPassiveSuggestionsModel, PassiveSuggestionsModels,
 };
+pub use permissions::BlocklistAIPermissions;
 #[cfg(test)]
 pub(crate) use permissions::is_agent_mode_autonomy_allowed;
-pub use permissions::{BlocklistAIPermissions, CommandExecutionPermissionAllowedReason};
 #[cfg_attr(target_family = "wasm", allow(unused))]
 pub(crate) use persistence::PersistedAIInputType;
 #[cfg_attr(target_family = "wasm", allow(unused))]

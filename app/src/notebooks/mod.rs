@@ -13,7 +13,6 @@ use anyhow::Result;
 use async_trait::async_trait;
 pub use cloud_object_models::{CloudNotebook, CloudNotebookModel, NotebookId, SerializedNotebook};
 use serde::{Deserialize, Serialize};
-pub use types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 use warpui::AppContext;
 
 use crate::appearance::Appearance;

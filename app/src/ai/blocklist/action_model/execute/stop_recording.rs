@@ -1,5 +1,5 @@
 #[cfg(not(target_family = "wasm"))]
-use ai::agent::action_result::{RecordingStopped, StopRecordingResult};
+use ai::agent::action_result::StopRecordingResult;
 use futures::FutureExt;
 use futures::future::BoxFuture;
 #[cfg(not(target_family = "wasm"))]
@@ -111,7 +111,7 @@ impl StopRecordingExecutor {
             // finalization continues and retains its result for a later stop.
             ActionExecution::new_async(
                 async move { finalization.resolve().await },
-                move |(result, actual_reason), ctx| {
+                move |(result, _actual_reason), ctx| {
                     RecordingController::handle(ctx).update(ctx, |controller, _| {
                         controller.consume_finalized(&recording_id);
                     });

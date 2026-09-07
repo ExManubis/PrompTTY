@@ -1704,7 +1704,7 @@ impl TemplatableMCPServerManager {
                 ctx,
             );
             match result {
-                Ok(result) => {}
+                Ok(_result) => {}
                 Err(e) => report_error!(
                     anyhow::Error::new(e)
                         .context("Failed to convert legacy MCP server to templatable")

@@ -768,7 +768,7 @@ impl ResponseStream {
                             ) {
                                 // Emit retry success telemetry if this was a successful completion after retries
                                 if self.retries_sent > 0
-                                    && let Some(original_error) = &self.original_error {
+                                    && let Some(_original_error) = &self.original_error {
                                     }
                             }
                         }

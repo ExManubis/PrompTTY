@@ -888,7 +888,6 @@ impl AgentManagementView {
 
     /// Shows the setup guide from a deep-link/action without toggling it off on repeated calls.
     pub(crate) fn show_setup_guide_from_link(&mut self, ctx: &mut ViewContext<Self>) {
-        if !self.is_viewing_setup_guide {}
         self.is_viewing_setup_guide = true;
         ctx.notify();
     }
@@ -1132,8 +1131,8 @@ impl AgentManagementView {
             }
             AgentDetailsButtonEvent::CopyLink { link } => {
                 match item_id {
-                    ManagementCardItemId::Conversation(conversation_id) => {}
-                    ManagementCardItemId::AmbientRun(task_id) => {}
+                    ManagementCardItemId::Conversation(_conversation_id) => {}
+                    ManagementCardItemId::AmbientRun(_task_id) => {}
                 }
 
                 ctx.clipboard()
@@ -2263,8 +2262,8 @@ impl TypedActionView for AgentManagementView {
                 };
 
                 match item_id {
-                    ManagementCardItemId::Conversation(conversation_id) => {}
-                    ManagementCardItemId::AmbientRun(task_id) => {}
+                    ManagementCardItemId::Conversation(_conversation_id) => {}
+                    ManagementCardItemId::AmbientRun(_task_id) => {}
                 }
                 ctx.dispatch_typed_action(&action);
             }

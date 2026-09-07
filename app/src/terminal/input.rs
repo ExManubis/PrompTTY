@@ -208,15 +208,13 @@ use crate::ai::predict::prompt_suggestions::{
     has_pending_code_or_unit_test_prompt_suggestion,
     is_accept_prompt_suggestion_bound_to_ctrl_enter,
 };
-use crate::ai::skills::SkillOpenOrigin;
 use crate::ai_assistant::execution_context::execution_context_for_session;
 use crate::appearance::{Appearance, AppearanceEvent};
 use crate::channel::{Channel, ChannelState};
 use crate::cloud_object::model::actions::ObjectActionType;
 use crate::cloud_object::model::generic_string_model::StringModel;
 use crate::cloud_object::model::persistence::CloudModel;
-use crate::cloud_object::model::view::CloudViewModel;
-use crate::cloud_object::{CloudObject, CloudObjectLookup as _, Space};
+use crate::cloud_object::{CloudObject, CloudObjectLookup as _};
 #[cfg(feature = "local_fs")]
 use crate::code::editor_management::CodeSource;
 use crate::code_review::diff_state::DiffMode;
@@ -268,7 +266,7 @@ use crate::session_management::SessionNavigationPromptElements;
 use crate::settings::{
     AISettings, AISettingsChangedEvent, AliasExpansionSettings, AppEditorSettings,
     AppEditorSettingsChangedEvent, InputModeSettings, InputSettings, InputSettingsChangedEvent,
-    MAX_TIMES_TO_SHOW_AUTOSUGGESTION_HINT, PrivacySettings,
+    MAX_TIMES_TO_SHOW_AUTOSUGGESTION_HINT,
 };
 use crate::settings_view::{SettingsSection, flags};
 use crate::shared_enums::{
@@ -571,26 +569,6 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, Eq, Copy, Clone, Serialize)]
-pub enum TelemetryInputSuggestionsMode {
-    HistoryFuzzySearch,
-    CompletionSuggestions,
-    HistoryUp,
-    NaturalLanguageCommandSearch,
-    StaticWorkflowEnumSuggestions,
-    DynamicWorkflowEnumSuggestions,
-    AIContextMenu,
-    SlashCommands,
-    ConversationMenu,
-    ModelSelector,
-    ProfileSelector,
-    PromptsMenu,
-    SkillMenu,
-    InlineHistoryMenu,
-    IndexedReposMenu,
-    PlanMenu,
-}
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum HistorySearchMode {
     /// Prefix match commands.
@@ -833,50 +811,7 @@ impl InputSuggestionsMode {
         }
     }
 
-    fn to_telemetry_mode(&self) -> TelemetryInputSuggestionsMode {
-        match *self {
-            InputSuggestionsMode::HistoryUp {
-                search_mode: HistorySearchMode::Prefix,
-                ..
-            } => TelemetryInputSuggestionsMode::HistoryUp,
-            InputSuggestionsMode::HistoryUp {
-                search_mode: HistorySearchMode::Fuzzy,
-                ..
-            } => TelemetryInputSuggestionsMode::HistoryFuzzySearch,
-            InputSuggestionsMode::CompletionSuggestions { .. } => {
-                TelemetryInputSuggestionsMode::CompletionSuggestions
-            }
-            InputSuggestionsMode::StaticWorkflowEnumSuggestions { .. } => {
-                TelemetryInputSuggestionsMode::StaticWorkflowEnumSuggestions
-            }
-            InputSuggestionsMode::DynamicWorkflowEnumSuggestions { .. } => {
-                TelemetryInputSuggestionsMode::DynamicWorkflowEnumSuggestions
-            }
-            InputSuggestionsMode::AIContextMenu { .. } => {
-                TelemetryInputSuggestionsMode::AIContextMenu
-            }
-            InputSuggestionsMode::SlashCommands => TelemetryInputSuggestionsMode::SlashCommands,
-            InputSuggestionsMode::ConversationMenu => {
-                TelemetryInputSuggestionsMode::ConversationMenu
-            }
-            InputSuggestionsMode::ModelSelector => TelemetryInputSuggestionsMode::ModelSelector,
-            InputSuggestionsMode::ProfileSelector => TelemetryInputSuggestionsMode::ProfileSelector,
-            InputSuggestionsMode::PromptsMenu => TelemetryInputSuggestionsMode::PromptsMenu,
-            InputSuggestionsMode::SkillMenu => TelemetryInputSuggestionsMode::SkillMenu,
-            InputSuggestionsMode::UserQueryMenu { .. } => {
-                TelemetryInputSuggestionsMode::ConversationMenu
-            }
-            InputSuggestionsMode::InlineHistoryMenu { .. } => {
-                TelemetryInputSuggestionsMode::InlineHistoryMenu
-            }
-            InputSuggestionsMode::IndexedReposMenu => {
-                TelemetryInputSuggestionsMode::IndexedReposMenu
-            }
-            InputSuggestionsMode::PlanMenu { .. } => TelemetryInputSuggestionsMode::PlanMenu,
-            InputSuggestionsMode::Closed => unreachable!(),
-        }
     }
-}
 
 struct SharedSessionInputState {
     /// History model for viewers in a shared session.
@@ -4268,7 +4203,7 @@ impl Input {
         query_id: QueuedQueryId,
         text: String,
         is_command: bool,
-        trigger: QueuedPromptSendNowTrigger,
+        _trigger: QueuedPromptSendNowTrigger,
         ctx: &mut ViewContext<Self>,
     ) {
         // Read the origin before dispatch; the row is removed once it fires.
@@ -4286,7 +4221,7 @@ impl Input {
         if !dispatched {
             return;
         }
-        if let Some(origin) = origin {}
+        if let Some(_origin) = origin {}
         QueuedQueryModel::handle(ctx).update(ctx, |model, ctx| {
             model.remove_fired_row(conversation_id, query_id, ctx);
         });
@@ -5199,9 +5134,9 @@ impl Input {
             });
 
             // Emit telemetry for @ menu opened
-            let is_udi_enabled =
+            let _is_udi_enabled =
                 InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
-            let current_input_mode = self.ai_input_model.as_ref(ctx).input_type();
+            let _current_input_mode = self.ai_input_model.as_ref(ctx).input_type();
         } else if self.suggestions_mode_model.as_ref(ctx).is_ai_context_menu() {
             self.close_ai_context_menu(ctx);
         }
@@ -5242,7 +5177,7 @@ impl Input {
             self.close_slash_commands_menu(ctx);
         } else {
             self.system_insert("/", ctx);
-            let is_in_agent_view = FeatureFlag::AgentView.is_enabled()
+            let _is_in_agent_view = FeatureFlag::AgentView.is_enabled()
                 && self.agent_view_controller.as_ref(ctx).is_fullscreen();
         }
     }
@@ -5254,7 +5189,7 @@ impl Input {
     ) {
         match event {
             InlineConversationMenuEvent::NavigateToConversation { item_id } => {
-                let is_in_agent_view = FeatureFlag::AgentView.is_enabled()
+                let _is_in_agent_view = FeatureFlag::AgentView.is_enabled()
                     && self.agent_view_controller.as_ref(ctx).is_fullscreen();
 
                 if self
@@ -5717,7 +5652,7 @@ impl Input {
         self.suggestions_mode_model.update(ctx, |model, ctx| {
             model.set_mode(InputSuggestionsMode::ConversationMenu, ctx);
         });
-        let is_in_agent_view = FeatureFlag::AgentView.is_enabled()
+        let _is_in_agent_view = FeatureFlag::AgentView.is_enabled()
             && self.agent_view_controller.as_ref(ctx).is_fullscreen();
         ctx.notify();
     }
@@ -5772,7 +5707,7 @@ impl Input {
                     destination,
                 });
 
-                let is_in_agent_view = FeatureFlag::AgentView.is_enabled()
+                let _is_in_agent_view = FeatureFlag::AgentView.is_enabled()
                     && self.agent_view_controller.as_ref(ctx).is_active();
 
                 self.suggestions_mode_model.update(ctx, |model, ctx| {
@@ -6062,7 +5997,7 @@ impl Input {
                     exchange_id: *exchange_id,
                 });
 
-                let is_in_agent_view = FeatureFlag::AgentView.is_enabled()
+                let _is_in_agent_view = FeatureFlag::AgentView.is_enabled()
                     && self.agent_view_controller.as_ref(ctx).is_active();
 
                 self.suggestions_mode_model.update(ctx, |model, ctx| {
@@ -6420,7 +6355,7 @@ impl Input {
     pub fn insert_zero_state_prompt_suggestion(
         &mut self,
         suggestion_type: ZeroStatePromptSuggestionType,
-        triggered_from: ZeroStatePromptSuggestionTriggeredFrom,
+        _triggered_from: ZeroStatePromptSuggestionTriggeredFrom,
         ctx: &mut ViewContext<Self>,
     ) {
         let has_any_ai = {
@@ -7875,11 +7810,11 @@ impl Input {
             // until the user executes a command.
             if !command.is_empty()
                 && let Some(ZeroStateSuggestionInfo {
-                    request,
+                    request: _,
                     response,
                     is_from_ai,
-                    history_based_autosuggestion_state,
-                    request_duration_ms,
+                    history_based_autosuggestion_state: _,
+                    request_duration_ms: _,
                 }) = zerostate_next_command_suggestion_info
             {
                 self.last_intelligent_autosuggestion_result =
@@ -8803,7 +8738,7 @@ impl Input {
         match event {
             InputSuggestionsEvent::ConfirmSuggestion {
                 suggestion,
-                match_type,
+                match_type: _,
             } => {
                 if !self.confirm_suggestion(suggestion, ctx) {
                     return;
@@ -8813,7 +8748,7 @@ impl Input {
             }
             InputSuggestionsEvent::ConfirmAndExecuteSuggestion {
                 suggestion,
-                match_type,
+                match_type: _,
             } => {
                 if !self.confirm_and_execute_suggestion(suggestion, ctx) {
                     return;
@@ -9511,7 +9446,7 @@ impl Input {
 
     // TODO - Implement PageUp functionality for input suggestions menu
     fn editor_page_up(&mut self, ctx: &mut ViewContext<Self>) {
-        let event = self.editor.read(ctx, |editor, ctx| {});
+        self.editor.read(ctx, |_editor, _ctx| {});
         if self.suggestions_mode_model.as_ref(ctx).is_visible() {
             self.editor
                 .update(ctx, |input, ctx| input.move_page_up(ctx));
@@ -9793,7 +9728,7 @@ impl Input {
 
     // TODO - Implement PageDown functionality for input suggestions menu
     fn editor_page_down(&mut self, ctx: &mut ViewContext<Self>) {
-        let event = self.editor.read(ctx, |editor, ctx| {});
+        self.editor.read(ctx, |_editor, _ctx| {});
         if self.suggestions_mode_model.as_ref(ctx).is_visible() {
             self.editor
                 .update(ctx, |input, ctx| input.move_page_down(ctx));
@@ -11917,7 +11852,7 @@ impl Input {
             });
         } else {
             // Otherwise backspace away the AI icon.
-            let new_input_type = self.ai_input_model.update(ctx, |ai_input_model, ctx| {
+            let _new_input_type = self.ai_input_model.update(ctx, |ai_input_model, ctx| {
                 let new_input_config = ai_input_model.input_config().with_toggled_type().locked();
                 let new_input_type = new_input_config.input_type;
                 ai_input_model.set_input_config_for_classic_mode(new_input_config, ctx);
@@ -16162,7 +16097,7 @@ impl Input {
 
         ctx.emit(Event::ShowCommandSearch(Default::default()));
 
-        let entrypoint = if buffer_starts_with_trigger {
+        let _entrypoint = if buffer_starts_with_trigger {
             AICommandSearchEntrypoint::ShortHandTrigger
         } else {
             AICommandSearchEntrypoint::Keybinding
@@ -16293,7 +16228,7 @@ impl TypedActionView for Input {
                 }
             }
             InputAction::ToggleInputAutoDetection => {
-                if let Ok(new_value) =
+                if let Ok(_new_value) =
                     AISettings::handle(ctx).update(ctx, |ai_settings, model_ctx| {
                         ai_settings
                             .ai_autodetection_enabled_internal

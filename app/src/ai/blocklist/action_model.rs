@@ -25,16 +25,13 @@ use std::sync::Arc;
 use ai::document::DEFAULT_PLANNING_DOCUMENT_TITLE;
 use chrono::Local;
 pub use execute::{
-    AskUserQuestionExecutor, EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent,
-    EditResolvedEvent, EditStats, NewConversationDecision, PromptSuggestionExecutor,
-    ReadFileContextResult, RequestFileEditsExecutor, RequestFileEditsFormatKind, RunAgentsExecutor,
+    AskUserQuestionExecutor, NewConversationDecision, PromptSuggestionExecutor,
+    ReadFileContextResult, RequestFileEditsExecutor, RunAgentsExecutor,
     RunAgentsExecutorEvent, RunAgentsSpawningSnapshot, ShellCommandExecutor,
     ShellCommandExecutorEvent, StartAgentExecutor, StartAgentExecutorEvent, StartAgentOutcome,
     StartAgentRequest, StartAgentRequestId, read_local_file_context,
 };
-pub(crate) use execute::{
-    FileReadResult, MalformedFinalLineProxyEvent, apply_edits, coerce_integer_args,
-};
+pub(crate) use execute::{FileReadResult, apply_edits, coerce_integer_args};
 #[cfg(test)]
 pub(crate) use execute::{compose_run_agents_child_prompt, run_agents_to_start_agent_mode};
 use futures::future::{BoxFuture, join_all};
@@ -1239,7 +1236,7 @@ impl BlocklistAIActionModel {
             pending_action.action,
             AIAgentActionType::RequestComputerUse(_)
         ) {
-            let server_conversation_id = BlocklistAIHistoryModel::as_ref(ctx)
+            let _server_conversation_id = BlocklistAIHistoryModel::as_ref(ctx)
                 .conversation(&conversation_id)
                 .and_then(|c| c.server_conversation_token())
                 .map(|t| t.as_str().to_string());

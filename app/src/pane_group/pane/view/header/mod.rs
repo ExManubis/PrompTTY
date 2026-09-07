@@ -33,7 +33,6 @@ use crate::pane_group::{
     BackingView, Direction, PaneDragDropLocation, PaneId, TabBarAxis, TabBarHoverIndex,
 };
 use crate::settings::CodeSettings;
-use crate::shared_enums::SharingDialogSource;
 use crate::tab::tab_position_id;
 use crate::terminal::view::TerminalAction;
 use crate::view_components::{FeaturePopup, NewFeaturePopupEvent, NewFeaturePopupLabel};
@@ -908,7 +907,7 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
                 ctx.notify();
             }
             PaneHeaderAction::ShareContents => {
-                self.share_pane_contents(SharingDialogSource::PaneHeader, ctx)
+                self.share_pane_contents(ctx)
             }
             PaneHeaderAction::PaneHeaderDragStarted => {}
             PaneHeaderAction::PaneHeaderDragged {

@@ -14,10 +14,9 @@ use warp_core::ui::theme::color::internal_colors;
 use warp_errors::{report_error, report_if_error};
 use warpui::r#async::{SpawnedFutureHandle, Timer};
 use warpui::elements::{
-    Align, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
-    Empty, Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
-    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Rect, Shrinkable,
-    Stack, Text,
+    Align, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Expanded,
+    Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
+    Rect, Shrinkable, Text,
 };
 use warpui::fonts::Weight;
 use warpui::keymap::ContextPredicate;
@@ -43,8 +42,6 @@ use crate::channel::ChannelState;
 use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::settings::{AISettings, CustomSecretRegex, PrivacySettings, RegexDisplayInfo};
 use crate::settings_view::privacy::AddRegexModalViewState;
-use crate::settings_view::render_body_item_label;
-use crate::settings_view::settings_page::CONTENT_FONT_SIZE;
 use crate::terminal::safe_mode_settings::{
     SafeModeEnabled, SafeModeSettings, SecretDisplayMode, SecretDisplayModeSetting,
     get_effective_secret_display_mode,
@@ -54,9 +51,7 @@ use crate::ui_components::icons::Icon;
 use crate::util::links::PRIVACY_POLICY_URL;
 use crate::view_components::{Dropdown, DropdownItem};
 use crate::workspaces::user_workspaces::UserWorkspaces;
-use crate::workspaces::workspace::{
-    AdminEnablementSetting, CustomerType, UgcCollectionEnablementSetting,
-};
+use crate::workspaces::workspace::AdminEnablementSetting;
 
 const FONT_SIZE: f32 = 12.;
 

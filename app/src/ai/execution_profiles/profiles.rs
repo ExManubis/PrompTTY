@@ -1227,7 +1227,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if let Some(model_id) = &llm_id {}
+        if let Some(_model_id) = &llm_id {}
     }
 
     pub fn set_coding_model(
@@ -1248,7 +1248,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if let Some(model_id) = &model_id {}
+        if let Some(_model_id) = &model_id {}
     }
 
     pub fn set_cli_agent_model(
@@ -1269,7 +1269,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if let Some(model_id) = &model_id {}
+        if let Some(_model_id) = &model_id {}
     }
 
     pub fn set_computer_use_model(
@@ -1290,7 +1290,7 @@ impl AIExecutionProfilesModel {
             ctx,
         );
 
-        if let Some(model_id) = &model_id {}
+        if let Some(_model_id) = &model_id {}
     }
 
     pub fn set_context_window_limit(
@@ -1320,7 +1320,7 @@ impl AIExecutionProfilesModel {
             };
             let llm_preferences = LLMPreferences::as_ref(ctx);
             let team_uid = UserWorkspaces::as_ref(ctx).inherited_or_default_team_uid(None);
-            let model_info = profile
+            let _model_info = profile
                 .data()
                 .base_model
                 .as_ref()

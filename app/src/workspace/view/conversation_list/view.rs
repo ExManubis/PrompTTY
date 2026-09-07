@@ -39,7 +39,6 @@ use crate::editor::{
     PropagateHorizontalNavigationKeys, SingleLineEditorOptions, TextOptions,
 };
 use crate::menu::{Event as MenuEvent, Menu, MenuItem, MenuItemFields};
-use crate::shared_enums::SharingDialogSource;
 use crate::view_components::DismissibleToast;
 use crate::view_components::action_button::{ActionButton, ButtonSize, SecondaryTheme};
 use crate::workspace::global_actions::ForkedConversationDestination;
@@ -612,10 +611,10 @@ impl ConversationListView {
         self.focus_query_editor(ctx);
     }
 
-    fn send_open_telemetry(id: &AgentConversationEntryId, ctx: &mut ViewContext<Self>) {
+    fn send_open_telemetry(id: &AgentConversationEntryId, _ctx: &mut ViewContext<Self>) {
         match id {
-            AgentConversationEntryId::Conversation(conversation_id) => {}
-            AgentConversationEntryId::AmbientRun(task_id) => {}
+            AgentConversationEntryId::Conversation(_conversation_id) => {}
+            AgentConversationEntryId::AmbientRun(_task_id) => {}
         }
     }
 
@@ -1106,7 +1105,6 @@ impl TypedActionView for ConversationListView {
                         Some(ShareableObject::AIConversation(ai_conversation_id)),
                         ctx,
                     );
-                    dialog.report_open(SharingDialogSource::ConversationList, ctx);
                 });
                 ctx.focus(&self.sharing_dialog);
                 ctx.notify();

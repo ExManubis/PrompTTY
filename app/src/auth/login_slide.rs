@@ -364,7 +364,7 @@ impl LoginSlideView {
             ctx.notify();
         });
 
-        let view = Self {
+        Self {
             ai_enabled,
             uses_third_party_agents,
             intention,
@@ -399,9 +399,7 @@ impl LoginSlideView {
             scroll_state: ClippedScrollStateHandle::new(),
             close_login_notification_mouse_state: MouseStateHandle::default(),
             highlighted_hyperlink_state: HighlightedHyperlink::default(),
-        };
-
-        view
+        }
     }
 
     // ------------------------------------------------------------------
@@ -436,9 +434,9 @@ impl LoginSlideView {
 
     fn send_account_first_action(
         &self,
-        slide_name: &str,
-        action: &str,
-        ctx: &mut ViewContext<Self>,
+        _slide_name: &str,
+        _action: &str,
+        _ctx: &mut ViewContext<Self>,
     ) {
         if matches!(self.source, LoginSlideSource::AccountFirstOnboarding) {}
     }

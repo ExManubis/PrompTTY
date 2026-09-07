@@ -44,9 +44,7 @@ use crate::server::cloud_objects::update_manager::{
     ObjectOperation, UpdateManager, UpdateManagerEvent,
 };
 use crate::server::ids::ServerId;
-use crate::shared_enums::SharingDialogSource;
 use crate::terminal::TerminalView;
-use crate::terminal::shared_session::SharedSessionActionSource;
 use crate::terminal::shared_session::permissions_manager::{
     SessionPermissionsEvent, SessionPermissionsManager,
 };
@@ -630,25 +628,6 @@ impl SharingDialog {
             }
             None => SharingAccessLevel::Full,
         }
-    }
-
-    /// Report a telemetry event for opening this sharing dialog.
-    ///
-    /// This should be called by views that contain a sharing dialog whenever they open it (i.e.
-    /// panes and the Warp Drive index).
-    pub fn report_open(&self, source: SharingDialogSource, ctx: &mut ViewContext<Self>) {
-        let event = match self.target.as_ref() {
-            Some(ShareableObject::WarpDriveObject(id)) => {
-                match CloudModel::as_ref(ctx).get_by_uid(&id.uid()) {
-                    Some(object) => {}
-                    None => return,
-                }
-            }
-            Some(ShareableObject::Session { session_id, .. }) => {}
-            // Skip telemetry for AI conversations
-            Some(ShareableObject::AIConversation(_)) => return,
-            None => return,
-        };
     }
 
     fn reset_editable_state(&mut self, ctx: &mut ViewContext<Self>) {

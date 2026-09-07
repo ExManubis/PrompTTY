@@ -40,9 +40,6 @@ use crate::pane_group::{
 };
 use crate::settings::AISettings;
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
-#[cfg(feature = "local_fs")]
-use crate::shared_enums::CodePanelsFileOpenEntrypoint;
-use crate::shared_enums::{FileTreeSource, WarpDriveSource};
 use crate::terminal::resizable_data::{ModalType, ResizableData};
 use crate::ui_components::buttons::{icon_button, icon_button_with_color};
 use crate::ui_components::icons;
@@ -1111,9 +1108,7 @@ impl LeftPanelView {
         match action {
             LeftPanelAction::ProjectExplorer => {
                 active_view_state::set(self, ToolPanelView::ProjectExplorer, ctx);
-                if force_open {
-                } else {
-                }
+                if force_open {}
             }
             LeftPanelAction::GlobalSearch { entry_focus } => {
                 let was_active = self.active_view.get()
@@ -1131,11 +1126,9 @@ impl LeftPanelView {
             }
             LeftPanelAction::WarpDrive => {
                 active_view_state::set(self, ToolPanelView::WarpDrive, ctx);
-                if self.active_view_availability(ctx) == ToolPanelAvailability::Available {
-                    if force_open {
-                    } else {
-                    }
-                }
+                if self.active_view_availability(ctx) == ToolPanelAvailability::Available
+                    && force_open
+                {}
             }
             LeftPanelAction::ConversationListView => {
                 active_view_state::set(self, ToolPanelView::ConversationListView, ctx);

@@ -32,17 +32,16 @@ use warp::tui_export::{
     ForkConversationError, GetRelevantFilesController, GitHubRepoModel, GitRepoStatusModel, LLMId,
     LLMPreferences, LLMPreferencesEvent, LOCAL_SKILLS_REMOTE_EXECUTION_ERROR_MESSAGE,
     LinkedWorkflowData, ModelEvent, ParsedSlashCommandInput, PersistenceWriter, PtyIntent,
-    PtyIntentEvent,
-    QueuedQueryEvent, QueuedQueryModel, RepoDetectionSessionType, RepoDetectionSource,
-    ResolvedTeamScope, ServerConversationToken, ServerId, SessionSettings, Sessions, SessionsEvent,
-    ShellCommandExecutorEvent, SizeInfo, SizeUpdate, SkillReference, SlashCommandDataSource as _,
-    SlashCommandKind, SlashCommandSelectionBehavior, StartAgentExecutorEvent, StartAgentRequest,
-    StaticCommand, TerminalModel, TerminalSurface, TerminalSurfaceInit, TranscriptScope,
-    TuiMcpAction, TuiMcpManager, TuiMcpServerId, TuiMcpVariableValue, TuiOnboardingMarker,
-    TuiOnboardingMarkers, TuiOnboardingMarkersEvent, TuiSlashCommandDataSource,
-    TuiSlashCommandDataSourceArgs, TuiUpArrowHistoryItemKind, TuiUserInfoManager,
-    TuiUserInfoManagerEvent, TuiZeroStateDataSource, UserTakeOverReason, UserWorkspaces,
-    UserWorkspacesEvent, WAKEUP_THROTTLE_PERIOD, WarpConfig, WarpConfigUpdateEvent,
+    PtyIntentEvent, QueuedQueryEvent, QueuedQueryModel, RepoDetectionSessionType,
+    RepoDetectionSource, ResolvedTeamScope, ServerConversationToken, ServerId, SessionSettings,
+    Sessions, SessionsEvent, ShellCommandExecutorEvent, SizeInfo, SizeUpdate, SkillReference,
+    SlashCommandDataSource as _, SlashCommandKind, SlashCommandSelectionBehavior,
+    StartAgentExecutorEvent, StartAgentRequest, StaticCommand, TerminalModel, TerminalSurface,
+    TerminalSurfaceInit, TranscriptScope, TuiMcpAction, TuiMcpManager, TuiMcpServerId,
+    TuiMcpVariableValue, TuiOnboardingMarker, TuiOnboardingMarkers, TuiOnboardingMarkersEvent,
+    TuiSlashCommandDataSource, TuiSlashCommandDataSourceArgs, TuiUpArrowHistoryItemKind,
+    TuiUserInfoManager, TuiUserInfoManagerEvent, TuiZeroStateDataSource, UserTakeOverReason,
+    UserWorkspaces, UserWorkspacesEvent, WAKEUP_THROTTLE_PERIOD, WarpConfig, WarpConfigUpdateEvent,
     block_context_from_terminal_model, build_slash_command_mixer, detect_possible_git_repo,
     export_conversation_markdown, loaded_subtree_rollup, log_out_tui,
     maybe_build_ai_query_upsert_event, prepare_conversation_block_restoration,
@@ -76,7 +75,6 @@ use warpui_core::{
     AppContext, Entity, EntityId, ModelHandle, TuiView, TypedActionView, ViewContext, ViewHandle,
 };
 
-use crate::conversation_restore_target::ConversationRestoreTarget;
 use crate::alt_screen_view::AltScreenElement;
 use crate::api_keys_menu::{TuiApiKeysMenuEvent, TuiApiKeysMenuModel, render_api_keys_footer};
 use crate::attachment_bar::{
@@ -89,6 +87,7 @@ use crate::cli_agent_osc_event_publisher::{
 use crate::clipboard::copy_to_clipboard;
 use crate::completion_menu::TuiCompletionMenuModel;
 use crate::conversation_menu::{TuiConversationMenuEvent, TuiConversationMenuModel};
+use crate::conversation_restore_target::ConversationRestoreTarget;
 use crate::conversation_selection::TuiConversationSelection;
 use crate::editor_interaction::TuiEditorCommand;
 use crate::exit_confirmation::{CTRL_C_EXIT_WINDOW, ExitConfirmation};

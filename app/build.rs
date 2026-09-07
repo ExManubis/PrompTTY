@@ -1,10 +1,6 @@
-// We can use `std::process:Command` here because this is invoked within a build script,
-// _not_ within the Warp binary (where it could cause a terminal to temporarily flash on
-// Windows).
 #![allow(clippy::disallowed_types)]
 
 use std::path::Path;
-use std::process::Command;
 use std::{env, fs};
 
 use anyhow::Result;

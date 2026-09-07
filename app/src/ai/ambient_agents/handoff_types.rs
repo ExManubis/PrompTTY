@@ -1,27 +1,5 @@
 use serde::Serialize;
 
-/// The entry point through which Cloud Mode was entered.
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CloudModeEntryPoint {
-    /// User clicked "New Cloud Agent Tab" or similar action to create a dedicated Cloud Mode tab.
-    NewTab,
-    /// User entered Cloud Mode from an existing local terminal session (e.g., via keyboard shortcut or command).
-    LocalSession,
-    /// User entered Cloud Mode through the Oz launch modal.
-    OzLaunchModal,
-    /// User re-entered Cloud Mode by clicking on an ambient agent entry block.
-    EntryBlock,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum HandoffSurface {
-    #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    Gui,
-    #[cfg_attr(not(feature = "tui"), allow(dead_code))]
-    Tui,
-}
 
 /// The entry point through which a local-to-cloud handoff was initiated.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]

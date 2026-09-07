@@ -77,7 +77,6 @@ use crate::settings::{
     PrivacySettingsChangedEvent,
 };
 use crate::settings_view::SettingsSection;
-use crate::shared_enums::PluginChipTelemetryKind;
 #[cfg(not(target_family = "wasm"))]
 use crate::terminal::ShellLaunchData;
 #[cfg(not(target_family = "wasm"))]
@@ -142,15 +141,6 @@ const PLUGIN_CHIP_DEBOUNCE: Duration = Duration::from_secs(3);
 enum PluginChipKind {
     Install,
     Update,
-}
-
-impl From<PluginChipKind> for PluginChipTelemetryKind {
-    fn from(kind: PluginChipKind) -> Self {
-        match kind {
-            PluginChipKind::Install => PluginChipTelemetryKind::Install,
-            PluginChipKind::Update => PluginChipTelemetryKind::Update,
-        }
-    }
 }
 
 /// Builds a composite key for per-agent, per-host plugin chip dismissal.
@@ -1298,7 +1288,6 @@ impl AgentInputFooter {
         progress_toast: &str,
         error_label: &str,
         success_toast: &str,
-        operation_kind: PluginChipTelemetryKind,
         operation: F,
         ctx: &mut ViewContext<Self>,
     ) -> bool
@@ -1394,7 +1383,6 @@ impl AgentInputFooter {
 
                 if result.is_ok() {
                     ctx.emit(AgentInputFooterEvent::PluginInstalled(agent));
-                } else {
                 }
 
                 ToastStack::handle(ctx).update(ctx, |toast_stack, ctx| {
@@ -1448,7 +1436,6 @@ impl AgentInputFooter {
             "Installing Warp plugin...",
             "Failed to install Warp plugin",
             success_msg,
-            PluginChipTelemetryKind::Install,
             |manager| async move { manager.install().await },
             ctx,
         )
@@ -1465,7 +1452,6 @@ impl AgentInputFooter {
             "Updating Warp plugin...",
             "Failed to update Warp plugin",
             success_msg,
-            PluginChipTelemetryKind::Update,
             |manager| async move { manager.update().await },
             ctx,
         )
@@ -2494,7 +2480,7 @@ impl TypedActionView for AgentInputFooter {
                 self.select_file(ctx);
             }
             AgentInputFooterAction::InsertFilePath(path) => {
-                if let Some(agent) = self.cli_agent(ctx) {}
+                if let Some(_agent) = self.cli_agent(ctx) {}
                 let path_with_space = format!("{path} ");
                 if self.has_active_cli_agent_input_session(ctx) {
                     ctx.emit(AgentInputFooterEvent::InsertIntoCLIRichInput(
@@ -2534,7 +2520,7 @@ impl TypedActionView for AgentInputFooter {
             AgentInputFooterAction::InstallPlugin => {
                 #[cfg(not(target_family = "wasm"))]
                 {
-                    if let Some(agent) = self.cli_agent(ctx) {}
+                    if let Some(_agent) = self.cli_agent(ctx) {}
                     if !self.handle_install_plugin(ctx) {
                         self.record_plugin_auto_failure_and_notify(ctx);
                     }
@@ -2543,7 +2529,7 @@ impl TypedActionView for AgentInputFooter {
             AgentInputFooterAction::UpdatePlugin => {
                 #[cfg(not(target_family = "wasm"))]
                 {
-                    if let Some(agent) = self.cli_agent(ctx) {}
+                    if let Some(_agent) = self.cli_agent(ctx) {}
                     if !self.handle_update_plugin(ctx) {
                         self.record_plugin_auto_failure_and_notify(ctx);
                     }
@@ -2570,8 +2556,8 @@ impl TypedActionView for AgentInputFooter {
             AgentInputFooterAction::DismissPluginChip => {
                 let chip_kind = self.plugin_chip_kind(ctx);
                 let is_update = matches!(chip_kind, Some(PluginChipKind::Update));
-                if let Some(agent) = self.cli_agent(ctx)
-                    && let Some(kind) = chip_kind
+                if let Some(_agent) = self.cli_agent(ctx)
+                    && let Some(_kind) = chip_kind
                 {}
                 let session = CLIAgentSessionsModel::as_ref(ctx)
                     .session(self.terminal_view_id)

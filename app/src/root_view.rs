@@ -1674,18 +1674,6 @@ enum AccountFirstCompletion {
 }
 
 impl AccountFirstCompletion {
-    fn completion_type(self) -> &'static str {
-        match self {
-            AccountFirstCompletion::AccountSkipped => "account_skipped",
-            AccountFirstCompletion::PaidTeam => "paid_team",
-            AccountFirstCompletion::FreeIcpSetupLater => "free_icp_setup_later",
-            AccountFirstCompletion::FreeStandardSetupLater => "free_standard_setup_later",
-            AccountFirstCompletion::FreeStandardCreditsPurchased => {
-                "free_standard_credits_purchased"
-            }
-            AccountFirstCompletion::UpgradeCompleted => "upgrade_completed",
-        }
-    }
 
     fn account_class(self) -> Option<FtueAccountClass> {
         match self {
@@ -2310,7 +2298,7 @@ impl RootView {
         };
         let account_class =
             Self::account_first_class(Self::account_first_is_paid(ctx), fresh_request_limit);
-        let has_team = UserWorkspaces::as_ref(ctx).has_teams();
+        let _has_team = UserWorkspaces::as_ref(ctx).has_teams();
 
         match account_class {
             FtueAccountClass::Paid => {
@@ -2343,7 +2331,7 @@ impl RootView {
         if !matches!(event, UserWorkspacesEvent::TeamsChanged) {
             return;
         }
-        let (account_class, upgrade_started) = match &self.auth_onboarding_state {
+        let (_account_class, upgrade_started) = match &self.auth_onboarding_state {
             AuthOnboardingState::PostAuthOnboarding {
                 account_class,
                 upgrade_started,
@@ -2597,7 +2585,7 @@ impl RootView {
                     #[cfg(target_family = "wasm")]
                     AuthOnboardingState::WebImport(_) => None,
                 };
-                if let Some(account_class) = upgrade_started {}
+                if let Some(_account_class) = upgrade_started {}
             }
             AgentOnboardingEvent::UpgradeCopyUrlRequested => {}
             AgentOnboardingEvent::UpgradePasteTokenFromClipboardRequested => {

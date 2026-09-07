@@ -12,7 +12,6 @@ use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::UiComponent as _;
 use warpui::{Entity, SingletonEntity as _, TypedActionView, View, ViewContext};
 
-use crate::terminal::model::terminal_model::ExitReason;
 use crate::ui_components;
 
 const FILE_ISSUE_TEXT: &str = "File issue";
@@ -134,7 +133,6 @@ pub enum TerminationType {
     /// The shell process terminated before we were able to bootstrap.
     Premature {
         shell_detail: String,
-        reason: ExitReason,
     },
 }
 

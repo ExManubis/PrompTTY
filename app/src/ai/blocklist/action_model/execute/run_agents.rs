@@ -394,12 +394,12 @@ impl RunAgentsExecutor {
             let result = RunAgentsResult::Denied { reason };
             return ActionExecution::Sync(AIAgentActionResultType::RunAgents(result));
         }
-        let telemetry_request = request.clone();
+        let _telemetry_request = request.clone();
 
         let receiver =
             self.dispatch_prepared_run_agents(action_id, request, parent_conversation_id, ctx);
 
-        ActionExecution::new_async(async move { receiver.recv().await }, move |result, ctx| {
+        ActionExecution::new_async(async move { receiver.recv().await }, move |result, _ctx| {
             let result = match result {
                 Ok(result) => result,
                 Err(_) => RunAgentsResult::Cancelled,

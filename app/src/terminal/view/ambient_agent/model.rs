@@ -595,8 +595,7 @@ impl AmbientAgentViewModel {
                 return;
             }
         }
-        let error = handoff_dispatch_error(&failure.issue);
-        if let Some(derived_workspace_had_content) = failure.derived_workspace_had_content {}
+        let _error = handoff_dispatch_error(&failure.issue);
         if failure.snapshot_failed {
             ctx.emit(AmbientAgentViewModelEvent::HandoffSnapshotUploadFailed {
                 error_message: "Workspace changes could not be uploaded; continuing without them."
@@ -1359,7 +1358,7 @@ impl AmbientAgentViewModel {
         err: anyhow::Error,
         ctx: &mut ModelContext<Self>,
     ) {
-        let error_message = err.to_string();
+        let _error_message = err.to_string();
 
         match classify_cloud_agent_startup_error(&err) {
             CloudAgentStartupIssue::Blocked(CloudAgentStartupBlocker::GitHubAuthRequired {

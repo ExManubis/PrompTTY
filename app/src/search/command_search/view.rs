@@ -373,7 +373,7 @@ impl CommandSearchView {
     }
 
     fn blur(&self, ctx: &mut ViewContext<Self>) {
-        let buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
+        let _buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
         ctx.emit(CommandSearchEvent::Blur);
     }
 
@@ -385,11 +385,11 @@ impl CommandSearchView {
     ) {
         match event {
             SearchBarEvent::Close => {
-                let buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
+                let _buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
                 self.close(ctx);
             }
             // ctrl-c should close the command search view
-            SearchBarEvent::BufferCleared { buffer_len } => {
+            SearchBarEvent::BufferCleared { buffer_len: _ } => {
                 self.close(ctx);
             }
             SearchBarEvent::ResultAccepted { index, action } => {
@@ -420,10 +420,6 @@ impl CommandSearchView {
         });
     }
 
-    /// Returns the active query filters
-    fn active_query_filter(&self, app: &AppContext) -> Option<QueryFilter> {
-        self.search_bar_state.as_ref(app).active_query_filter()
-    }
 
     /// Emits the `ItemSelected` event containing the passed `CommandSearchEventPayload` and closes
     /// the search panel.
@@ -465,7 +461,7 @@ impl CommandSearchView {
 
             // Recompute the result index - the incoming index is the index in the
             // uniform list, but what we want is the "distance from first result".
-            let result_index = match self.search_bar_state.as_ref(ctx).query_result_renderers() {
+            let _result_index = match self.search_bar_state.as_ref(ctx).query_result_renderers() {
                 Some(renderers) => renderers.len() - result_index - 1,
                 None => result_index,
             };

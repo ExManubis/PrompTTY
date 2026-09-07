@@ -380,7 +380,6 @@ impl FileNotebookView {
     }
 
     #[cfg(feature = "local_fs")]
-
     fn set_context(&mut self, path: &Path, session: Arc<Session>, ctx: &mut ViewContext<Self>) {
         self.location = Some(FileLocation::new(path, session.home_dir()));
         let title = self.title();

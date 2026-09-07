@@ -5458,7 +5458,7 @@ fn render_terminal_diff_stats_badge(
     git_line_changes: &GitLineChanges,
     pane_group_id: EntityId,
     pane_id: PaneId,
-    entrypoint: VerticalTabsChipEntrypoint,
+    _entrypoint: VerticalTabsChipEntrypoint,
     mouse_state: MouseStateHandle,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
@@ -5475,7 +5475,7 @@ fn render_terminal_diff_stats_badge(
             bg,
         )
     })
-    .on_click(move |ctx, app, _| {
+    .on_click(move |ctx, _app, _| {
         let locator = PaneViewLocator {
             pane_group_id,
             pane_id,
@@ -5490,7 +5490,7 @@ fn render_terminal_diff_stats_badge(
 fn render_terminal_pull_request_badge(
     label: String,
     url: String,
-    entrypoint: VerticalTabsChipEntrypoint,
+    _entrypoint: VerticalTabsChipEntrypoint,
     mouse_state: MouseStateHandle,
     appearance: &Appearance,
 ) -> Box<dyn Element> {
@@ -5504,7 +5504,7 @@ fn render_terminal_pull_request_badge(
         };
         render_badge_container(render_pull_request_badge_content(&label, appearance), bg)
     })
-    .on_click(move |ctx, app, _| {
+    .on_click(move |ctx, _app, _| {
         ctx.dispatch_typed_action(WorkspaceAction::OpenLink(url.clone()));
     })
     .with_cursor(Cursor::PointingHand)

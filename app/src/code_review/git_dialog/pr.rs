@@ -131,11 +131,11 @@ pub(super) fn start_confirm(me: &mut GitDialog, ctx: &mut ViewContext<GitDialog>
 /// Shared create-PR completion: toast (with Open PR link) + telemetry +
 /// close.
 pub(super) fn finish_create_pr(
-    me: &GitDialog,
+    _me: &GitDialog,
     result: anyhow::Result<PrInfo>,
     ctx: &mut ViewContext<GitDialog>,
 ) {
-    let (status, error) = match &result {
+    let (_status, _error) = match &result {
         Ok(_) => (GitDialogStatus::Succeeded, None),
         Err(err) => (GitDialogStatus::Failed, Some(err.to_string())),
     };

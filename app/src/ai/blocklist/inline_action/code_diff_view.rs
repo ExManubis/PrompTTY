@@ -47,16 +47,12 @@ use warpui::{
     ViewContext, ViewHandle, WeakViewHandle,
 };
 
-use super::malformed_line_heuristics::has_malformed_terminal_correction_signal;
 use crate::ai::agent::icons::{self, yellow_stop_icon};
 use crate::ai::agent::{
     AIAgentActionId, AIIdentifiers, FileEdit, RequestFileEditsResult, ServerOutputId,
 };
-use crate::ai::blocklist::RequestedEditResolution;
 use crate::ai::blocklist::action_model::{
     AIActionStatus, BlocklistAIActionEvent, BlocklistAIActionModel,
-    EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats,
-    MalformedFinalLineProxyEvent, RequestFileEditsFormatKind,
 };
 use crate::ai::blocklist::diff_storage::{
     DiffStorage, DiffStorageHelper, FileSnapshot, RegisteredDiffStorage, SaveFuture,
@@ -74,8 +70,8 @@ use crate::ai::mcp::{MCPProvider, mcp_provider_from_file_path};
 use crate::ai::paths::host_native_absolute_path;
 use crate::ai::predict::prompt_suggestions::ACCEPT_PROMPT_SUGGESTION_KEYBINDING;
 use crate::ai::skills::{
-    SkillManager, SkillOpenOrigin, SkillReference, icon_override_for_skill_name,
-    render_skill_button, skill_path_from_location,
+    SkillManager, SkillReference, icon_override_for_skill_name, render_skill_button,
+    skill_path_from_location,
 };
 use crate::cmd_or_ctrl_shift;
 use crate::code::diff_viewer::{DiffViewer, DisplayMode};
@@ -393,7 +389,6 @@ pub struct CodeDiffView {
     focus_handle: Option<PaneFocusHandle>,
     /// Client and server identifiers for the AI output associated with the code diffs.
     identifiers: AIIdentifiers,
-    edit_format_kind: RequestFileEditsFormatKind,
     /// `False` until a user makes the first edit to one of the diffs in the view.
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     user_edited_file_contents: bool,
@@ -562,7 +557,7 @@ impl CodeDiffView {
                 }
                 me.user_edited_file_contents = true;
 
-                let Some(output_id) = me.server_output_id() else {
+                let Some(_output_id) = me.server_output_id() else {
                     return;
                 };
 
@@ -576,7 +571,6 @@ impl CodeDiffView {
         model: &dyn AIBlockModel<View = crate::ai::blocklist::AIBlock>,
         title: Option<String>,
         identifiers: AIIdentifiers,
-        edit_format_kind: RequestFileEditsFormatKind,
         should_show_speedbump: bool,
         action_model: ModelHandle<BlocklistAIActionModel>,
         session_platform: Option<SessionPlatform>,
@@ -597,7 +591,6 @@ impl CodeDiffView {
             initial_state,
             title,
             identifiers,
-            edit_format_kind,
             should_show_speedbump,
             session_platform,
             ctx,
@@ -649,7 +642,6 @@ impl CodeDiffView {
         action_id: &AIAgentActionId,
         title: Option<String>,
         identifiers: AIIdentifiers,
-        edit_format_kind: RequestFileEditsFormatKind,
         should_show_speedbump: bool,
         session_platform: Option<SessionPlatform>,
         ctx: &mut ViewContext<Self>,
@@ -660,7 +652,6 @@ impl CodeDiffView {
             CodeDiffState::WaitingForUser,
             title,
             identifiers,
-            edit_format_kind,
             should_show_speedbump,
             session_platform,
             ctx,
@@ -674,7 +665,6 @@ impl CodeDiffView {
         initial_state: CodeDiffState,
         title: Option<String>,
         identifiers: AIIdentifiers,
-        edit_format_kind: RequestFileEditsFormatKind,
         should_show_speedbump: bool,
         session_platform: Option<SessionPlatform>,
         ctx: &mut ViewContext<Self>,
@@ -829,7 +819,6 @@ impl CodeDiffView {
             title,
             focus_handle: None,
             identifiers,
-            edit_format_kind,
             user_edited_file_contents: false,
             original_pane_id: None,
             scrollable_state: Default::default(),
@@ -1993,7 +1982,7 @@ impl CodeDiffView {
                 .update(ctx, |v, ctx| v.navigate_previous_diff_hunk(ctx)),
         };
 
-        if let Some(output_id) = self.server_output_id() {}
+        if let Some(_output_id) = self.server_output_id() {}
     }
 
     fn select_file(&mut self, direction: Direction, ctx: &mut ViewContext<Self>) {
@@ -2021,7 +2010,7 @@ impl CodeDiffView {
         });
         ctx.notify();
 
-        if let Some(output_id) = self.server_output_id() {}
+        if let Some(_output_id) = self.server_output_id() {}
     }
 
     fn set_display_mode(&mut self, display_mode: DisplayMode, ctx: &mut ViewContext<Self>) {
@@ -2474,7 +2463,7 @@ impl TypedActionView for CodeDiffView {
                     self.selected_tab = *idx;
                     ctx.notify();
 
-                    if let Some(output_id) = self.server_output_id() {}
+                    if let Some(_output_id) = self.server_output_id() {}
                 }
             }
             CodeDiffViewAction::Edit => {
@@ -2502,7 +2491,7 @@ impl TypedActionView for CodeDiffView {
                 });
                 ctx.notify();
 
-                if let Ok(checked) = checked {}
+                if let Ok(_checked) = checked {}
             }
             CodeDiffViewAction::OpenSettings => {
                 ctx.emit(CodeDiffViewEvent::OpenSettings);
@@ -2931,6 +2920,3 @@ fn editor_range_to_file_context_range(range: Range<usize>) -> Range<usize> {
     range.start.saturating_add(1)..range.end.saturating_add(1)
 }
 
-fn file_context_range_to_editor_range(range: Range<usize>) -> Range<usize> {
-    range.start.saturating_sub(1)..range.end.saturating_sub(1)
-}

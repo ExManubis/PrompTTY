@@ -47,21 +47,7 @@ use crate::ui_components::blended_colors;
 use crate::workspace::WorkspaceAction;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
-/// True when the mode is remote and `environment_id` is non-empty.
-fn env_presence(execution_mode: &RunAgentsExecutionMode) -> bool {
-    matches!(
-        execution_mode,
-        RunAgentsExecutionMode::Remote { environment_id, .. } if !environment_id.is_empty()
-    )
-}
 
-/// True when the mode is remote and `worker_host` is non-empty.
-fn host_presence(execution_mode: &RunAgentsExecutionMode) -> bool {
-    matches!(
-        execution_mode,
-        RunAgentsExecutionMode::Remote { worker_host, .. } if !worker_host.is_empty()
-    )
-}
 
 const CONFIG_BLOCK_HEADER: &str = "Use orchestration";
 const CONFIG_BLOCK_DESCRIPTION: &str =
@@ -1105,10 +1091,10 @@ impl TypedActionView for OrchestrationConfigBlockView {
 impl OrchestrationConfigBlockView {
     fn emit_plan_config_approval_toggled(
         &self,
-        status: OrchestrationApprovalStatus,
-        ctx: &mut ViewContext<Self>,
+        _status: OrchestrationApprovalStatus,
+        _ctx: &mut ViewContext<Self>,
     ) {
     }
 
-    fn emit_agent_proposed_config(&self, ctx: &mut ViewContext<Self>) {}
+    fn emit_agent_proposed_config(&self, _ctx: &mut ViewContext<Self>) {}
 }

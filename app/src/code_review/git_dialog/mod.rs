@@ -878,7 +878,7 @@ impl TypedActionView for GitDialog {
         match action {
             GitDialogAction::Cancel => {
                 if !self.loading {
-                    let operation = match &self.mode {
+                    let _operation = match &self.mode {
                         GitDialogMode::Commit(state) => match state.intent {
                             CommitChainMode::CommitOnly => GitOperationKind::CommitOnly,
                             CommitChainMode::CommitAndPush => GitOperationKind::CommitAndPush,
@@ -898,7 +898,7 @@ impl TypedActionView for GitDialog {
                     // Derive the real local/remote value rather than hardcoding
                     // it, so cancel telemetry matches the repo the dialog acts
                     // on (the completion paths report the same value).
-                    let is_local = !self.repo_location.is_remote();
+                    let _is_local = !self.repo_location.is_remote();
                     ctx.emit(GitDialogEvent::Cancelled);
                 }
             }

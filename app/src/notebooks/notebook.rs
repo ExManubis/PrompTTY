@@ -12,7 +12,7 @@ use warp_editor::editor::NavigationKey;
 use warp_editor::model::{CoreEditorModel, RichTextEditorModel};
 use warp_errors::{report_error, report_if_error};
 use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
-use warpui::r#async::{SpawnedFutureHandle, Timer};
+use warpui::r#async::SpawnedFutureHandle;
 use warpui::clipboard::ClipboardContent;
 use warpui::elements::{
     Align, Clipped, ConstrainedBox, Container, CrossAxisAlignment, DispatchEventResult, Empty,
@@ -108,11 +108,6 @@ const FEATURE_NOT_AVAILABLE_MESSAGE: &str = "This notebook could not be saved to
 /// object updates.
 const SAVE_PERIOD: Duration = Duration::from_secs(2);
 
-/// The minimum size of an edit delta (in terms of the change in byte length of the serialized
-/// Markdown) for it to be considered "meaningful". We're likely going to tune this over time:
-/// * By refining the threshold
-/// * By using a more advanced diff algorithm
-const MEANINGFUL_EDIT_THRESHOLD: usize = 30;
 
 lazy_static! {
     // This is used to replace any backslash followed by a punctuation character with just the punctuation character.

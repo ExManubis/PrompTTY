@@ -732,8 +732,8 @@ impl RunAgentsCardView {
     /// per card instance.
     fn emit_orchestration_entered_once(
         &mut self,
-        conversation_id: AIConversationId,
-        ctx: &mut ViewContext<Self>,
+        _conversation_id: AIConversationId,
+        _ctx: &mut ViewContext<Self>,
     ) {
         if self.entered_event_emitted {
             return;
@@ -742,12 +742,12 @@ impl RunAgentsCardView {
     }
 
     /// Emits `RunAgentsCardDecision` at most once per card instance.
-    fn emit_decision(&mut self, decision: RunAgentsCardDecision, ctx: &mut ViewContext<Self>) {
+    fn emit_decision(&mut self, _decision: RunAgentsCardDecision, ctx: &mut ViewContext<Self>) {
         if self.decision_event_emitted {
             return;
         }
         self.decision_event_emitted = true;
-        let Some(conversation_id) = self.block_model.conversation_id(ctx) else {
+        let Some(_conversation_id) = self.block_model.conversation_id(ctx) else {
             return;
         };
     }

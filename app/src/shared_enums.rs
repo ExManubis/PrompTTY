@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-pub use warp_terminal::local_tty::spawner::PtySpawnMode;
 
 #[derive(Clone, Copy, Serialize, Deserialize, Debug)]
 pub enum PaletteSource {
@@ -28,15 +27,6 @@ pub enum FileTreeSource {
     CLIAgentView,
     /// Opened from the File explorer chip in Warp's own agent input toolbelt.
     AgentToolbelt,
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub enum CloseTarget {
-    App,
-    Window,
-    Tab,
-    Pane,
-    EditorTab,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -128,36 +118,6 @@ pub enum SharingDialogSource {
     AIBlockContextMenu,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
-pub enum FindOption {
-    CaseSensitive,
-    FindInBlock,
-    Regex,
-}
-
-#[cfg(feature = "local_fs")]
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CodePanelsFileOpenEntrypoint {
-    CodeReview,
-    ProjectExplorer,
-    GlobalSearch,
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum PluginChipTelemetryKind {
-    Install,
-    Update,
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub enum WarpDriveSource {
-    Legacy,
-    LeftPanelToolbelt,
-    ForceOpened,
-}
-
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum SaveAsWorkflowModalSource {
     Block,
@@ -183,44 +143,6 @@ pub enum AnonymousUserSignupEntrypoint {
     SignUpAIPrompt,
     NextCommandSuggestionsUpgradeBanner,
     Unknown,
-}
-
-#[derive(Clone, Debug, Copy, Serialize, Deserialize)]
-pub enum KnowledgePaneEntrypoint {
-    /// Triggered by either the command palette or the mac menus
-    #[serde(rename = "global")]
-    Global,
-
-    #[serde(rename = "settings")]
-    Settings,
-
-    #[serde(rename = "warp_drive")]
-    WarpDrive,
-
-    #[serde(rename = "ai_blocklist")]
-    AIBlocklist,
-
-    #[serde(rename = "slash_command")]
-    SlashCommand,
-}
-
-#[derive(Clone, Debug, Copy, Serialize, Deserialize)]
-pub enum MCPServerCollectionPaneEntrypoint {
-    /// Triggered by either the command palette or the mac menus
-    #[serde(rename = "global")]
-    Global,
-
-    #[serde(rename = "settings")]
-    Settings,
-
-    #[serde(rename = "warp_drive")]
-    WarpDrive,
-
-    #[serde(rename = "slash_command")]
-    SlashCommand,
-
-    #[serde(rename = "mcp_settings_tab")]
-    MCPSettingsTab,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -271,7 +193,6 @@ pub enum PromptSuggestionFallbackReason {
 #[serde(rename_all = "snake_case")]
 pub enum CodeContextDestination {
     Pty,
-    AgentInput,
     RichInput,
 }
 
@@ -295,15 +216,6 @@ pub enum MCPTemplateInstallationSource {
     Shared,
     #[serde(rename = "gallery")]
     Gallery,
-}
-
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub enum OpenedWarpAISource {
-    GlobalEntryButton,
-    HelpWithBlock,
-    HelpWithTextSelection,
-    FromAICommandSearch,
-    WarmWelcome,
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]
