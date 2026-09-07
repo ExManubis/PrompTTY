@@ -20,8 +20,6 @@ pub struct ChannelConfig {
     /// disabled for this build.
     #[serde(default)]
     pub oz_config: Option<OzConfig>,
-    /// Configuration for telemetry sending, or [`None`] if telemetry should be
-    /// disabled for this build.
     /// Configuration for autoupdate functionality.
     pub autoupdate_config: Option<AutoupdateConfig>,
     /// Configuration for crash reporting.
@@ -31,7 +29,7 @@ pub struct ChannelConfig {
 }
 
 impl ChannelConfig {
-    /// A channel config with no Warp-hosted services: no server, Oz, telemetry,
+    /// A channel config with no Warp-hosted services: no server, Oz,
     /// autoupdate, crash reporting, or bundled MCP OAuth credentials.
     pub fn local_only(app_id: AppId, logfile_name: impl Into<Cow<'static, str>>) -> Self {
         Self {
@@ -39,7 +37,6 @@ impl ChannelConfig {
             logfile_name: logfile_name.into(),
             server_config: None,
             oz_config: None,
-            telemetry_config: None,
             autoupdate_config: None,
             crash_reporting_config: None,
             mcp_static_config: None,

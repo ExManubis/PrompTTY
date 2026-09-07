@@ -28,7 +28,7 @@ use super::{
 };
 use crate::accessibility::{AccessibilityVerbosity, ActionAccessibilityContent};
 use crate::actions::StandardAction;
-use crate::app_focus_telemetry::AppFocusInfo;
+use crate::app_focus::AppFocusInfo;
 use crate::assets::AssetProvider;
 use crate::assets::asset_cache::{AssetCache, AssetHandle, AssetSource, AssetState};
 use crate::r#async::executor::{self, Background, Foreground, ForegroundTask};

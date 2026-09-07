@@ -170,24 +170,6 @@ impl ChannelState {
         CHANNEL_STATE.lock().config.logfile_name.clone()
     }
 
-    pub fn telemetry_file_name() -> Cow<'static, str> {
-        CHANNEL_STATE
-            .lock()
-            .config
-            .telemetry_config
-            .as_ref()
-            .map(|tc| tc.telemetry_file_name.clone())
-            .unwrap_or_default()
-    }
-
-    /// Returns whether this build has a telemetry config and can therefore ship
-    /// telemetry events. Builds like OpenWarp intentionally ship with
-    /// `telemetry_config: None`, in which case UI that controls telemetry
-    /// should be hidden since the toggle has no effect.
-    pub fn is_telemetry_available() -> bool {
-        CHANNEL_STATE.lock().config.telemetry_config.is_some()
-    }
-
     /// Returns whether this build has a crash reporting config and can therefore
     /// ship crash reports. Builds like OpenWarp intentionally ship with
     /// `crash_reporting_config: None`, in which case UI that controls crash
