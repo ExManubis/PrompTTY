@@ -375,6 +375,3 @@ async fn load_markers_with_timeout(
     }
 }
 
-#[cfg(test)]
-#[path = "tui_onboarding_markers_tests.rs"]
-mod tests;

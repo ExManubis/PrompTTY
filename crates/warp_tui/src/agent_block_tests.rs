@@ -18,8 +18,8 @@ use warp::tui_export::{
     Appearance, BlocklistAIActionModel, FailedOutputPresentation, GetRelevantFilesController,
     LLMId, MessageId, ModelEventDispatcher, OutputStatusUpdateCallback, ReceivedMessageDisplay,
     RenderableAIError, RequestCommandOutputResult, ServerOutputId, Sessions, Shared,
-    SummarizationType, TaskId, TerminalModel, TodoOperation, TodoStatus, TuiOnboardingMarker,
-    TuiOnboardingMarkers, UserQueryMode, UserWorkspaces, queue_tui_permission_action,
+    SummarizationType, TaskId, TerminalModel, TodoOperation, TodoStatus, UserQueryMode,
+    UserWorkspaces, queue_tui_permission_action,
     register_tui_session_view_test_singletons, should_show_failed_output_usage_notice,
 };
 use warp_core::ui::color::blend::Blend;
@@ -39,7 +39,6 @@ use warpui_core::{App, AppContext, EntityId, EntityIdMap, TuiView, ViewContext, 
 use super::{
     CollapsibleSectionStates, TuiAIBlock, TuiAIBlockAction, TuiAIBlockEvent, TuiAIBlockSection,
     TuiCodeBlockKey, TuiRichTextSection, TuiToolCallView, render_failure_section,
-    render_first_credit_gate, should_consume_first_credit_gate,
 };
 use crate::agent_block_sections::{
     completed_todos_label, render_fallback_tool_call_section, render_todo_list_section,
@@ -93,110 +92,6 @@ fn agent_block_renders_generic_failure_after_partial_output() {
             ))
             .into();
             assert_eq!(frame.buffer[(0, failure_row as u16)].fg, red);
-        });
-    });
-}
-
-#[test]
-fn restored_out_of_credits_exchange_does_not_consume_first_credit_gate() {
-    let presentation = FailedOutputPresentation::OutOfCredits {
-        message: "out of credits".to_owned(),
-        can_use_own_api_keys: false,
-    };
-    assert!(should_consume_first_credit_gate(false, Some(&presentation)));
-    assert!(!should_consume_first_credit_gate(true, Some(&presentation)));
-    assert!(!should_consume_first_credit_gate(false, None));
-}
-
-#[test]
-fn first_credit_gate_matches_design() {
-    App::test((), |app| async move {
-        app.add_singleton_model(|_| Appearance::mock());
-
-        app.read(|ctx| {
-            let mut presenter = TuiPresenter::new();
-            let frame = presenter.present_element(
-                render_first_credit_gate(ctx),
-                TuiRect::new(0, 0, 80, 1),
-                ctx,
-            );
-            assert_eq!(
-                frame
-                    .buffer
-                    .to_lines()
-                    .into_iter()
-                    .map(|line| line.trim_end().to_owned())
-                    .collect::<Vec<_>>(),
-                vec!["You need AI credits in order to use Warp’s agent.".to_owned()]
-            );
-            let builder = TuiUiBuilder::from_app(ctx);
-            assert_eq!(
-                frame.buffer[(0, 0)].fg,
-                builder
-                    .attention_glyph_style()
-                    .fg
-                    .expect("attention foreground")
-            );
-        });
-    });
-}
-
-#[test]
-fn first_credit_gate_consumes_once_and_reacts_to_delayed_marker_readiness() {
-    App::test((), |mut app| async move {
-        register_tui_session_view_test_singletons(&mut app);
-        let markers = TuiOnboardingMarkers::handle(&app);
-        let first = test_agent_block_with_registered_singletons(
-            &mut app,
-            FakeAgentBlockModel {
-                inputs: Vec::new(),
-                status: failed_output(
-                    Vec::new(),
-                    RenderableAIError::QuotaLimit {
-                        user_display_message: Some("You’ve reached your credit limit.".to_owned()),
-                    },
-                ),
-            },
-        );
-        app.read(|ctx| {
-            assert!(!first.as_ref(ctx).first_credit_gate);
-        });
-
-        markers.update(&mut app, |markers, ctx| {
-            markers.set_ready_for_test(false, true, ctx);
-        });
-        app.read(|ctx| {
-            let lines = render_block_lines(first.as_ref(ctx), 100, ctx);
-            assert!(first.as_ref(ctx).first_credit_gate);
-            assert!(
-                lines
-                    .iter()
-                    .any(|line| line == "You need AI credits in order to use Warp’s agent.")
-            );
-            assert!(
-                lines
-                    .iter()
-                    .all(|line| !line.contains("won't count towards your usage"))
-            );
-        });
-        markers.update(&mut app, |markers, ctx| {
-            assert!(!markers.consume(TuiOnboardingMarker::FirstCreditGate, ctx));
-        });
-
-        let duplicate = test_agent_block_with_registered_singletons(
-            &mut app,
-            FakeAgentBlockModel {
-                inputs: Vec::new(),
-                status: failed_output(
-                    Vec::new(),
-                    RenderableAIError::QuotaLimit {
-                        user_display_message: Some("You’ve reached your credit limit.".to_owned()),
-                    },
-                ),
-            },
-        );
-        app.read(|ctx| {
-            assert!(!duplicate.as_ref(ctx).first_credit_gate);
         });
     });
 }

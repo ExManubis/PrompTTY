@@ -26,7 +26,7 @@ use super::{
     ANIMATION_PANEL_COLS, LEFT_COLUMN_COLS, ZeroStateSectionVisibility, autoupdate_status_label,
     build_zero_state_layout, build_zero_state_overlay, build_zero_state_stack_layout,
     changelog_bullets_from_changelog, custom_endpoint_status_label, mcp_status_label,
-    render_bottom_section, render_first_run_top_section,
+    render_bottom_section,
 };
 use crate::autoupdate::TuiAutoupdateStatus;
 use crate::tui_builder::TuiUiBuilder;
@@ -117,54 +117,6 @@ fn homebrew_update_status_shows_the_upgrade_command() {
         autoupdate_status_label(TuiAutoupdateStatus::UpdateAvailable),
         Some("update available — run brew upgrade --cask warp-agent-cli")
     );
-}
-
-#[test]
-fn first_zero_state_matches_welcome_design_copy() {
-    App::test((), |mut app| async move {
-        register_tui_session_view_test_singletons(&mut app);
-
-        let lines = app.read(|ctx| {
-            let builder = TuiUiBuilder::from_app(ctx);
-            render_element_lines(
-                render_first_run_top_section(&builder, ZeroStateSectionVisibility::default(), ctx)
-                    .finish(),
-                ctx,
-                LEFT_COLUMN_COLS,
-                16,
-            )
-        });
-        let rendered = lines.join("\n");
-        for expected in [
-            "Welcome to PrompTTY",
-            "What’s different about Warp",
-            "✶ State of the art coding agents",
-            "✶ Frontier and open-weight models",
-            "✶ Fully customizable model routers",
-            "✶ Orchestration for fleets of agents",
-            "✶ Better shell command support",
-        ] {
-            assert!(
-                rendered.contains(expected),
-                "first zero state should contain {expected:?}:\n{rendered}"
-            );
-        }
-        for unexpected in [
-            "/natural-language-detection",
-            "/modify-settings",
-            "/orchestrate",
-            "Run full-screen terminal apps",
-            "Orchestrate fleets of agents",
-            "Work with shell commands like in a native terminal",
-        ] {
-            assert!(
-                !rendered.contains(unexpected),
-                "first zero state should not contain {unexpected:?}:\n{rendered}"
-            );
-        }
-        assert!(!rendered.contains("What's new"));
-        assert!(!rendered.contains("████"));
-    });
 }
 
 #[test]

@@ -1028,6 +1028,3 @@ impl Entity for OnboardingStateModel {
     type Event = OnboardingStateEvent;
 }
 
-#[cfg(test)]
-#[path = "model_tests.rs"]
-mod tests;

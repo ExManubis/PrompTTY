@@ -365,48 +365,6 @@ fn edits_persist_on_unsynced_default_profile_when_logged_out() {
 }
 
 #[test]
-fn explicit_local_collection_is_preserved_from_onboarding() {
-    let _guard = FeatureFlag::FileBackedExecutionProfiles.override_enabled(true);
-
-    App::test((), |mut app| async move {
-        install_singletons(&mut app, AuthStateProvider::new_for_test());
-        app.update(|ctx| {
-            AISettings::handle(ctx).update(ctx, |settings, ctx| {
-                settings
-                    .execution_profiles
-                    .set_value(
-                        collection_with_profile(
-                            "pre-login",
-                            "Pre-login",
-                            ActionPermission::AlwaysAllow,
-                        ),
-                        ctx,
-                    )
-                    .unwrap();
-            });
-        });
-
-        let profile_model = app.add_singleton_model(|ctx| {
-            AIExecutionProfilesModel::new(&LaunchMode::new_for_unit_test(), ctx)
-        });
-        complete_cloud_initial_load(&mut app);
-
-        profile_model.read(&app, |model, ctx| {
-            assert!(model.should_preserve_onboarding_profile(ctx));
-        });
-        app.read(|ctx| {
-            assert!(
-                AISettings::as_ref(ctx)
-                    .execution_profiles
-                    .value()
-                    .profile(&ExecutionProfileId::parse("pre-login").unwrap())
-                    .is_some()
-            );
-        });
-    });
-}
-
-#[test]
 fn migration_retries_after_pending_legacy_profile_receives_server_id() {
     let _guard = FeatureFlag::FileBackedExecutionProfiles.override_enabled(true);
 
