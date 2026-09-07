@@ -1,4 +1,5 @@
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
 #[cfg(unix)]
 use warp_errors::report_error;
 use warpui_core::{AppContext, Entity, SingletonEntity};
@@ -13,10 +14,15 @@ use super::PseudoConsoleChild;
 use super::{PtyOptions, PtySpawnResult};
 use crate::local_tty::{self};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum PtySpawnMode {
+    /// The pty was spawned using the terminal server.
     TerminalServer,
+    /// We tried to spawn the pty using the terminal server, but something went
+    /// wrong so we fell back to spawning it directly.
     FallbackToDirect,
+    /// The terminal server is not in use, and we spawned the pty directly
+    /// (in tests, for example).
     Direct,
 }
 
