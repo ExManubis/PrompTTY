@@ -658,7 +658,7 @@ pub(crate) enum TuiTerminalSessionAction {
     ReadOnlyMenuSelectionEnded(String),
 }
 
-/// The authenticated terminal/session surface rendered inside [`RootTuiView`].
+/// The terminal/session surface rendered inside [`RootTuiView`].
 pub(crate) struct TuiTerminalSessionView {
     transcript: ViewHandle<TuiTranscriptView>,
     input_view: ViewHandle<TuiInputView>,

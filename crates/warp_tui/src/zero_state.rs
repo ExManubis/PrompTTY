@@ -889,8 +889,7 @@ fn mcp_status_label(snapshot: &warp::tui_export::TuiMcpSnapshot) -> (String, boo
 
 /// The login-info line: the signed-in account (email, falling back to the
 /// display name) when authenticated, or a graceful "Not signed in" state when
-/// not. The zero state is normally only shown after login, but the unauthenticated
-/// branch keeps the surface honest if it is ever rendered before auth completes.
+/// not.
 fn render_login_line(builder: &TuiUiBuilder, app: &AppContext) -> Box<dyn TuiElement> {
     render_login_line_with_prefix("Signed in as", builder, app)
 }
