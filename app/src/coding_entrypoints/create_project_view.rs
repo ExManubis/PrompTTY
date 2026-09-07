@@ -12,7 +12,6 @@ use warpui::{
 
 use crate::appearance::Appearance;
 use crate::coding_entrypoints::glowing_editor::{GlowingEditor, GlowingEditorEvent};
-use crate::settings::{PrivacySettings, should_collect_ai_ugc_telemetry};
 
 const ICON_MARGIN_LEFT: f32 = 12.;
 const ICON_MARGIN_RIGHT: f32 = 8.;
@@ -71,16 +70,6 @@ impl CreateProjectView {
     fn handle_editor_event(&mut self, event: &GlowingEditorEvent, ctx: &mut ViewContext<Self>) {
         match event {
             GlowingEditorEvent::Submit(prompt) => {
-                // Always send metadata event for custom prompts
-
-                // Send content event only if UGC collection is enabled
-                let should_collect_ugc = should_collect_ai_ugc_telemetry(
-                    ctx,
-                    PrivacySettings::as_ref(ctx).is_telemetry_enabled,
-                );
-                if should_collect_ugc {
-                }
-
                 ctx.emit(CreateProjectEvent::SubmitPrompt(prompt.clone()));
             }
             GlowingEditorEvent::Cancel => {

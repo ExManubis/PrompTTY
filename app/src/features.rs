@@ -26,13 +26,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::Autoupdate,
         #[cfg(feature = "changelog")]
         FeatureFlag::Changelog,
-        #[cfg(feature = "cocoa_sentry")]
-        FeatureFlag::CocoaSentry,
-        #[cfg(feature = "crash_reporting")]
-        FeatureFlag::CrashReporting,
-        #[cfg(feature = "log_expensive_frames_in_sentry")]
-        FeatureFlag::LogExpensiveFramesInSentry,
-        #[cfg(feature = "record_app_active_events")]
         #[cfg(feature = "runtime_feature_flags")]
         FeatureFlag::RuntimeFeatureFlags,
         #[cfg(feature = "sequential_storage")]
@@ -127,8 +120,6 @@ fn enabled_features() -> HashSet<FeatureFlag> {
         FeatureFlag::KittyImages,
         #[cfg(feature = "warp_packs")]
         FeatureFlag::WarpPacks,
-        #[cfg(feature = "global_ai_analytics_banner")]
-        #[cfg(feature = "global_ai_analytics_collection")]
         #[cfg(feature = "default_adeberry_theme")]
         FeatureFlag::DefaultAdeberryTheme,
         #[cfg(feature = "agent_mode_primary_xml")]

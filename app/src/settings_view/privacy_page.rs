@@ -214,7 +214,6 @@ impl PrivacyPageView {
     fn build_page() -> PageType<Self> {
         let mut widgets: Vec<Box<dyn SettingsWidget<View = Self>>> = vec![
             Box::new(SecretRedactionWidget::default()),
-            Box::new(CrashReportsWidget::default()),
             Box::new(CloudConversationStorageWidget::default()),
         ];
         if ContextFlag::NetworkLogConsole.is_enabled() {
@@ -281,16 +280,6 @@ impl PrivacyPageView {
     }
 
 
-    fn toggle_crash_reporting(&mut self, ctx: &mut ViewContext<Self>) {
-        let privacy_settings_handle = PrivacySettings::handle(ctx);
-        let old_value = privacy_settings_handle
-            .as_ref(ctx)
-            .is_crash_reporting_enabled;
-        ctx.update_model(&privacy_settings_handle, |privacy_settings, ctx| {
-            privacy_settings.set_is_crash_reporting_enabled(!old_value, ctx);
-        });
-        ctx.notify();
-    }
 
     fn toggle_cloud_conversation_storage(&mut self, ctx: &mut ViewContext<Self>) {
         let privacy_settings_handle = PrivacySettings::handle(ctx);
@@ -473,7 +462,6 @@ pub enum PrivacyPageAction {
     ToggleSafeMode,
     ToggleHideSecretsInBlockList,
     SetSecretDisplayMode(SecretDisplayMode),
-    ToggleCrashReporting,
     ToggleCloudConversationStorage,
     LaunchNetworkLogging,
     RemoveCustomRegex(usize),
@@ -553,7 +541,6 @@ impl TypedActionView for PrivacyPageView {
             PrivacyPageAction::SetSecretDisplayMode(mode) => {
                 self.set_secret_display_mode(*mode, ctx)
             }
-            PrivacyPageAction::ToggleCrashReporting => self.toggle_crash_reporting(ctx),
             PrivacyPageAction::ToggleCloudConversationStorage => {
                 self.toggle_cloud_conversation_storage(ctx)
             }
@@ -1348,81 +1335,6 @@ impl SettingsWidget for SecretRedactionWidget {
 }
 
 #[derive(Default)]
-struct CrashReportsWidget {
-    switch_state: SwitchStateHandle,
-}
-
-impl SettingsWidget for CrashReportsWidget {
-    type View = PrivacyPageView;
-
-    fn search_terms(&self) -> &str {
-        "telemetry crash reports stability data collection"
-    }
-
-    fn should_render(&self, app: &AppContext) -> bool {
-        // Builds without a crash reporting config (e.g. OpenWarp) cannot ship
-        // crash reports, so the toggle would be a no-op. Hide it in that case.
-        if !ChannelState::is_crash_reporting_available() {
-            return false;
-        }
-        let privacy_settings = PrivacySettings::as_ref(app);
-        !privacy_settings.is_telemetry_force_enabled()
-    }
-
-    fn render(
-        &self,
-        _view: &Self::View,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        let ui_builder = appearance.ui_builder();
-        let privacy_settings = PrivacySettings::as_ref(app);
-        Flex::column()
-            .with_child(render_body_item::<PrivacyPageAction>(
-                "Send crash reports".into(),
-                None,
-                // Crash report state is always synced to cloud, so no need to show local only icon.
-                LocalOnlyIconState::Hidden,
-                ToggleState::Enabled,
-                appearance,
-                ui_builder
-                    .switch(self.switch_state.clone())
-                    .check(privacy_settings.is_crash_reporting_enabled)
-                    .build()
-                    .on_click(move |ctx, _, _| {
-                        ctx.dispatch_typed_action(PrivacyPageAction::ToggleCrashReporting)
-                    })
-                    .finish(),
-                None,
-            ))
-            .with_child(
-                ui_builder
-                    .paragraph(
-                        "Crash reports assist with debugging and stability improvements."
-                            .to_owned(),
-                    )
-                    .with_style(UiComponentStyles {
-                        font_color: Some(
-                            appearance
-                                .theme()
-                                .sub_text_color(appearance.theme().surface_2())
-                                .into_solid(),
-                        ),
-                        margin: Some(
-                            Coords::default()
-                                .top(styles::DESCRIPTION_NEGATIVE_MARGIN_OFFSET)
-                                .bottom(styles::DESCRIPTION_MARGIN_BOTTOM),
-                        ),
-                        ..Default::default()
-                    })
-                    .build()
-                    .finish(),
-            )
-            .finish()
-    }
-}
-
-#[derive(Default)]
 struct CloudConversationStorageWidget {
     switch_state: SwitchStateHandle,
 }
@@ -1746,25 +1658,14 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
     context: &ContextPredicate,
     builder: fn(SettingsAction) -> T,
 ) {
-    let mut toggle_binding_pairs = vec![
-        ToggleSettingActionPair::new(
-            "crash reporting",
-            builder(SettingsAction::PrivacyPageToggle(
-                PrivacyPageAction::ToggleCrashReporting,
-            )),
-            context,
-            flags::CRASH_REPORTING_FLAG,
-        ),
-    ];
-
-    toggle_binding_pairs.push(ToggleSettingActionPair::new(
+    let mut toggle_binding_pairs = vec![ToggleSettingActionPair::new(
         "secret redaction",
         builder(SettingsAction::PrivacyPageToggle(
             PrivacyPageAction::ToggleSafeMode,
         )),
         context,
         flags::SAFE_MODE_FLAG,
-    ));
+    )];
 
     toggle_binding_pairs.push(
         ToggleSettingActionPair::new(

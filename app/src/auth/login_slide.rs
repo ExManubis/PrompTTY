@@ -135,7 +135,6 @@ pub enum LoginSlideAction {
     EnterToken,
     ShowPrivacySettings,
     HideOverlay,
-    ToggleCrashReporting,
     ToggleCloudConversationStorage,
     DismissNotification,
     PasteAuthUrl,
@@ -1012,7 +1011,6 @@ impl LoginSlideView {
                 .finish();
 
         let actions = PrivacySettingsActions {
-            toggle_crash_reporting: LoginSlideAction::ToggleCrashReporting,
             toggle_cloud_conversation_storage: LoginSlideAction::ToggleCloudConversationStorage,
             hide_overlay: LoginSlideAction::HideOverlay,
         };
@@ -1384,14 +1382,6 @@ impl TypedActionView for LoginSlideView {
                         ctx.notify();
                     }
                 }
-            }
-            LoginSlideAction::ToggleCrashReporting => {
-                let handle = PrivacySettings::handle(ctx);
-                ctx.update_model(&handle, |settings, ctx| {
-                    settings
-                        .set_is_crash_reporting_enabled(!settings.is_crash_reporting_enabled, ctx);
-                });
-                ctx.notify();
             }
             LoginSlideAction::ToggleCloudConversationStorage => {
                 let handle = PrivacySettings::handle(ctx);

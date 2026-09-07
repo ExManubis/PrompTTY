@@ -7893,10 +7893,7 @@ impl Input {
                         predicted_command: response.most_likely_action.clone(),
                     });
 
-                let should_collect_ugc = should_collect_ai_ugc_telemetry(
-                    ctx,
-                    PrivacySettings::as_ref(ctx).is_telemetry_enabled,
-                );
+                let should_collect_ugc = should_collect_ai_ugc_telemetry(ctx);
             }
             // Reset state for whether the user accepted the intelligent autosuggestion.
             self.was_intelligent_autosuggestion_accepted = false;
@@ -8595,9 +8592,8 @@ impl Input {
 
                 // The ID may be `None` if the user is *clearing* environment variables.
                 if let Some(env_vars_id) = env_vars {
-                    let env_vars_object =
+                    let _env_vars_object =
                         CloudModel::as_ref(ctx).get_env_var_collection(env_vars_id);
-                    let telemetry_metadata = (),;
                 }
             }
         }
@@ -9653,7 +9649,7 @@ impl Input {
         let input_buffer_text = self.buffer_text(ctx);
         let buffer_length = input_buffer_text.len();
         let input =
-            should_collect_ai_ugc_telemetry(ctx, PrivacySettings::as_ref(ctx).is_telemetry_enabled)
+            should_collect_ai_ugc_telemetry(ctx)
                 .then_some(input_buffer_text);
         let is_udi_enabled = InputSettings::as_ref(ctx).is_universal_developer_input_enabled(ctx);
 

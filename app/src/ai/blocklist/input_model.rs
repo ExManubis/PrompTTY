@@ -826,14 +826,6 @@ impl BlocklistAIInputModel {
                         Some(decision_source),
                         ctx,
                     );
-                    if current_input_type != new_input_type {
-                        let buffer_length = other_buffer_cloned.len();
-                        let input_buffer_text_for_telemetry = (
-                            ctx,
-                            PrivacySettings::as_ref(ctx).is_telemetry_enabled,
-                        )
-                        .then_some(other_buffer_cloned);
-                    }
                 },
             )
             .abort_handle();

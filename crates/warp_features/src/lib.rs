@@ -7,11 +7,8 @@ pub use overrides::{get_overrides, set_overrides};
 #[derive(Copy, Clone, Hash, PartialEq, Eq, Debug, Sequence)]
 pub enum FeatureFlag {
     Changelog,
-    CocoaSentry,
-    CrashReporting,
     DebugMode,
     Autoupdate,
-    LogExpensiveFramesInSentry,
 
     WelcomeTips,
     ThinStrokes,
