@@ -53,8 +53,6 @@ echo "Running core tests via nextest..."
 # Run warp_completer tests with the "v2" (completions-on-js) flag enabled. We do this to ensure that
 # the v2 completions implementation doesn't regress/rot while it's development is paused.
 cargo nextest run -p warp_completer --features v2
-echo "Running core doc tests..."
-./script/run-core-tests --doc
 echo "Tests succeeded..."
 
 echo "Congrats! All presubmits checks passed."

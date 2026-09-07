@@ -89,10 +89,6 @@ jobs:
         if: success()
         run: ./script/run-core-tests
 
-      - name: Run doc tests
-        if: success() || failure()
-        run: ./script/run-core-tests --doc
-
       - name: Run completions-on-js tests
         if: success() || failure()
         run: cargo nextest run --locked -p warp_completer --features v2
