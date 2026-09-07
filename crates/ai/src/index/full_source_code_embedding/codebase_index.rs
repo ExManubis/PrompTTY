@@ -245,8 +245,6 @@ enum SyncOperationResult {
 }
 
 impl SyncOperationResult {
-    }
-
     fn server_sync_result(
         self,
         last_server_synced_root_node: Option<NodeHash>,
