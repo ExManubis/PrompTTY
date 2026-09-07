@@ -420,7 +420,6 @@ impl CommandSearchView {
         });
     }
 
-
     /// Emits the `ItemSelected` event containing the passed `CommandSearchEventPayload` and closes
     /// the search panel.
     fn handle_result_selected(

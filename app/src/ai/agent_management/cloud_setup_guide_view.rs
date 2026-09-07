@@ -60,16 +60,10 @@ pub struct CloudSetupGuideView {
 
 #[derive(Debug, Clone)]
 pub enum CloudSetupGuideAction {
-    CopyCode {
-        code: String,
-    },
-    RunWorkflow {
-        workflow: Box<WorkflowType>,
-    },
+    CopyCode { code: String },
+    RunWorkflow { workflow: Box<WorkflowType> },
     VisitOz,
-    OpenDocs {
-        docs: SetupGuideDocs,
-    },
+    OpenDocs { docs: SetupGuideDocs },
 }
 
 /// Which URL the user clicked in the setup guide (also used in telemetry)
@@ -341,44 +335,34 @@ impl CloudSetupGuideView {
 
         // Match command to formatted workflow with correct args.
         let Some(workflow) = (match code {
-            CREATE_ENV_SLASH_CMD => Some(
-                WorkflowType::Local(
-                    Workflow::new("Create Environment", CREATE_ENV_SLASH_CMD).with_arguments(vec![
-                        Argument::new("github link or local filepath", ArgumentType::Text)
-                            .with_description("GitHub link or local filepath to the repository"),
+            CREATE_ENV_SLASH_CMD => Some(WorkflowType::Local(
+                Workflow::new("Create Environment", CREATE_ENV_SLASH_CMD).with_arguments(vec![
+                    Argument::new("github link or local filepath", ArgumentType::Text)
+                        .with_description("GitHub link or local filepath to the repository"),
+                ]),
+            )),
+            CREATE_ENV_CLI_CMD => Some(WorkflowType::Local(
+                Workflow::new("Create Environment (CLI)", CREATE_ENV_CLI_CMD).with_arguments(vec![
+                    Argument::new("NAME", ArgumentType::Text)
+                        .with_description("Name for the environment"),
+                    Argument::new("DOCKER_IMAGE", ArgumentType::Text)
+                        .with_description("Docker image to use for the environment"),
+                ]),
+            )),
+            CREATE_SLACK_INTEGRATION_CMD => Some(WorkflowType::Local(
+                Workflow::new("Create Slack Integration", CREATE_SLACK_INTEGRATION_CMD)
+                    .with_arguments(vec![
+                        Argument::new("environment_id", ArgumentType::Text)
+                            .with_description("ID of the environment to integrate with"),
                     ]),
-                ),
-            ),
-            CREATE_ENV_CLI_CMD => Some(
-                WorkflowType::Local(
-                    Workflow::new("Create Environment (CLI)", CREATE_ENV_CLI_CMD).with_arguments(
-                        vec![
-                            Argument::new("NAME", ArgumentType::Text)
-                                .with_description("Name for the environment"),
-                            Argument::new("DOCKER_IMAGE", ArgumentType::Text)
-                                .with_description("Docker image to use for the environment"),
-                        ],
-                    ),
-                ),
-            ),
-            CREATE_SLACK_INTEGRATION_CMD => Some(
-                WorkflowType::Local(
-                    Workflow::new("Create Slack Integration", CREATE_SLACK_INTEGRATION_CMD)
-                        .with_arguments(vec![
-                            Argument::new("environment_id", ArgumentType::Text)
-                                .with_description("ID of the environment to integrate with"),
-                        ]),
-                ),
-            ),
-            CREATE_LINEAR_INTEGRATION_CMD => Some(
-                WorkflowType::Local(
-                    Workflow::new("Create Linear Integration", CREATE_LINEAR_INTEGRATION_CMD)
-                        .with_arguments(vec![
-                            Argument::new("environment_id", ArgumentType::Text)
-                                .with_description("ID of the environment to integrate with"),
-                        ]),
-                ),
-            ),
+            )),
+            CREATE_LINEAR_INTEGRATION_CMD => Some(WorkflowType::Local(
+                Workflow::new("Create Linear Integration", CREATE_LINEAR_INTEGRATION_CMD)
+                    .with_arguments(vec![
+                        Argument::new("environment_id", ArgumentType::Text)
+                            .with_description("ID of the environment to integrate with"),
+                    ]),
+            )),
             _ => None,
         }) else {
             report_error!(

@@ -15,14 +15,12 @@ use warpui::r#async::{FutureExt as AsyncFutureExt, SpawnedFutureHandle, Timer};
 use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity};
 
 use super::static_prompt_suggestions::static_suggested_query;
+use crate::ai::agent::CancellationReason;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent::PassiveSuggestionTrigger;
-use crate::ai::agent::{CancellationReason};
 use crate::ai::blocklist::controller::response_stream::ResponseStreamId;
 use crate::ai::blocklist::controller::{BlocklistAIController, BlocklistAIControllerEvent};
-use crate::ai::blocklist::{
-    BlocklistAIPermissions, read_local_file_context,
-};
+use crate::ai::blocklist::{BlocklistAIPermissions, read_local_file_context};
 use crate::ai::paths::host_native_absolute_path;
 use crate::ai::predict::generate_am_query_suggestions::{
     GenerateAMQuerySuggestionsRequest, GenerateAMQuerySuggestionsResponse, Suggestion,

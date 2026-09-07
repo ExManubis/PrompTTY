@@ -876,7 +876,8 @@ async fn prepare_snapshot_for_spawn(forked: ForkedHandoff) -> SnapshotSettledHan
         snapshot_disabled,
         orchestration_handoff,
     } = forked.pending;
-    let (_workspace, snapshot_result) = upload_handoff_snapshot(source_paths, snapshot_target).await;
+    let (_workspace, snapshot_result) =
+        upload_handoff_snapshot(source_paths, snapshot_target).await;
     let (initial_snapshot_token, snapshot_failed) = match snapshot_result {
         Ok(HandoffUploadResult::Uploaded(token)) => (Some(token), false),
         Ok(HandoffUploadResult::EmptyWorkspace) => (None, false),

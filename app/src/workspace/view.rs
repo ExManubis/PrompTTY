@@ -9287,11 +9287,7 @@ impl Workspace {
             diff_state_model,
         };
 
-        self.open_right_panel(
-            &context,
-            &pane_group,
-            ctx,
-        );
+        self.open_right_panel(&context, &pane_group, ctx);
 
         let active_conversation_id = panel_context
             .terminal_view
@@ -23871,11 +23867,7 @@ impl TypedActionView for Workspace {
                                 repo_path,
                                 diff_state_model,
                             };
-                            self.open_right_panel(
-                                &context,
-                                &pane_group_handle,
-                                ctx,
-                            );
+                            self.open_right_panel(&context, &pane_group_handle, ctx);
                         }
                     }
                 }
@@ -24337,7 +24329,10 @@ impl TypedActionView for Workspace {
                 // Focus newly created object in WD
                 self.view_in_and_focus_warp_drive(*item_id, ctx);
             }
-            OpenObjectSharingSettings { object_id, source: _ } => {
+            OpenObjectSharingSettings {
+                object_id,
+                source: _,
+            } => {
                 self.open_object_sharing_settings(*object_id, None, ctx);
             }
             UndoTrash(cloud_object_type_and_id) => {

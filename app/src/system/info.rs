@@ -73,7 +73,6 @@ impl SystemInfo {
         self.resource_usage_reporter.handle_block_created();
     }
 
-
     /// Returns the full memory footprint of the current process, in bytes.
     ///
     /// Unlike RSS, this includes memory that has been swapped out or compressed
@@ -81,8 +80,6 @@ impl SystemInfo {
     pub fn memory_footprint(&self) -> Byte {
         memory_footprint::memory_footprint_bytes().into()
     }
-
-
 
     fn schedule_refresh(ctx: &mut ModelContext<Self>) {
         ctx.spawn(

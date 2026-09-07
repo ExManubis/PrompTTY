@@ -63,10 +63,10 @@ cfg_if::cfg_if! {
 use warp_errors::report_error;
 
 use super::{
-    CommitChainMode, DiffHunk, DiffLine, DiffLineType, DiffMetadata,
-    DiffMetadataAgainstBase, DiffMode, DiffState, DiffStateError, DiffStateModelEvent, DiffStats,
-    FileDiff, FileDiffAndContent, FileStatusInfo, GitDiffData, GitDiffWithBaseContent,
-    GitFileStatus, GitOpResult,
+    CommitChainMode, DiffHunk, DiffLine, DiffLineType, DiffMetadata, DiffMetadataAgainstBase,
+    DiffMode, DiffState, DiffStateError, DiffStateModelEvent, DiffStats, FileDiff,
+    FileDiffAndContent, FileStatusInfo, GitDiffData, GitDiffWithBaseContent, GitFileStatus,
+    GitOpResult,
 };
 
 // Unicode bidirectional characters that should be flagged
@@ -224,10 +224,7 @@ struct GitNumStatMetadata {
 
 impl LocalDiffStateModel {
     #[cfg(feature = "local_fs")]
-    pub fn new(
-        repo_path: Option<String>,
-            ctx: &mut ModelContext<Self>,
-    ) -> Self {
+    pub fn new(repo_path: Option<String>, ctx: &mut ModelContext<Self>) -> Self {
         // Set up file invalidation queue and subscribe to results
         // so the model can emit SingleFileUpdated events.
         let queue = SyncQueue::new_streaming(&ctx.background_executor());
@@ -309,10 +306,7 @@ impl LocalDiffStateModel {
     }
 
     #[cfg(not(feature = "local_fs"))]
-    pub fn new(
-        _repo_path: Option<String>,
-        _ctx: &mut ModelContext<Self>,
-    ) -> Self {
+    pub fn new(_repo_path: Option<String>, _ctx: &mut ModelContext<Self>) -> Self {
         Self {
             state: InternalDiffState::default(),
             mode: DiffMode::default(),

@@ -2919,4 +2919,3 @@ fn changed_lines_for_result(
 fn editor_range_to_file_context_range(range: Range<usize>) -> Range<usize> {
     range.start.saturating_add(1)..range.end.saturating_add(1)
 }
-

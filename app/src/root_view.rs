@@ -1674,7 +1674,6 @@ enum AccountFirstCompletion {
 }
 
 impl AccountFirstCompletion {
-
     fn account_class(self) -> Option<FtueAccountClass> {
         match self {
             AccountFirstCompletion::AccountSkipped => None,

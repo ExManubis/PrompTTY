@@ -272,9 +272,9 @@ use crate::ai::blocklist::{
     InputTypeAutoDetectionSource, LegacyPassiveSuggestionsEvent, LegacyPassiveSuggestionsModel,
     MaaPassiveSuggestionsEvent, MaaPassiveSuggestionsModel, PRE_REWIND_PREFIX,
     PassiveSuggestionsModels, PendingAttachment, PendingQueryState, QueuedQuery, QueuedQueryId,
-    QueuedQueryModel, QueuedQueryOrigin, ShellCommandExecutor,
-    ShellCommandExecutorEvent, SlashCommandRequest, StartAgentExecutor, StartAgentExecutorEvent,
-    StartAgentRequest, ai_brand_color, block_context_from_terminal_model,
+    QueuedQueryModel, QueuedQueryOrigin, ShellCommandExecutor, ShellCommandExecutorEvent,
+    SlashCommandRequest, StartAgentExecutor, StartAgentExecutorEvent, StartAgentRequest,
+    ai_brand_color, block_context_from_terminal_model,
     get_ai_block_overflow_menu_element_position_id, get_attached_blocks_chip_element_position_id,
     is_lrc_auto_queue_active,
 };
@@ -2686,7 +2686,6 @@ pub struct TerminalView {
 
     /// Background executor for sending telemetry when a TerminalView is
     /// dropped.
-
     inline_banners_state: InlineBannersState,
 
     /// Most recent command correction encountered, if any, used for the keyboard shortcut action.
@@ -15351,14 +15350,7 @@ impl TerminalView {
             .map(Into::into);
 
         let diff_view = ctx.add_typed_action_view(|ctx| {
-            CodeDiffView::new_passive(
-                &action_id,
-                title,
-                identifiers,
-                false,
-                session_platform,
-                ctx,
-            )
+            CodeDiffView::new_passive(&action_id, title, identifiers, false, session_platform, ctx)
         });
 
         diff_view.update(ctx, |view, ctx| {

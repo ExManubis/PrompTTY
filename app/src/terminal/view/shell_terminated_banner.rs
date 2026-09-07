@@ -131,9 +131,7 @@ pub enum TerminationType {
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     PtySpawnFailure { pty_spawn_error: anyhow::Error },
     /// The shell process terminated before we were able to bootstrap.
-    Premature {
-        shell_detail: String,
-    },
+    Premature { shell_detail: String },
 }
 
 impl TerminationType {

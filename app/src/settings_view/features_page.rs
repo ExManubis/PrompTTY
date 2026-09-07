@@ -893,7 +893,6 @@ fn block_maximum_rows_description() -> String {
     )
 }
 
-
 #[derive(Default)]
 struct MouseStateHandles {
     local_only_icon_tooltip_states: RefCell<HashMap<String, MouseStateHandle>>,

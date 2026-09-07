@@ -1,5 +1,14 @@
 use serde::Serialize;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(not(feature = "tui"), allow(dead_code))]
+pub enum HandoffSurface {
+    #[cfg_attr(target_family = "wasm", allow(dead_code))]
+    Gui,
+    #[cfg_attr(not(feature = "tui"), allow(dead_code))]
+    Tui,
+}
 
 /// The entry point through which a local-to-cloud handoff was initiated.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
@@ -17,8 +26,6 @@ pub enum HandoffEntryPoint {
 }
 
 /// Describes which synthetic-input path drives an empty-prompt handoff.
-/// Captured at handoff initiation so telemetry reflects the intended path
-/// regardless of whether the snapshot derivation later produces content.
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
 #[derive(Clone, Copy, Debug, Default, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

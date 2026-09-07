@@ -87,10 +87,7 @@ impl<P: BackingView> PaneHeader<P> {
     ///
     /// If the user can share the pane contents, this will bring up a sharing dialog. Otherwise, it copies
     /// the backing object's URL.
-    pub fn share_pane_contents(
-        &mut self,
-        ctx: &mut ViewContext<Self>,
-    ) {
+    pub fn share_pane_contents(&mut self, ctx: &mut ViewContext<Self>) {
         if !self.is_sharing_dialog_enabled(ctx) {
             return;
         }
@@ -122,10 +119,7 @@ impl<P: BackingView> PaneHeader<P> {
         ctx.notify();
     }
 
-    pub fn open_shared_session_qr_code(
-        &mut self,
-        ctx: &mut ViewContext<Self>,
-    ) {
+    pub fn open_shared_session_qr_code(&mut self, ctx: &mut ViewContext<Self>) {
         if !self.is_sharing_dialog_enabled(ctx)
             || !self
                 .sharing_dialog()

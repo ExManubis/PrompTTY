@@ -197,7 +197,6 @@ where
     }
 }
 
-
 #[derive(Default)]
 struct DiffResult {
     /// All successfully-applied diffs, grouped by file.

@@ -17,10 +17,7 @@ use crate::ai::agent::{
 };
 use crate::ai::block_context::BlockContext;
 use crate::ai::blocklist::diff_types::FileDiff;
-use crate::ai::blocklist::{
-    BlocklistAIHistoryModel, FileReadResult, SessionContext,
-    apply_edits,
-};
+use crate::ai::blocklist::{BlocklistAIHistoryModel, FileReadResult, SessionContext, apply_edits};
 use crate::ai::paths::host_native_absolute_path;
 use crate::auth::auth_state::AuthStateProvider;
 use crate::settings::AISettings;
@@ -834,7 +831,6 @@ fn file_edits_to_passive_diffs(file_edits: &[FileEdit]) -> Vec<PassiveCodeDiffEn
     }
     entries
 }
-
 
 fn is_passive_code_diffs_enabled(ctx: &ModelContext<PassiveSuggestionsModel>) -> bool {
     AISettings::as_ref(ctx).is_code_suggestions_enabled(ctx)

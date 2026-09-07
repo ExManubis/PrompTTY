@@ -810,8 +810,7 @@ impl InputSuggestionsMode {
             _ => None,
         }
     }
-
-    }
+}
 
 struct SharedSessionInputState {
     /// History model for viewers in a shared session.

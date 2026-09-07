@@ -906,9 +906,7 @@ impl<P: BackingView> TypedActionView for PaneHeader<P> {
                 ctx.emit(Event::PaneHeaderOverflowMenuToggled(true));
                 ctx.notify();
             }
-            PaneHeaderAction::ShareContents => {
-                self.share_pane_contents(ctx)
-            }
+            PaneHeaderAction::ShareContents => self.share_pane_contents(ctx),
             PaneHeaderAction::PaneHeaderDragStarted => {}
             PaneHeaderAction::PaneHeaderDragged {
                 origin,

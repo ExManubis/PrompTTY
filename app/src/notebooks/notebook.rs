@@ -108,7 +108,6 @@ const FEATURE_NOT_AVAILABLE_MESSAGE: &str = "This notebook could not be saved to
 /// object updates.
 const SAVE_PERIOD: Duration = Duration::from_secs(2);
 
-
 lazy_static! {
     // This is used to replace any backslash followed by a punctuation character with just the punctuation character.
     static ref ESCAPE_PUNCTUATION_REGEX: Regex =

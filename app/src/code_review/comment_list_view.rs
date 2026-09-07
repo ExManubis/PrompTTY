@@ -301,7 +301,6 @@ impl CommentListView {
         }
     }
 
-
     pub fn debug_state(&self, ctx: &AppContext) -> CommentListDebugState {
         let user_workspaces = UserWorkspaces::as_ref(ctx);
         let scope = user_workspaces.team_context(&self.view_handle, ctx);

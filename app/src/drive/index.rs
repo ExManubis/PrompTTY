@@ -83,7 +83,7 @@ use crate::settings::SharedObjectLimitBannerSettings;
 use crate::settings::app_installation_detection::{
     UserAppInstallDetectionSettings, UserAppInstallStatus,
 };
-use crate::shared_enums::{AnonymousUserSignupEntrypoint};
+use crate::shared_enums::AnonymousUserSignupEntrypoint;
 use crate::ui_components::blended_colors;
 use crate::ui_components::buttons::{highlight, icon_button};
 use crate::ui_components::icons::{ICON_DIMENSIONS, Icon};
@@ -5333,11 +5333,7 @@ impl TypedActionView for DriveIndex {
                 ctx.emit(DriveIndexEvent::InvokeEnvVarCollectionInSubshell(*id))
             }
             DriveIndexAction::ToggleShareDialog { warp_drive_item_id } => {
-                self.toggle_share_dialog(
-                    warp_drive_item_id,
-                    None,
-                    ctx,
-                );
+                self.toggle_share_dialog(warp_drive_item_id, None, ctx);
             }
             DriveIndexAction::SignupAnonymousUser => {
                 let entrypoint = AnonymousUserSignupEntrypoint::SignUpButton;

@@ -155,9 +155,7 @@ impl SuggestedRuleModal {
 
     fn handle_view_event(&mut self, event: &SuggestedRuleDialogEvent, ctx: &mut ViewContext<Self>) {
         match event {
-            SuggestedRuleDialogEvent::AddNewRule => {
-                ctx.emit(SuggestedRuleModalEvent::AddNewRule)
-            }
+            SuggestedRuleDialogEvent::AddNewRule => ctx.emit(SuggestedRuleModalEvent::AddNewRule),
             SuggestedRuleDialogEvent::OpenRuleForEditing => {
                 ctx.emit(SuggestedRuleModalEvent::OpenRuleForEditing)
             }

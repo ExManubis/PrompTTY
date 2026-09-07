@@ -47,8 +47,6 @@ use crate::ui_components::blended_colors;
 use crate::workspace::WorkspaceAction;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
-
-
 const CONFIG_BLOCK_HEADER: &str = "Use orchestration";
 const CONFIG_BLOCK_DESCRIPTION: &str =
     "Break this work into coordinated streams with multiple agents.";

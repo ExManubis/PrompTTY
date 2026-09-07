@@ -35,4 +35,3 @@ impl Entity for SystemStats {
 }
 
 impl SingletonEntity for SystemStats {}
-

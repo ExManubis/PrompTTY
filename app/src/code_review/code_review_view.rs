@@ -3546,7 +3546,7 @@ impl CodeReviewView {
 
         let RelocateCommentsResult {
             comments: relocated_comments,
-                    } = Self::relocate_comments(comments, state, &repo_path, ctx);
+        } = Self::relocate_comments(comments, state, &repo_path, ctx);
 
         if !newly_imported_ids.is_empty() {
             let (_active_count, _outdated_count) = relocated_comments

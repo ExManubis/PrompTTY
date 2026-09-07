@@ -97,7 +97,6 @@ impl CodeReviewFindModel {
         self.results = None;
     }
 
-
     pub fn update_query(
         &mut self,
         query: Option<String>,

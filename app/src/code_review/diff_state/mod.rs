@@ -412,8 +412,7 @@ impl DiffStateModel {
     /// to the inner model so it can forward events.
     pub fn new_local(path: PathBuf, ctx: &mut ModelContext<Self>) -> Self {
         let repo_path = Some(path.display().to_string());
-        let local = ctx
-            .add_model(|ctx| LocalDiffStateModel::new(repo_path, ctx));
+        let local = ctx.add_model(|ctx| LocalDiffStateModel::new(repo_path, ctx));
         ctx.subscribe_to_model(&local, |me, _, event, ctx| me.forward_event(event, ctx));
         Self::Local(local)
     }
