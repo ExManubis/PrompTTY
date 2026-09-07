@@ -265,8 +265,8 @@ pub enum SettingsViewEvent {
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub enum SettingsSection {
     About,
-    #[default]
     Account,
+    #[default]
     Appearance,
     Features,
     Keybindings,
@@ -1416,10 +1416,10 @@ impl SettingsView {
 
         let initial_page = match page {
             Some(SettingsSection::Scripting) if !FeatureFlag::WarpControlCli.is_enabled() => {
-                SettingsSection::Account
+                SettingsSection::default()
             }
             Some(section) if !ChannelState::cloud_enabled() && section.requires_warp_cloud() => {
-                SettingsSection::Account
+                SettingsSection::default()
             }
             other => other.unwrap_or_default(),
         };
