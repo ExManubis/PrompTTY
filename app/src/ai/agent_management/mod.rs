@@ -1,3 +1,5 @@
+pub mod setup_guide_step;
+pub use setup_guide_step::*;
 mod agent_management_model;
 pub(crate) mod agent_type_selector;
 pub(crate) mod details_action_buttons;

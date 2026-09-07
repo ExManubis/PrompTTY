@@ -1,5 +1,6 @@
-use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 //! Shared context menu implementation for notebooks.
+
+use crate::notebooks::types::{ActionEntrypoint, BlockInfo, EmbeddedObjectInfo, SelectionMode};
 
 use pathfinder_geometry::vector::Vector2F;
 use warp_core::context_flag::ContextFlag;

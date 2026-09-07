@@ -8,7 +8,7 @@ use cfg_if::cfg_if;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use onboarding::{
-    AgentAgentOnboardingView, OfferVariant, OnboardingIntention,
+    AgentOnboardingEvent, AgentOnboardingView, OfferVariant, OnboardingIntention,
     SelectedSettings,
 };
 use parking_lot::Mutex;

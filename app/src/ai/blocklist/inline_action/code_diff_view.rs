@@ -996,7 +996,6 @@ impl CodeDiffView {
 
         // Handled in `CodeDiffView` instead of `CodeDiffModel` so we emit one event for all files.
         // This isn't emitted in the executor because rejected diffs aren't executed.
-        self.send_telemetry_for_edit_resolution(RequestedEditResolution::Reject, ctx);
     }
 
     /// Revert all changes by replacing file contents with the base version.
@@ -2121,71 +2120,11 @@ impl CodeDiffView {
         self.identifiers.server_output_id.clone()
     }
 
-    /// Helper function to send telemetry for edit resolution.
-    /// Consolidates the common telemetry logic for reject operations.
-    fn send_telemetry_for_edit_resolution(
-        &self,
-        response: RequestedEditResolution,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        let (lines_added, lines_removed) = self.pending_diffs_line_counts(ctx);
-    }
 
     /// Emits the malformed-final-line proxy telemetry, computed from editor state
     /// at accept time. Called by the review surface when the user accepts.
     pub fn send_malformed_line_telemetry(&self, ctx: &mut ViewContext<Self>) {
-        let mut edited_file_count = 0;
-        let mut correction_count = 0;
-        let mut edited_correction_count = 0;
-        let mut unedited_correction_count = 0;
-
-        for diff in self.pending_diffs.iter() {
-            // Deletes have no content changes to analyze.
-            if matches!(
-                diff.diff_view.as_ref(ctx).diff(),
-                Some(DiffType::Delete { .. })
-            ) {
-                continue;
-            }
-            let was_edited = diff.diff_view.as_ref(ctx).was_edited();
-            let editor_changed_lines = diff.diff_view.as_ref(ctx).changed_lines(ctx);
-            let changed_lines_for_malformed_signal = if editor_changed_lines.is_empty() {
-                changed_lines_for_result(
-                    editor_changed_lines.clone(),
-                    diff.diff_view.as_ref(ctx).diff(),
-                )
-                .into_iter()
-                .map(file_context_range_to_editor_range)
-                .collect()
-            } else {
-                editor_changed_lines
-            };
-            let has_malformed_terminal_signal =
-                diff.diff_view
-                    .as_ref(ctx)
-                    .diff()
-                    .is_some_and(|editor_diff| {
-                        has_malformed_terminal_correction_signal(
-                            editor_diff,
-                            &changed_lines_for_malformed_signal,
-                        )
-                    });
-
-            if was_edited {
-                edited_file_count += 1;
-            }
-            if has_malformed_terminal_signal {
-                correction_count += 1;
-                if was_edited {
-                    edited_correction_count += 1;
-                } else {
-                    unedited_correction_count += 1;
-                }
-            }
-        }
-
-        if correction_count > 0 {
-        }
+        let _ = ctx;
     }
 
     pub fn set_original_pane_id(&mut self, original_pane_id: Option<PaneId>) {

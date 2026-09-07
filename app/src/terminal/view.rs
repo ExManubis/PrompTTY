@@ -364,6 +364,7 @@ use crate::settings::{
     InputModeSettings, InputModeSettingsChangedEvent, InputSettings, PaneSettings,
     PaneSettingsChangedEvent, PrivacySettings, PrivacySettingsChangedEvent,
     PrivacySettingsSnapshot, SelectionSettings, VimBannerSettings,
+    should_collect_ai_ugc_telemetry,
 };
 use crate::settings_view::keybindings::KeybindingChangedNotifier;
 use crate::settings_view::mcp_servers_page::MCPServersSettingsPage;
@@ -6111,13 +6112,6 @@ impl TerminalView {
                 ..
             } => {
                 self.maybe_send_lrc_queued_prompts_after_subagent_handoff(*conversation_id, ctx);
-                // Hide telemetry banner forever after first AI input user sends.
-                    && !GeneralSettings::as_ref(ctx)
-                        .telemetry_banner_dismissed
-                        .value()
-                {
-                    self.hide_telemetry_banner_permanently(ctx);
-                }
 
                 // Close any open usage footer(s) when a new AI block is added
                 if !self.usage_footer_view_ids.is_empty() {
@@ -11010,58 +11004,7 @@ impl TerminalView {
     }
 
     /// Inserts telemetry policy banner into the blocklist.
-    pub fn insert_telemetry_banner(&mut self, is_onboarded: bool, ctx: &mut ViewContext<Self>) {
-        // Don't ever show telemetry banner for enterprise users.
-        if UserWorkspaces::as_ref(ctx)
-            .current_workspace()
-            .is_some_and(|w| matches!(w.billing_metadata.customer_type, CustomerType::Enterprise))
-        {
-            return;
-        }
 
-            && !GeneralSettings::as_ref(ctx)
-                .telemetry_banner_dismissed
-                .value()
-            // Do not insert telemetry banner if one is already showing
-            // (Happens in the case of a new user going from loginless to login
-            // without dismissing banner the first time)
-            && !self.rich_content_views.iter().any(|content| content.is_telemetry_banner())
-        {
-            let banner = ctx.add_view(|ctx| TelemetryBanner::new(is_onboarded, ctx));
-            self.insert_rich_content(
-                None,
-                banner.clone(),
-                Some(RichContentMetadata::TelemetryBanner {
-                    telemetry_banner_handle: banner,
-                }),
-                RichContentInsertionPosition::Append {
-                    insert_below_long_running_block: true,
-                },
-                ctx,
-            );
-            ctx.notify();
-        }
-    }
-
-    fn hide_telemetry_banner_permanently(&mut self, ctx: &mut ViewContext<Self>) {
-        GeneralSettings::handle(ctx).update(ctx, |general_settings, ctx| {
-            let _ = general_settings
-                .telemetry_banner_dismissed
-                .set_value(true, ctx);
-        });
-        for rich_content in self.rich_content_views.iter() {
-            if let Some(RichContentMetadata::TelemetryBanner {
-                telemetry_banner_handle,
-            }) = rich_content.metadata()
-            {
-                self.model
-                    .lock()
-                    .block_list_mut()
-                    .remove_rich_content(telemetry_banner_handle.id());
-            }
-        }
-        ctx.notify();
-    }
 
     /// Redetermine focus in the terminal view -- note that this will not steal focus
     /// from other parts of the app, the find bar, or the block filter editor.
@@ -11207,14 +11150,6 @@ impl TerminalView {
             self.ai_controller.update(ctx, |controller, ctx| {
                 controller.resume_conversation(conversation_id, resume_context, ctx);
             });
-        }
-
-        // Hide telemetry banner forever after first block user executes.
-            && !GeneralSettings::as_ref(ctx)
-                .telemetry_banner_dismissed
-                .value()
-        {
-            self.hide_telemetry_banner_permanently(ctx);
         }
     }
 
@@ -26608,7 +26543,6 @@ impl TypedActionView for TerminalView {
             | StartFileDropTarget
             | StopFileDropTarget
             | RunNativeShellCompletions { .. }
-            | HideTelemetryBannerPermanently
             | GenerateCodebaseIndex
             | LoadAgentModeConversation
             | DeleteAttachment { .. }
@@ -27232,7 +27166,6 @@ impl TypedActionView for TerminalView {
                 selected_range,
             } => self.set_marked_text_on_terminal(marked_text, selected_range, ctx),
             ClearMarkedText => self.clear_marked_text_on_terminal(ctx),
-            HideTelemetryBannerPermanently => self.hide_telemetry_banner_permanently(ctx),
             ShowInitializationBlock => self.show_initialization_block(),
             GenerateCodebaseIndex => {
                 self.generate_codebase_index(ctx);
@@ -28778,22 +28711,6 @@ impl Drop for TerminalView {
                 "Session abandoned before bootstrap for shell {pending_shell:?} on ssh {has_pending_ssh_session}"
             );
 
-            let was_ever_visible = self.was_ever_visible;
-            let duration_since_start = self.bootstrap_start.unwrap_or_else(Instant::now).elapsed();
-            let server_api = self.server_api.clone();
-            let privacy_settings_snapshot = self.privacy_settings_snapshot;
-            let task = self.background_executor.spawn(async move {
-                if let Err(error) = server_api
-                    .send_telemetry_event(
-                        
-                        privacy_settings_snapshot,
-                    )
-                    .await
-                {
-                    log::warn!("Error occurred with sending telemetry event: {error}");
-                }
-            });
-            task.detach();
         };
     }
 }

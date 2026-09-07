@@ -4,7 +4,7 @@ use onboarding::components::feature_optout_dialog::{
     FeatureOptOutDialog, render_feature_optout_dialog,
 };
 use onboarding::slides::{layout, onboarding_bottom_nav, slide_content};
-use onboarding::{OnboardingEvent, OnboardingIntention, WARP_DRIVE_FEATURES};
+use onboarding::{OnboardingIntention, WARP_DRIVE_FEATURES};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use ui_components::{Component as _, Options as _, button};
@@ -402,9 +402,6 @@ impl LoginSlideView {
             close_login_notification_mouse_state: MouseStateHandle::default(),
             highlighted_hyperlink_state: HighlightedHyperlink::default(),
         };
-
-        if matches!(source, LoginSlideSource::AccountFirstOnboarding) {
-        }
 
         view
     }

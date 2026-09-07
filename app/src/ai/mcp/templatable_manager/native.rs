@@ -70,9 +70,6 @@ enum SpawnMode {
 }
 
 impl SpawnMode {
-    fn should_send_telemetry(&self) -> bool {
-        matches!(self, SpawnMode::Initial { .. })
-    }
 
     fn should_persist_running_state_to_sqlite(&self) -> bool {
         matches!(
@@ -1122,7 +1119,6 @@ impl TemplatableMCPServerManager {
 
         // Extract values from mode before moving it into the closure.
         let should_persist = mode.should_persist_running_state_to_sqlite();
-        let should_send_telemetry = mode.should_send_telemetry();
 
         self.change_server_state(installation_uuid, MCPServerState::Starting, ctx);
         let task = ctx.spawn(
@@ -1182,9 +1178,6 @@ impl TemplatableMCPServerManager {
                         Some(e.into())
                     }
                 };
-
-                if should_send_telemetry {
-                }
             },
         );
 

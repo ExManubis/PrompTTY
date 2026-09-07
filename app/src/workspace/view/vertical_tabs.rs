@@ -1,3 +1,4 @@
+use crate::shared_enums::VerticalTabsChipEntrypoint;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

@@ -11,7 +11,6 @@ type CustomCallback<S> = Rc<dyn Fn(&mut ViewContext<super::LaunchModal<S>>)>;
 pub struct CTAButton<S: Slide> {
     pub label: String,
     pub action: CTAButtonAction<S>,
-    #[allow(dead_code)]
 }
 
 impl<S: Slide> CTAButton<S> {
@@ -47,8 +46,6 @@ impl<S: Slide> CTAButton<S> {
             action: CTAButtonAction::Custom(Rc::new(callback)),
         }
     }
-
-    #[allow(dead_code)]
 }
 
 pub enum CTAButtonAction<S: Slide> {
@@ -57,15 +54,4 @@ pub enum CTAButtonAction<S: Slide> {
     #[allow(dead_code)]
     OpenUrl(String),
     Custom(CustomCallback<S>),
-}
-
-impl<S: Slide> Clone for CTAButtonAction<S> {
-    fn clone(&self) -> Self {
-        match self {
-            CTAButtonAction::NextSlide(s) => CTAButtonAction::NextSlide(*s),
-            CTAButtonAction::Close => CTAButtonAction::Close,
-            CTAButtonAction::OpenUrl(url) => CTAButtonAction::OpenUrl(url.clone()),
-            CTAButtonAction::Custom(f) => CTAButtonAction::Custom(f.clone()),
-        }
-    }
 }

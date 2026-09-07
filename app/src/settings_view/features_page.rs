@@ -898,8 +898,6 @@ fn to_string(b: bool) -> String {
     format!("{b}")
 }
 
-impl FeaturesPageAction {
-
 #[derive(Default)]
 struct MouseStateHandles {
     local_only_icon_tooltip_states: RefCell<HashMap<String, MouseStateHandle>>,

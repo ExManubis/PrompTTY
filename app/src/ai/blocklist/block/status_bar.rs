@@ -746,7 +746,6 @@ impl BlocklistAIStatusBar {
             self.current_tip = tip_model.as_ref(ctx).current_tip().cloned();
 
             if let Some(tip) = self.current_tip.as_ref() {
-                send_agent_tip_shown_analytics_event(tip.description.clone(), ctx);
             }
         } else {
             self.current_tip = None;
@@ -1235,35 +1234,6 @@ fn resolve_warping_model_message<V: View>(
     })
 }
 
-fn should_send_agent_tip_shown_analytics_event(app: &AppContext) -> bool {
-    let privacy_settings_snapshot = PrivacySettings::handle(app).as_ref(app).get_snapshot(app);
-    if privacy_settings_snapshot.should_disable_telemetry() {
-        return false;
-    }
-        return false;
-    }
-
-    if ChannelState::channel() == Channel::Integration {
-        return true;
-    }
-
-    ChannelState::server_root_url().contains("staging")
-}
-
-fn send_agent_tip_shown_analytics_event(tip: String, app: &AppContext) {
-    if !should_send_agent_tip_shown_analytics_event(app) {
-        return;
-    }
-
-    let server_api = ServerApiProvider::handle(app).as_ref(app).get();
-    app.background_executor()
-        .spawn(async move {
-            if let Err(error) = server_api.send_agent_tip_shown_analytics_event(tip).await {
-                log::warn!("Error occurred with sending AgentTipShown analytics event: {error}");
-            }
-        })
-        .detach();
-}
 
 impl View for BlocklistAIStatusBar {
     fn ui_name() -> &'static str {

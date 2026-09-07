@@ -1,3 +1,4 @@
+use warp_terminal::ImageProtocol;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;

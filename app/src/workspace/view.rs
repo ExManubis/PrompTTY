@@ -7905,18 +7905,6 @@ impl Workspace {
         }
     }
 
-    fn check_and_trigger_telemetry_banner_for_existing_users(
-        &mut self,
-        ctx: &mut ViewContext<Self>,
-    ) {
-            && PrivacySettings::as_ref(ctx).is_telemetry_enabled
-            && let Some(terminal_view_handle) = self.active_session_view(ctx)
-        {
-            terminal_view_handle.update(ctx, |terminal_view, ctx| {
-                terminal_view.insert_telemetry_banner(true, ctx);
-            });
-        }
-    }
 
     fn should_trigger_get_started_onboarding(&self, ctx: &mut ViewContext<Self>) -> bool {
         // Onboarding requires a real user to interact with it; suppress when
@@ -7976,7 +7964,6 @@ impl Workspace {
             // Add telemetry banner for new users BEFORE the agentic onboarding blocks.
             if let Some(terminal_view_handle) = self.active_session_view(ctx) {
                 terminal_view_handle.update(ctx, |terminal_view, ctx| {
-                    terminal_view.insert_telemetry_banner(false, ctx);
                 });
             }
 
@@ -11234,7 +11221,6 @@ impl Workspace {
                 if self.auth_state.is_onboarded().unwrap_or_default() {
                     // Need to check this AFTER we fetch any billing metadata associated with the team,
                     // to make sure we don't show the banner if the user is an enterprise user.
-                    self.check_and_trigger_telemetry_banner_for_existing_users(ctx);
                 }
                 ctx.notify();
             }

@@ -175,6 +175,7 @@ use crate::settings::{
     AISettings, AISettingsChangedEvent, AgentModeCodingPermissionsType, FontSettings,
     InputModeSettings, InputModeSettingsChangedEvent, InputSettings,
     OrchestrationMessageDisplayMode,
+    should_collect_ai_ugc_telemetry,
 };
 use crate::settings_view::SettingsSection;
 use crate::terminal::find::TerminalFindModel;

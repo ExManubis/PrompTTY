@@ -152,12 +152,6 @@ impl RichContent {
         matches!(self.metadata, Some(RichContentMetadata::UsageFooter))
     }
 
-    pub fn is_telemetry_banner(&self) -> bool {
-        matches!(
-            self.metadata,
-            Some(RichContentMetadata::TelemetryBanner { .. })
-        )
-    }
 
     pub fn is_agent_view_entry(&self) -> bool {
         matches!(self.metadata, Some(RichContentMetadata::AgentViewEntry(_)))
@@ -250,9 +244,6 @@ pub enum RichContentMetadata {
     },
     WarpifySuccessBlock {
         bootstrap_success_block_handle: ViewHandle<WarpifySuccessBlock>,
-    },
-    TelemetryBanner {
-        telemetry_banner_handle: ViewHandle<TelemetryBanner>,
     },
     AgentViewEntry(AgentViewEntryMetadata),
     AmbientAgentBlock {

@@ -18,7 +18,7 @@ use crate::PrivacySettings;
 use crate::ai::blocklist::SerializedBlockListItem;
 use crate::appearance::Appearance;
 use crate::pane_group::pane::DetachType;
-use crate::settings::{BlockVisibilitySettings, DebugSettings, InputModeSettings};
+use crate::settings::{BlockVisibilitySettings, DebugSettings, InputModeSettings, should_collect_ai_ugc_telemetry};
 
 pub trait TerminalManager: Any {
     /// Returns the backing terminal model.

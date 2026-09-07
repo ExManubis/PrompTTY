@@ -107,36 +107,16 @@ impl GrepError {
 }
 
 #[allow(clippy::too_many_arguments)]
-
-#[allow(clippy::too_many_arguments)]
 fn log_grep_error(
-    conversation_id: AIConversationId,
-    queries: Vec<String>,
-    path: String,
-    shell_type: Option<ShellType>,
-    working_directory: Option<String>,
-    absolute_path: String,
-    error: GrepError,
-    ctx: &mut AppContext,
+    _conversation_id: AIConversationId,
+    _queries: Vec<String>,
+    _path: String,
+    _shell_type: Option<ShellType>,
+    _working_directory: Option<String>,
+    _absolute_path: String,
+    _error: GrepError,
+    _ctx: &mut AppContext,
 ) {
-    let should_collect_ugc = should_collect_ai_ugc_telemetry(
-        ctx,
-        PrivacySettings::handle(ctx)
-            .as_ref(ctx)
-            .is_telemetry_enabled,
-    );
-    let server_output_id = get_server_output_id(conversation_id, ctx);
-
-    let event = create_redacted_grep_error_event(
-        should_collect_ugc,
-        server_output_id,
-        queries,
-        path,
-        shell_type,
-        working_directory,
-        absolute_path,
-        error,
-    );
 }
 
 pub struct GrepExecutor {

@@ -1,3 +1,4 @@
+use warp_terminal::ImageProtocol;
 use std::sync::Arc;
 
 use async_channel::Receiver;
@@ -288,8 +289,8 @@ impl ModelEventDispatcher {
                 ModelEvent::PluggableNotification { title, body }
             }
             Event::ExitShell { session_id } => ModelEvent::ExitShell { session_id },
-            Event::LifecycleRecovery(record) => {
-                crate::                return;
+            Event::LifecycleRecovery(_record) => {
+                return;
             }
             _ => return,
         };

@@ -349,67 +349,26 @@ impl AuthViewBody {
         .with_margin_bottom(8.)
         .finish();
 
-            Align::new(
-                ui_builder
-                    .link(
-                        "Privacy Settings".into(),
-                        None,
-                        Some(Box::new(|ctx| {
-                            ctx.dispatch_typed_action(AuthViewBodyAction::ShowOverlay(
-                                AuthViewOverlay::PrivacySettings,
-                            ));
-                        })),
-                        self.mouse_state_handles
-                            .privacy_settings_mouse_state_handle
-                            .clone(),
-                    )
-                    .soft_wrap(false)
-                    .build()
-                    .finish(),
-            )
-            .left()
-            .finish()
-        } else {
-            Flex::column()
-                .with_child(
-                    ui_builder
-                        .paragraph("If you'd like to opt out of analytics and AI features,")
-                        .with_style(disclaimer_styles)
-                        .build()
-                        .finish(),
+        let disclaimer_line_2 = Align::new(
+            ui_builder
+                .link(
+                    "Privacy Settings".into(),
+                    None,
+                    Some(Box::new(|ctx| {
+                        ctx.dispatch_typed_action(AuthViewBodyAction::ShowOverlay(
+                            AuthViewOverlay::PrivacySettings,
+                        ));
+                    })),
+                    self.mouse_state_handles
+                        .privacy_settings_mouse_state_handle
+                        .clone(),
                 )
-                .with_child(
-                    Flex::row()
-                        .with_child(
-                            ui_builder
-                                .paragraph("you can adjust your ")
-                                .with_style(disclaimer_styles)
-                                .build()
-                                .finish(),
-                        )
-                        .with_child(
-                            ui_builder
-                                .link(
-                                    "Privacy Settings".into(),
-                                    None,
-                                    Some(Box::new(|ctx| {
-                                        ctx.dispatch_typed_action(AuthViewBodyAction::ShowOverlay(
-                                            AuthViewOverlay::PrivacySettings,
-                                        ));
-                                    })),
-                                    self.mouse_state_handles
-                                        .privacy_settings_mouse_state_handle
-                                        .clone(),
-                                )
-                                .soft_wrap(false)
-                                .with_style(link_styles)
-                                .build()
-                                .finish(),
-                        )
-                        .finish(),
-                )
-                .finish()
-        };
+                .soft_wrap(false)
+                .build()
+                .finish(),
+        )
+        .left()
+        .finish();
 
         vec![disclaimer_line_1, disclaimer_line_2]
     }

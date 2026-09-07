@@ -3163,14 +3163,6 @@ impl AgentDriver {
                             error.pattern,
                             error.excerpt,
                         );
-                        let telemetry_harness = harness_name.clone();
-                        let telemetry_pattern = error.pattern.clone();
-                        let _ = foreground
-                            .spawn(move |_, ctx| {
-                                let event =
-                                    
-                            })
-                            .await;
                         let session_status = foreground
                             .spawn(|me, ctx| {
                                 let view_id =

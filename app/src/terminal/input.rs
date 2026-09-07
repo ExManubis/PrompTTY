@@ -270,6 +270,7 @@ use crate::settings::{
     AISettings, AISettingsChangedEvent, AliasExpansionSettings, AppEditorSettings,
     AppEditorSettingsChangedEvent, InputModeSettings, InputSettings, InputSettingsChangedEvent,
     MAX_TIMES_TO_SHOW_AUTOSUGGESTION_HINT, PrivacySettings,
+    should_collect_ai_ugc_telemetry,
 };
 use crate::settings_view::{SettingsSection, flags};
 use crate::suggestions::ignored_suggestions_model::{
