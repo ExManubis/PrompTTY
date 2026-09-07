@@ -1,7 +1,8 @@
 use std::cell::Cell;
 
 use onboarding::components::feature_optout_dialog::{
-    FeatureOptOutDialog, render_feature_optout_dialog};
+    FeatureOptOutDialog, render_feature_optout_dialog,
+};
 use onboarding::slides::{layout, onboarding_bottom_nav, slide_content};
 use onboarding::{OnboardingEvent, OnboardingIntention, WARP_DRIVE_FEATURES};
 use pathfinder_color::ColorU;
@@ -17,20 +18,23 @@ use warpui::elements::{
     Align, Border, CacheOption, ChildAnchor, ClippedScrollStateHandle, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Dismiss, Fill, Flex, FormattedTextElement,
     HighlightedHyperlink, Image, MainAxisAlignment, MainAxisSize, MouseStateHandle,
-    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack};
+    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack,
+};
 use warpui::fonts::Weight;
 use warpui::keymap::{FixedBinding, Keystroke};
 use warpui::text_layout::TextAlignment;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, UpdateModel, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 use crate::appearance::Appearance;
 use crate::auth::auth_manager::{AuthManager, AuthManagerEvent};
 use crate::auth::auth_view_modal::AuthRedirectPayload;
 use crate::auth::auth_view_shared_helpers::{
-    PrivacySettingsActions, PrivacySettingsHandles, render_privacy_settings_toggles};
+    PrivacySettingsActions, PrivacySettingsHandles, render_privacy_settings_toggles,
+};
 use crate::auth::login_failure_notification::{self, LoginFailureReason};
 use crate::editor::{EditorView, SingleLineEditorOptions, TextColors, TextOptions};
 use crate::server::telemetry::{LoginEventSource, TelemetryEvent};
@@ -101,7 +105,8 @@ impl LoginPurpose {
             LoginPurpose::AccountFirst => (
                 "Create an account",
                 "Access AI, run cloud agents, collaborate with teammates, and sync settings across devices.",
-            )}
+            ),
+        }
     }
 
     fn work_email_callout_copy(self) -> Option<(&'static str, &'static str)> {
@@ -134,12 +139,14 @@ pub enum LoginSlideAction {
     ToggleCrashReporting,
     ToggleCloudConversationStorage,
     DismissNotification,
-    PasteAuthUrl}
+    PasteAuthUrl,
+}
 
 #[derive(Clone, Debug)]
 pub enum LoginSlideEvent {
     BackToOnboarding,
-    LoginLaterConfirmed}
+    LoginLaterConfirmed,
+}
 
 /// How the user arrived at the login slide. Controls which step is shown first
 /// and how "Back" is routed when the user backs out of the privacy-settings step.
@@ -155,7 +162,8 @@ pub enum LoginSlideSource {
     AccountFirstOnboarding,
     /// Reached via the "Privacy Settings" link on the terminal-intention theme slide.
     /// Starts directly in the privacy settings step and routes Back to onboarding.
-    PrivacySettingsFromTerminalIntentionTheme}
+    PrivacySettingsFromTerminalIntentionTheme,
+}
 
 // ---------------------------------------------------------------------------
 // Login step
@@ -164,7 +172,8 @@ pub enum LoginSlideSource {
 enum LoginStep {
     SelectAuthPathway,
     BrowserOpen,
-    PrivacySettings}
+    PrivacySettings,
+}
 
 // ---------------------------------------------------------------------------
 // Overlay
@@ -172,7 +181,8 @@ enum LoginStep {
 
 #[derive(Copy, Clone, Debug)]
 enum LoginSlideOverlay {
-    SkipDialog}
+    SkipDialog,
+}
 
 /// Why the login slide is being shown, which drives its copy. All paths
 /// need an account: Terminal+Drive for cloud sync, and the Warp-agent and
@@ -184,7 +194,8 @@ enum LoginPurpose {
     WarpAgent,
     WarpDrive,
     ThirdParty,
-    AccountFirst}
+    AccountFirst,
+}
 
 // ---------------------------------------------------------------------------
 // View
@@ -241,7 +252,8 @@ pub struct LoginSlideView {
 
     scroll_state: ClippedScrollStateHandle,
     close_login_notification_mouse_state: MouseStateHandle,
-    highlighted_hyperlink_state: HighlightedHyperlink}
+    highlighted_hyperlink_state: HighlightedHyperlink,
+}
 
 /// All image paths used by the login slide visual. These mirror the set in
 /// `ThemePickerSlide::VISUAL_IMAGE_PATHS` so the login slide can keep showing
@@ -274,13 +286,15 @@ fn resolve_visual_path(
 ) -> &'static str {
     let intention_dir = match intention {
         OnboardingIntention::AgentDrivenDevelopment => "agent_intention",
-        OnboardingIntention::Terminal => "terminal_intention"};
+        OnboardingIntention::Terminal => "terminal_intention",
+    };
     let name_key = match theme_name {
         "Phenomenon" => "phenomenon",
         "Dark" => "dark",
         "Light" => "light",
         "Adeberry" => "adeberry",
-        _ => "dark"};
+        _ => "dark",
+    };
     let orientation = if use_vertical_tabs {
         "vertical"
     } else {
@@ -328,7 +342,8 @@ impl LoginSlideView {
                         text_colors_override: Some(TextColors {
                             default_color: text_color,
                             disabled_color: text_color.with_opacity(20),
-                            hint_color: text_color.with_opacity(40)}),
+                            hint_color: text_color.with_opacity(40),
+                        }),
                         ..Default::default()
                     },
                     soft_wrap: false,
@@ -386,7 +401,8 @@ impl LoginSlideView {
             privacy_settings_handles: PrivacySettingsHandles::default(),
             scroll_state: ClippedScrollStateHandle::new(),
             close_login_notification_mouse_state: MouseStateHandle::default(),
-            highlighted_hyperlink_state: HighlightedHyperlink::default()};
+            highlighted_hyperlink_state: HighlightedHyperlink::default(),
+        };
 
         if matches!(source, LoginSlideSource::AccountFirstOnboarding) {
         }
@@ -742,7 +758,8 @@ impl LoginSlideView {
                         ctx.dispatch_typed_action(LoginSlideAction::Back);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         let cmd_enter = Keystroke::parse("cmdorctrl-enter").unwrap_or_default();
@@ -750,7 +767,8 @@ impl LoginSlideView {
             LoginPurpose::WarpDrive => "Disable Warp Drive",
             LoginPurpose::WarpAgent => "Skip for now",
             LoginPurpose::ThirdParty => "Skip for now",
-            LoginPurpose::AccountFirst => "Skip"};
+            LoginPurpose::AccountFirst => "Skip",
+        };
         let skip_keystroke = if matches!(self.login_purpose(), LoginPurpose::AccountFirst) {
             None
         } else {
@@ -767,7 +785,8 @@ impl LoginSlideView {
                         ctx.dispatch_typed_action(LoginSlideAction::ShowSkipDialog);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         let enter = Keystroke::parse("enter").unwrap_or_default();
@@ -782,7 +801,8 @@ impl LoginSlideView {
                         ctx.dispatch_typed_action(LoginSlideAction::Enter);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         let right_buttons = Flex::row()
@@ -896,12 +916,14 @@ impl LoginSlideView {
                             top: 12.,
                             bottom: 12.,
                             left: 16.,
-                            right: 16.}),
+                            right: 16.,
+                        }),
                         margin: Some(Coords {
                             top: 8.,
                             bottom: 0.,
                             left: 0.,
-                            right: 0.}),
+                            right: 0.,
+                        }),
                         ..Default::default()
                     })
                     .build()
@@ -958,7 +980,8 @@ impl LoginSlideView {
                         ctx.dispatch_typed_action(LoginSlideAction::BackToSelectAuthPathway);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         if matches!(self.login_purpose(), LoginPurpose::AccountFirst) {
@@ -996,7 +1019,8 @@ impl LoginSlideView {
             toggle_telemetry: LoginSlideAction::ToggleTelemetry,
             toggle_crash_reporting: LoginSlideAction::ToggleCrashReporting,
             toggle_cloud_conversation_storage: LoginSlideAction::ToggleCloudConversationStorage,
-            hide_overlay: LoginSlideAction::HideOverlay};
+            hide_overlay: LoginSlideAction::HideOverlay,
+        };
 
         let toggles = render_privacy_settings_toggles(
             appearance,
@@ -1020,7 +1044,8 @@ impl LoginSlideView {
                         ctx.dispatch_typed_action(LoginSlideAction::HideOverlay);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         Flex::row()
@@ -1060,7 +1085,8 @@ impl LoginSlideView {
                 "Without an account, you won't have access to Warp's AI features. Sign in anytime to unlock agents and other AI features.",
                 &[],
                 "Sign in",
-            )};
+            ),
+        };
 
         // Close button with ESC keyboard-shortcut badge.
         let escape = Keystroke::parse("escape").unwrap_or_default();
@@ -1075,7 +1101,8 @@ impl LoginSlideView {
                         ctx.dispatch_typed_action(LoginSlideAction::DismissDialog);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         let cancel_button = self.dialog_login_button.render(
@@ -1088,7 +1115,8 @@ impl LoginSlideView {
                         ctx.dispatch_typed_action(LoginSlideAction::LoginFromSkipDialog);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         let dialog_enter = Keystroke::parse("enter").unwrap_or_default();
@@ -1103,7 +1131,8 @@ impl LoginSlideView {
                         ctx.dispatch_typed_action(LoginSlideAction::ConfirmSkip);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         render_feature_optout_dialog(
@@ -1114,7 +1143,8 @@ impl LoginSlideView {
                 features,
                 close_button,
                 cancel_button,
-                confirm_button},
+                confirm_button,
+            },
         )
     }
 }

@@ -2,11 +2,13 @@ use std::collections::HashSet;
 
 use warpui::{
     AppContext, Entity, EntityId, ModelContext, SingletonEntity, TypedActionView, ViewHandle,
-    WindowId};
+    WindowId,
+};
 
 use super::{
     AutoCloudHandoffTrigger, OneTimeModalModel, ToastStack, Workspace, WorkspaceAction,
-    WorkspaceRegistry};
+    WorkspaceRegistry,
+};
 use crate::BlocklistAIHistoryModel;
 use crate::ai::active_agent_views_model::{ActiveAgentViewsModel, ConversationOrTaskId};
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};
@@ -33,7 +35,8 @@ pub(crate) enum AutoCloudHandoffSkipReason {
     TerminalNotFound { terminal_view_id: EntityId },
     CloudPane,
     LongRunningCommand,
-    ConversationNotLoaded { conversation_id: AIConversationId }}
+    ConversationNotLoaded { conversation_id: AIConversationId },
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct AutoCloudHandoffEligibility {
@@ -51,7 +54,8 @@ pub(crate) struct AutoCloudHandoffEligibility {
     /// (Oz) agent (e.g. a custom-endpoint/BYOK model or local custom router).
     /// Handing off would silently swap the run onto a different model, so we
     /// skip instead.
-    pub(crate) active_model_not_cloud_runnable: bool}
+    pub(crate) active_model_not_cloud_runnable: bool,
+}
 
 impl AutoCloudHandoffEligibility {
     pub(crate) fn from_conversation(
@@ -69,7 +73,8 @@ impl AutoCloudHandoffEligibility {
             can_handoff_to_cloud,
             already_attempted,
             has_local_orchestrated_children,
-            active_model_not_cloud_runnable}
+            active_model_not_cloud_runnable,
+        }
     }
 
     pub(crate) fn skip_reason(self) -> Option<AutoCloudHandoffSkipReason> {
@@ -105,7 +110,8 @@ pub(crate) struct AutoCloudHandoffRequest {
     workspace: ViewHandle<Workspace>,
     terminal_view_id: EntityId,
     conversation_id: AIConversationId,
-    trigger: AutoCloudHandoffTrigger}
+    trigger: AutoCloudHandoffTrigger,
+}
 
 /// A focused local agent conversation that passed every auto-handoff
 /// precondition, resolved to the views needed to dispatch the handoff.
@@ -113,7 +119,8 @@ struct AutoCloudHandoffCandidate {
     window_id: WindowId,
     workspace: ViewHandle<Workspace>,
     terminal_view_id: EntityId,
-    conversation_id: AIConversationId}
+    conversation_id: AIConversationId,
+}
 
 impl AutoCloudHandoffRequest {
     fn dispatch(&self, ctx: &mut AppContext) {
@@ -122,7 +129,8 @@ impl AutoCloudHandoffRequest {
                 &WorkspaceAction::AutoHandoffActiveAgentToCloud {
                     terminal_view_id: self.terminal_view_id,
                     conversation_id: self.conversation_id,
-                    trigger: self.trigger},
+                    trigger: self.trigger,
+                },
                 ctx,
             );
         });
@@ -140,7 +148,8 @@ pub(crate) struct AutoCloudHandoffController {
     /// Window of an automatic handoff that succeeded while the system was
     /// sleeping. Consumed on wake to show the success toast once the user can
     /// actually see it.
-    pending_success_toast_window: Option<WindowId>}
+    pending_success_toast_window: Option<WindowId>,
+}
 
 impl AutoCloudHandoffController {
     pub(crate) fn new(ctx: &mut ModelContext<Self>) -> Self {
@@ -152,7 +161,8 @@ impl AutoCloudHandoffController {
             attempted_conversation_ids: HashSet::new(),
             pending_sleep_prompt: false,
             is_system_sleeping: false,
-            pending_success_toast_window: None}
+            pending_success_toast_window: None,
+        }
     }
 
     /// Marks the attempt as succeeded and surfaces the success toast:
@@ -283,7 +293,8 @@ impl AutoCloudHandoffController {
         }
         match self.evaluate_handoff_candidate(ctx) {
             Ok(candidate) => self.dispatch_handoff(candidate, trigger, ctx),
-            Err(reason) => log::info!("auto handoff: skipping {trigger:?} trigger: {reason:?}")}
+            Err(reason) => log::info!("auto handoff: skipping {trigger:?} trigger: {reason:?}"),
+        }
     }
 
     /// Resolves the focused local agent conversation and checks every
@@ -344,7 +355,8 @@ impl AutoCloudHandoffController {
             window_id,
             workspace,
             terminal_view_id,
-            conversation_id})
+            conversation_id,
+        })
     }
 
     /// Marks the candidate as attempted and emits the handoff request.
@@ -366,7 +378,8 @@ impl AutoCloudHandoffController {
             workspace: candidate.workspace,
             terminal_view_id: candidate.terminal_view_id,
             conversation_id: candidate.conversation_id,
-            trigger});
+            trigger,
+        });
     }
 
     fn last_focused_local_conversation(
@@ -375,7 +388,8 @@ impl AutoCloudHandoffController {
         let active_agent_views = ActiveAgentViewsModel::as_ref(ctx);
         let conversation_id = match active_agent_views.get_last_focused_conversation()? {
             ConversationOrTaskId::ConversationId(conversation_id) => conversation_id,
-            ConversationOrTaskId::TaskId(_) => return None};
+            ConversationOrTaskId::TaskId(_) => return None,
+        };
         // The last-focused terminal id can go stale (e.g. its pane was closed
         // or swapped) while the conversation lives on in another view. Prefer
         // the history model's owner mapping — it's the same mapping the

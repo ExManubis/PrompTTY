@@ -23,11 +23,6 @@ use crate::ai::agent::{
     EntrypointType, PassiveSuggestionTrigger, ServerOutputId, SuggestedLoggingId,
 };
 use crate::ai::agent_management::notifications::NotificationSourceAgent;
-use crate::shared_enums::{
-    AgentModeEntrypoint, AgentModeEntrypointSelectionType, CloseTarget, FileTreeSource,
-    InteractionSource, PaletteSource,
-};
-use crate::terminal::cli_agent_type::{CLIAgentType, NotificationAgentVariant};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::blocklist::agent_view::AgentViewEntryOrigin;
 use crate::ai::blocklist::{
@@ -87,24 +82,6 @@ use crate::util::openable_file_type::FileTarget;
 use crate::workflows::{WorkflowId, WorkflowSelectionSource, WorkflowSource};
 use crate::workspace::TabMovement;
 use crate::workspace::tab_settings::{TabCloseButtonPosition, WorkspaceDecorationVisibility};
-
-
-// Re-exports of domain types formerly co-located here, for transitional compatibility.
-pub use crate::shared_enums::{
-    AgentModeEntrypoint, AgentModeEntrypointSelectionType, CloseTarget, FileTreeSource,
-    InteractionSource, PaletteSource,
-};
-pub use crate::terminal::cli_agent_type::{CLIAgentType, NotificationAgentVariant};
-pub use warp_terminal::local_tty::PtySpawnMode;
-
-impl From<NotificationSourceAgent> for NotificationAgentVariant {
-    fn from(agent: NotificationSourceAgent) -> Self {
-        match agent {
-            NotificationSourceAgent::Oz { .. } => Self::Oz,
-            NotificationSourceAgent::CLI { agent, .. } => Self::CLIAgent(agent.into()),
-        }
-    }
-}
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BootstrappingInfo {
@@ -435,6 +412,35 @@ pub enum CommandXRayTrigger {
     Keystroke,
 }
 
+#[derive(Clone, Copy, Serialize, Deserialize, Debug)]
+pub enum PaletteSource {
+    PrefixChange,
+    Keybinding,
+    CtrlTab { shift_pressed_initially: bool },
+    WarpDrive,
+    QuitModal,
+    LogOutModal,
+    IntegrationTest,
+    ConversationManager,
+    ContextChip,
+    PaneHeader,
+    AgentTip,
+    TitleBarSearchBar,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub enum FileTreeSource {
+    /// Opened from the pane header toolbelt button.
+    PaneHeader,
+    Keybinding,
+    LeftPanelToolbelt,
+    ForceOpened,
+    /// Opened from the CLI agent view footer (e.g., Claude Code).
+    CLIAgentView,
+    /// Opened from the File explorer chip in Warp's own agent input toolbelt.
+    AgentToolbelt,
+}
+
 #[cfg(feature = "local_fs")]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -444,12 +450,54 @@ pub enum CodePanelsFileOpenEntrypoint {
     GlobalSearch,
 }
 
+/// The CLI agent being used (for telemetry purposes).
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub enum CLIAgentType {
+    Claude,
+    Gemini,
+    Codex,
+    Amp,
+    Droid,
+    OpenCode,
+    Copilot,
+    Pi,
+    OhMyPi,
+    Auggie,
+    Cursor,
+    Goose,
+    Hermes,
+    Vibe,
+    Antigravity,
+    /// Warp's own headless TUI, targeted by the code review panel as a CLI-agent-equivalent destination.
+    WarpTui,
+    Unknown,
+}
+
 /// The kind of plugin chip shown or dismissed (for telemetry purposes).
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PluginChipTelemetryKind {
     Install,
     Update,
+}
+
+/// Identifies the agent variant that triggered a notification (for telemetry purposes).
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NotificationAgentVariant {
+    /// Warp's built-in agent (Oz).
+    Oz,
+    /// A CLI agent (e.g., Claude Code, Gemini CLI, etc.).
+    CLIAgent(CLIAgentType),
+}
+
+impl From<NotificationSourceAgent> for NotificationAgentVariant {
+    fn from(agent: NotificationSourceAgent) -> Self {
+        match agent {
+            NotificationSourceAgent::Oz { .. } => Self::Oz,
+            NotificationSourceAgent::CLI { agent, .. } => Self::CLIAgent(agent.into()),
+        }
+    }
 }
 
 /// The action taken on a plugin chip (for telemetry purposes).
@@ -497,6 +545,27 @@ impl From<&CommandSearchItemAction> for CommandSearchResultType {
             AcceptAIQuery(_) | RunAIQuery(_) => Self::AIQuery,
         }
     }
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub enum CloseTarget {
+    App,
+    Window,
+    Tab,
+    Pane,
+    EditorTab,
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub enum PtySpawnMode {
+    /// The pty was spawned using the terminal server.
+    TerminalServer,
+    /// We tried to spawn the pty using the terminal server, but something went
+    /// wrong so we fell back to spawning it directly.
+    FallbackToDirect,
+    /// The terminal server is not in use, and we spawned the pty directly
+    /// (in tests, for example).
+    Direct,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -629,6 +698,61 @@ pub enum MCPServerCollectionPaneEntrypoint {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum AgentModeEntrypointSelectionType {
+    /// User entered Agent Mode by taking action on a blocklist text selection.
+    Text,
+
+    /// User entered Agent Mode by taking action on a block selection.
+    Block,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum AgentModeEntrypoint {
+    /// The stars icon button in the tab bar.
+    #[serde(rename = "tab_bar")]
+    TabBar,
+
+    /// This corresponds to _both_ triggering from the command palette and via keybinding.
+    ///
+    /// Unfortunately due to the way the command palette automatically surfaces any editable
+    /// keybinding as an action, we don't have enough information to discern if the binding was
+    /// triggered by the palette or keyboard.
+    #[serde(rename = "new_pane_binding")]
+    NewPaneBinding,
+
+    /// The stars button in the hoverable block "toolbelt".
+    #[serde(rename = "block_toolbelt")]
+    BlockToolbelt,
+
+    /// The "Ask Agent Mode" option from AI command search.
+    #[serde(rename = "ai_command_search")]
+    AICommandSearch,
+
+    /// Context menu item(s) that attach a blocklist selection as context to an Agent Mode query.
+    #[serde(rename = "context_menu")]
+    ContextMenu {
+        selection_type: AgentModeEntrypointSelectionType,
+    },
+
+    /// The Agent Mode chip in the prompt.
+    #[serde(rename = "prompt_chip")]
+    PromptChip,
+
+    /// The Agent Management popup, where you can see all the most recent tasks for each terminal
+    /// pane across all windows/tabs/panes.
+    #[serde(rename = "agent_management_popup")]
+    AgentManagementPopup,
+
+    /// User manually switched between terminal and AI input modes in UDI interface
+    #[serde(rename = "udi_terminal_input_switcher")]
+    UDITerminalInputSwitcher,
+
+    /// The agent management view, where you can see both local interactive and ambient agent tasks
+    #[serde(rename = "agent_management_view")]
+    AgentManagementView,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum AutonomySettingToggleSource {
     Speedbump,
     SettingsPage,
@@ -638,6 +762,12 @@ pub enum AutonomySettingToggleSource {
 pub enum ToggleCodeSuggestionsSettingSource {
     Speedbump,
     Settings,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub enum InteractionSource {
+    Button,
+    Keybinding,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]

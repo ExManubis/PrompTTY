@@ -12,7 +12,8 @@ use warpui::elements::new_scrollable::{ClippedAxisConfiguration, DualAxisConfig,
 use warpui::elements::{
     Align, Border, ClippedScrollStateHandle, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Element, Empty, Expanded, Flex, Highlight, HighlightedRange,
-    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text};
+    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::prelude::ChildView;
 use warpui::text_layout::TextStyle;
@@ -21,7 +22,8 @@ use warpui::{AppContext, Entity, SingletonEntity, TypedActionView, View, ViewCon
 
 use crate::ai::agent_management::telemetry::{AgentManagementTelemetryEvent, SetupGuideStep};
 use crate::ai::blocklist::code_block::{
-    CodeBlockOptions, CodeSnippetButtonHandles, render_code_block_plain};
+    CodeBlockOptions, CodeSnippetButtonHandles, render_code_block_plain,
+};
 use crate::appearance::Appearance;
 use crate::completer::SessionAgnosticContext;
 use crate::view_components::action_button::{ActionButton, SecondaryTheme};
@@ -54,29 +56,36 @@ pub struct CloudSetupGuideView {
     visit_oz_button: ViewHandle<ActionButton>,
     parsed_tokens: HashMap<&'static str, ParsedTokensSnapshot>,
     vertical_scroll_state: ClippedScrollStateHandle,
-    horizontal_scroll_state: ClippedScrollStateHandle}
+    horizontal_scroll_state: ClippedScrollStateHandle,
+}
 
 #[derive(Debug, Clone)]
 pub enum CloudSetupGuideAction {
     CopyCode {
         code: String,
-        step: SetupGuideStep},
+        step: SetupGuideStep,
+    },
     RunWorkflow {
         workflow: Box<WorkflowType>,
-        step: SetupGuideStep},
+        step: SetupGuideStep,
+    },
     VisitOz,
     OpenDocs {
-        docs: SetupGuideDocs}}
+        docs: SetupGuideDocs,
+    },
+}
 
 /// Which URL the user clicked in the setup guide (also used in telemetry)
 #[derive(Clone, Copy, Debug, Serialize)]
 pub enum SetupGuideDocs {
     Main,
     Environment,
-    Integration}
+    Integration,
+}
 
 pub enum CloudSetupGuideEvent {
-    OpenNewTabAndInsertWorkflow(WorkflowType)}
+    OpenNewTabAndInsertWorkflow(WorkflowType),
+}
 
 impl CloudSetupGuideView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -123,7 +132,8 @@ impl CloudSetupGuideView {
             visit_oz_button,
             parsed_tokens: HashMap::new(),
             vertical_scroll_state: ClippedScrollStateHandle::default(),
-            horizontal_scroll_state: ClippedScrollStateHandle::default()}
+            horizontal_scroll_state: ClippedScrollStateHandle::default(),
+        }
     }
 
     /// Render the main header for the setup guide.
@@ -172,7 +182,8 @@ impl CloudSetupGuideView {
                         None,
                         Some(Box::new(|ctx| {
                             ctx.dispatch_typed_action(CloudSetupGuideAction::OpenDocs {
-                                docs: SetupGuideDocs::Main});
+                                docs: SetupGuideDocs::Main,
+                            });
                         })),
                         self.docs_link_mouse_state.clone(),
                     )
@@ -295,7 +306,8 @@ impl CloudSetupGuideView {
                 None,
                 Some(Box::new(move |ctx| {
                     ctx.dispatch_typed_action(CloudSetupGuideAction::OpenDocs {
-                        docs: telemetry_url});
+                        docs: telemetry_url,
+                    });
                 })),
                 link_mouse_state,
             )
@@ -374,7 +386,8 @@ impl CloudSetupGuideView {
                 ),
                 SetupGuideStep::CreateLinearIntegration,
             )),
-            _ => None}) else {
+            _ => None,
+        }) else {
             report_error!(
                 "Received unknown code in render_code_block",
                 extra: { "code" => %code }
@@ -390,17 +403,20 @@ impl CloudSetupGuideView {
                 on_execute: Some(Box::new(move |_code, ctx| {
                     ctx.dispatch_typed_action(CloudSetupGuideAction::RunWorkflow {
                         workflow: Box::new(workflow.clone()),
-                        step: setup_step});
+                        step: setup_step,
+                    });
                 })),
                 on_copy: Some(Box::new(move |_code, ctx| {
                     ctx.dispatch_typed_action(CloudSetupGuideAction::CopyCode {
                         code: code.to_string().clone(),
-                        step: setup_step});
+                        step: setup_step,
+                    });
                 })),
                 on_insert: None,
                 footer_element: None,
                 mouse_handles: Some(handles),
-                file_path: None},
+                file_path: None,
+            },
             true,
             app,
             None,
@@ -586,11 +602,13 @@ impl View for CloudSetupGuideView {
                 horizontal: ClippedAxisConfiguration {
                     handle: self.horizontal_scroll_state.clone(),
                     max_size: None,
-                    stretch_child: true},
+                    stretch_child: true,
+                },
                 vertical: ClippedAxisConfiguration {
                     handle: self.vertical_scroll_state.clone(),
                     max_size: None,
-                    stretch_child: false},
+                    stretch_child: false,
+                },
                 child: Align::new(
                     Container::new(
                         ConstrainedBox::new(content)
@@ -601,7 +619,8 @@ impl View for CloudSetupGuideView {
                     .finish(),
                 )
                 .top_center()
-                .finish()},
+                .finish(),
+            },
             theme.nonactive_ui_detail().into(),
             theme.active_ui_detail().into(),
             warpui::elements::Fill::None,
@@ -637,7 +656,8 @@ impl TypedActionView for CloudSetupGuideView {
                 let url = match docs {
                     SetupGuideDocs::Main => DOCS_URL,
                     SetupGuideDocs::Environment => ENV_DOCS_URL,
-                    SetupGuideDocs::Integration => DOCS_URL};
+                    SetupGuideDocs::Integration => DOCS_URL,
+                };
                 ctx.open_url(url);
             }
         }
@@ -662,7 +682,8 @@ fn tokens_to_highlight_ranges(
         highlights.push(HighlightedRange {
             highlight: Highlight::new()
                 .with_text_style(TextStyle::new().with_foreground_color(color.into())),
-            highlight_indices: (0..space_idx).collect()});
+            highlight_indices: (0..space_idx).collect(),
+        });
         return highlights;
     }
 
@@ -694,7 +715,8 @@ fn tokens_to_highlight_ranges(
         highlights.push(HighlightedRange {
             highlight: Highlight::new()
                 .with_text_style(TextStyle::new().with_foreground_color(color.into())),
-            highlight_indices: char_indices});
+            highlight_indices: char_indices,
+        });
     }
 
     highlights

@@ -1,7 +1,7 @@
 use warpui::App;
 
 use super::HandoffComposeState;
-use crate::ai::ambient_agents::handoff_types::HandoffEntryPoint;
+use crate::ai::ambient_agents::telemetry::HandoffEntryPoint;
 use crate::server::ids::{ClientId, SyncId};
 
 #[test]

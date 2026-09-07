@@ -9,10 +9,12 @@ use warpui::clipboard::{ClipboardContent, ImageData};
 
 use crate::ai::agent::ImageContext;
 use crate::ai::blocklist::agent_view::agent_input_footer::{
-    AgentInputFooter, AgentInputFooterEvent};
+    AgentInputFooter, AgentInputFooterEvent,
+};
 use crate::terminal::cli_agent_sessions::{CLIAgentInputEntrypoint, CLIAgentSessionsModel};
 use crate::terminal::shared_session::{
-    SharedSessionActionSource, SharedSessionScrollbackType, SharedSessionSource};
+    SharedSessionActionSource, SharedSessionScrollbackType, SharedSessionSource,
+};
 use crate::util::image::{MAX_IMAGE_SIZE_BYTES_FOR_CLI_AGENT, MIME_SNIFF_BYTES, infer_mime_type};
 mod warpify_footer;
 
@@ -26,7 +28,8 @@ use warp_core::features::FeatureFlag;
 use warp_core::settings::Setting;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::color::contrast::{
-    MinimumAllowedContrast, high_enough_contrast, pick_best_foreground_color};
+    MinimumAllowedContrast, high_enough_contrast, pick_best_foreground_color,
+};
 use warp_core::ui::theme::Fill as ThemeFill;
 use warp_core::ui::theme::color::internal_colors;
 use warp_errors::report_error;
@@ -34,11 +37,13 @@ use warp_terminal::model::escape_sequences::{BRACKETED_PASTE_END, BRACKETED_PAST
 use warpify_footer::{WarpifyFooterView, WarpifyFooterViewEvent};
 use warpui::r#async::Timer;
 use warpui::elements::{
-    ChildView, Container, CrossAxisAlignment, Empty, Expanded, Flex, MainAxisSize, ParentElement};
+    ChildView, Container, CrossAxisAlignment, Empty, Expanded, Flex, MainAxisSize, ParentElement,
+};
 use warpui::keymap::Keystroke;
 use warpui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 use super::{RichContentInsertionPosition, TerminalAction, TerminalView};
 use crate::ai::blocklist::block::cli_controller::CLISubagentEvent;
@@ -46,9 +51,11 @@ use crate::cmd_or_ctrl_shift;
 use crate::code_review::diff_state::GitDeltaPreference;
 use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
 use crate::server::telemetry::{
-    CLIAgentType, CLISubagentControlState, FileTreeSource, TelemetryEvent};
+    CLIAgentType, CLISubagentControlState, FileTreeSource, TelemetryEvent,
+};
 use crate::settings::{
-    AISettings, AISettingsChangedEvent, CompiledCommandsForCodingAgentToolbar, InputModeSettings};
+    AISettings, AISettingsChangedEvent, CompiledCommandsForCodingAgentToolbar, InputModeSettings,
+};
 pub use crate::terminal::CLIAgent;
 use crate::terminal::TerminalModel;
 use crate::terminal::cli_agent_sessions::CLIAgentRichInputCloseReason;
@@ -56,7 +63,8 @@ use crate::terminal::model_events::{ModelEvent, ModelEventDispatcher};
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
-    ActionButton, ActionButtonTheme, ButtonSize, KeystrokeSource, TooltipAlignment};
+    ActionButton, ActionButtonTheme, ButtonSize, KeystrokeSource, TooltipAlignment,
+};
 
 /// Small delay inserted between separate PTY writes to CLI agents.
 /// (Used both for the mode-switch prefix split and for the `DelayedEnter`
@@ -109,7 +117,8 @@ enum RichInputSubmitStrategy {
     /// Wrap text in bracketed paste (reliable buffer insertion), then send
     /// `\r` after a delay. For agents like Copilot that need bracketed paste
     /// for reliable text delivery but also need a separate delayed Enter.
-    BracketedPasteDelayedEnter}
+    BracketedPasteDelayedEnter,
+}
 
 /// Returns the strategy for submitting rich input text to a CLI agent's PTY.
 fn rich_input_submit_strategy(agent: CLIAgent) -> RichInputSubmitStrategy {
@@ -130,7 +139,8 @@ fn rich_input_submit_strategy(agent: CLIAgent) -> RichInputSubmitStrategy {
         | CLIAgent::Vibe
         | CLIAgent::Antigravity
         | CLIAgent::WarpTui
-        | CLIAgent::Unknown => RichInputSubmitStrategy::Inline}
+        | CLIAgent::Unknown => RichInputSubmitStrategy::Inline,
+    }
 }
 
 static USE_AGENT_KEYSTROKE: LazyLock<Keystroke> =
@@ -163,7 +173,8 @@ impl TerminalView {
             AISettingsChangedEvent::CLIAgentToolbarEnabledCommands { .. } => {
                 me.maybe_show_use_agent_footer_in_blocklist(ctx);
             }
-            _ => ()});
+            _ => (),
+        });
 
         ctx.subscribe_to_view(&self.use_agent_footer, |me, _, event, ctx| {
             me.handle_use_agent_footer_event(event, ctx);
@@ -191,7 +202,8 @@ impl TerminalView {
                 CLISubagentEvent::UpdatedControl { .. } => {
                     me.maybe_show_use_agent_footer_in_blocklist(ctx);
                 }
-                _ => ()},
+                _ => (),
+            },
         );
     }
 
@@ -231,7 +243,8 @@ impl TerminalView {
             UseAgentToolbarEvent::ToggleFileExplorer(cli_agent) => {
                 let source = match cli_agent {
                     Some(_) => FileTreeSource::CLIAgentView,
-                    None => FileTreeSource::AgentToolbelt};
+                    None => FileTreeSource::AgentToolbelt,
+                };
                 self.toggle_file_tree(source, cli_agent.map(Into::into), ctx);
             }
             UseAgentToolbarEvent::StartRemoteControl { scrollback_type } => {
@@ -519,7 +532,8 @@ impl TerminalView {
             self.use_agent_footer.clone(),
             None,
             RichContentInsertionPosition::Append {
-                insert_below_long_running_block: should_insert_after_block},
+                insert_below_long_running_block: should_insert_after_block,
+            },
             ctx,
         );
     }
@@ -827,7 +841,8 @@ impl TerminalView {
                                 images: Some(vec![ImageData {
                                     data: raw_bytes,
                                     mime_type: image.mime_type,
-                                    filename: Some(image.file_name)}]),
+                                    filename: Some(image.file_name),
+                                }]),
                                 ..Default::default()
                             });
                             me.write_user_bytes_to_pty(cli_agent_paste_keystroke_bytes(), ctx);
@@ -942,7 +957,8 @@ impl TerminalView {
                                 images: Some(vec![ImageData {
                                     data: bytes,
                                     mime_type,
-                                    filename}]),
+                                    filename,
+                                }]),
                                 ..Default::default()
                             });
                             me.write_user_bytes_to_pty(cli_agent_paste_keystroke_bytes(), ctx);
@@ -1078,7 +1094,8 @@ pub struct UseAgentToolbar {
     //
     // Footer dismissal is terminal pane-scoped, e.g. dismissal hides the footer for this
     // specific terminal pane for the lifetime of the pane.
-    did_user_dismiss: bool}
+    did_user_dismiss: bool,
+}
 
 impl UseAgentToolbar {
     pub(crate) fn new(
@@ -1176,7 +1193,8 @@ impl UseAgentToolbar {
             agent_input_footer,
             warpify_footer_view,
             terminal_model,
-            did_user_dismiss: false}
+            did_user_dismiss: false,
+        }
     }
 
     fn handle_agent_input_footer_event(
@@ -1310,7 +1328,8 @@ pub enum UseAgentToolbarEvent {
     ToggleFileExplorer(Option<CLIAgent>),
     /// Start remote control (one-click share without modal).
     StartRemoteControl {
-        scrollback_type: SharedSessionScrollbackType},
+        scrollback_type: SharedSessionScrollbackType,
+    },
     /// Stop remote control (stop the active shared session).
     StopRemoteControl,
     /// Open the rich input editor for composing a prompt.
@@ -1320,7 +1339,8 @@ pub enum UseAgentToolbarEvent {
     /// User chose to warpify the subshell.
     Warpify,
     /// User chose to use the agent.
-    UseAgent}
+    UseAgent,
+}
 
 impl Entity for UseAgentToolbar {
     type Event = UseAgentToolbarEvent;
@@ -1412,7 +1432,8 @@ impl View for UseAgentToolbar {
 
 #[derive(Debug, Clone)]
 pub enum UseAgentToolbarAction {
-    Dismiss { permanently: bool }}
+    Dismiss { permanently: bool },
+}
 
 impl TypedActionView for UseAgentToolbar {
     type Action = UseAgentToolbarAction;
@@ -1442,7 +1463,8 @@ impl TypedActionView for UseAgentToolbar {
 #[derive(Clone)]
 pub(super) struct AgentFooterButtonTheme {
     /// When set, enables alt-screen contrast adjustment for text and border.
-    terminal_model: Option<Arc<FairMutex<TerminalModel>>>}
+    terminal_model: Option<Arc<FairMutex<TerminalModel>>>,
+}
 
 impl AgentFooterButtonTheme {
     pub fn new(terminal_model: Option<Arc<FairMutex<TerminalModel>>>) -> Self {

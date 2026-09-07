@@ -19,12 +19,14 @@ use warp_errors::report_error;
 use warpui::elements::{
     Border, ChildAnchor, ChildView, Container, CornerRadius, CrossAxisAlignment, Flex,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
-    ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack, Text};
+    ParentElement, ParentOffsetBounds, Radius, Shrinkable, Stack, Text,
+};
 use warpui::platform::Cursor;
 use warpui::ui_components::components::UiComponent;
 use warpui::{
     AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
-    WeakViewHandle};
+    WeakViewHandle,
+};
 
 use crate::GlobalResourceHandlesProvider;
 use crate::ai::blocklist::secret_redaction::find_secrets_in_text;
@@ -32,7 +34,8 @@ use crate::ai::mcp::parsing::{ParsedTemplatableMCPServerResult, prettify_json, r
 use crate::ai::mcp::templatable::CloudTemplatableMCPServer;
 use crate::ai::mcp::{
     MCPServer, TemplatableMCPServer, TemplatableMCPServerInstallation, TemplatableMCPServerManager,
-    TransportType};
+    TransportType,
+};
 use crate::banner::{Banner, BannerTextContent};
 use crate::cloud_object::{CloudObject, Space};
 use crate::code::editor::view::{CodeEditorRenderOptions, CodeEditorView};
@@ -43,14 +46,16 @@ use crate::server::cloud_objects::update_manager::InitiatedBy;
 use crate::server::telemetry::{MCPTemplateCreationSource, TelemetryEvent};
 use crate::settings_view::mcp_servers::destructive_mcp_confirmation_dialog::{
     DestructiveMCPConfirmationDialog, DestructiveMCPConfirmationDialogEvent,
-    DestructiveMCPConfirmationDialogVariant};
+    DestructiveMCPConfirmationDialogVariant,
+};
 use crate::settings_view::mcp_servers::{ServerCardItemId, style};
 use crate::terminal::safe_mode_settings::SafeModeSettings;
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
 use crate::view_components::DismissibleToast;
 use crate::view_components::action_button::{
-    ActionButton, DangerNakedTheme, DangerSecondaryTheme, PrimaryTheme};
+    ActionButton, DangerNakedTheme, DangerSecondaryTheme, PrimaryTheme,
+};
 use crate::workspace::ToastStack;
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
@@ -66,7 +71,8 @@ pub enum MCPServersEditPageViewEvent {
     Back,
     Reinstall(Uuid),
     Delete(ServerCardItemId),
-    LogOut(ServerCardItemId, Option<String>)}
+    LogOut(ServerCardItemId, Option<String>),
+}
 
 #[derive(Debug, Clone)]
 pub enum MCPServersEditPageViewAction {
@@ -75,13 +81,15 @@ pub enum MCPServersEditPageViewAction {
     Save,
     Delete,
     Unshare,
-    LogOut}
+    LogOut,
+}
 
 #[allow(clippy::large_enum_variant)]
 pub enum ServerModel {
     CloudTemplatableMCPServer(CloudTemplatableMCPServer),
     LocalTemplatableMCPInstallation(TemplatableMCPServerInstallation),
-    None}
+    None,
+}
 
 impl ServerModel {
     pub fn name(&self) -> Option<String> {
@@ -97,7 +105,8 @@ impl ServerModel {
                         .clone(),
                 )
             }
-            ServerModel::None => None}
+            ServerModel::None => None,
+        }
     }
 }
 
@@ -117,7 +126,8 @@ pub struct MCPServersEditPageView {
 
     #[cfg(feature = "local_fs")]
     #[allow(dead_code)]
-    database_connection: Option<Arc<Mutex<SqliteConnection>>>}
+    database_connection: Option<Arc<Mutex<SqliteConnection>>>,
+}
 
 impl MCPServersEditPageView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -207,7 +217,8 @@ impl MCPServersEditPageView {
             editing_disabled_banner,
 
             #[cfg(feature = "local_fs")]
-            database_connection}
+            database_connection,
+        }
     }
 
     pub fn set_mcp_server(
@@ -292,7 +303,8 @@ impl MCPServersEditPageView {
                         false
                     }
                 }
-                ServerCardItemId::GalleryMCP(_) | ServerCardItemId::FileBasedMCP(_) => false}
+                ServerCardItemId::GalleryMCP(_) | ServerCardItemId::FileBasedMCP(_) => false,
+            }
         } else {
             false
         }
@@ -387,7 +399,8 @@ impl MCPServersEditPageView {
                 TemplatableMCPServerManager::as_ref(app)
                     .is_server_installation_shared(installation_uuid, app)
             }
-            ServerCardItemId::GalleryMCP(_) | ServerCardItemId::FileBasedMCP(_) => false}
+            ServerCardItemId::GalleryMCP(_) | ServerCardItemId::FileBasedMCP(_) => false,
+        }
     }
 
     fn is_editable(&self, item_id: Option<ServerCardItemId>, app: &AppContext) -> bool {
@@ -421,7 +434,8 @@ impl MCPServersEditPageView {
             Some(ServerCardItemId::GalleryMCP(_)) | Some(ServerCardItemId::FileBasedMCP(_)) => {
                 false
             }
-            None => true}
+            None => true,
+        }
     }
 
     fn is_reinstallable(item_id: Option<ServerCardItemId>, app: &AppContext) -> bool {
@@ -451,7 +465,8 @@ impl MCPServersEditPageView {
             ServerCardItemId::TemplatableMCPInstallation(installation_uuid) => {
                 TemplatableMCPServerManager::as_ref(app).get_template_uuid(installation_uuid)
             }
-            _ => None};
+            _ => None,
+        };
         let is_author = template_uuid
             .map(|template_uuid| {
                 TemplatableMCPServerManager::as_ref(app).is_author(template_uuid, app)
@@ -700,7 +715,8 @@ impl MCPServersEditPageView {
                 && let Err(e) =
                     model_event_sender.send(ModelEvent::UpsertMCPServerEnvironmentVariables {
                         mcp_server_uuid: mcp_server.uuid.as_bytes().to_vec(),
-                        environment_variables: env_vars_string})
+                        environment_variables: env_vars_string,
+                    })
             {
                 report_error!(
                     anyhow::Error::new(e)
@@ -729,7 +745,8 @@ impl MCPServersEditPageView {
                 description: parsed_result.templatable_mcp_server.description,
                 template: parsed_result.templatable_mcp_server.template,
                 version: parsed_result.templatable_mcp_server.version,
-                gallery_data};
+                gallery_data,
+            };
 
             if let Some(old_installation) =
                 templatable_manager.get_installation_by_template_uuid(template_uuid)

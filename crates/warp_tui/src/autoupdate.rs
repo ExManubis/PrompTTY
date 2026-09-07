@@ -108,7 +108,8 @@ struct InstallLayout {
     /// The version directory the running binary is executing from.
     running_version_dir: PathBuf,
     /// The channel-suffixed binary name (e.g. `warp-tui-dev`).
-    binary_name: String}
+    binary_name: String,
+}
 
 impl InstallLayout {
     /// Detects the managed install layout from the running executable.
@@ -138,7 +139,8 @@ impl InstallLayout {
             root,
             versions_dir,
             running_version_dir,
-            binary_name})
+            binary_name,
+        })
     }
 }
 
@@ -150,7 +152,8 @@ enum InstallMethod {
     /// Installed from the `warp-agent-cli` Homebrew cask.
     Homebrew,
     /// A development build, legacy flat install, or unknown package manager.
-    Unmanaged}
+    Unmanaged,
+}
 
 impl InstallMethod {
     fn detect() -> Self {
@@ -183,7 +186,8 @@ fn is_homebrew_cask_exe_path(exe: &Path) -> bool {
             std::path::Component::Prefix(_)
             | std::path::Component::RootDir
             | std::path::Component::CurDir
-            | std::path::Component::ParentDir => None})
+            | std::path::Component::ParentDir => None,
+        })
         .collect::<Vec<_>>();
     components.windows(2).any(|components| {
         components[0] == OsStr::new("Caskroom") && components[1] == OsStr::new(HOMEBREW_CASK_TOKEN)
@@ -271,7 +275,8 @@ fn open_version_lease(root: &Path, version: &OsStr) -> Result<fs::File> {
 /// A process-lifetime shared lease protecting one managed version directory
 /// from garbage collection. Dropping the file releases the OS lock.
 pub(crate) struct VersionLease {
-    _file: fs::File}
+    _file: fs::File,
+}
 
 impl VersionLease {
     /// Acquires a lease for the version containing the running executable.
@@ -327,7 +332,8 @@ enum UpdateOutcome {
     /// effect on the next launch.
     Installed { version: String },
     /// A newer Homebrew cask is available and must be installed by Homebrew.
-    UpdateAvailable { version: String }}
+    UpdateAvailable { version: String },
+}
 
 impl UpdateOutcome {
     /// Stable identifier for this kind of outcome, used for telemetry and
@@ -339,7 +345,8 @@ impl UpdateOutcome {
             UpdateOutcome::UpToDate { .. } => "up_to_date",
             UpdateOutcome::PendingRestart { .. } => "pending_restart",
             UpdateOutcome::Installed { .. } => "installed",
-            UpdateOutcome::UpdateAvailable { .. } => "update_available"}
+            UpdateOutcome::UpdateAvailable { .. } => "update_available",
+        }
     }
 
     /// The version associated with this outcome, if any.
@@ -350,7 +357,8 @@ impl UpdateOutcome {
             UpdateOutcome::UpToDate { version }
             | UpdateOutcome::PendingRestart { version }
             | UpdateOutcome::Installed { version }
-            | UpdateOutcome::UpdateAvailable { version } => Some(version)}
+            | UpdateOutcome::UpdateAvailable { version } => Some(version),
+        }
     }
 }
 
@@ -372,13 +380,15 @@ pub(crate) enum TuiAutoupdateStatus {
     /// A newer version is staged and takes effect on the next launch.
     PendingRestart,
     /// A newer Homebrew cask is available.
-    UpdateAvailable}
+    UpdateAvailable,
+}
 
 /// Events emitted by [`TuiAutoupdater`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum TuiAutoupdaterEvent {
     /// [`TuiAutoupdater::status`] changed.
-    StatusChanged}
+    StatusChanged,
+}
 
 /// Whether this process runs the background update loop.
 ///
@@ -393,7 +403,9 @@ enum AutoupdateEligibility {
     /// Background updates are disabled for this process.
     Disabled {
         /// Why updates are disabled, for logging/debugging.
-        reason: &'static str}}
+        reason: &'static str,
+    },
+}
 
 impl AutoupdateEligibility {
     /// Determines whether this process should run the background update loop.
@@ -403,25 +415,31 @@ impl AutoupdateEligibility {
     fn determine(ctx: &AppContext) -> Self {
         if std::env::var_os(DISABLE_ENV_VAR).is_some() {
             return Self::Disabled {
-                reason: "opted out via the WARP_TUI_DISABLE_AUTOUPDATE environment variable"};
+                reason: "opted out via the WARP_TUI_DISABLE_AUTOUPDATE environment variable",
+            };
         }
         if !*TuiAutoupdateSettings::as_ref(ctx).autoupdate_enabled {
             return Self::Disabled {
-                reason: "opted out via the general.autoupdate_enabled setting"};
+                reason: "opted out via the general.autoupdate_enabled setting",
+            };
         }
         if ChannelState::app_version().is_none() {
             return Self::Disabled {
-                reason: "no release version tag baked into this build"};
+                reason: "no release version tag baked into this build",
+            };
         }
         if download_os().is_none() {
             return Self::Disabled {
-                reason: "no TUI release artifacts exist for this platform"};
+                reason: "no TUI release artifacts exist for this platform",
+            };
         }
         match InstallMethod::detect() {
             InstallMethod::Native(layout) => Self::Native(layout),
             InstallMethod::Homebrew => Self::Homebrew,
             InstallMethod::Unmanaged => Self::Disabled {
-                reason: "not running from a managed install"}}
+                reason: "not running from a managed install",
+            },
+        }
     }
 }
 
@@ -439,7 +457,8 @@ pub(crate) struct TuiAutoupdater {
     /// The outcome kind last reported to telemetry. Consecutive checks
     /// usually resolve to the same outcome (e.g. `up_to_date` on every
     /// poll), so only transitions are reported.
-    last_reported_outcome: Option<&'static str>}
+    last_reported_outcome: Option<&'static str>,
+}
 
 impl Entity for TuiAutoupdater {
     type Event = TuiAutoupdaterEvent;
@@ -455,7 +474,8 @@ impl TuiAutoupdater {
         ctx.add_singleton_model(move |_| TuiAutoupdater {
             eligibility,
             status: TuiAutoupdateStatus::Idle,
-            last_reported_outcome: None});
+            last_reported_outcome: None,
+        });
         TuiAutoupdater::handle(ctx).update(ctx, |me, ctx| match me.eligibility.clone() {
             AutoupdateEligibility::Native(layout) => me.check_native_now(layout, ctx),
             AutoupdateEligibility::Homebrew => me.check_homebrew_now(ctx),
@@ -507,7 +527,8 @@ impl TuiAutoupdater {
                         },
                     );
                 }
-                Err(error) => me.finish_check(Err(error), fallback_status, layout, ctx)},
+                Err(error) => me.finish_check(Err(error), fallback_status, layout, ctx),
+            },
         );
     }
 
@@ -529,7 +550,8 @@ impl TuiAutoupdater {
     ) {
         match &result {
             Ok(outcome) => log::info!("TUI Homebrew update check finished: {outcome:?}"),
-            Err(error) => log::warn!("TUI Homebrew update check failed: {error:#}")}
+            Err(error) => log::warn!("TUI Homebrew update check failed: {error:#}"),
+        }
         self.report_outcome(&result, ctx);
         let status = settled_status(&result, fallback_status);
         self.set_status(status, ctx);
@@ -552,7 +574,8 @@ impl TuiAutoupdater {
             Ok(outcome) => log::info!("TUI autoupdate check finished: {outcome:?}"),
             // Let the next poll retry; transient network errors (e.g. waking
             // from sleep) are common here.
-            Err(error) => log::warn!("TUI autoupdate check failed: {error:#}")}
+            Err(error) => log::warn!("TUI autoupdate check failed: {error:#}"),
+        }
         self.report_outcome(&result, ctx);
         let status = settled_status(&result, fallback_status);
         self.set_status(status, ctx);
@@ -568,7 +591,8 @@ impl TuiAutoupdater {
     fn report_outcome(&mut self, result: &Result<UpdateOutcome>, ctx: &mut ModelContext<Self>) {
         let kind = match result {
             Ok(outcome) => outcome.kind(),
-            Err(_) => "failed"};
+            Err(_) => "failed",
+        };
         if self.last_reported_outcome == Some(kind) {
             return;
         }
@@ -577,9 +601,12 @@ impl TuiAutoupdater {
         let event = match result {
             Ok(outcome) => TuiAutoupdateTelemetryEvent::CheckCompleted {
                 outcome: kind,
-                version: outcome.version().map(ToOwned::to_owned)},
+                version: outcome.version().map(ToOwned::to_owned),
+            },
             Err(error) => TuiAutoupdateTelemetryEvent::CheckFailed {
-                error: format!("{error:#}")}};
+                error: format!("{error:#}"),
+            },
+        };
     }
 }
 
@@ -601,7 +628,8 @@ fn settled_status(
         Ok(UpdateOutcome::UpdateAvailable { .. }) => TuiAutoupdateStatus::UpdateAvailable,
         #[cfg(unix)]
         Ok(UpdateOutcome::Locked) => fallback_status,
-        Err(_) => TuiAutoupdateStatus::Failed}
+        Err(_) => TuiAutoupdateStatus::Failed,
+    }
 }
 
 /// The result of the lightweight check phase of an update pass.
@@ -610,7 +638,8 @@ enum CheckDecision {
     /// Nothing to install; the pass is complete with this outcome.
     Settled(UpdateOutcome),
     /// A newer version needs the install phase ([`install_update`]).
-    NeedsInstall { latest_version: String }}
+    NeedsInstall { latest_version: String },
+}
 
 /// Performs the check phase of an update pass: a single lightweight
 /// `/client_version` request plus local filesystem checks, deciding whether
@@ -623,7 +652,8 @@ async fn check_for_update(layout: InstallLayout) -> Result<CheckDecision> {
     let latest_version = fetch_latest_version(&client).await?;
     if !is_newer_version(current_version, &latest_version)? {
         return Ok(CheckDecision::Settled(UpdateOutcome::UpToDate {
-            version: current_version.to_owned()}));
+            version: current_version.to_owned(),
+        }));
     }
 
     let version_dir = layout.versions_dir.join(&latest_version);
@@ -636,7 +666,8 @@ async fn check_for_update(layout: InstallLayout) -> Result<CheckDecision> {
     match version_dir_state(&layout, &version_dir)? {
         VersionDirState::Complete if current_points_at(&layout, &latest_version) => {
             return Ok(CheckDecision::Settled(UpdateOutcome::PendingRestart {
-                version: latest_version}));
+                version: latest_version,
+            }));
         }
         VersionDirState::Invalid => {
             bail!(
@@ -660,10 +691,12 @@ async fn check_homebrew_update() -> Result<UpdateOutcome> {
 fn homebrew_update_outcome(current_version: &str, latest_version: String) -> Result<UpdateOutcome> {
     if is_newer_version(current_version, &latest_version)? {
         Ok(UpdateOutcome::UpdateAvailable {
-            version: latest_version})
+            version: latest_version,
+        })
     } else {
         Ok(UpdateOutcome::UpToDate {
-            version: current_version.to_owned()})
+            version: current_version.to_owned(),
+        })
     }
 }
 
@@ -755,7 +788,8 @@ async fn install_update(layout: InstallLayout, latest_version: String) -> Result
         prune_old_versions(&layout, &latest_version);
 
         Ok(UpdateOutcome::Installed {
-            version: latest_version})
+            version: latest_version,
+        })
     })
     .await
 }
@@ -816,7 +850,8 @@ async fn install_update(layout: InstallLayout, latest_version: String) -> Result
         }
         prune_old_versions(&layout, &latest_version);
         Ok(UpdateOutcome::Installed {
-            version: latest_version})
+            version: latest_version,
+        })
     })
     .await
 }
@@ -831,7 +866,8 @@ async fn install_update(_layout: InstallLayout, _latest_version: String) -> Resu
 enum VersionDirState {
     Missing,
     Complete,
-    Invalid}
+    Invalid,
+}
 
 /// A complete version is a real directory containing the expected regular
 /// binary and a real `resources/` directory. Symlinks never satisfy these
@@ -850,7 +886,8 @@ fn version_dir_state(layout: &InstallLayout, version_dir: &Path) -> Result<Versi
         Ok(_) => Ok(VersionDirState::Invalid),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(VersionDirState::Missing),
         Err(error) => Err(error)
-            .with_context(|| format!("failed to inspect TUI version directory {version_dir:?}"))}
+            .with_context(|| format!("failed to inspect TUI version directory {version_dir:?}")),
+    }
 }
 
 /// Whether the platform-specific `current` pointer names `version`.
@@ -951,7 +988,8 @@ fn download_arch() -> &'static str {
 
 #[cfg(windows)]
 struct DownloadedInstaller {
-    path: PathBuf}
+    path: PathBuf,
+}
 
 #[cfg(windows)]
 impl Drop for DownloadedInstaller {
@@ -1022,7 +1060,8 @@ async fn download_windows_installer(
 #[cfg(unix)]
 struct StagedUpdate {
     staging_dir: PathBuf,
-    payload_dir: PathBuf}
+    payload_dir: PathBuf,
+}
 
 #[cfg(unix)]
 impl StagedUpdate {
@@ -1175,7 +1214,8 @@ async fn download_update(
     std::mem::forget(_cleanup);
     Ok(StagedUpdate {
         staging_dir,
-        payload_dir})
+        payload_dir,
+    })
 }
 
 /// Atomically points `current` at `versions/<version>`.
@@ -1352,7 +1392,8 @@ fn prune_old_versions(layout: &InstallLayout, new_version: &str) {
 #[cfg(unix)]
 struct InstallLock {
     path: PathBuf,
-    owner: String}
+    owner: String,
+}
 
 #[cfg(unix)]
 impl InstallLock {
@@ -1382,7 +1423,8 @@ impl InstallLock {
                     }
                     return Ok(Some(Self {
                         path,
-                        owner: owner.clone()}));
+                        owner: owner.clone(),
+                    }));
                 }
                 Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
                     let metadata = match fs::symlink_metadata(&path) {

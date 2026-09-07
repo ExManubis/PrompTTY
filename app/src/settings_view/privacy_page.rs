@@ -17,7 +17,8 @@ use warpui::elements::{
     Align, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Empty, Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Rect, Shrinkable,
-    Stack, Text};
+    Stack, Text,
+};
 use warpui::fonts::Weight;
 use warpui::keymap::ContextPredicate;
 use warpui::platform::Cursor;
@@ -26,13 +27,15 @@ use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
 use warpui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView,
-    UpdateModel, View, ViewContext, ViewHandle, id};
+    UpdateModel, View, ViewContext, ViewHandle, id,
+};
 
 use super::privacy::{AddRegexModal, AddRegexModalEvent};
 use super::settings_page::{
     HEADER_PADDING, LocalOnlyIconState, MatchData, PageTitle, PageType, SettingsPageMeta,
     SettingsPageViewHandle, SettingsWidget, TOGGLE_BUTTON_RIGHT_PADDING, ToggleState,
-    render_body_item, render_sub_header};
+    render_body_item, render_sub_header,
+};
 use super::{SettingsAction, SettingsSection, ToggleSettingActionPair, flags};
 use crate::appearance::Appearance;
 use crate::auth::auth_manager::AuthManager;
@@ -45,14 +48,16 @@ use crate::settings_view::render_body_item_label;
 use crate::settings_view::settings_page::CONTENT_FONT_SIZE;
 use crate::terminal::safe_mode_settings::{
     SafeModeEnabled, SafeModeSettings, SecretDisplayMode, SecretDisplayModeSetting,
-    get_effective_secret_display_mode};
+    get_effective_secret_display_mode,
+};
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
 use crate::util::links::PRIVACY_POLICY_URL;
 use crate::view_components::{Dropdown, DropdownItem};
 use crate::workspaces::user_workspaces::UserWorkspaces;
 use crate::workspaces::workspace::{
-    AdminEnablementSetting, CustomerType, UgcCollectionEnablementSetting};
+    AdminEnablementSetting, CustomerType, UgcCollectionEnablementSetting,
+};
 
 const FONT_SIZE: f32 = 12.;
 
@@ -89,7 +94,8 @@ pub fn data_management_url(custom_token: Option<&str>) -> String {
             ChannelState::server_root_url(),
             token
         ),
-        None => format!("{}/data_management", ChannelState::server_root_url(),)}
+        None => format!("{}/data_management", ChannelState::server_root_url(),),
+    }
 }
 
 pub struct PrivacyPageView {
@@ -106,13 +112,15 @@ pub struct PrivacyPageView {
     /// Active tab for secret redaction settings
     active_secret_redaction_tab: SecretRedactionTab,
     /// Dropdown for selecting secret redaction display mode
-    secret_redaction_display_dropdown: ViewHandle<Dropdown<PrivacyPageAction>>}
+    secret_redaction_display_dropdown: ViewHandle<Dropdown<PrivacyPageAction>>,
+}
 
 #[derive(Clone, Copy)]
 pub enum PrivacyPageViewEvent {
     LaunchNetworkLogging,
     ShowAddRegexModal,
-    HideAddRegexModal}
+    HideAddRegexModal,
+}
 
 impl PrivacyPageView {
     const BATCH_TIMEOUT_MS: u64 = 700;
@@ -152,7 +160,8 @@ impl PrivacyPageView {
                         top: 24.,
                         bottom: 0.,
                         left: 24.,
-                        right: 24.}),
+                        right: 24.,
+                    }),
                     font_size: Some(16.),
                     font_weight: Some(Weight::Bold),
                     ..Default::default()
@@ -162,7 +171,8 @@ impl PrivacyPageView {
                         top: 0.,
                         bottom: 24.,
                         left: 24.,
-                        right: 24.}),
+                        right: 24.,
+                    }),
                     ..Default::default()
                 })
                 .with_background_opacity(100)
@@ -199,7 +209,8 @@ impl PrivacyPageView {
                 add_regex_modal_view,
             )),
             active_secret_redaction_tab: SecretRedactionTab::Personal,
-            secret_redaction_display_dropdown: secret_display_dropdown};
+            secret_redaction_display_dropdown: secret_display_dropdown,
+        };
 
         privacy_page_view.update_button_states(privacy_settings_handle, ctx);
         privacy_page_view.update_secret_display_dropdown(ctx);
@@ -427,7 +438,8 @@ impl PrivacyPageView {
                             None
                         } else {
                             Some(name.trim().to_string())
-                        }});
+                        },
+                    });
 
                     if privacy_settings
                         .user_secret_regex_list
@@ -485,12 +497,14 @@ pub enum PrivacyPageAction {
     AddAllRecommendedRegexes,
     ShowAddRegexModal,
     AddRecommendedRegex(usize),
-    SwitchSecretRedactionTab(SecretRedactionTab)}
+    SwitchSecretRedactionTab(SecretRedactionTab),
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SecretRedactionTab {
     Personal,
-    Enterprise}
+    Enterprise,
+}
 
 impl TypedActionView for PrivacyPageView {
     type Action = PrivacyPageAction;
@@ -532,7 +546,8 @@ impl TypedActionView for PrivacyPageView {
                             privacy_settings.user_secret_regex_list.to_vec();
                         new_user_secret_regex_list.push(CustomSecretRegex {
                             pattern,
-                            name: Some(regex.name.to_string())});
+                            name: Some(regex.name.to_string()),
+                        });
 
                         if privacy_settings
                             .user_secret_regex_list
@@ -626,7 +641,8 @@ struct SecretRedactionWidget {
     add_recommended_button_mouse_states: RefCell<Vec<MouseStateHandle>>,
     add_all_button_mouse_state: MouseStateHandle,
     personal_tab_mouse_state: MouseStateHandle,
-    enterprise_tab_mouse_state: MouseStateHandle}
+    enterprise_tab_mouse_state: MouseStateHandle,
+}
 
 impl SecretRedactionWidget {
     /// Ensures there's enough mouse states for the recommended regexes to be added.
@@ -1113,12 +1129,14 @@ impl SecretRedactionWidget {
                 left: 8.,
                 right: 12.,
                 top: 6.,
-                bottom: 6.}),
+                bottom: 6.,
+            }),
             margin: Some(Coords {
                 left: 8.,
                 right: 0.,
                 top: 0.,
-                bottom: 0.}),
+                bottom: 0.,
+            }),
             ..Default::default()
         }
     }
@@ -1350,7 +1368,8 @@ impl SettingsWidget for SecretRedactionWidget {
 struct AppAnalyticsWidget {
     switch_state: SwitchStateHandle,
     docs_link_mouse_state: MouseStateHandle,
-    zdr_badge_mouse_state: MouseStateHandle}
+    zdr_badge_mouse_state: MouseStateHandle,
+}
 
 impl AppAnalyticsWidget {
     fn render_zero_data_retention_badge(&self, appearance: &Appearance) -> Box<dyn Element> {
@@ -1488,7 +1507,8 @@ impl SettingsWidget for AppAnalyticsWidget {
             switch
                 .with_tooltip(TooltipConfig {
                     text: "This setting is managed by your organization.".to_string(),
-                    styles: ui_builder.default_tool_tip_styles()})
+                    styles: ui_builder.default_tool_tip_styles(),
+                })
                 .disable()
                 .build()
                 .finish()
@@ -1541,7 +1561,8 @@ impl SettingsWidget for AppAnalyticsWidget {
 
 #[derive(Default)]
 struct CrashReportsWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for CrashReportsWidget {
     type View = PrivacyPageView;
@@ -1615,7 +1636,8 @@ impl SettingsWidget for CrashReportsWidget {
 
 #[derive(Default)]
 struct CloudConversationStorageWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for CloudConversationStorageWidget {
     type View = PrivacyPageView;
@@ -1657,7 +1679,8 @@ impl SettingsWidget for CloudConversationStorageWidget {
             AdminEnablementSetting::RespectUserSetting => (
                 ToggleState::Enabled,
                 privacy_settings.is_cloud_conversation_storage_enabled,
-            )};
+            ),
+        };
 
         let switch = ui_builder
             .switch(self.switch_state.clone())
@@ -1673,7 +1696,8 @@ impl SettingsWidget for CloudConversationStorageWidget {
             switch
                 .with_tooltip(TooltipConfig {
                     text: "This setting is managed by your organization.".to_string(),
-                    styles: ui_builder.default_tool_tip_styles()})
+                    styles: ui_builder.default_tool_tip_styles(),
+                })
                 .disable()
                 .build()
                 .finish()
@@ -1726,7 +1750,8 @@ impl SettingsWidget for CloudConversationStorageWidget {
 
 #[derive(Default)]
 struct NetworkLogWidget {
-    link_mouse_state: MouseStateHandle}
+    link_mouse_state: MouseStateHandle,
+}
 
 impl SettingsWidget for NetworkLogWidget {
     type View = PrivacyPageView;
@@ -1803,7 +1828,8 @@ impl SettingsWidget for NetworkLogWidget {
 
 #[derive(Default)]
 struct DataManagementWidget {
-    link_mouse_state: MouseStateHandle}
+    link_mouse_state: MouseStateHandle,
+}
 
 impl SettingsWidget for DataManagementWidget {
     type View = PrivacyPageView;
@@ -1878,7 +1904,8 @@ impl SettingsWidget for DataManagementWidget {
 
 #[derive(Default)]
 struct PrivacyPolicyWidget {
-    link_mouse_state: MouseStateHandle}
+    link_mouse_state: MouseStateHandle,
+}
 
 impl SettingsWidget for PrivacyPolicyWidget {
     type View = PrivacyPageView;

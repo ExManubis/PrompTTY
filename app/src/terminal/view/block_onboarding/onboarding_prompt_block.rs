@@ -4,7 +4,8 @@ use warp_errors::report_if_error;
 use warpui::elements::{
     Align, Border, Clipped, ConstrainedBox, Container, CornerRadius, Flex, FormattedTextElement,
     HighlightedHyperlink, Hoverable, HyperlinkUrl, MainAxisAlignment, MainAxisSize,
-    MouseStateHandle, ParentElement, Radius, Shrinkable, Text, Wrap};
+    MouseStateHandle, ParentElement, Radius, Shrinkable, Text, Wrap,
+};
 use warpui::fonts::Weight;
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
@@ -31,7 +32,8 @@ pub struct OnboardingPromptBlock {
     mouse_state_handle_confirm: MouseStateHandle,
     ps1_grid_info: Option<(BlockGrid, SizeInfo)>,
     selected_prompt: Option<OnboardingPromptType>,
-    block_completed: bool}
+    block_completed: bool,
+}
 
 impl OnboardingPromptBlock {
     pub fn new(ps1_grid_info: Option<(BlockGrid, SizeInfo)>) -> Self {
@@ -43,7 +45,8 @@ impl OnboardingPromptBlock {
             mouse_state_handle_confirm: Default::default(),
             ps1_grid_info,
             selected_prompt: None,
-            block_completed: false}
+            block_completed: false,
+        }
     }
 
     pub fn interrupt_block(&mut self, ctx: &mut ViewContext<Self>) {
@@ -405,7 +408,8 @@ impl OnboardingPromptBlock {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum OnboardingPromptType {
     PS1,
-    WarpDefault}
+    WarpDefault,
+}
 
 impl Entity for OnboardingPromptBlock {
     type Event = ();
@@ -462,7 +466,8 @@ impl View for OnboardingPromptBlock {
 pub enum OnboardingPromptBlockAction {
     PromptSelected(OnboardingPromptType),
     PromptConfirmed,
-    HyperlinkClick(HyperlinkUrl)}
+    HyperlinkClick(HyperlinkUrl),
+}
 
 impl TypedActionView for OnboardingPromptBlock {
     type Action = OnboardingPromptBlockAction;

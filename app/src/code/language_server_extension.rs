@@ -11,14 +11,16 @@ use warp_editor::render::model::Decoration;
 use warpui::elements::{
     Border, ChildView, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox, Container,
     CornerRadius, CrossAxisAlignment, Flex, FormattedTextElement, HighlightedHyperlink, Hoverable,
-    MouseStateHandle, ParentElement, Radius, Rect, ScrollbarWidth};
+    MouseStateHandle, ParentElement, Radius, Rect, ScrollbarWidth,
+};
 use warpui::{AppContext, Element, SingletonEntity, ViewContext};
 
 use super::editor::view::{CodeEditorRenderOptions, CodeEditorView};
 use super::lsp_telemetry::LspTelemetryEvent;
 use crate::code::local_code_editor::{
     HOVER_TOOLTIP_MAX_HEIGHT, HOVER_TOOLTIP_MAX_WIDTH, HoverContentSegment, LocalCodeEditorView,
-    LspHoverState};
+    LspHoverState,
+};
 use crate::editor::InteractionState;
 
 /// A processed diagnostic with its converted offset range.
@@ -32,17 +34,20 @@ pub struct ProcessedDiagnostic {
     /// The start offset (0-based, for rendering).
     pub start: CharOffset,
     /// The end offset (0-based, for rendering).
-    pub end: CharOffset}
+    pub end: CharOffset,
+}
 
 enum PendingSection {
     Markdown(Vec<FormattedTextLine>),
-    Code { language: String, code: String }}
+    Code { language: String, code: String },
+}
 
 #[derive(Default)]
 struct PendingSections {
     sections: Vec<PendingSection>,
     pending: Option<PendingSection>,
-    active_line_break: bool}
+    active_line_break: bool,
+}
 
 impl PendingSections {
     fn push_formatted_line(&mut self, line: FormattedTextLine) {
@@ -72,10 +77,12 @@ impl PendingSections {
                         }
                         self.sections.push(PendingSection::Code { code, language });
                     }
-                    None => ()};
+                    None => (),
+                };
                 self.pending = Some(PendingSection::Code {
                     code: code_block.code,
-                    language: code_block.lang})
+                    language: code_block.lang,
+                })
             }
             other => {
                 self.active_line_break = matches!(other, FormattedTextLine::LineBreak);
@@ -88,7 +95,8 @@ impl PendingSections {
                         markdown.push(other);
                         self.pending = Some(PendingSection::Markdown(markdown));
                     }
-                    None => self.pending = Some(PendingSection::Markdown(vec![other]))}
+                    None => self.pending = Some(PendingSection::Markdown(vec![other])),
+                }
             }
         }
     }
@@ -102,7 +110,8 @@ impl PendingSections {
                 }
                 PendingSection::Code { language, code } => segments.push(
                     LocalCodeEditorView::create_highlighted_code_fragment(language, code, ctx),
-                )}
+                ),
+            }
         }
 
         if let Some(pending) = self.pending {
@@ -112,7 +121,8 @@ impl PendingSections {
                 }
                 PendingSection::Code { language, code } => segments.push(
                     LocalCodeEditorView::create_highlighted_code_fragment(language, code, ctx),
-                )}
+                ),
+            }
         }
         segments
     }
@@ -270,7 +280,8 @@ impl LocalCodeEditorView {
                     message: diagnostic.message.clone(),
                     severity,
                     start,
-                    end})
+                    end,
+                })
             })
             .collect()
     }
@@ -329,14 +340,16 @@ impl LocalCodeEditorView {
                 // Extract hover range and contents from the LSP result (if available).
                 let (hover_range, hover_contents) = match result {
                     Ok(Some(hover_result)) => (hover_result.range, Some(hover_result.contents)),
-                    _ => (None, None)};
+                    _ => (None, None),
+                };
 
                 // Create hover segments if we have non-empty contents.
                 let segments = match hover_contents {
                     Some(contents) if !contents.is_empty() => {
                         me.create_hover_content_segments(contents, ctx)
                     }
-                    _ => Vec::new()};
+                    _ => Vec::new(),
+                };
 
                 // Only show the hover tooltip if there's something to display.
                 if segments.is_empty() && diagnostics.is_empty() {
@@ -363,14 +376,17 @@ impl LocalCodeEditorView {
                                 range.start.saturating_sub(&CharOffset::from(1))
                                     ..range.end.saturating_sub(&CharOffset::from(1))
                             }
-                            None => offset..offset + 1}};
+                            None => offset..offset + 1,
+                        },
+                    };
 
                     me.lsp_hover_state = LspHoverState::Loaded {
                         segments,
                         diagnostics,
                         hovered_offset_range: offset_range,
                         scroll_state: ClippedScrollStateHandle::default(),
-                        mouse_state: MouseStateHandle::default()};
+                        mouse_state: MouseStateHandle::default(),
+                    };
                 }
                 ctx.notify();
             })
@@ -423,10 +439,12 @@ impl LocalCodeEditorView {
                     Ok(text) => text,
                     Err(_) => FormattedText::new([FormattedTextLine::Line(vec![
                         FormattedTextFragment::plain_text(section.value),
-                    ])])},
+                    ])]),
+                },
                 MarkupKind::PlainText => FormattedText::new([FormattedTextLine::Line(vec![
                     FormattedTextFragment::plain_text(section.value),
-                ])])};
+                ])]),
+            };
 
             for line in text.lines {
                 pending.push_formatted_line(line);
@@ -451,7 +469,8 @@ impl LocalCodeEditorView {
                 scroll_state.clone(),
                 mouse_state.clone(),
             ),
-            _ => return None};
+            _ => return None,
+        };
 
         // Don't show tooltip if there's no content.
         if segments.is_empty() && diagnostics.is_empty() {
@@ -569,7 +588,8 @@ impl LocalCodeEditorView {
             lsp_types::DiagnosticSeverity::WARNING => "Warning",
             lsp_types::DiagnosticSeverity::INFORMATION => "Info",
             lsp_types::DiagnosticSeverity::HINT => "Hint",
-            _ => "Diagnostic"};
+            _ => "Diagnostic",
+        };
 
         let text = FormattedText::new([FormattedTextLine::Line(vec![
             FormattedTextFragment::bold(format!("{severity_text}: ")),
@@ -580,7 +600,8 @@ impl LocalCodeEditorView {
         let text_color = match diagnostic.severity {
             lsp_types::DiagnosticSeverity::ERROR => theme.ui_error_color(),
             lsp_types::DiagnosticSeverity::WARNING => theme.ui_warning_color(),
-            _ => theme.active_ui_text_color().into_solid()};
+            _ => theme.active_ui_text_color().into_solid(),
+        };
 
         FormattedTextElement::new(
             text,

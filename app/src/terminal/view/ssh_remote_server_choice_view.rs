@@ -21,17 +21,21 @@ use warp_core::ui::theme::color::internal_colors;
 use warp_errors::report_error;
 use warpui::elements::{
     Border, ChildView, Container, CornerRadius, CrossAxisAlignment, Flex, Hoverable,
-    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text};
+    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
+};
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle};
+    ViewHandle,
+};
 
 use crate::ai::blocklist::block::keyboard_navigable_buttons::{
-    KeyboardNavigableButtons, rich_navigation_button};
+    KeyboardNavigableButtons, rich_navigation_button,
+};
 use crate::ai::blocklist::inline_action::inline_action_header::{
-    HeaderConfig, INLINE_ACTION_HORIZONTAL_PADDING};
+    HeaderConfig, INLINE_ACTION_HORIZONTAL_PADDING,
+};
 use crate::server::telemetry::TelemetryEvent;
 use crate::terminal::model::session::SessionId;
 use crate::terminal::warpify::settings::{SshExtensionInstallMode, WarpifySettings};
@@ -45,13 +49,15 @@ pub enum SshRemoteServerChoiceViewAction {
     Install,
     Skip,
     ToggleDoNotAskAgain,
-    OpenWarpifySettings}
+    OpenWarpifySettings,
+}
 
 #[derive(Clone, Debug)]
 pub enum SshRemoteServerChoiceViewEvent {
     Install,
     Skip,
-    OpenWarpifySettings}
+    OpenWarpifySettings,
+}
 
 /// Choice block prompting the user to install the remote-server binary on the remote host or skip.
 pub struct SshRemoteServerChoiceView {
@@ -61,7 +67,8 @@ pub struct SshRemoteServerChoiceView {
     do_not_ask_again_label_mouse_state: MouseStateHandle,
     manage_settings_mouse_state: MouseStateHandle,
     /// Current checked state of the "Don't ask me this again" checkbox.
-    do_not_ask_again: bool}
+    do_not_ask_again: bool,
+}
 
 impl SshRemoteServerChoiceView {
     pub fn new(session_id: SessionId, ctx: &mut ViewContext<Self>) -> Self {
@@ -98,7 +105,8 @@ impl SshRemoteServerChoiceView {
             do_not_ask_again_mouse_state: MouseStateHandle::default(),
             do_not_ask_again_label_mouse_state: MouseStateHandle::default(),
             manage_settings_mouse_state: MouseStateHandle::default(),
-            do_not_ask_again: false}
+            do_not_ask_again: false,
+        }
     }
 
     pub fn session_id(&self) -> SessionId {

@@ -18,7 +18,8 @@ pub(crate) use telemetry::MalformedFinalLineProxyEvent;
 pub use telemetry::{EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent};
 pub use telemetry::{
     EditReceivedEvent, EditResolvedEvent, EditStats, RequestFileEditsFormatKind,
-    RequestFileEditsTelemetryEvent};
+    RequestFileEditsTelemetryEvent,
+};
 use vec1::{Vec1, vec1};
 use warpui::{Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 
@@ -26,7 +27,8 @@ use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessA
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionId, AIAgentActionResultType, AIAgentActionType,
-    AIAgentOutputMessage, AIAgentOutputMessageType, AIIdentifiers, RequestFileEditsResult};
+    AIAgentOutputMessage, AIAgentOutputMessageType, AIIdentifiers, RequestFileEditsResult,
+};
 use crate::ai::blocklist::diff_storage::RegisteredDiffStorage;
 use crate::ai::blocklist::diff_types::{DiffSessionType, FileDiff};
 use crate::ai::blocklist::{BlocklistAIPermissions, RequestedEditResolution};
@@ -43,7 +45,8 @@ pub struct RequestFileEditsExecutor {
     diff_storages: HashMap<AIAgentActionId, Box<dyn RegisteredDiffStorage>>,
     /// Set of action IDs where diff application failed.
     diff_application_failures: HashMap<AIAgentActionId, Vec1<DiffApplicationError>>,
-    terminal_view_id: EntityId}
+    terminal_view_id: EntityId,
+}
 
 impl RequestFileEditsExecutor {
     pub fn new(
@@ -57,7 +60,8 @@ impl RequestFileEditsExecutor {
             apply_diff_model,
             diff_storages: HashMap::new(),
             diff_application_failures: HashMap::new(),
-            terminal_view_id}
+            terminal_view_id,
+        }
     }
 
     pub(super) fn should_autoexecute(
@@ -72,7 +76,8 @@ impl RequestFileEditsExecutor {
                     action: AIAgentActionType::RequestFileEdits { file_edits, .. },
                     ..
                 },
-            conversation_id} = input
+            conversation_id,
+        } = input
         else {
             return false;
         };
@@ -156,7 +161,8 @@ impl RequestFileEditsExecutor {
         if let Some(errors) = self.diff_application_failures.remove(id) {
             return ActionExecution::Sync(AIAgentActionResultType::RequestFileEdits(
                 RequestFileEditsResult::DiffApplicationFailed {
-                    error: DiffApplicationError::error_for_conversation(&errors)},
+                    error: DiffApplicationError::error_for_conversation(&errors),
+                },
             ));
         }
 
@@ -298,8 +304,10 @@ impl RequestFileEditsExecutor {
         // correct FileModel backend.
         let diff_session_type = match self.active_session.as_ref(ctx).session_type(ctx) {
             Some(SessionType::WarpifiedRemote {
-                host_id: Some(host_id)}) => DiffSessionType::Remote(host_id.clone()),
-            _ => DiffSessionType::Local};
+                host_id: Some(host_id),
+            }) => DiffSessionType::Remote(host_id.clone()),
+            _ => DiffSessionType::Local,
+        };
 
         storage.set_candidate_diffs(diffs, diff_session_type, ctx);
     }
@@ -333,7 +341,8 @@ impl RequestFileEditsExecutor {
                 .server_conversation_token()
                 .cloned()
                 .map(Into::into),
-            model_id})
+            model_id,
+        })
     }
 }
 

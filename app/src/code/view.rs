@@ -18,7 +18,8 @@ use warpui::elements::{
     Container, CornerRadius, CrossAxisAlignment, Draggable, DraggableState, DropTarget, Empty,
     Expanded, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, Padding, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Rect,
-    SavePosition, Shrinkable, Stack, Text};
+    SavePosition, Shrinkable, Stack, Text,
+};
 use warpui::fonts::{Properties, Style, Weight};
 use warpui::keymap::EditableBinding;
 use warpui::text::point::Point;
@@ -27,7 +28,8 @@ use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::UiComponent;
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WindowId, id};
+    ViewHandle, WindowId, id,
+};
 
 use super::buffer_location::LocalOrRemotePath;
 use super::diff_viewer::DiffViewer;
@@ -47,12 +49,14 @@ use crate::notebooks::file::{MarkdownDisplayMode, renders_in_warp_notebook_viewe
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::view::header::components::{
     CenteredHeaderEdgeWidth, render_pane_header_buttons, render_pane_header_title_text,
-    render_three_column_header};
+    render_three_column_header,
+};
 use crate::pane_group::pane::view::header::render_pane_header_draggable;
 use crate::pane_group::pane::{ActionOrigin, PaneHeaderAction, view};
 use crate::pane_group::{
     BackingView, CodePane, PaneConfiguration, PaneConfigurationEvent, PaneDragDropLocation,
-    PaneEvent, TabBarAxis};
+    PaneEvent, TabBarAxis,
+};
 use crate::quit_warning::UnsavedStateSummary;
 use crate::search::ItemHighlightState;
 use crate::search::files::icon::icon_from_file_path;
@@ -60,7 +64,8 @@ use crate::server::telemetry::CodeContextDestination;
 use crate::settings::CodeSettings;
 use crate::tab::TAB_BAR_BORDER_HEIGHT;
 use crate::terminal::cli_agent::{
-    build_selection_line_range_prompt, build_selection_substring_prompt};
+    build_selection_line_range_prompt, build_selection_substring_prompt,
+};
 use crate::terminal::view::CliAgentRouting;
 use crate::ui_components::blended_colors;
 use crate::ui_components::buttons::icon_button;
@@ -131,7 +136,8 @@ pub fn tab_position_id(index: usize) -> String {
 #[derive(Debug, Clone)]
 enum TabBarDragPosition {
     BeforeTab { index: usize },
-    AfterTab { index: usize }}
+    AfterTab { index: usize },
+}
 
 #[derive(Debug, Clone)]
 pub enum CodeViewAction {
@@ -140,9 +146,11 @@ pub enum CodeViewAction {
     AcceptPendingDiffsAndSave,
     RejectPendingDiffs,
     SetCurrentTabIndex {
-        index: usize},
+        index: usize,
+    },
     RemoveTabAtIndex {
-        index: usize},
+        index: usize,
+    },
     CloseAll,
     CloseSaved,
     ToggleMaximized,
@@ -157,27 +165,35 @@ pub enum CodeViewAction {
     RenderMarkdown,
     DragOverIndex {
         target: usize,
-        drag_position: RectF},
+        drag_position: RectF,
+    },
     DropAtIndex {
         origin: usize,
         target: usize,
-        drag_position: RectF},
+        drag_position: RectF,
+    },
     ClearEditorTabGroupDragPositions,
-    ClearWorkspaceTabGroupDragPositions}
+    ClearWorkspaceTabGroupDragPositions,
+}
 
 #[derive(Debug, Clone)]
 pub enum CodeViewEvent {
     Pane(PaneEvent),
     TabChanged {
         location: Option<LocalOrRemotePath>,
-        tab_index: usize},
+        tab_index: usize,
+    },
     FileOpened {
         location: LocalOrRemotePath,
-        tab_index: usize},
+        tab_index: usize,
+    },
     RunTabConfigSkill {
-        path: PathBuf},
+        path: PathBuf,
+    },
     OpenLspLogs {
-        log_path: PathBuf}}
+        log_path: PathBuf,
+    },
+}
 
 #[derive(Default, Clone)]
 struct TabDataMouseStateHandles {
@@ -185,20 +201,23 @@ struct TabDataMouseStateHandles {
     close_handle: MouseStateHandle,
     accept_mouse_state: MouseStateHandle,
     reject_mouse_state: MouseStateHandle,
-    tab_draggable_state: DraggableState}
+    tab_draggable_state: DraggableState,
+}
 
 #[derive(Clone)]
 pub struct TabData {
     location: Option<LocalOrRemotePath>,
     editor_view: ViewHandle<LocalCodeEditorView>,
     mouse_state_handles: TabDataMouseStateHandles,
-    preview: bool}
+    preview: bool,
+}
 
 #[derive(Debug, Clone)]
 pub enum PendingSaveIntent {
     Save,
     Discard,
-    Cancel}
+    Cancel,
+}
 
 impl TabData {
     /// Returns the file location (local or remote), if any.
@@ -223,7 +242,8 @@ pub struct CodeView {
     source: CodeSource,
     window_id: WindowId,
     drag_position: Option<TabBarDragPosition>,
-    markdown_mode_segmented_control: Option<ViewHandle<MarkdownToggleView>>}
+    markdown_mode_segmented_control: Option<ViewHandle<MarkdownToggleView>>,
+}
 
 impl CodeView {
     fn new_internal(source: CodeSource, ctx: &mut ViewContext<Self>) -> Self {
@@ -238,7 +258,8 @@ impl CodeView {
             source,
             window_id,
             drag_position: None,
-            markdown_mode_segmented_control: None}
+            markdown_mode_segmented_control: None,
+        }
     }
 
     pub fn new(
@@ -386,7 +407,8 @@ impl CodeView {
                 let mut editor = editor.with_find_references_provider(
                     ShowFindReferencesCard {
                         editor_window_id: ctx.window_id(),
-                        parent_scrollable_position_id: None},
+                        parent_scrollable_position_id: None,
+                    },
                     ctx,
                 );
                 editor.add_footer(ctx);
@@ -426,7 +448,8 @@ impl CodeView {
             local_editor.with_find_references_provider(
                 ShowFindReferencesCard {
                     editor_window_id: ctx.window_id(),
-                    parent_scrollable_position_id: None},
+                    parent_scrollable_position_id: None,
+                },
                 ctx,
             )
         })
@@ -443,7 +466,8 @@ impl CodeView {
                 let editor = self.construct_editor_for_location(loc.clone(), ctx);
                 (editor, Some(loc))
             }
-            None => (self.construct_new_file_editor(ctx), None)};
+            None => (self.construct_new_file_editor(ctx), None),
+        };
 
         let editor = code_editor.as_ref(ctx).editor().clone();
 
@@ -496,7 +520,8 @@ impl CodeView {
             LocalCodeEditorEvent::SelectionAddedAsContext {
                 relative_file_path,
                 line_range,
-                selected_text} => {
+                selected_text,
+            } => {
                 me.insert_selection_as_context(
                     relative_file_path.clone(),
                     line_range.start.as_usize(),
@@ -544,7 +569,8 @@ impl CodeView {
                 path,
                 line,
                 column,
-                source_server_id} => {
+                source_server_id,
+            } => {
                 // Register the external file so it can use LSP features.
                 // The manager will skip registration if the path is under an existing workspace.
                 let lsp_manager = LspManagerModel::handle(ctx);
@@ -556,7 +582,8 @@ impl CodeView {
                 let line_1based = *line + 1;
                 let line_col = LineAndColumnArg {
                     line_num: line_1based,
-                    column_num: Some(*column)};
+                    column_num: Some(*column),
+                };
 
                 me.open_or_focus_existing(
                     Some(LocalOrRemotePath::Local(path.to_path_buf())),
@@ -580,15 +607,18 @@ impl CodeView {
             }
             LocalCodeEditorEvent::OpenLspLogs { log_path } => {
                 ctx.emit(CodeViewEvent::OpenLspLogs {
-                    log_path: log_path.clone()});
+                    log_path: log_path.clone(),
+                });
             }
-            LocalCodeEditorEvent::DelayedRenderingFlushed => ()});
+            LocalCodeEditorEvent::DelayedRenderingFlushed => (),
+        });
 
         TabData {
             location: tab_location,
             editor_view: code_editor,
             mouse_state_handles: Default::default(),
-            preview}
+            preview,
+        }
     }
 
     fn clear_drag_position(&mut self) {
@@ -679,7 +709,8 @@ impl CodeView {
 
         ctx.emit(CodeViewEvent::FileOpened {
             location: LocalOrRemotePath::Local(path),
-            tab_index: self.active_tab_index});
+            tab_index: self.active_tab_index,
+        });
     }
 
     pub fn open_in_preview_or_promote_and_jump(
@@ -781,14 +812,17 @@ impl CodeView {
         if let (Some(loc), Some(tab)) = (&location, self.tab_group.get(active_tab_index)) {
             ctx.emit(CodeViewEvent::FileOpened {
                 location: loc.clone(),
-                tab_index: active_tab_index});
+                tab_index: active_tab_index,
+            });
 
             let scroll_position = match line_col {
                 Some(line_col) => ScrollPosition::LineAndColumn(line_col),
                 // By default scroll to the first line.
                 None => ScrollPosition::LineAndColumn(LineAndColumnArg {
                     line_num: 1,
-                    column_num: None})};
+                    column_num: None,
+                }),
+            };
 
             // For GlobalBuffer path, set_pending_scroll handles the case where the file
             // hasn't finished loading yet by deferring the scroll until FileLoaded.
@@ -811,7 +845,8 @@ impl CodeView {
 
         let title = match &file_location {
             Some(location) => display_path_with_host(location, false, ctx),
-            None => "Untitled".to_string()};
+            None => "Untitled".to_string(),
+        };
 
         self.pane_configuration.update(ctx, |pane_config, ctx| {
             let mut secondary = String::new();
@@ -1066,7 +1101,8 @@ impl CodeView {
             }) {
                 let destination = match routing {
                     CliAgentRouting::RichInput => CodeContextDestination::RichInput,
-                    CliAgentRouting::Pty => CodeContextDestination::Pty};
+                    CliAgentRouting::Pty => CodeContextDestination::Pty,
+                };
                 return;
             }
         }
@@ -1075,7 +1111,8 @@ impl CodeView {
         ctx.dispatch_typed_action(&WorkspaceAction::InsertInInput {
             content: format!("{file_path}:{start_line}-{end_line} "),
             replace_buffer: false,
-            ensure_agent_mode: true});
+            ensure_agent_mode: true,
+        });
     }
 
     fn render_request_edit_action_header(
@@ -1263,7 +1300,8 @@ impl CodeView {
             let source = CodeSource::Link {
                 path,
                 range_start: None,
-                range_end: None};
+                range_end: None,
+            };
             self.remove_tab_data_index(index, ctx);
             CodePane::new(source, None, ctx)
         })
@@ -1290,7 +1328,8 @@ impl CodeView {
             Some(PendingSaveIntent::Discard) => {
                 self.remove_tab_data_index(index, ctx);
             }
-            _ => ()}
+            _ => (),
+        }
     }
 
     fn clear_tab_group_with_intent(
@@ -1315,7 +1354,8 @@ impl CodeView {
             Some(PendingSaveIntent::Discard) => {
                 self.process_next_tab_for_clear(unsaved_indices, current_index + 1, ctx);
             }
-            _ => ()}
+            _ => (),
+        }
     }
 
     fn process_next_tab_for_clear(
@@ -1352,7 +1392,8 @@ impl CodeView {
         let location = self.tab_at(index).and_then(|tab| tab.location.clone());
         ctx.emit(CodeViewEvent::TabChanged {
             location,
-            tab_index: index});
+            tab_index: index,
+        });
 
         #[cfg(feature = "local_fs")]
         {
@@ -1654,7 +1695,8 @@ impl CodeView {
                     PaneHeaderAction::<CodeViewAction, CodeViewAction>::CustomAction(
                         CodeViewAction::DragOverIndex {
                             target: tab_group_index.index,
-                            drag_position},
+                            drag_position,
+                        },
                     ),
                 );
             } else if let Some(data) =
@@ -1672,7 +1714,8 @@ impl CodeView {
                         origin: ActionOrigin::EditorTab(index),
                         drag_location: PaneDragDropLocation::TabBar(data.tab_bar_location),
                         drag_position,
-                        tab_bar_axis: Some(TabBarAxis::Horizontal)},
+                        tab_bar_axis: Some(TabBarAxis::Horizontal),
+                    },
                 );
             } else {
                 // If an editor tab is dragged anywhere else, we should clear all drag indicators on the editor and workspace tab groups.
@@ -1697,7 +1740,8 @@ impl CodeView {
                         CodeViewAction::DropAtIndex {
                             origin: index,
                             target: tab_group_index.index,
-                            drag_position},
+                            drag_position,
+                        },
                     ),
                 );
             } else if let Some(data) =
@@ -1706,7 +1750,8 @@ impl CodeView {
                 ctx.dispatch_typed_action(
                     PaneHeaderAction::<CodeViewAction, CodeViewAction>::PaneHeaderDropped {
                         origin: ActionOrigin::EditorTab(index),
-                        drop_location: PaneDragDropLocation::TabBar(data.tab_bar_location)},
+                        drop_location: PaneDragDropLocation::TabBar(data.tab_bar_location),
+                    },
                 );
             }
         })
@@ -1798,7 +1843,8 @@ impl CodeView {
                         {
                             Some(Border::right(2.).with_border_fill(theme.foreground()))
                         }
-                        _ => None};
+                        _ => None,
+                    };
 
                     if let Some(border) = border {
                         stack.add_child(
@@ -2056,7 +2102,8 @@ impl CodeView {
             right_row.finish(),
             CenteredHeaderEdgeWidth {
                 min: buttons_width,
-                max: edge_width},
+                max: edge_width,
+            },
             header_ctx.header_left_inset,
             is_pane_dragging,
         )
@@ -2194,7 +2241,8 @@ impl View for CodeView {
                         Shrinkable::new(1., ChildView::new(&tab.editor_view).finish()).finish(),
                     )
                     .finish(),
-                _ => ChildView::new(&tab.editor_view).finish()}
+                _ => ChildView::new(&tab.editor_view).finish(),
+            }
         } else {
             Empty::new().finish()
         };
@@ -2313,7 +2361,8 @@ impl TypedActionView for CodeView {
                                     ctx.emit(CodeViewEvent::Pane(PaneEvent::ReplaceWithFilePane {
                                         path: lor_path.clone(),
                                         source: Some(source.clone()),
-                                        scroll_fraction}));
+                                        scroll_fraction,
+                                    }));
                                 }
                             })),
                             ctx,
@@ -2322,14 +2371,16 @@ impl TypedActionView for CodeView {
                         ctx.emit(CodeViewEvent::Pane(PaneEvent::ReplaceWithFilePane {
                             path: lor_path,
                             source: Some(source),
-                            scroll_fraction}));
+                            scroll_fraction,
+                        }));
                     }
                 }
             }
 
             CodeViewAction::DragOverIndex {
                 target,
-                drag_position} => {
+                drag_position,
+            } => {
                 self.drag_position = Some(Self::calculate_tab_bar_dragged_position(
                     drag_position,
                     *target,
@@ -2341,7 +2392,8 @@ impl TypedActionView for CodeView {
             CodeViewAction::DropAtIndex {
                 origin,
                 target,
-                drag_position} => {
+                drag_position,
+            } => {
                 self.clear_drag_position();
 
                 let calculated_drag_position =
@@ -2425,11 +2477,13 @@ impl BackingView for CodeView {
             // Multi-tab case: render custom tab bar with explicit draggable handling
             view::HeaderContent::Custom {
                 element: self.render_tab_bar_with_draggable(ctx, app),
-                has_custom_draggable_behavior: true}
+                has_custom_draggable_behavior: true,
+            }
         } else {
             view::HeaderContent::Custom {
                 element: self.render_single_tab_header(ctx, app),
-                has_custom_draggable_behavior: false}
+                has_custom_draggable_behavior: false,
+            }
         }
     }
 

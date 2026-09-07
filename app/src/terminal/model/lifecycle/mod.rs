@@ -5,12 +5,13 @@
 //! policy for an action, and attaches rate-limited diagnostics when the action is conservative or
 //! corrective. Callers apply the planned action before committing its next phase.
 
+mod recovery;
 mod telemetry;
 mod transition;
 
-pub use telemetry::LifecycleRecoveryRecord;
+pub use recovery::LifecycleRecoveryRecord;
 pub(in crate::terminal) use telemetry::LifecycleTelemetryEvent;
-use telemetry::LifecycleTelemetryLimiter;
+use recovery::LifecycleTelemetryLimiter;
 pub(in crate::terminal) use transition::{
     CommandStartKind, IgnoreReason, LifecycleAction, LifecycleInput, LifecyclePhase,
     LifecycleSnapshot, LifecycleTransition, NextBlockIdDisposition, PreexecObservation,

@@ -26,7 +26,8 @@ use warpui::elements::{
     Highlight, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
     Padding, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, ScrollStateHandle,
     Scrollable, ScrollableElement, ScrollbarWidth, Shrinkable, Stack, Text, UniformList,
-    UniformListState};
+    UniformListState,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::FixedBinding;
 use warpui::platform::Cursor;
@@ -35,14 +36,16 @@ use warpui::ui_components::components::{UiComponent as _, UiComponentStyles};
 use warpui::ui_components::text::Span;
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakViewHandle};
+    ViewHandle, WeakViewHandle,
+};
 
 use crate::TelemetryEvent;
 use crate::code::icon_from_file_path;
 use crate::coding_panel_enablement_state::CodingPanelEnablementState;
 use crate::editor::{
     EditorOptions, EditorView, Event as EditorEvent, InteractionState,
-    PropagateAndNoOpNavigationKeys, PropagateHorizontalNavigationKeys, TextOptions};
+    PropagateAndNoOpNavigationKeys, PropagateHorizontalNavigationKeys, TextOptions,
+};
 use crate::search::ItemHighlightState as SearchHighlightState;
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon as UiIcon;
@@ -67,27 +70,33 @@ const QUERY_DEBOUNCE_PERIOD: Duration = Duration::from_millis(300);
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GlobalSearchEntryFocus {
     QueryEditor,
-    Results}
+    Results,
+}
 
 enum FocusMode {
     QueryEditor,
-    ResultsList}
+    ResultsList,
+}
 
 #[derive(Debug, Clone)]
 pub enum GlobalSearchAction {
     SelectRow {
         directory_path: LocalOrRemotePath,
         file_path: LocalOrRemotePath,
-        match_index: Option<usize>},
+        match_index: Option<usize>,
+    },
     ToggleFileCollapsed {
         directory_path: LocalOrRemotePath,
-        file_path: LocalOrRemotePath},
+        file_path: LocalOrRemotePath,
+    },
     ToggleDirectoryCollapsed {
-        directory_path: LocalOrRemotePath},
+        directory_path: LocalOrRemotePath,
+    },
     OpenMatch {
         location: LocalOrRemotePath,
         line_number: u32,
-        column_num: Option<usize>},
+        column_num: Option<usize>,
+    },
     ResultsUp,
     ResultsDown,
     ResultsLeft,
@@ -96,19 +105,23 @@ pub enum GlobalSearchAction {
     FocusQueryEditor,
     FocusResultsList,
     ToggleRegexSearch,
-    ToggleCaseSensitivity}
+    ToggleCaseSensitivity,
+}
 
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
 pub enum GlobalSearchEvent {
     Started {
         search_id: u32,
-        remote_host_count: usize},
+        remote_host_count: usize,
+    },
     Progress {
         search_id: u32,
-        result: GlobalSearchMatch},
+        result: GlobalSearchMatch,
+    },
     ProgressBatch {
         search_id: u32,
-        items: Vec<GlobalSearchMatch>},
+        items: Vec<GlobalSearchMatch>,
+    },
     Completed {
         search_id: u32,
         total_match_count: usize,
@@ -119,21 +132,27 @@ pub enum GlobalSearchEvent {
         local_source_failed: bool,
         /// Number of remote host search sources that failed while another
         /// source completed. Results from the surviving sources remain valid.
-        remote_source_failures: usize},
+        remote_source_failures: usize,
+    },
     Failed {
         search_id: u32,
-        error: String}}
+        error: String,
+    },
+}
 
 #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
 pub enum Event {
     OpenMatch {
         location: LocalOrRemotePath,
         line_number: u32,
-        column_num: Option<usize>}}
+        column_num: Option<usize>,
+    },
+}
 
 enum SelectionDirection {
     Up,
-    Down}
+    Down,
+}
 
 /// Absolute row index in the flattened view.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -144,23 +163,28 @@ struct GlobalIndex(usize);
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct RowIndex {
     directory_index: usize,
-    index_type: RowIndexType}
+    index_type: RowIndexType,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum RowIndexType {
     DirectoryHeader,
     FileHeader {
-        path_index: usize},
+        path_index: usize,
+    },
     Match {
         path_index: usize,
-        match_index: usize}}
+        match_index: usize,
+    },
+}
 
 /// A root directory containing matched files.
 struct DirectoryEntry {
     path: LocalOrRemotePath,
     is_collapsed: bool,
     mouse_state: MouseStateHandle,
-    matched_paths: MatchedPaths}
+    matched_paths: MatchedPaths,
+}
 
 impl DirectoryEntry {
     fn new(path: LocalOrRemotePath) -> Self {
@@ -168,7 +192,8 @@ impl DirectoryEntry {
             path,
             is_collapsed: false,
             mouse_state: MouseStateHandle::default(),
-            matched_paths: MatchedPaths::new()}
+            matched_paths: MatchedPaths::new(),
+        }
     }
 
     /// Returns the number of visible rows for this directory entry.
@@ -195,13 +220,15 @@ impl DirectoryEntry {
 /// Collection of matched files within a directory.
 struct MatchedPaths {
     paths: Vec<MatchedPath>,
-    index_by_path: HashMap<LocalOrRemotePath, usize>}
+    index_by_path: HashMap<LocalOrRemotePath, usize>,
+}
 
 impl MatchedPaths {
     fn new() -> Self {
         Self {
             paths: Vec::new(),
-            index_by_path: HashMap::new()}
+            index_by_path: HashMap::new(),
+        }
     }
 
     /// Returns the total number of visible rows across all files.
@@ -236,7 +263,8 @@ struct MatchedPath {
     path: LocalOrRemotePath,
     is_collapsed: bool,
     mouse_state: MouseStateHandle,
-    matches: Vec<Match>}
+    matches: Vec<Match>,
+}
 
 impl MatchedPath {
     fn new(path: LocalOrRemotePath) -> Self {
@@ -244,7 +272,8 @@ impl MatchedPath {
             path,
             is_collapsed: false,
             mouse_state: MouseStateHandle::default(),
-            matches: Vec::new()}
+            matches: Vec::new(),
+        }
     }
 
     /// Returns the number of visible rows for this file.
@@ -265,7 +294,8 @@ struct Match {
     line_number: u32,
     column_num: Option<usize>,
     submatches: Vec<Submatch>,
-    mouse_state: MouseStateHandle}
+    mouse_state: MouseStateHandle,
+}
 
 impl Match {
     fn new(
@@ -279,7 +309,8 @@ impl Match {
             line_number,
             column_num,
             submatches,
-            mouse_state: MouseStateHandle::default()}
+            mouse_state: MouseStateHandle::default(),
+        }
     }
 }
 
@@ -311,7 +342,8 @@ pub struct GlobalSearchView {
     regex_search_enabled: bool,
     regex_button: ViewHandle<ActionButton>,
     case_sensitivity_enabled: bool,
-    case_sensitivity_button: ViewHandle<ActionButton>}
+    case_sensitivity_button: ViewHandle<ActionButton>,
+}
 
 impl Entity for GlobalSearchView {
     type Event = Event;
@@ -325,7 +357,8 @@ impl TypedActionView for GlobalSearchView {
             GlobalSearchAction::SelectRow {
                 directory_path,
                 file_path,
-                match_index} => {
+                match_index,
+            } => {
                 if let Some(row_index) =
                     self.path_to_row_index(directory_path, file_path, *match_index)
                 {
@@ -335,7 +368,8 @@ impl TypedActionView for GlobalSearchView {
             }
             GlobalSearchAction::ToggleFileCollapsed {
                 directory_path,
-                file_path} => {
+                file_path,
+            } => {
                 self.toggle_file_collapsed(directory_path, file_path, ctx);
             }
             GlobalSearchAction::ToggleDirectoryCollapsed { directory_path } => {
@@ -344,11 +378,13 @@ impl TypedActionView for GlobalSearchView {
             GlobalSearchAction::OpenMatch {
                 location,
                 line_number,
-                column_num} => {
+                column_num,
+            } => {
                 ctx.emit(Event::OpenMatch {
                     location: location.clone(),
                     line_number: *line_number,
-                    column_num: *column_num});
+                    column_num: *column_num,
+                });
                 self.enter_query_mode(ctx);
             }
             GlobalSearchAction::ResultsDown => {
@@ -683,7 +719,8 @@ impl GlobalSearchView {
             regex_search_enabled: false,
             regex_button,
             case_sensitivity_enabled: false,
-            case_sensitivity_button}
+            case_sensitivity_button,
+        }
     }
 
     pub fn on_left_panel_focused(
@@ -868,7 +905,8 @@ impl GlobalSearchView {
         } else {
             match self.last_searched_pattern.as_deref() {
                 Some(last) => last != pattern,
-                None => true}
+                None => true,
+            }
         };
 
         if !should_run_search {
@@ -884,7 +922,8 @@ impl GlobalSearchView {
                 roots,
                 SearchConfig {
                     use_regex: self.regex_search_enabled,
-                    use_case_sensitivity: self.case_sensitivity_enabled},
+                    use_case_sensitivity: self.case_sensitivity_enabled,
+                },
                 model_ctx,
             );
         });
@@ -894,7 +933,8 @@ impl GlobalSearchView {
         match event {
             GlobalSearchEvent::Started {
                 search_id,
-                remote_host_count} => {
+                remote_host_count,
+            } => {
 
                 self.current_search_id = Some(*search_id);
                 self.search_started_at = Some(Instant::now());
@@ -931,7 +971,8 @@ impl GlobalSearchView {
                 total_match_count,
                 capped,
                 local_source_failed,
-                remote_source_failures} => {
+                remote_source_failures,
+            } => {
                 if Some(*search_id) != self.current_search_id {
                     return;
                 }
@@ -1067,7 +1108,8 @@ impl GlobalSearchView {
             }
             RowIndexType::Match {
                 path_index,
-                match_index} => {
+                match_index,
+            } => {
                 let Some(matched_path) = dir_entry.matched_paths.paths.get(*path_index) else {
                     return Empty::new().finish();
                 };
@@ -1141,7 +1183,8 @@ impl GlobalSearchView {
                 ItemHighlightState::Hovered => {
                     ThemeFill::Solid(blended_colors::text_main(theme, theme.background()))
                 }
-                ItemHighlightState::Selected => ThemeFill::Solid(theme.foreground().into())};
+                ItemHighlightState::Selected => ThemeFill::Solid(theme.foreground().into()),
+            };
 
             let left = render_file_search_row(
                 &display_path,
@@ -1177,7 +1220,8 @@ impl GlobalSearchView {
                 ImageOrIcon::Icon(icon) => {
                     icon.to_warpui_icon(ThemeFill::from(icon_color)).finish()
                 }
-                ImageOrIcon::Image(image) => image};
+                ImageOrIcon::Image(image) => image,
+            };
 
             let file_icon_element = Container::new(
                 ConstrainedBox::new(file_icon)
@@ -1247,10 +1291,12 @@ impl GlobalSearchView {
             ctx.dispatch_typed_action(GlobalSearchAction::SelectRow {
                 directory_path: directory_path_for_select.clone(),
                 file_path: file_path_clone.clone(),
-                match_index: None});
+                match_index: None,
+            });
             ctx.dispatch_typed_action(GlobalSearchAction::ToggleFileCollapsed {
                 directory_path: directory_path_for_toggle.clone(),
-                file_path: file_path_clone.clone()});
+                file_path: file_path_clone.clone(),
+            });
         })
         .finish()
     }
@@ -1283,7 +1329,8 @@ impl GlobalSearchView {
             let text_color = match list_highlight_state {
                 ItemHighlightState::None => blended_colors::text_sub(theme, theme.background()),
                 ItemHighlightState::Hovered => blended_colors::text_main(theme, theme.background()),
-                ItemHighlightState::Selected => theme.foreground().into()};
+                ItemHighlightState::Selected => theme.foreground().into(),
+            };
 
             let highlight_indices =
                 GlobalSearchView::highlight_indices_from_submatches(&line_text, &submatches);
@@ -1328,11 +1375,13 @@ impl GlobalSearchView {
             ctx.dispatch_typed_action(GlobalSearchAction::SelectRow {
                 directory_path: directory_path_for_select.clone(),
                 file_path: file_path_for_select.clone(),
-                match_index: Some(match_index)});
+                match_index: Some(match_index),
+            });
             ctx.dispatch_typed_action(GlobalSearchAction::OpenMatch {
                 location: location_for_click.clone(),
                 line_number,
-                column_num});
+                column_num,
+            });
         })
         .finish()
     }
@@ -1366,7 +1415,8 @@ impl GlobalSearchView {
         if offset == 0 {
             return Some(RowIndex {
                 directory_index: dir_idx,
-                index_type: RowIndexType::DirectoryHeader});
+                index_type: RowIndexType::DirectoryHeader,
+            });
         }
 
         // If directory is collapsed, only the header is visible
@@ -1386,7 +1436,9 @@ impl GlobalSearchView {
                     return Some(RowIndex {
                         directory_index: dir_idx,
                         index_type: RowIndexType::FileHeader {
-                            path_index: path_idx}});
+                            path_index: path_idx,
+                        },
+                    });
                 }
                 // It's a match row (remaining - 1 because we skip the file header)
                 let match_index = remaining - 1;
@@ -1395,7 +1447,9 @@ impl GlobalSearchView {
                         directory_index: dir_idx,
                         index_type: RowIndexType::Match {
                             path_index: path_idx,
-                            match_index}});
+                            match_index,
+                        },
+                    });
                 }
                 return None;
             }
@@ -1442,7 +1496,8 @@ impl GlobalSearchView {
             }
             RowIndexType::Match {
                 path_index,
-                match_index} => {
+                match_index,
+            } => {
                 let Some(dir_entry) = self.directory_entries.get(row.directory_index) else {
                     debug_assert!(
                         false,
@@ -1519,11 +1574,14 @@ impl GlobalSearchView {
             None => RowIndexType::FileHeader { path_index },
             Some(match_idx) => RowIndexType::Match {
                 path_index,
-                match_index: match_idx}};
+                match_index: match_idx,
+            },
+        };
 
         Some(RowIndex {
             directory_index,
-            index_type})
+            index_type,
+        })
     }
 
     /// Gets the directory location for a given RowIndex.
@@ -1655,7 +1713,8 @@ impl GlobalSearchView {
         if !self.directory_entries.is_empty() {
             let row_index = RowIndex {
                 directory_index: 0,
-                index_type: RowIndexType::DirectoryHeader};
+                index_type: RowIndexType::DirectoryHeader,
+            };
             self.set_selected_row(row_index, ctx);
         }
     }
@@ -1685,7 +1744,8 @@ impl GlobalSearchView {
 
         let next_index = match direction {
             SelectionDirection::Up => current_index.saturating_sub(1),
-            SelectionDirection::Down => current_index + 1};
+            SelectionDirection::Down => current_index + 1,
+        };
 
         let max_index = total_items.saturating_sub(1);
         let clamped_next = next_index.min(max_index);
@@ -1709,7 +1769,8 @@ impl GlobalSearchView {
             }
             RowIndexType::Match {
                 path_index,
-                match_index} => {
+                match_index,
+            } => {
                 let Some(dir_entry) = self.directory_entries.get(selected_row.directory_index)
                 else {
                     return;
@@ -1723,7 +1784,8 @@ impl GlobalSearchView {
                 ctx.emit(Event::OpenMatch {
                     location: matched_path.path.clone(),
                     line_number: matched.line_number,
-                    column_num: matched.column_num});
+                    column_num: matched.column_num,
+                });
             }
             RowIndexType::DirectoryHeader => {
                 if let Some(dir_path) = self.directory_path_for_row_index(&selected_row).cloned() {
@@ -1759,7 +1821,8 @@ impl GlobalSearchView {
         {
             self.selected_row = Some(RowIndex {
                 directory_index: dir_idx,
-                index_type: RowIndexType::DirectoryHeader});
+                index_type: RowIndexType::DirectoryHeader,
+            });
         }
 
         self.ensure_selection(ctx);
@@ -1803,7 +1866,9 @@ impl GlobalSearchView {
                 self.selected_row = Some(RowIndex {
                     directory_index: selected_row.directory_index,
                     index_type: RowIndexType::FileHeader {
-                        path_index: *path_index}});
+                        path_index: *path_index,
+                    },
+                });
             }
         }
 
@@ -1971,7 +2036,8 @@ impl GlobalSearchView {
         .with_cursor(Cursor::PointingHand)
         .on_click(move |ctx, _, _| {
             ctx.dispatch_typed_action(GlobalSearchAction::ToggleDirectoryCollapsed {
-                directory_path: directory_path_for_click.clone()});
+                directory_path: directory_path_for_click.clone(),
+            });
         })
         .finish()
     }
@@ -2071,7 +2137,8 @@ impl View for GlobalSearchView {
         } else {
             match self.total_match_count {
                 1 => format!("1 result in {files} {file_word}"),
-                n => format!("{n} results in {files} {file_word}")}
+                n => format!("{n} results in {files} {file_word}"),
+            }
         };
 
         let match_text_styles = UiComponentStyles {

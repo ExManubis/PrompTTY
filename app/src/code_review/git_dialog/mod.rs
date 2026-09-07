@@ -16,20 +16,24 @@ use warpui::elements::{
     Align, Border, ChildAnchor, ChildView, ClippedScrollStateHandle, ClippedScrollable,
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Element, Flex, Hoverable,
     Icon as IconElement, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
-    ParentAnchor, ParentElement, ParentOffsetBounds, Radius, ScrollbarWidth, Stack, Text};
+    ParentAnchor, ParentElement, ParentOffsetBounds, Radius, ScrollbarWidth, Stack, Text,
+};
 use warpui::keymap::{self, FixedBinding};
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::editor::{add_color, remove_color};
 use crate::code_review::diff_state::{
-    CommitChainMode, DiffStateModel, DiffStateModelEvent, GitOpResult};
+    CommitChainMode, DiffStateModel, DiffStateModelEvent, GitOpResult,
+};
 use crate::code_review::telemetry_event::{
-    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind};
+    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind,
+};
 use crate::settings::AISettings;
 use crate::ui_components::dialog::{Dialog, dialog_styles};
 use crate::ui_components::icons::Icon;
@@ -54,7 +58,8 @@ pub use push::{PushState, PushSubAction};
 pub enum GitDialogKind {
     Commit,
     Push { publish: bool },
-    CreatePr}
+    CreatePr,
+}
 
 pub fn init(ctx: &mut AppContext) {
     ctx.register_fixed_bindings(vec![FixedBinding::new(
@@ -74,7 +79,8 @@ pub enum GitDialogAction {
     Confirm,
     Commit(CommitSubAction),
     Push(PushSubAction),
-    Pr(PrSubAction)}
+    Pr(PrSubAction),
+}
 
 /// Events emitted to the parent view. Each mode handles its own success /
 /// failure toasts internally; the parent only needs to know whether the
@@ -86,7 +92,8 @@ pub enum GitDialogEvent {
     Completed,
     /// The user cancelled (ESC / close button / cancel button). Parent
     /// should close the dialog; no refresh needed.
-    Cancelled}
+    Cancelled,
+}
 
 /// Shows an ephemeral toast for a git-dialog outcome. Submodules call this
 /// directly from their success/failure paths.
@@ -228,7 +235,8 @@ fn render_branch_section(
 fn split_file_path(path: &str) -> (&str, &str) {
     match path.rfind('/') {
         Some(idx) => (&path[idx + 1..], &path[..idx + 1]),
-        None => (path, "")}
+        None => (path, ""),
+    }
 }
 
 /// Renders a chevron icon (ChevronDown when expanded, ChevronRight when collapsed).
@@ -453,7 +461,8 @@ fn render_file_list(files: &[FileChangeEntry], appearance: &Appearance) -> Box<d
 pub enum GitDialogMode {
     Commit(CommitState),
     Push(PushState),
-    CreatePr(PrState)}
+    CreatePr(PrState),
+}
 
 pub struct GitDialog {
     repo_location: LocalOrRemotePath,
@@ -463,7 +472,8 @@ pub struct GitDialog {
     loading: bool,
     confirm_button: ViewHandle<ActionButton>,
     cancel_button: ViewHandle<ActionButton>,
-    close_button: ViewHandle<ActionButton>}
+    close_button: ViewHandle<ActionButton>,
+}
 
 impl GitDialog {
     pub fn new_for_commit(
@@ -495,7 +505,8 @@ impl GitDialog {
             loading: false,
             confirm_button,
             cancel_button,
-            close_button};
+            close_button,
+        };
         // Open-time AI commit-message autogen runs for both backends; the model
         // generates it (local in-process, remote on the daemon) and the result
         // returns via the diff-state subscription wired up just above.
@@ -530,7 +541,8 @@ impl GitDialog {
             loading: false,
             confirm_button,
             cancel_button,
-            close_button}
+            close_button,
+        }
     }
 
     pub fn new_for_pr(
@@ -552,7 +564,8 @@ impl GitDialog {
             loading: false,
             confirm_button,
             cancel_button,
-            close_button};
+            close_button,
+        };
         // Fetch the committed branch diff on open (committed-only, so the
         // Changes box previews exactly what the PR will contain). Both backends
         // deliver the result via `BranchCommittedFilesReceived`, applied in
@@ -643,7 +656,8 @@ impl GitDialog {
             GitOpResult::CommitChainCompleted(result) => {
                 let intent = match &self.mode {
                     GitDialogMode::Commit(state) => state.intent,
-                    _ => return};
+                    _ => return,
+                };
                 // Unified completion path (toast + telemetry + close) for both
                 // backends; the model already applied the delta / PR info to
                 // metadata before emitting this event.
@@ -652,7 +666,8 @@ impl GitDialog {
             GitOpResult::PushCompleted(result) => {
                 let publish = match &self.mode {
                     GitDialogMode::Push(state) => state.publish,
-                    _ => return};
+                    _ => return,
+                };
                 push::finish_push(
                     self,
                     publish,
@@ -712,7 +727,8 @@ impl GitDialog {
                 commit::confirm_tooltip(state, ctx),
             ),
             GitDialogMode::Push(_) => (false, None),
-            GitDialogMode::CreatePr(state) => (!pr::is_ready_to_confirm(state), None)};
+            GitDialogMode::CreatePr(state) => (!pr::is_ready_to_confirm(state), None),
+        };
         self.confirm_button.update(ctx, |b, ctx| {
             b.set_disabled(disabled, ctx);
             b.set_tooltip(tooltip, ctx);
@@ -729,7 +745,8 @@ impl GitDialog {
                     "Push changes"
                 }
             }
-            GitDialogMode::CreatePr(_) => "Create pull request"}
+            GitDialogMode::CreatePr(_) => "Create pull request",
+        }
     }
 
     fn header_icon(&self) -> Icon {
@@ -742,7 +759,8 @@ impl GitDialog {
                     Icon::ArrowUp
                 }
             }
-            GitDialogMode::CreatePr(_) => Icon::Github}
+            GitDialogMode::CreatePr(_) => Icon::Github,
+        }
     }
 
     fn render_body(&self, app: &AppContext) -> Box<dyn Element> {
@@ -750,7 +768,8 @@ impl GitDialog {
         match &self.mode {
             GitDialogMode::Commit(state) => commit::render_body(state, &self.branch_name, app),
             GitDialogMode::Push(state) => push::render_body(state, &self.branch_name, appearance),
-            GitDialogMode::CreatePr(state) => pr::render_body(state, &self.branch_name, appearance)}
+            GitDialogMode::CreatePr(state) => pr::render_body(state, &self.branch_name, appearance),
+        }
     }
 
     /// Builds the `Dialog` component (title, body, bottom buttons) and wraps
@@ -876,7 +895,8 @@ impl TypedActionView for GitDialog {
                                 GitOperationKind::Push
                             }
                         }
-                        GitDialogMode::CreatePr(_) => GitOperationKind::CreatePr};
+                        GitDialogMode::CreatePr(_) => GitOperationKind::CreatePr,
+                    };
                     // Derive the real local/remote value rather than hardcoding
                     // it, so cancel telemetry matches the repo the dialog acts
                     // on (the completion paths report the same value).
@@ -891,10 +911,12 @@ impl TypedActionView for GitDialog {
                 match &self.mode {
                     GitDialogMode::Commit(_) => commit::start_confirm(self, ctx),
                     GitDialogMode::Push(_) => push::start_confirm(self, ctx),
-                    GitDialogMode::CreatePr(_) => pr::start_confirm(self, ctx)}
+                    GitDialogMode::CreatePr(_) => pr::start_confirm(self, ctx),
+                }
             }
             GitDialogAction::Commit(sub) => commit::handle_sub_action(self, sub, ctx),
             GitDialogAction::Push(sub) => push::handle_sub_action(self, sub, ctx),
-            GitDialogAction::Pr(sub) => pr::handle_sub_action(self, sub, ctx)}
+            GitDialogAction::Pr(sub) => pr::handle_sub_action(self, sub, ctx),
+        }
     }
 }

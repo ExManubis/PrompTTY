@@ -58,14 +58,16 @@ const GEAP_REFRESH_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::f
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RecoveryBudget {
     attempts_used: usize,
-    resume_allowed: bool}
+    resume_allowed: bool,
+}
 
 impl RecoveryBudget {
     /// A full budget, for a request that is not itself recovering another.
     pub(crate) fn fresh() -> Self {
         Self {
             attempts_used: 0,
-            resume_allowed: true}
+            resume_allowed: true,
+        }
     }
 
     /// The same budget with resumes disallowed, for requests whose failures must stay
@@ -104,7 +106,8 @@ impl RecoveryBudget {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PendingResume {
     recovery: RecoveryBudget,
-    backoff: Duration}
+    backoff: Duration,
+}
 
 impl PendingResume {
     /// The budget the resumed request runs with, already charged for this resume.
@@ -133,7 +136,8 @@ enum RecoveryAction {
     /// Resume the conversation with a fresh request after the stream completes.
     Resume,
     /// Surface the error; the conversation ends in error.
-    Fail(FailReason)}
+    Fail(FailReason),
+}
 
 impl RecoveryAction {
     /// Which kind of recovery this is, for the recovery logs. Both retry variants share
@@ -142,7 +146,8 @@ impl RecoveryAction {
         match self {
             Self::Retry | Self::RetryWhenOnline => "retry",
             Self::Resume => "resume",
-            Self::Fail(_) => "none"}
+            Self::Fail(_) => "none",
+        }
     }
 }
 
@@ -154,14 +159,16 @@ enum FailReason {
     /// The shared retry/resume budget is spent.
     BudgetExhausted,
     /// Only a resume could recover this failure, and this request may not resume.
-    ResumeNotAllowed}
+    ResumeNotAllowed,
+}
 
 impl FailReason {
     fn log_label(self) -> &'static str {
         match self {
             Self::NotRecoverable => "not_recoverable",
             Self::BudgetExhausted => "budget_exhausted",
-            Self::ResumeNotAllowed => "resume_not_allowed"}
+            Self::ResumeNotAllowed => "resume_not_allowed",
+        }
     }
 }
 
@@ -208,7 +215,8 @@ enum RecoveryOutcome {
     /// stream for this attempt.
     InFlight,
     /// The failure has been reported and must be surfaced to the conversation.
-    Surfaced}
+    Surfaced,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ResponseStreamId(String);
@@ -285,7 +293,8 @@ pub struct ResponseStream {
     ///
     /// Note this is unique compared to `id`; this is unique across retry requests while the response
     /// stream id remains stable.
-    current_request_id: Option<Uuid>}
+    current_request_id: Option<Uuid>,
+}
 
 impl ResponseStream {
     /// Emits a synthetic successful response event through the normal controller subscription.
@@ -327,7 +336,8 @@ impl ResponseStream {
             stream_finished_received: false,
             error_event_emitted: false,
             deferred_retry_pending: false,
-            current_request_id: Some(Uuid::new_v4())}
+            current_request_id: Some(Uuid::new_v4()),
+        }
     }
 
     pub fn new(
@@ -356,7 +366,8 @@ impl ResponseStream {
             stream_finished_received: false,
             error_event_emitted: false,
             deferred_retry_pending: false,
-            current_request_id: Some(request_id)}
+            current_request_id: Some(request_id),
+        }
     }
 
     pub fn id(&self) -> &ResponseStreamId {
@@ -457,7 +468,8 @@ impl ResponseStream {
                 let delay = backoff_after_attempts(self.recovery.attempts_used() + 1);
                 self.pending_resume = Some(PendingResume {
                     recovery: self.recovery.next_attempt(),
-                    backoff: delay});
+                    backoff: delay,
+                });
                 self.log_recovery(action, &format!("after_stream_finished+{delay:?}"), error);
                 self.error_event_emitted = true;
                 self.report_request_failure(error, is_online, self.recovery.attempts_used() + 1);
@@ -681,7 +693,9 @@ impl ResponseStream {
         ctx.emit(ResponseStreamEvent::AfterStreamFinished {
             cancellation: Some(StreamCancellation {
                 reason,
-                conversation_id})});
+                conversation_id,
+            }),
+        });
     }
 
     fn handle_response_stream_result(
@@ -861,7 +875,8 @@ impl ResponseStream {
                         "failed_request" => self.failed_request_label(),
                         "recovery_attempt" => recovery_attempt,
                         "max_recovery_attempts" => MAX_RECOVERY_ATTEMPTS,
-                        "error_debug" => %format!("{error:?}")}
+                        "error_debug" => %format!("{error:?}"),
+                    }
                 );
             },
         );
@@ -877,7 +892,8 @@ impl ResponseStream {
                     "failed_request" => self.failed_request_label(),
                     "recovery_attempt" => recovery_attempt,
                     "max_recovery_attempts" => MAX_RECOVERY_ATTEMPTS,
-                    "error_debug" => %format!("{error:?}")}
+                    "error_debug" => %format!("{error:?}"),
+                }
             );
         }
     }
@@ -937,12 +953,14 @@ fn apply_geap_refresh_to_params(
 
 #[derive(Debug)]
 pub struct Consumable<T> {
-    value: Rc<RefCell<Option<T>>>}
+    value: Rc<RefCell<Option<T>>>,
+}
 
 impl<T> Consumable<T> {
     fn new(value: T) -> Self {
         Consumable {
-            value: Rc::new(RefCell::new(Some(value)))}
+            value: Rc::new(RefCell::new(Some(value))),
+        }
     }
 
     pub(super) fn consume(&self) -> Option<T> {
@@ -953,7 +971,8 @@ impl<T> Consumable<T> {
 impl<T> Clone for Consumable<T> {
     fn clone(&self) -> Self {
         Consumable {
-            value: Rc::clone(&self.value)}
+            value: Rc::clone(&self.value),
+        }
     }
 }
 
@@ -962,7 +981,8 @@ impl<T> Clone for Consumable<T> {
 #[derive(Debug, Clone)]
 pub struct StreamCancellation {
     pub reason: CancellationReason,
-    pub conversation_id: AIConversationId}
+    pub conversation_id: AIConversationId,
+}
 
 #[derive(Debug, Clone)]
 pub enum ResponseStreamEvent {
@@ -975,10 +995,13 @@ pub enum ResponseStreamEvent {
     /// request failure while offline — never speculatively before an attempt. Consumers
     /// can therefore treat `waiting: true` as a transient-error (reconnecting) state.
     WaitingForNetwork {
-        waiting: bool},
+        waiting: bool,
+    },
     AfterStreamFinished {
         /// Some for cancellation (with context), None for natural completion (uses dynamic lookup).
-        cancellation: Option<StreamCancellation>}}
+        cancellation: Option<StreamCancellation>,
+    },
+}
 
 impl Entity for ResponseStream {
     type Event = ResponseStreamEvent;

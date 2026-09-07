@@ -91,7 +91,8 @@ struct BucketRange {
     /// The group to assign this range of buckets to.
     group: GroupId,
     /// The range of buckets.
-    range: Range<u16>}
+    range: Range<u16>,
+}
 
 impl BucketRange {
     // Ignoring the warning that appears when there are no experiments running currently.
@@ -102,7 +103,8 @@ impl BucketRange {
     {
         Self {
             group: exp.get_group_id(),
-            range}
+            range,
+        }
     }
 }
 
@@ -111,7 +113,8 @@ impl BucketRange {
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub struct GroupId {
     experiment: &'static str,
-    variant: &'static str}
+    variant: &'static str,
+}
 
 impl fmt::Display for GroupId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -147,7 +150,8 @@ pub struct Layer {
     /// in the experiment remain in the same group. This involves fragmenting the
     /// bucket ranges for each group. See the `Increasing experiment traffic
     /// allocations` section in the Notion guide for more details.
-    bucket_ranges: Vec<BucketRange>}
+    bucket_ranges: Vec<BucketRange>,
+}
 
 #[allow(dead_code)]
 impl Layer {
@@ -253,7 +257,8 @@ pub trait Experiment<T: Experiment<T>>: FromStr {
     fn get_group_id(&self) -> GroupId {
         GroupId {
             experiment: Self::name(),
-            variant: self.variant()}
+            variant: self.variant(),
+        }
     }
 
     /// Parses a group id to return the associated experiment. Will fail if the

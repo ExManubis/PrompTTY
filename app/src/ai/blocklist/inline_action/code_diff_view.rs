@@ -6,7 +6,8 @@ use std::time::Duration;
 
 use ai::diff_validation::{
     DiffDelta, DiffType, ParsedDiff, SearchAndReplace, V4AHunk, fuzzy_match_diffs,
-    fuzzy_match_v4a_diffs, parse_line_numbers};
+    fuzzy_match_v4a_diffs, parse_line_numbers,
+};
 use anyhow::Result;
 use futures::FutureExt;
 use futures::future::BoxFuture;
@@ -36,31 +37,37 @@ use warpui::elements::{
     MouseStateHandle, NewScrollable, OffsetPositioning, ParentAnchor, ParentElement,
     ParentOffsetBounds, PositionedElementAnchor, PositionedElementOffsetBounds, Radius,
     SavePosition, ScrollTarget, ScrollToPositionMode, ScrollbarWidth, Shrinkable,
-    SizeConstraintCondition, SizeConstraintSwitch, Stack, Text};
+    SizeConstraintCondition, SizeConstraintSwitch, Stack, Text,
+};
 use warpui::keymap::{EditableBinding, FixedBinding, Keystroke};
 use warpui::platform::{Cursor, OperatingSystem};
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle, WeakViewHandle};
+    ViewContext, ViewHandle, WeakViewHandle,
+};
 
 use super::malformed_line_heuristics::has_malformed_terminal_correction_signal;
 use crate::ai::agent::icons::{self, yellow_stop_icon};
 use crate::ai::agent::{
-    AIAgentActionId, AIIdentifiers, FileEdit, RequestFileEditsResult, ServerOutputId};
+    AIAgentActionId, AIIdentifiers, FileEdit, RequestFileEditsResult, ServerOutputId,
+};
 use crate::ai::blocklist::RequestedEditResolution;
 use crate::ai::blocklist::action_model::{
     AIActionStatus, BlocklistAIActionEvent, BlocklistAIActionModel,
     EditAcceptAndContinueClickedEvent, EditAcceptClickedEvent, EditResolvedEvent, EditStats,
-    MalformedFinalLineProxyEvent, RequestFileEditsFormatKind, RequestFileEditsTelemetryEvent};
+    MalformedFinalLineProxyEvent, RequestFileEditsFormatKind, RequestFileEditsTelemetryEvent,
+};
 use crate::ai::blocklist::diff_storage::{
     DiffStorage, DiffStorageHelper, FileSnapshot, RegisteredDiffStorage, SaveFuture,
-    UpdatedFileState};
+    UpdatedFileState,
+};
 use crate::ai::blocklist::diff_types::{DiffSessionType, FileDiff, changed_lines_from_op};
 use crate::ai::blocklist::history_model::BlocklistAIHistoryModel;
 use crate::ai::blocklist::inline_action::inline_action_header::INLINE_ACTION_HORIZONTAL_PADDING;
 use crate::ai::blocklist::inline_action::inline_action_icons::{
-    cancelled_icon, green_check_icon, icon_size, reverted_icon};
+    cancelled_icon, green_check_icon, icon_size, reverted_icon,
+};
 use crate::ai::blocklist::model::{AIBlockModel, AIBlockModelHelper};
 use crate::ai::blocklist::view_util::render_provider_icon_button;
 use crate::ai::mcp::{MCPProvider, mcp_provider_from_file_path};
@@ -68,7 +75,8 @@ use crate::ai::paths::host_native_absolute_path;
 use crate::ai::predict::prompt_suggestions::ACCEPT_PROMPT_SUGGESTION_KEYBINDING;
 use crate::ai::skills::{
     SkillManager, SkillOpenOrigin, SkillReference, SkillTelemetryEvent,
-    icon_override_for_skill_name, render_skill_button, skill_path_from_location};
+    icon_override_for_skill_name, render_skill_button, skill_path_from_location,
+};
 use crate::code::diff_viewer::{DiffViewer, DisplayMode};
 use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEditorView};
 use crate::code::editor::{add_color, remove_color};
@@ -79,7 +87,8 @@ use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::{PaneId, view};
 use crate::pane_group::{BackingView, PaneEvent};
 use crate::server::telemetry::{
-    AgentModeCodeFileNavigationSource, ToggleCodeSuggestionsSettingSource};
+    AgentModeCodeFileNavigationSource, ToggleCodeSuggestionsSettingSource,
+};
 use crate::settings::AISettings;
 use crate::terminal::ShellLaunchData;
 use crate::terminal::input::SET_INPUT_MODE_AGENT_ACTION_NAME;
@@ -88,10 +97,12 @@ use crate::ui_components::icons::Icon;
 use crate::util::bindings::keybinding_name_to_keystroke;
 use crate::view_components::DismissibleToast;
 use crate::view_components::action_button::{
-    ActionButton, ButtonSize, KeystrokeSource, NakedTheme};
+    ActionButton, ButtonSize, KeystrokeSource, NakedTheme,
+};
 use crate::view_components::compactible_action_button::{
     CompactibleActionButton, MEDIUM_SIZE_SWITCH_THRESHOLD, RenderCompactibleActionButton,
-    XLARGE_SIZE_SWITCH_THRESHOLD, render_compact_and_regular_button_rows};
+    XLARGE_SIZE_SWITCH_THRESHOLD, render_compact_and_regular_button_rows,
+};
 use crate::view_components::compactible_split_action_button::CompactibleSplitActionButton;
 use crate::workspace::ToastStack;
 use crate::{TelemetryEvent, cmd_or_ctrl_shift};
@@ -200,7 +211,8 @@ struct CodeDiffViewMouseStates {
     ai_settings_link_highlight_index: HighlightedHyperlink,
     skill_button_handle: MouseStateHandle,
     stats_badge_button: MouseStateHandle,
-    mcp_config_button_handle: MouseStateHandle}
+    mcp_config_button_handle: MouseStateHandle,
+}
 
 #[derive(Debug, Clone)]
 pub enum CodeDiffViewEvent {
@@ -209,7 +221,8 @@ pub enum CodeDiffViewEvent {
     Rejected,
     Pane(PaneEvent),
     EditModeChanged {
-        enabled: bool},
+        enabled: bool,
+    },
     ToggledEditVisibility,
     TextSelected,
     CopiedEmptyText,
@@ -220,20 +233,25 @@ pub enum CodeDiffViewEvent {
     CancelPassive,
     ViewDetails,
     ContinuePassiveCodeDiffWithAgent {
-        accepted: bool},
+        accepted: bool,
+    },
     ToggleCodeReviewPane {
-        entrypoint: CodeReviewPaneEntrypoint},
+        entrypoint: CodeReviewPaneEntrypoint,
+    },
     /// Emitted when candidate diffs are loaded and ready to display.
     /// Used to trigger AIBlock height recalculation for passive code diffs.
     LoadedDiffs,
     /// Emitted when the user opens a skill file from a code diff
     OpenSkill {
         reference: SkillReference,
-        path: LocalOrRemotePath},
+        path: LocalOrRemotePath,
+    },
     /// Emitted when the user opens an MCP config file from a code diff
     OpenMCPConfig {
         provider: MCPProvider,
-        path: PathBuf}}
+        path: PathBuf,
+    },
+}
 
 #[derive(Clone, Debug)]
 pub enum CodeDiffState {
@@ -250,7 +268,8 @@ pub enum CodeDiffState {
     Reverted,
     /// The diff is being viewed in a shared session (read-only mode).
     /// is_complete indicates whether the diff has been accepted or is still pending.
-    ViewOnly { is_complete: bool }}
+    ViewOnly { is_complete: bool },
+}
 
 impl CodeDiffState {
     fn is_complete(&self) -> bool {
@@ -271,7 +290,8 @@ impl CodeDiffState {
 #[derive(Clone, Copy, Debug)]
 pub enum Direction {
     Next,
-    Previous}
+    Previous,
+}
 
 #[derive(Clone, Debug)]
 pub enum CodeDiffViewAction {
@@ -295,22 +315,27 @@ pub enum CodeDiffViewAction {
     OpenSkill {
         reference: SkillReference,
         path: LocalOrRemotePath,
-        mouse_state: MouseStateHandle},
+        mouse_state: MouseStateHandle,
+    },
     OpenMCPConfig {
         provider: MCPProvider,
         path: PathBuf,
-        mouse_state: MouseStateHandle}}
+        mouse_state: MouseStateHandle,
+    },
+}
 
 #[derive(Clone, Copy, Debug)]
 enum AcceptSelection {
     Only,
     AndAutoExecute,
-    AndContinueWithAgent}
+    AndContinueWithAgent,
+}
 
 #[derive(Clone)]
 struct PendingDiff {
     diff_view: ViewHandle<InlineDiffView>,
-    tab_handle: MouseStateHandle}
+    tab_handle: MouseStateHandle,
+}
 
 /// The GUI review surface registers as a weak handle so the executor never
 /// keeps a dead review view alive; a dead view at execute time fails
@@ -336,7 +361,8 @@ impl RegisteredDiffStorage for WeakViewHandle<CodeDiffView> {
         let Some(view) = self.upgrade(app) else {
             log::warn!("RequestFileEdits review view vanished before execute");
             return futures::future::ready(RequestFileEditsResult::DiffApplicationFailed {
-                error: "The review surface holding these edits no longer exists".to_string()})
+                error: "The review surface holding these edits no longer exists".to_string(),
+            })
             .boxed();
         };
         view.update(app, |view, ctx| {
@@ -386,7 +412,8 @@ pub struct CodeDiffView {
     /// Whether diffs target local disk or a remote host.
     diff_session_type: DiffSessionType,
     /// Number of dispatched saves still in flight; guards revert while saving.
-    pending_saves: usize}
+    pending_saves: usize,
+}
 
 impl CodeDiffView {
     fn open_accept_split_button_menu(&mut self, ctx: &mut ViewContext<Self>) {
@@ -608,7 +635,8 @@ impl CodeDiffView {
                         }
                     }
                 }
-                _ => ()},
+                _ => (),
+            },
         );
 
         view
@@ -813,7 +841,8 @@ impl CodeDiffView {
             should_show_speedbump,
             session_platform,
             diff_session_type: DiffSessionType::Local,
-            pending_saves: 0}
+            pending_saves: 0,
+        }
     }
 
     /// Set the session type for this diff view.
@@ -890,7 +919,8 @@ impl CodeDiffView {
 
                 PendingDiff {
                     diff_view: diff_viewer,
-                    tab_handle: Default::default()}
+                    tab_handle: Default::default(),
+                }
             })
             .collect();
 
@@ -1478,7 +1508,8 @@ impl CodeDiffView {
                     ctx.dispatch_typed_action(CodeDiffViewAction::OpenSkill {
                         reference: skill_reference.clone(),
                         path: skill_path.clone(),
-                        mouse_state: skill_button_handle.clone()});
+                        mouse_state: skill_button_handle.clone(),
+                    });
                 },
             );
             right_side_row.add_child(
@@ -1528,7 +1559,8 @@ impl CodeDiffView {
                     ctx.dispatch_typed_action(CodeDiffViewAction::OpenMCPConfig {
                         provider,
                         path: config_path.clone(),
-                        mouse_state: mcp_button_handle.clone()});
+                        mouse_state: mcp_button_handle.clone(),
+                    });
                 },
             );
             right_side_row.add_child(
@@ -1679,7 +1711,8 @@ impl CodeDiffView {
                 rename: Some(rename_to),
                 ..
             }) => Some(rename_to.as_path()),
-            _ => None}
+            _ => None,
+        }
     }
 
     /// Returns true if this diff is a rename without any content changes.
@@ -1687,8 +1720,10 @@ impl CodeDiffView {
         match diff_type {
             Some(DiffType::Update {
                 rename: Some(_),
-                deltas}) => deltas.is_empty(),
-            _ => false}
+                deltas,
+            }) => deltas.is_empty(),
+            _ => false,
+        }
     }
 
     fn render_file_selection(&self, appearance: &Appearance, app: &AppContext) -> Box<dyn Element> {
@@ -1731,7 +1766,8 @@ impl CodeDiffView {
                         file_name
                     }
                 }
-                None => "No file name".to_string()};
+                None => "No file name".to_string(),
+            };
 
             // Get the full path for the tooltip
             let tooltip_text = diff
@@ -1815,7 +1851,8 @@ impl CodeDiffView {
             NewScrollable::horizontal(
                 SingleAxisConfig::Clipped {
                     handle: self.scrollable_state.clone(),
-                    child: row.finish()},
+                    child: row.finish(),
+                },
                 theme.nonactive_ui_detail().into(),
                 theme.active_ui_detail().into(),
                 warpui::elements::Fill::None,
@@ -1916,7 +1953,8 @@ impl CodeDiffView {
                     .with_padding_bottom(12.)
                     .finish(),
             )
-            .finish()}
+            .finish(),
+        }
     }
 
     pub fn state(&self) -> &CodeDiffState {
@@ -1958,7 +1996,8 @@ impl CodeDiffView {
                 .update(ctx, |v, ctx| v.navigate_next_diff_hunk(ctx)),
             Direction::Previous => editor
                 .diff_view
-                .update(ctx, |v, ctx| v.navigate_previous_diff_hunk(ctx))};
+                .update(ctx, |v, ctx| v.navigate_previous_diff_hunk(ctx)),
+        };
 
         if let Some(output_id) = self.server_output_id() {
         }
@@ -1985,7 +2024,8 @@ impl CodeDiffView {
         };
         self.scrollable_state.scroll_to_position(ScrollTarget {
             position_id: self.position_id_for_file(self.selected_tab),
-            mode: ScrollToPositionMode::FullyIntoView});
+            mode: ScrollToPositionMode::FullyIntoView,
+        });
         ctx.notify();
 
         if let Some(output_id) = self.server_output_id() {
@@ -2001,7 +2041,8 @@ impl CodeDiffView {
                 DisplayMode::Embedded { .. } | DisplayMode::InlineBanner { .. } => {
                     Some(accept_keystroke_source(is_passive))
                 }
-                DisplayMode::FullPane => None},
+                DisplayMode::FullPane => None,
+            },
             ctx,
         );
 
@@ -2047,7 +2088,8 @@ impl CodeDiffView {
             let display_mode = DisplayMode::InlineBanner {
                 max_height: INLINE_EDITOR_HEIGHT_EXPANDED,
                 is_expanded: true,
-                is_dismissed};
+                is_dismissed,
+            };
             self.set_display_mode(display_mode, ctx);
         }
     }
@@ -2162,7 +2204,8 @@ impl CodeDiffView {
 
     fn close_and_focus(&self, pane_to_focus: PaneId, ctx: &mut ViewContext<Self>) {
         ctx.emit(CodeDiffViewEvent::Pane(PaneEvent::CloseAndFocus {
-            pane_to_focus}));
+            pane_to_focus,
+        }));
     }
 
     pub fn title(&self) -> Option<&str> {
@@ -2183,7 +2226,8 @@ impl CodeDiffView {
             DisplayMode::InlineBanner {
                 max_height,
                 is_expanded,
-                is_dismissed: true},
+                is_dismissed: true,
+            },
             ctx,
         );
 
@@ -2316,7 +2360,9 @@ impl CodeDiffView {
             DiffSessionType::Local => path.to_local_path().map(LocalOrRemotePath::Local),
             DiffSessionType::Remote(host_id) => Some(LocalOrRemotePath::Remote(RemotePath {
                 host_id: host_id.clone(),
-                path: path.clone()}))}
+                path: path.clone(),
+            })),
+        }
     }
 }
 
@@ -2476,7 +2522,8 @@ impl TypedActionView for CodeDiffView {
                     .is_ok()
                 {
                     ctx.emit(CodeDiffViewEvent::ContinuePassiveCodeDiffWithAgent {
-                        accepted: true});
+                        accepted: true,
+                    });
                 }
             }
             CodeDiffViewAction::IterateOnPassiveDiffWithAgent => {
@@ -2536,7 +2583,8 @@ impl TypedActionView for CodeDiffView {
                     ctx.notify();
                 });
                 ctx.emit(CodeDiffViewEvent::ToggleCodeReviewPane {
-                    entrypoint: CodeReviewPaneEntrypoint::CodeDiffHeader});
+                    entrypoint: CodeReviewPaneEntrypoint::CodeDiffHeader,
+                });
                 ctx.notify();
             }
             CodeDiffViewAction::RevertChanges => {
@@ -2545,7 +2593,8 @@ impl TypedActionView for CodeDiffView {
             CodeDiffViewAction::OpenSkill {
                 reference,
                 path,
-                mouse_state} => {
+                mouse_state,
+            } => {
                 // Sends a telemetry event when a skill is opened from a code diff view
 
                 // Resets the interaction state of the skill button to avoid an immediate re-hover
@@ -2555,12 +2604,14 @@ impl TypedActionView for CodeDiffView {
 
                 ctx.emit(CodeDiffViewEvent::OpenSkill {
                     reference: reference.clone(),
-                    path: path.clone()});
+                    path: path.clone(),
+                });
             }
             CodeDiffViewAction::OpenMCPConfig {
                 provider,
                 path,
-                mouse_state} => {
+                mouse_state,
+            } => {
                 // Resets the interaction state of the button to avoid an immediate re-hover
                 if let Ok(mut state) = mouse_state.lock() {
                     state.reset_interaction_state();
@@ -2568,7 +2619,8 @@ impl TypedActionView for CodeDiffView {
 
                 ctx.emit(CodeDiffViewEvent::OpenMCPConfig {
                     provider: *provider,
-                    path: path.clone()});
+                    path: path.clone(),
+                });
             }
         }
     }
@@ -2685,7 +2737,8 @@ pub fn convert_file_edits_to_file_diffs(
                         // For file creation, create a DiffDelta that inserts the content at the beginning
                         create_diffs.push(DiffDelta {
                             replacement_line_range: 0..0,
-                            insertion: content.clone()});
+                            insertion: content.clone(),
+                        });
                     }
                     FileEdit::Delete { .. } => {
                         show_as_deleted = true;
@@ -2772,7 +2825,8 @@ pub fn convert_file_edits_to_file_diffs(
                 if num_lines > 0 {
                     applied_diffs.push(DiffDelta {
                         replacement_line_range: 1..num_lines.saturating_add(1),
-                        insertion: String::new()});
+                        insertion: String::new(),
+                    });
                 }
             }
 
@@ -2800,7 +2854,8 @@ impl DiffStorage for CodeDiffView {
                         deleted_paths: vec![path.clone()],
                         diff_base,
                         diff_new: final_content,
-                        diff_name: path});
+                        diff_name: path,
+                    });
                 }
 
                 // A rename reports the source path as deleted and the update
@@ -2823,11 +2878,13 @@ impl DiffStorage for CodeDiffView {
                         path: report_path,
                         changed_lines,
                         final_content: final_content.clone(),
-                        was_edited: diff_view.was_edited()}),
+                        was_edited: diff_view.was_edited(),
+                    }),
                     deleted_paths,
                     diff_base,
                     diff_new: final_content,
-                    diff_name: path})
+                    diff_name: path,
+                })
             })
             .collect()
     }
@@ -2895,7 +2952,8 @@ impl BackingView for CodeDiffView {
             options: view::StandardHeaderOptions {
                 hide_close_button: true,
                 ..Default::default()
-            }})
+            },
+        })
     }
 
     fn set_focus_handle(&mut self, focus_handle: PaneFocusHandle, _ctx: &mut ViewContext<Self>) {

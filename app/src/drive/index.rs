@@ -20,7 +20,8 @@ use warpui::elements::{
     OffsetPositioning, OffsetType, ParentAnchor, ParentElement, ParentOffsetBounds,
     PositionedElementAnchor, PositionedElementOffsetBounds, PositioningAxis, Radius, SavePosition,
     ScrollTarget, ScrollToPositionMode, ScrollbarWidth, Shrinkable, Stack, Text, XAxisAnchor,
-    YAxisAnchor};
+    YAxisAnchor,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::FixedBinding;
 use warpui::platform::{Cursor, OperatingSystem};
@@ -29,15 +30,18 @@ use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::units::IntoPixels;
 use warpui::{
     AppContext, BlurContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView,
-    UpdateView, View, ViewContext, ViewHandle, WindowId};
+    UpdateView, View, ViewContext, ViewHandle, WindowId,
+};
 
 use super::cloud_object_naming_dialog::CloudObjectNamingDialog;
 use super::drive_helpers::{
     has_feature_gated_anonymous_user_reached_env_var_limit,
     has_feature_gated_anonymous_user_reached_notebook_limit,
-    has_feature_gated_anonymous_user_reached_workflow_limit};
+    has_feature_gated_anonymous_user_reached_workflow_limit,
+};
 use super::empty_trash_confirmation_dialog::{
-    EmptyTrashConfirmationDialog, EmptyTrashConfirmationEvent};
+    EmptyTrashConfirmationDialog, EmptyTrashConfirmationEvent,
+};
 use super::folders::CloudFolder;
 use super::items::WarpDriveItemId;
 use super::items::ai_fact_collection::WarpDriveAIFactCollection;
@@ -60,7 +64,8 @@ use crate::cloud_object::model::view::{CloudViewModel, CloudViewModelEvent, Upda
 use crate::cloud_object::{
     CloudObject, CloudObjectEventEntrypoint, CloudObjectLocation, CloudObjectSyncStatus,
     GenericCloudObject, GenericStringObjectFormat, JsonObjectType, NumInFlightRequests, ObjectType,
-    Space};
+    Space,
+};
 use crate::drive::panel::DrivePanelAction;
 use crate::editor::{EditorView, Event as EditorEvent, SingleLineEditorOptions};
 use crate::env_vars::CloudEnvVarCollection;
@@ -69,14 +74,17 @@ use crate::menu::{Event, Menu, MenuItem, MenuItemFields};
 use crate::network::NetworkStatus;
 use crate::notebooks::CloudNotebookModel;
 use crate::server::cloud_objects::update_manager::{
-    FetchSingleObjectOption, InitiatedBy, UpdateManager};
+    FetchSingleObjectOption, InitiatedBy, UpdateManager,
+};
 use crate::server::ids::{ClientId, ObjectUid, ServerId, SyncId};
 use crate::server::sync_queue::SyncQueue;
 use crate::server::telemetry::{
-    AnonymousUserSignupEntrypoint, SharingDialogSource, TelemetryEvent};
+    AnonymousUserSignupEntrypoint, SharingDialogSource, TelemetryEvent,
+};
 use crate::settings::SharedObjectLimitBannerSettings;
 use crate::settings::app_installation_detection::{
-    UserAppInstallDetectionSettings, UserAppInstallStatus};
+    UserAppInstallDetectionSettings, UserAppInstallStatus,
+};
 use crate::ui_components::blended_colors;
 use crate::ui_components::buttons::{highlight, icon_button};
 use crate::ui_components::icons::{ICON_DIMENSIONS, Icon};
@@ -205,7 +213,8 @@ struct DriveIndexSectionState {
     header_hover_state: MouseStateHandle,
     collapsible_hover_state: MouseStateHandle,
     create_menu_mouse_state_handle: MouseStateHandle,
-    empty_trash_mouse_state: MouseStateHandle}
+    empty_trash_mouse_state: MouseStateHandle,
+}
 
 impl DropTargetData for CloudObjectLocation {
     fn as_any(&self) -> &dyn Any {
@@ -222,7 +231,8 @@ struct RenderedWarpDriveItemAndChildren {
 pub enum DriveIndexSection {
     Space(Space),
     CreateATeam,
-    JoinTeam}
+    JoinTeam,
+}
 
 /// Which "you've run out of <object>s on your plan" banner a dismiss action
 /// refers to. Mirrors the two [`ObjectType`] cases that render the banner, but
@@ -230,29 +240,34 @@ pub enum DriveIndexSection {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SharedObjectLimitBannerKind {
     Notebook,
-    Workflow}
+    Workflow,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DriveIndexAction {
     OpenObject(CloudObjectTypeAndId),
     OpenWorkflowInPane {
         cloud_object_type_and_id: CloudObjectTypeAndId,
-        open_mode: WorkflowViewMode},
+        open_mode: WorkflowViewMode,
+    },
     OpenImportModal {
         space: Space,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     OpenAIFactCollection,
     OpenMCPServerCollection,
     CreateObject {
         object_type: DriveObjectType,
         space: Space,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     /// Create a workflow with pre-populated content (e.g. saved from a conversation prompt)
     CreateWorkflowWithContent {
         space: Space,
         initial_folder_id: Option<SyncId>,
         content: String,
-        is_for_agent_mode: bool},
+        is_for_agent_mode: bool,
+    },
     CopyObjectToClipboard(CloudObjectTypeAndId),
     CopyWorkflowId(CloudObjectTypeAndId),
     DuplicateObject(CloudObjectTypeAndId),
@@ -263,55 +278,72 @@ pub enum DriveIndexAction {
     ToggleSortingMenu,
     ToggleItemOverflowMenu {
         space: Space,
-        warp_drive_item_id: WarpDriveItemId},
+        warp_drive_item_id: WarpDriveItemId,
+    },
     ToggleShareDialog {
-        warp_drive_item_id: WarpDriveItemId},
+        warp_drive_item_id: WarpDriveItemId,
+    },
     ToggleSpaceOverflowMenu {
         space: Space,
-        offset: Vector2F},
+        offset: Vector2F,
+    },
     MoveObject {
         cloud_object_type_and_id: CloudObjectTypeAndId,
-        new_space: Space},
+        new_space: Space,
+    },
     LeaveSharedObject {
-        cloud_object_type_and_id: CloudObjectTypeAndId},
+        cloud_object_type_and_id: CloudObjectTypeAndId,
+    },
     OpenCloudObjectNamingDialog {
         space: Space,
         object_type: DriveObjectType,
         // only present when renaming an existing item
         cloud_object_type_and_id: Option<CloudObjectTypeAndId>,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     CloseCloudObjectNamingDialog,
     DropIndexItem {
         cloud_object_type_and_id: CloudObjectTypeAndId,
-        drop_target_location: CloudObjectLocation},
+        drop_target_location: CloudObjectLocation,
+    },
     UpdateCurrentDropTarget {
-        drop_target_location: CloudObjectLocation},
+        drop_target_location: CloudObjectLocation,
+    },
     ClearDropTarget,
     ToggleSectionCollapsed(DriveIndexSection),
     RunObject(CloudObjectTypeAndId),
     OpenWorkflowModalWithNew {
         space: Space,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     OpenWorkflowModalWithCloudWorkflow(SyncId),
     ToggleFolderOpen(SyncId),
     CollapseAllInLocation(CloudObjectLocation),
     InvokeEnvVarCollectionInSubshell(CloudObjectTypeAndId),
     TrashObject {
-        cloud_object_type_and_id: CloudObjectTypeAndId},
+        cloud_object_type_and_id: CloudObjectTypeAndId,
+    },
     UntrashObject {
-        cloud_object_type_and_id: CloudObjectTypeAndId},
+        cloud_object_type_and_id: CloudObjectTypeAndId,
+    },
     DeleteObject {
-        cloud_object_type_and_id: CloudObjectTypeAndId},
+        cloud_object_type_and_id: CloudObjectTypeAndId,
+    },
     EmptyTrash {
-        space: Space},
+        space: Space,
+    },
     OpenEmptyTrashConfirmationDialog {
-        space: Space},
+        space: Space,
+    },
     Autoscroll {
-        delta: f32},
+        delta: f32,
+    },
     RenameFolder {
-        folder_id: SyncId},
+        folder_id: SyncId,
+    },
     UpdateSortingChoice {
-        sorting_choice: DriveSortOrder},
+        sorting_choice: DriveSortOrder,
+    },
     RetryFailedObject(CloudObjectTypeAndId),
     RetryAllFailedObjects,
     RevertFailedObject(ServerId),
@@ -333,9 +365,11 @@ pub enum DriveIndexAction {
     /// Dismiss (and remember dismissing) the shared object limit banner shown
     /// in the Warp Drive sidebar when a plan's notebook/workflow limit is hit.
     DismissObjectLimitBanner {
-        banner_kind: SharedObjectLimitBannerKind},
+        banner_kind: SharedObjectLimitBannerKind,
+    },
     SetCurrentWorkspace(WorkspaceUid),
-    AttachPlanAsContext(AIDocumentId)}
+    AttachPlanAsContext(AIDocumentId),
+}
 
 impl DriveIndexAction {
     pub fn create_object(
@@ -349,7 +383,8 @@ impl DriveIndexAction {
                 object_type,
                 space,
                 cloud_object_type_and_id: None,
-                initial_folder_id},
+                initial_folder_id,
+            },
             (
                 _,
                 DriveObjectType::Notebook { .. }
@@ -363,7 +398,9 @@ impl DriveIndexAction {
             ) => DriveIndexAction::CreateObject {
                 object_type,
                 space,
-                initial_folder_id}}
+                initial_folder_id,
+            },
+        }
     }
 
     pub fn blocked_for_anonymous_user(&self) -> bool {
@@ -381,45 +418,54 @@ pub enum DriveIndexEvent {
     CreateNotebook {
         space: Space,
         title: Option<String>,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     CreateFolder {
         space: Space,
         title: String,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     CreateEnvVarCollection {
         space: Space,
         title: Option<String>,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     CreateWorkflow {
         space: Space,
         title: Option<String>,
         initial_folder_id: Option<SyncId>,
         is_for_agent_mode: bool,
         /// Pre-populated content for the workflow (e.g. saved from a conversation prompt)
-        content: Option<String>},
+        content: Option<String>,
+    },
     CreateAIFact {
         space: Space,
         fact: AIFact,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     OpenAIFactCollection,
     OpenMCPServerCollection,
     OpenObject(CloudObjectTypeAndId),
     OpenWorkflowInPane {
         cloud_object_type_and_id: CloudObjectTypeAndId,
-        open_mode: WorkflowViewMode},
+        open_mode: WorkflowViewMode,
+    },
     DuplicateObject(CloudObjectTypeAndId),
     ExportObject(CloudObjectTypeAndId),
     OpenImportModal {
         space: Space,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     RunObject(CloudObjectTypeAndId),
     InvokeEnvVarCollectionInSubshell(CloudObjectTypeAndId),
     OpenWorkflowModalWithNew {
         space: Space,
-        initial_folder_id: Option<SyncId>},
+        initial_folder_id: Option<SyncId>,
+    },
     OpenWorkflowModalWithCloudWorkflow(SyncId),
     FocusWarpDrive,
-    AttachPlanAsContext(AIDocumentId)}
+    AttachPlanAsContext(AIDocumentId),
+}
 
 #[derive(Clone, Default)]
 struct MouseStateHandles {
@@ -431,17 +477,20 @@ struct MouseStateHandles {
     shared_object_limit_hit_banner_close_mouse_state: MouseStateHandle,
     anonymous_sign_up_button_mouse_state: MouseStateHandle,
     anonymous_object_limit_close_button_mouse_state: MouseStateHandle,
-    search_button_mouse_state: MouseStateHandle}
+    search_button_mouse_state: MouseStateHandle,
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum DriveIndexVariant {
     MainIndex,
-    Trash}
+    Trash,
+}
 
 #[derive(Clone)]
 struct SpaceMenuState {
     space: Space,
-    offset: Vector2F}
+    offset: Vector2F,
+}
 
 /// The main view for the Warp Drive sidebar.
 /// `DriveIndex` is different from `DrivePanel` in that it is responsible for
@@ -508,7 +557,8 @@ pub struct DriveIndex {
     /// Drive item to represent collection of MCP servers.
     /// Special-cased to always render at the top of the Personal space section.
     mcp_server_collection: WarpDriveMCPServerCollection,
-    mcp_server_collection_item_mouse_states: ItemStates}
+    mcp_server_collection_item_mouse_states: ItemStates,
+}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -584,7 +634,8 @@ impl DriveIndex {
                 .num_active_cloud_objects_per_space(spaces.iter(), ctx),
             DriveIndexVariant::Trash => cloud_model
                 .as_ref(ctx)
-                .num_trashed_cloud_objects_per_space(spaces.iter(), ctx)};
+                .num_trashed_cloud_objects_per_space(spaces.iter(), ctx),
+        };
         let mut sections = spaces
             .iter()
             .map(|space| DriveIndexSection::Space(*space))
@@ -709,7 +760,8 @@ impl DriveIndex {
                     cloud_view_model,
                     UpdateTimestamp::Trashed,
                     app,
-                ))};
+                )),
+        };
 
         let mut items = vec![];
         // Add the AI fact collection object + MCP server collection object for personal space
@@ -968,7 +1020,8 @@ impl DriveIndex {
             ai_fact_collection,
             ai_fact_collection_item_mouse_states: Default::default(),
             mcp_server_collection,
-            mcp_server_collection_item_mouse_states: Default::default()}
+            mcp_server_collection_item_mouse_states: Default::default(),
+        }
     }
 
     fn edit_object_enabled(
@@ -1000,7 +1053,8 @@ impl DriveIndex {
     pub fn scroll_item_into_view(&mut self, item_id: WarpDriveItemId, ctx: &mut ViewContext<Self>) {
         self.clipped_scroll_state.scroll_to_position(ScrollTarget {
             position_id: item_id.drive_row_position_id(),
-            mode: ScrollToPositionMode::FullyIntoView});
+            mode: ScrollToPositionMode::FullyIntoView,
+        });
         ctx.notify();
     }
 
@@ -1327,7 +1381,8 @@ impl DriveIndex {
             let offset_position = position - prompt_rect.origin();
             ctx.dispatch_typed_action(DriveIndexAction::ToggleSpaceOverflowMenu {
                 space: space_clone,
-                offset: offset_position});
+                offset: offset_position,
+            });
         })
         .finish();
 
@@ -1361,7 +1416,8 @@ impl DriveIndex {
             let can_create_objects = match space {
                 Space::Personal => true,
                 Space::Team { .. } => self.is_online(app),
-                Space::Shared => false};
+                Space::Shared => false,
+            };
             if can_create_objects {
                 let create_object_button =
                     self.render_create_new_button(appearance, space, section_state, app);
@@ -1445,7 +1501,8 @@ impl DriveIndex {
                 let offset_position = position - prompt_rect.origin();
                 ctx.dispatch_typed_action(DriveIndexAction::ToggleSpaceOverflowMenu {
                     space: space_clone,
-                    offset: offset_position});
+                    offset: offset_position,
+                });
             })
             .finish();
 
@@ -1538,7 +1595,8 @@ impl DriveIndex {
                     .on_click(move |ctx, _, _| {
                         ctx.dispatch_typed_action(
                             DriveIndexAction::OpenEmptyTrashConfirmationDialog {
-                                space: space_clone},
+                                space: space_clone,
+                            },
                         )
                     })
                     .with_cursor(Cursor::PointingHand)
@@ -1667,7 +1725,8 @@ impl DriveIndex {
                 ))
             }
             (DriveIndexVariant::Trash, DriveIndexSection::CreateATeam) => None,
-            (DriveIndexVariant::Trash, DriveIndexSection::JoinTeam) => None};
+            (DriveIndexVariant::Trash, DriveIndexSection::JoinTeam) => None,
+        };
 
         if let Some(header) = rendered_header {
             SavePosition::new(
@@ -1919,7 +1978,8 @@ impl DriveIndex {
                             cloud_view_model,
                             UpdateTimestamp::Trashed,
                             app,
-                        ))}
+                        )),
+                }
                 .map(|item| item.uid())
                 .collect()
             });
@@ -2553,7 +2613,8 @@ impl DriveIndex {
                                     cloud_view_model,
                                     UpdateTimestamp::Revision,
                                     app,
-                                ))}
+                                )),
+                        }
                         .map(|item| item.uid())
                         .collect()
                     });
@@ -2598,7 +2659,8 @@ impl DriveIndex {
 
         Some(RenderedWarpDriveItemAndChildren {
             element: rendered_item,
-            num_items: total_rows_for_item})
+            num_items: total_rows_for_item,
+        })
     }
 
     fn add_dialog_to_stack(
@@ -2650,7 +2712,8 @@ impl DriveIndex {
                 AnchorPair::new(XAxisAnchor::Left, XAxisAnchor::Right),
                 match x_offset {
                     OffsetType::Pixel(px) => OffsetType::Pixel(-px),
-                    other => other},
+                    other => other,
+                },
             )
         };
 
@@ -2697,7 +2760,8 @@ impl DriveIndex {
                     appearance.theme().foreground()
                 }
             }
-            _ => appearance.theme().foreground()};
+            _ => appearance.theme().foreground(),
+        };
 
         // This icon should render the same as other WarpDrive icons but with no click or hover states.
         Container::new(
@@ -2953,7 +3017,8 @@ impl DriveIndex {
                 ctx,
             ),
             CloudObjectLocation::Space(_) => self.is_online(ctx),
-            CloudObjectLocation::Trash => self.is_online(ctx)};
+            CloudObjectLocation::Trash => self.is_online(ctx),
+        };
 
         if is_drop_target_valid {
             self.current_drop_target = Some(new_location);
@@ -3018,7 +3083,8 @@ impl DriveIndex {
                         return;
                     }
                 }
-                _ => ()}
+                _ => (),
+            }
         }
 
         // Otherwise allow object move to go through.
@@ -3122,14 +3188,16 @@ impl DriveIndex {
                 ctx.emit(DriveIndexEvent::CreateNotebook {
                     space,
                     title,
-                    initial_folder_id});
+                    initial_folder_id,
+                });
             }
             DriveObjectType::Folder => {
                 if let Some(title) = title {
                     ctx.emit(DriveIndexEvent::CreateFolder {
                         space,
                         title,
-                        initial_folder_id});
+                        initial_folder_id,
+                    });
                 }
             }
             DriveObjectType::EnvVarCollection => {
@@ -3140,7 +3208,8 @@ impl DriveIndex {
                 ctx.emit(DriveIndexEvent::CreateEnvVarCollection {
                     space,
                     title,
-                    initial_folder_id})
+                    initial_folder_id,
+                })
             }
             DriveObjectType::Workflow => {
                 if has_feature_gated_anonymous_user_reached_workflow_limit(ctx) {
@@ -3152,7 +3221,8 @@ impl DriveIndex {
                     title,
                     initial_folder_id,
                     is_for_agent_mode: false,
-                    content: None})
+                    content: None,
+                })
             }
             DriveObjectType::AgentModeWorkflow => {
                 if has_feature_gated_anonymous_user_reached_workflow_limit(ctx) {
@@ -3164,7 +3234,8 @@ impl DriveIndex {
                     title,
                     initial_folder_id,
                     is_for_agent_mode: true,
-                    content: None})
+                    content: None,
+                })
             }
             DriveObjectType::AIFact => {
                 if let Some(fact) = title {
@@ -3174,8 +3245,10 @@ impl DriveIndex {
                             name: None,
                             content: fact,
                             is_autogenerated: false,
-                            suggested_logging_id: None}),
-                        initial_folder_id})
+                            suggested_logging_id: None,
+                        }),
+                        initial_folder_id,
+                    })
                 }
             }
             DriveObjectType::MCPServer => {
@@ -3279,7 +3352,8 @@ impl DriveIndex {
                                 return;
                             }
                         }
-                        _ => ()}
+                        _ => (),
+                    }
                 }
                 Space::Personal => match cloud_object_type_and_id {
                     CloudObjectTypeAndId::Notebook(_) => {
@@ -3295,7 +3369,8 @@ impl DriveIndex {
                     CloudObjectTypeAndId::GenericStringObject {
                         object_type:
                             GenericStringObjectFormat::Json(JsonObjectType::EnvVarCollection),
-                        id: _} => {
+                        id: _,
+                    } => {
                         if has_feature_gated_anonymous_user_reached_env_var_limit(ctx) {
                             return;
                         }
@@ -3304,7 +3379,8 @@ impl DriveIndex {
                 },
                 // We have to rely on server checks here, since the client doesn't know how many
                 // objects are in the owning drive.
-                Space::Shared => ()}
+                Space::Shared => (),
+            }
         }
 
         // Otherwise allow object untrash to go through.
@@ -3396,7 +3472,8 @@ impl DriveIndex {
                 MenuItemFields::new(NOTEBOOK_LABEL)
                     .with_on_select_action(DriveIndexAction::create_object(
                         DriveObjectType::Notebook {
-                            is_ai_document: false},
+                            is_ai_document: false,
+                        },
                         *space,
                         None,
                     ))
@@ -3419,7 +3496,8 @@ impl DriveIndex {
                 MenuItemFields::new(IMPORT_LABEL)
                     .with_on_select_action(DriveIndexAction::OpenImportModal {
                         space: *space,
-                        initial_folder_id: None})
+                        initial_folder_id: None,
+                    })
                     .with_icon(Icon::Import)
                     .into_item(),
             );
@@ -3476,7 +3554,8 @@ impl DriveIndex {
         for sort_order in global_sort_orders {
             let mut menu_item = MenuItemFields::new(sort_order.menu_text(self.index_variant))
                 .with_on_select_action(DriveIndexAction::UpdateSortingChoice {
-                    sorting_choice: sort_order});
+                    sorting_choice: sort_order,
+                });
 
             if sort_order == self.sorting_choice {
                 menu_item = menu_item.with_icon(Icon::Check);
@@ -3570,7 +3649,8 @@ impl DriveIndex {
         SharedObjectLimitBannerSettings::handle(app).read(app, |settings, _| {
             let state = match banner_kind {
                 SharedObjectLimitBannerKind::Notebook => *settings.notebook_limit_banner_state,
-                SharedObjectLimitBannerKind::Workflow => *settings.workflow_limit_banner_state};
+                SharedObjectLimitBannerKind::Workflow => *settings.workflow_limit_banner_state,
+            };
             state == BannerState::Dismissed
         })
     }
@@ -3587,7 +3667,8 @@ impl DriveIndex {
                     .set_value(BannerState::Dismissed, model_ctx),
                 SharedObjectLimitBannerKind::Workflow => settings
                     .workflow_limit_banner_state
-                    .set_value(BannerState::Dismissed, model_ctx)};
+                    .set_value(BannerState::Dismissed, model_ctx),
+            };
             report_if_error!(result);
         });
         ctx.notify();
@@ -3678,7 +3759,8 @@ impl DriveIndex {
         let notebook_usage = Container::new(self.render_personal_object_limit_row(
             appearance,
             DriveObjectType::Notebook {
-                is_ai_document: false},
+                is_ai_document: false,
+            },
             num_notebooks,
             personal_object_limits.notebook_limit,
         ))
@@ -3718,7 +3800,8 @@ impl DriveIndex {
                 top: 8.,
                 bottom: 8.,
                 left: 64.,
-                right: 64.}),
+                right: 64.,
+            }),
             border_color: Some(appearance.theme().outline().into()),
             background: Some(appearance.theme().accent().into()),
             ..Default::default()
@@ -3793,7 +3876,8 @@ impl DriveIndex {
 
         let text_color = match amount {
             0 => sub_text_color,
-            _ => main_text_color};
+            _ => main_text_color,
+        };
 
         let name = match object_type {
             DriveObjectType::Notebook { .. } => "Notebooks",
@@ -3804,7 +3888,8 @@ impl DriveIndex {
             DriveObjectType::AIFact => "AI Fact",
             DriveObjectType::AIFactCollection => "Rules",
             DriveObjectType::MCPServer => "MCP Server",
-            DriveObjectType::MCPServerCollection => "MCP Servers"};
+            DriveObjectType::MCPServerCollection => "MCP Servers",
+        };
         let name_styles = UiComponentStyles {
             font_family_id: Some(appearance.ui_font_family()),
             font_size: Some(12.),
@@ -4008,7 +4093,8 @@ impl DriveIndex {
     ) -> Vec<MenuItem<DriveIndexAction>> {
         match self.index_variant {
             DriveIndexVariant::MainIndex => self.index_menu_items(space, warp_drive_item_id, app),
-            DriveIndexVariant::Trash => self.trash_menu_items(space, warp_drive_item_id, app)}
+            DriveIndexVariant::Trash => self.trash_menu_items(space, warp_drive_item_id, app),
+        }
     }
 
     /// This function sets the items for the context menu in an individual index row.
@@ -4070,7 +4156,8 @@ impl DriveIndex {
                             MenuItemFields::new(INDEX_NOTEBOOK_LABEL)
                                 .with_on_select_action(DriveIndexAction::create_object(
                                     DriveObjectType::Notebook {
-                                        is_ai_document: false},
+                                        is_ai_document: false,
+                                    },
                                     *space,
                                     Some(*folder_id),
                                 ))
@@ -4099,7 +4186,8 @@ impl DriveIndex {
                                         space: *space,
                                         object_type: DriveObjectType::Folder,
                                         initial_folder_id: Some(*folder_id),
-                                        cloud_object_type_and_id: Some(*cloud_object_type_and_id)},
+                                        cloud_object_type_and_id: Some(*cloud_object_type_and_id),
+                                    },
                                 )
                                 .with_icon(Icon::Rename)
                                 .into_item(),
@@ -4122,7 +4210,8 @@ impl DriveIndex {
                         menu_items.push(
                             MenuItemFields::new("Share")
                                 .with_on_select_action(DriveIndexAction::ToggleShareDialog {
-                                    warp_drive_item_id: *warp_drive_item_id})
+                                    warp_drive_item_id: *warp_drive_item_id,
+                                })
                                 .with_icon(Icon::Share)
                                 .into_item(),
                         );
@@ -4134,7 +4223,8 @@ impl DriveIndex {
                         MenuItemFields::new(IMPORT_LABEL)
                             .with_on_select_action(DriveIndexAction::OpenImportModal {
                                 space: *space,
-                                initial_folder_id: Some(*folder_id)})
+                                initial_folder_id: Some(*folder_id),
+                            })
                             .with_icon(Icon::Import)
                             .into_item(),
                     );
@@ -4155,7 +4245,8 @@ impl DriveIndex {
                     menu_items.push(
                         MenuItemFields::new(REMOVE_LABEL)
                             .with_on_select_action(DriveIndexAction::LeaveSharedObject {
-                                cloud_object_type_and_id: *cloud_object_type_and_id})
+                                cloud_object_type_and_id: *cloud_object_type_and_id,
+                            })
                             .with_icon(Icon::Minus)
                             .into_item(),
                     )
@@ -4220,7 +4311,8 @@ impl DriveIndex {
                                     WorkflowViewMode::View
                                 } else {
                                     WorkflowViewMode::Edit
-                                }})
+                                },
+                            })
                             .into_item(),
                         );
                     } else if env_var_collection.is_some() {
@@ -4290,7 +4382,8 @@ impl DriveIndex {
                     }
                     ObjectType::Notebook
                     | ObjectType::Folder
-                    | ObjectType::GenericStringObject(_) => ()}
+                    | ObjectType::GenericStringObject(_) => (),
+                }
             }
 
             // TODO: move this out of the -else- branch. Right now, we don't support bulk actions.
@@ -4308,10 +4401,12 @@ impl DriveIndex {
                                         MenuItemFields::new(format!("Move to {}", space.name(app)))
                                             .with_on_select_action(DriveIndexAction::MoveObject {
                                                 cloud_object_type_and_id: *cloud_object_type_and_id,
-                                                new_space: *space})
+                                                new_space: *space,
+                                            })
                                             .with_icon(Icon::Move)
                                             .into_item(),
-                                    )}
+                                    ),
+                                }
                             } else {
                                 None
                             }
@@ -4343,7 +4438,8 @@ impl DriveIndex {
                             menu_items.push(
                                 MenuItemFields::new("Share")
                                     .with_on_select_action(DriveIndexAction::ToggleShareDialog {
-                                        warp_drive_item_id: *warp_drive_item_id})
+                                        warp_drive_item_id: *warp_drive_item_id,
+                                    })
                                     .with_icon(Icon::Share)
                                     .into_item(),
                             );
@@ -4380,7 +4476,8 @@ impl DriveIndex {
                             );
                         }
                     }
-                    ObjectType::Folder | ObjectType::GenericStringObject(_) => ()}
+                    ObjectType::Folder | ObjectType::GenericStringObject(_) => (),
+                }
 
                 #[cfg(feature = "local_fs")]
                 if object.can_export() {
@@ -4398,7 +4495,8 @@ impl DriveIndex {
                     menu_items.push(
                         MenuItemFields::new(REMOVE_LABEL)
                             .with_on_select_action(DriveIndexAction::LeaveSharedObject {
-                                cloud_object_type_and_id: *cloud_object_type_and_id})
+                                cloud_object_type_and_id: *cloud_object_type_and_id,
+                            })
                             .with_icon(Icon::Minus)
                             .into_item(),
                     )
@@ -4412,7 +4510,8 @@ impl DriveIndex {
             menu_items.push(
                 MenuItemFields::new("Trash")
                     .with_on_select_action(DriveIndexAction::TrashObject {
-                        cloud_object_type_and_id: *cloud_object_type_and_id})
+                        cloud_object_type_and_id: *cloud_object_type_and_id,
+                    })
                     .with_icon(Icon::Trash)
                     .into_item(),
             );
@@ -4480,7 +4579,8 @@ impl DriveIndex {
                 menu_items.push(
                     MenuItemFields::new("Restore")
                         .with_on_select_action(DriveIndexAction::UntrashObject {
-                            cloud_object_type_and_id: *cloud_object_type_and_id})
+                            cloud_object_type_and_id: *cloud_object_type_and_id,
+                        })
                         .with_icon(Icon::ReverseLeft)
                         .into_item(),
                 );
@@ -4489,7 +4589,8 @@ impl DriveIndex {
                 menu_items.push(
                     MenuItemFields::new("Delete forever")
                         .with_on_select_action(DriveIndexAction::DeleteObject {
-                            cloud_object_type_and_id: *cloud_object_type_and_id})
+                            cloud_object_type_and_id: *cloud_object_type_and_id,
+                        })
                         .with_icon(Icon::AlertTriangle)
                         .into_item(),
                 );
@@ -4556,7 +4657,8 @@ impl DriveIndex {
     fn toggle_space_menu(&mut self, space: &Space, offset: Vector2F, ctx: &mut ViewContext<Self>) {
         self.space_menu_open_for_space = Some(SpaceMenuState {
             space: *space,
-            offset});
+            offset,
+        });
         let menu_items = vec![
             MenuItemFields::new("Collapse all")
                 .with_on_select_action(DriveIndexAction::CollapseAllInLocation(
@@ -4650,7 +4752,8 @@ impl DriveIndex {
                                 // if on the web open in view mode by default
                                 ctx.emit(DriveIndexEvent::OpenWorkflowInPane {
                                     cloud_object_type_and_id: *cloud_id,
-                                    open_mode: WorkflowViewMode::View})
+                                    open_mode: WorkflowViewMode::View,
+                                })
                             } else {
                                 ctx.emit(DriveIndexEvent::RunObject(*cloud_id))
                             }
@@ -4788,7 +4891,8 @@ impl View for DriveIndex {
                 );
                 stack.finish()
             }
-            _ => index};
+            _ => index,
+        };
 
         let mut drive = Flex::column();
 
@@ -4872,14 +4976,16 @@ impl TypedActionView for DriveIndex {
             DriveIndexAction::CreateObject {
                 object_type,
                 space,
-                initial_folder_id} => {
+                initial_folder_id,
+            } => {
                 self.create_object(*object_type, *space, *initial_folder_id, ctx);
             }
             DriveIndexAction::CreateWorkflowWithContent {
                 space,
                 initial_folder_id,
                 content,
-                is_for_agent_mode} => {
+                is_for_agent_mode,
+            } => {
                 if has_feature_gated_anonymous_user_reached_workflow_limit(ctx) {
                     return;
                 }
@@ -4889,13 +4995,16 @@ impl TypedActionView for DriveIndex {
                     title: None,
                     initial_folder_id: *initial_folder_id,
                     is_for_agent_mode: *is_for_agent_mode,
-                    content: Some(content.clone())});
+                    content: Some(content.clone()),
+                });
             }
             DriveIndexAction::OpenImportModal {
                 space,
-                initial_folder_id} => ctx.emit(DriveIndexEvent::OpenImportModal {
+                initial_folder_id,
+            } => ctx.emit(DriveIndexEvent::OpenImportModal {
                 space: *space,
-                initial_folder_id: *initial_folder_id}),
+                initial_folder_id: *initial_folder_id,
+            }),
             DriveIndexAction::RenameFolder { folder_id } => {
                 self.rename_folder(*folder_id, ctx);
             }
@@ -4916,7 +5025,8 @@ impl TypedActionView for DriveIndex {
             }
             DriveIndexAction::OpenWorkflowInPane {
                 cloud_object_type_and_id,
-                open_mode} => {
+                open_mode,
+            } => {
                 if !matches!(self.index_variant, DriveIndexVariant::Trash) {
                     self.set_selected_object(
                         Some(WarpDriveItemId::Object(*cloud_object_type_and_id)),
@@ -4924,7 +5034,8 @@ impl TypedActionView for DriveIndex {
                     );
                     ctx.emit(DriveIndexEvent::OpenWorkflowInPane {
                         cloud_object_type_and_id: *cloud_object_type_and_id,
-                        open_mode: *open_mode});
+                        open_mode: *open_mode,
+                    });
                 }
             }
             DriveIndexAction::CopyObjectToClipboard(cloud_object_type_and_id) => {
@@ -4961,7 +5072,8 @@ impl TypedActionView for DriveIndex {
                         }
                         ObjectType::Notebook
                         | ObjectType::Folder
-                        | ObjectType::GenericStringObject(_) => ()}
+                        | ObjectType::GenericStringObject(_) => (),
+                    }
                 }
             }
             DriveIndexAction::CopyWorkflowId(cloud_object_type_and_id) => {
@@ -4983,7 +5095,8 @@ impl TypedActionView for DriveIndex {
             }
             DriveIndexAction::ToggleItemOverflowMenu {
                 space,
-                warp_drive_item_id} => {
+                warp_drive_item_id,
+            } => {
                 self.toggle_item_menu(space, warp_drive_item_id, ctx);
             }
             DriveIndexAction::ToggleSpaceOverflowMenu { space, offset } => {
@@ -4993,7 +5106,8 @@ impl TypedActionView for DriveIndex {
                 object_type,
                 space,
                 initial_folder_id,
-                cloud_object_type_and_id} => {
+                cloud_object_type_and_id,
+            } => {
                 self.reset_menus(ctx);
 
                 // If attempting to rename a folder, we can start with the existing name.
@@ -5006,7 +5120,8 @@ impl TypedActionView for DriveIndex {
                         CloudObjectTypeAndId::Notebook(notebook_id) => model
                             .get_notebook(&notebook_id)
                             .map(|n| n.model().title.clone()),
-                        _ => None}
+                        _ => None,
+                    }
                 });
 
                 let is_rename = cloud_object_type_and_id.is_some();
@@ -5045,7 +5160,8 @@ impl TypedActionView for DriveIndex {
                 ctx.notify();
             }
             DriveIndexAction::LeaveSharedObject {
-                cloud_object_type_and_id} => {
+                cloud_object_type_and_id,
+            } => {
                 self.leave_object(cloud_object_type_and_id, ctx);
             }
             DriveIndexAction::CloseCloudObjectNamingDialog => {
@@ -5054,18 +5170,21 @@ impl TypedActionView for DriveIndex {
             }
             DriveIndexAction::MoveObject {
                 cloud_object_type_and_id,
-                new_space} => self.move_object(
+                new_space,
+            } => self.move_object(
                 cloud_object_type_and_id,
                 CloudObjectLocation::Space(*new_space),
                 ctx,
             ),
             DriveIndexAction::DropIndexItem {
                 cloud_object_type_and_id,
-                drop_target_location} => {
+                drop_target_location,
+            } => {
                 self.move_object(cloud_object_type_and_id, *drop_target_location, ctx);
             }
             DriveIndexAction::UpdateCurrentDropTarget {
-                drop_target_location} => {
+                drop_target_location,
+            } => {
                 self.update_drop_target_location(*drop_target_location, ctx);
             }
             DriveIndexAction::ClearDropTarget => self.clear_drop_target(ctx),
@@ -5079,9 +5198,11 @@ impl TypedActionView for DriveIndex {
             }
             DriveIndexAction::OpenWorkflowModalWithNew {
                 space,
-                initial_folder_id} => ctx.emit(DriveIndexEvent::OpenWorkflowModalWithNew {
+                initial_folder_id,
+            } => ctx.emit(DriveIndexEvent::OpenWorkflowModalWithNew {
                 space: *space,
-                initial_folder_id: *initial_folder_id}),
+                initial_folder_id: *initial_folder_id,
+            }),
             DriveIndexAction::OpenWorkflowModalWithCloudWorkflow(workflow_id) => {
                 ctx.emit(DriveIndexEvent::OpenWorkflowModalWithCloudWorkflow(
                     *workflow_id,
@@ -5106,15 +5227,18 @@ impl TypedActionView for DriveIndex {
                 });
             }
             DriveIndexAction::TrashObject {
-                cloud_object_type_and_id} => {
+                cloud_object_type_and_id,
+            } => {
                 self.trash_object(*cloud_object_type_and_id, ctx);
             }
             DriveIndexAction::UntrashObject {
-                cloud_object_type_and_id} => {
+                cloud_object_type_and_id,
+            } => {
                 self.untrash_object(cloud_object_type_and_id, ctx);
             }
             DriveIndexAction::DeleteObject {
-                cloud_object_type_and_id} => {
+                cloud_object_type_and_id,
+            } => {
                 self.delete_object(cloud_object_type_and_id, ctx);
             }
             DriveIndexAction::EmptyTrash { space } => {

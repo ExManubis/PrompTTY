@@ -5,7 +5,8 @@ pub use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
 use warpui::elements::{
     Align, Border, ChildAnchor, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, DropShadow, Element, Flex, Hoverable, MouseStateHandle, OffsetPositioning,
-    ParentAnchor, ParentOffsetBounds, Radius, SavePosition, Shrinkable, Text};
+    ParentAnchor, ParentOffsetBounds, Radius, SavePosition, Shrinkable, Text,
+};
 pub use warpui::elements::{ParentElement as _, Stack};
 pub use warpui::geometry::vector::vec2f;
 use warpui::keymap::EditableBinding;
@@ -13,12 +14,14 @@ use warpui::presenter::ChildView;
 use warpui::ui_components::components::UiComponent;
 use warpui::{
     Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle};
+    ViewHandle,
+};
 
 use crate::appearance::Appearance;
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
-    TextOptions};
+    TextOptions,
+};
 use crate::server::telemetry::{FindOption, TelemetryEvent};
 use crate::settings::InputModeSettings;
 use crate::themes::theme::Fill;
@@ -50,7 +53,8 @@ pub enum FindEvent {
     RanFind,
 
     /// Emitted when the focused match in the active find run has been updated.
-    UpdatedFocusedMatch}
+    UpdatedFocusedMatch,
+}
 
 pub trait FindModel {
     fn focused_match_index(&self) -> Option<usize>;
@@ -59,7 +63,8 @@ pub trait FindModel {
     fn alt_find_direction(&self, app: &AppContext) -> FindDirection {
         match self.default_find_direction(app) {
             FindDirection::Up => FindDirection::Down,
-            FindDirection::Down => FindDirection::Up}
+            FindDirection::Down => FindDirection::Up,
+        }
     }
 
     /// Returns true if a find operation is currently in progress (scanning).
@@ -75,18 +80,21 @@ pub enum Event {
     NextMatch { direction: FindDirection },
     ToggleFindInBlock { value: bool },
     ToggleCaseSensitivity { is_case_sensitive: bool },
-    ToggleRegexSearch { is_regex_enabled: bool }}
+    ToggleRegexSearch { is_regex_enabled: bool },
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum FindDirection {
     Up,
-    Down}
+    Down,
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FindWithinBlockState {
     Enabled,
     Disabled,
-    Hidden}
+    Hidden,
+}
 
 #[derive(Default)]
 struct ButtonMouseStates {
@@ -95,7 +103,8 @@ struct ButtonMouseStates {
     close: MouseStateHandle,
     toggle_find_in_block: MouseStateHandle,
     toggle_case_sensitivity: MouseStateHandle,
-    toggle_regex_search: MouseStateHandle}
+    toggle_regex_search: MouseStateHandle,
+}
 
 pub struct Find<T: FindModel + Entity<Event = FindEvent> + 'static> {
     editor: ViewHandle<EditorView>,
@@ -103,7 +112,8 @@ pub struct Find<T: FindModel + Entity<Event = FindEvent> + 'static> {
     button_mouse_states: ButtonMouseStates,
     pub case_sensitivity_enabled: bool,
     pub regex_search_enabled: bool,
-    pub display_find_within_block: FindWithinBlockState}
+    pub display_find_within_block: FindWithinBlockState,
+}
 
 #[derive(Copy, Clone, Debug)]
 pub enum FindAction {
@@ -114,7 +124,8 @@ pub enum FindAction {
     ToggleCaseSensitivity,
     ToggleRegexSearch,
     CmdG,
-    CmdShiftG}
+    CmdShiftG,
+}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -169,7 +180,8 @@ impl<T: FindModel + Entity<Event = FindEvent> + 'static> Find<T> {
         });
 
         ctx.subscribe_to_model(&model, |_, _, event, ctx| match event {
-            FindEvent::RanFind | FindEvent::UpdatedFocusedMatch => ctx.notify()});
+            FindEvent::RanFind | FindEvent::UpdatedFocusedMatch => ctx.notify(),
+        });
 
         Self {
             editor,
@@ -177,7 +189,8 @@ impl<T: FindModel + Entity<Event = FindEvent> + 'static> Find<T> {
             button_mouse_states: Default::default(),
             case_sensitivity_enabled: false,
             regex_search_enabled: false,
-            display_find_within_block: FindWithinBlockState::Disabled}
+            display_find_within_block: FindWithinBlockState::Disabled,
+        }
     }
 
     pub fn editor(&self) -> &ViewHandle<EditorView> {
@@ -206,7 +219,8 @@ impl<T: FindModel + Entity<Event = FindEvent> + 'static> Find<T> {
                 ctx.emit(Event::Update {
                     // If the query is empty, don't search for an empty string - set the query to
                     // `None`.
-                    query: (!query.is_empty()).then_some(query)});
+                    query: (!query.is_empty()).then_some(query),
+                });
                 self.emit_result_a11y_content(ctx);
                 ctx.notify();
             }
@@ -263,21 +277,25 @@ impl<T: FindModel + Entity<Event = FindEvent> + 'static> Find<T> {
         self.display_find_within_block = match self.display_find_within_block {
             FindWithinBlockState::Enabled => FindWithinBlockState::Disabled,
             FindWithinBlockState::Disabled => FindWithinBlockState::Enabled,
-            _ => return};
+            _ => return,
+        };
         ctx.emit(Event::ToggleFindInBlock {
-            value: self.display_find_within_block == FindWithinBlockState::Enabled});
+            value: self.display_find_within_block == FindWithinBlockState::Enabled,
+        });
     }
 
     fn toggle_case_sensitivity(&mut self, ctx: &mut ViewContext<Self>) {
         self.case_sensitivity_enabled = !self.case_sensitivity_enabled;
         ctx.emit(Event::ToggleCaseSensitivity {
-            is_case_sensitive: self.case_sensitivity_enabled});
+            is_case_sensitive: self.case_sensitivity_enabled,
+        });
     }
 
     fn toggle_regex_search(&mut self, ctx: &mut ViewContext<Self>) {
         self.regex_search_enabled = !self.regex_search_enabled;
         ctx.emit(Event::ToggleRegexSearch {
-            is_regex_enabled: self.regex_search_enabled});
+            is_regex_enabled: self.regex_search_enabled,
+        });
     }
 
     fn render_match_index(&self, appearance: &Appearance, app: &AppContext) -> Box<dyn Element> {
@@ -303,7 +321,8 @@ impl<T: FindModel + Entity<Event = FindEvent> + 'static> Find<T> {
         // (i.e. first match starts at index 1 out of the total number of matches).
         let index = match model.focused_match_index() {
             None => 0,
-            Some(idx) => idx + 1};
+            Some(idx) => idx + 1,
+        };
         let label = format!("{}/{}", index, model.match_count());
         Text::new_inline(label, appearance.ui_font_family(), FIND_EDITOR_FONT_SIZE)
             .with_color(blended_colors::text_sub(
@@ -396,7 +415,8 @@ impl<T: FindModel + Entity<Event = FindEvent> + 'static> Find<T> {
         };
         let match_icon = match direction {
             FindDirection::Down => Icon::ArrowDown,
-            FindDirection::Up => Icon::ArrowUp};
+            FindDirection::Up => Icon::ArrowUp,
+        };
         let icon_color = if self.model.as_ref(app).match_count() == 0 {
             appearance.theme().nonactive_ui_text_color()
         } else {
@@ -466,7 +486,8 @@ impl<T: FindModel + Entity<Event = FindEvent> + 'static> TypedActionView for Fin
             FindAction::Close => self.close_find_bar(ctx),
             FindAction::ToggleFindInBlock => self.toggle_find_within_block(ctx),
             FindAction::ToggleCaseSensitivity => self.toggle_case_sensitivity(ctx),
-            FindAction::ToggleRegexSearch => self.toggle_regex_search(ctx)}
+            FindAction::ToggleRegexSearch => self.toggle_regex_search(ctx),
+        }
     }
 }
 

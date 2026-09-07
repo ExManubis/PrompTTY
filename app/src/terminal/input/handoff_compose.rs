@@ -3,7 +3,7 @@
 
 use warpui::{Entity, ModelContext};
 
-use crate::ai::ambient_agents::handoff_types::HandoffEntryPoint;
+use crate::ai::ambient_agents::telemetry::HandoffEntryPoint;
 use crate::server::ids::SyncId;
 
 #[derive(Clone)]

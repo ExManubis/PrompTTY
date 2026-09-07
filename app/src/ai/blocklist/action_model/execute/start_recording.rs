@@ -39,7 +39,8 @@ impl StartRecordingExecutor {
     ) -> impl Into<AnyActionExecution> + use<> {
         let ExecuteActionInput {
             action,
-            conversation_id} = input;
+            conversation_id,
+        } = input;
         let AIAgentActionType::StartRecording {
             frame_rate,
             max_duration,
@@ -47,7 +48,8 @@ impl StartRecordingExecutor {
             summary,
             description,
             playback_speed_multiplier,
-            window} = action.action.clone()
+            window,
+        } = action.action.clone()
         else {
             return ActionExecution::InvalidAction;
         };
@@ -93,7 +95,8 @@ impl StartRecordingExecutor {
                     max_duration: max_duration.unwrap_or(defaults.max_duration),
                     max_size_bytes: max_size_bytes.unwrap_or(defaults.max_size_bytes),
                     playback_speed_multiplier,
-                    target};
+                    target,
+                };
                 // Carry the resolved frame rate to the completion callback so the
                 // controller can store it for the post-stop smart cut's one-frame
                 // minimum, even though it is not echoed back to the server.
@@ -126,7 +129,8 @@ impl StartRecordingExecutor {
                             recording_id,
                             started_at,
                             width_px,
-                            height_px},
+                            height_px,
+                        },
                     ))
                 }
                 Err(error) => {

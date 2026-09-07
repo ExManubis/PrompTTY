@@ -27,20 +27,23 @@ use warpui::elements::{
     MainAxisSize, MouseStateHandle, NewScrollable, OffsetPositioning, ParentElement,
     PositionedElementAnchor, PositionedElementOffsetBounds, Radius, Resizable,
     ResizableStateHandle, SavePosition, SelectableArea, SelectionHandle, Shrinkable,
-    SizeConstraintCondition, SizeConstraintSwitch, Stack, Text, resizable_state_handle};
+    SizeConstraintCondition, SizeConstraintSwitch, Stack, Text, resizable_state_handle,
+};
 use warpui::fonts::{Properties, Style, Weight};
 use warpui::keymap::{EditableBinding, Keystroke};
 use warpui::platform::{Cursor, OperatingSystem};
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 use super::cli_controller::{CLISubagentController, CLISubagentEvent, UserTakeOverReason};
 use super::model::{AIBlockModel, AIBlockModelHelper, AIBlockModelImpl, AIBlockOutputStatus};
 use super::view_impl::common::{
     DebugFooterProps, FailedOutputProps, TextSectionsProps, render_debug_footer,
-    render_failed_output, render_informational_footer, render_text_sections};
+    render_failed_output, render_informational_footer, render_text_sections,
+};
 use super::view_impl::output::are_all_text_sections_empty;
 use super::{EmbeddedCodeEditorView, SecretRedactionState, TableSectionHandles};
 use crate::ai::agent::conversation::AIConversationId;
@@ -48,7 +51,8 @@ use crate::ai::agent::icons::yellow_stop_icon;
 use crate::ai::agent::task::TaskId;
 use crate::ai::agent::{
     AIAgentActionType, AIAgentInput, AIAgentOutput, AIAgentOutputMessageType, AIAgentPtyWriteMode,
-    AIAgentText, AIAgentTextSection, CancellationReason, ProgrammingLanguage, WebSearchStatus};
+    AIAgentText, AIAgentTextSection, CancellationReason, ProgrammingLanguage, WebSearchStatus,
+};
 use crate::ai::blocklist::block::TextLocation;
 use crate::ai::blocklist::block::view_impl::common::{
     BLOCKED_ACTION_MESSAGE_FOR_GREP_OR_FILE_GLOB, BLOCKED_ACTION_MESSAGE_FOR_READING_FILES,
@@ -56,15 +60,18 @@ use crate::ai::blocklist::block::view_impl::common::{
     BLOCKED_ACTION_MESSAGE_FOR_WRITE_TO_LONG_RUNNING_SHELL_COMMAND,
     LOAD_OUTPUT_MESSAGE_FOR_FILE_GLOB, LOAD_OUTPUT_MESSAGE_FOR_GREP,
     LOAD_OUTPUT_MESSAGE_FOR_READING_FILES, LOAD_OUTPUT_MESSAGE_FOR_SEARCH_CODEBASE,
-    LOAD_OUTPUT_MESSAGE_FOR_WEB_SEARCH, UserQueryProps, render_query_text};
+    LOAD_OUTPUT_MESSAGE_FOR_WEB_SEARCH, UserQueryProps, render_query_text,
+};
 use crate::ai::blocklist::code_block::CodeSnippetButtonHandles;
 use crate::ai::blocklist::inline_action::inline_action_icons::icon_size;
 use crate::ai::blocklist::permissions::is_agent_mode_autonomy_allowed;
 use crate::ai::blocklist::{
-    BlocklistAIActionModel, BlocklistAIHistoryEvent, BlocklistAIPermissions};
+    BlocklistAIActionModel, BlocklistAIHistoryEvent, BlocklistAIPermissions,
+};
 use crate::ai::control_code_parser::{ParsedControlCodeOutput, parse_control_codes_from_bytes};
 use crate::ai::execution_profiles::profiles::{
-    AIExecutionProfilesModel, AIExecutionProfilesModelEvent};
+    AIExecutionProfilesModel, AIExecutionProfilesModelEvent,
+};
 use crate::code::editor::view::{CodeEditorEvent, CodeEditorRenderOptions, CodeEditorView};
 use crate::code::editor_management::CodeSource;
 use crate::editor::InteractionState;
@@ -81,9 +88,11 @@ use crate::ui_components::icons::Icon;
 use crate::util::link_detection::{DetectedLinksState, detect_links};
 use crate::view_components::DismissibleToast;
 use crate::view_components::action_button::{
-    ButtonSize, KeystrokeSource, NakedTheme, PrimaryTheme};
+    ButtonSize, KeystrokeSource, NakedTheme, PrimaryTheme,
+};
 use crate::view_components::compactible_action_button::{
-    CompactibleActionButton, RenderCompactibleActionButton, render_compact_and_regular_button_rows};
+    CompactibleActionButton, RenderCompactibleActionButton, render_compact_and_regular_button_rows,
+};
 use crate::view_components::compactible_split_action_button::CompactibleSplitActionButton;
 use crate::workspace::WorkspaceAction;
 use crate::{BlocklistAIHistoryModel, ToastStack};
@@ -133,13 +142,15 @@ pub fn init(app: &mut AppContext) {
         FixedBinding::new(
             REJECT_KEYSTROKE.normalized(),
             CLISubagentAction::RejectBlockedAction {
-                should_user_take_over: false},
+                should_user_take_over: false,
+            },
             id!(CLISubagentView::ui_name()) & id!(HAS_PENDING_CLI_ACTION_CONTEXT_KEY),
         ),
         FixedBinding::new(
             "escape",
             CLISubagentAction::RejectBlockedAction {
-                should_user_take_over: true},
+                should_user_take_over: true,
+            },
             id!(CLISubagentView::ui_name())
                 & id!(HAS_PENDING_NON_TRANSFER_CONTROL_ACTION_CONTEXT_KEY),
         ),
@@ -177,7 +188,8 @@ struct StateHandles {
     input_scroll_state: ClippedScrollStateHandle,
     query_scroll_state: ClippedScrollStateHandle,
     input_hover_state: MouseStateHandle,
-    dismiss_input_mouse_state: MouseStateHandle}
+    dismiss_input_mouse_state: MouseStateHandle,
+}
 
 pub struct CLISubagentView {
     block_id: BlockId,
@@ -212,7 +224,8 @@ pub struct CLISubagentView {
     resizable_height: ResizableStateHandle,
 
     current_working_directory: Option<String>,
-    shell_launch_data: Option<ShellLaunchData>}
+    shell_launch_data: Option<ShellLaunchData>,
+}
 
 impl CLISubagentView {
     #[allow(clippy::too_many_arguments)]
@@ -244,7 +257,8 @@ impl CLISubagentView {
             Some(KeystrokeSource::Fixed(REJECT_KEYSTROKE.clone())),
             ButtonSize::Small,
             CLISubagentAction::RejectBlockedAction {
-                should_user_take_over: false},
+                should_user_take_over: false,
+            },
             Icon::X,
             Arc::new(NakedTheme),
             ctx,
@@ -257,7 +271,8 @@ impl CLISubagentView {
             )),
             ButtonSize::Small,
             CLISubagentAction::RejectBlockedAction {
-                should_user_take_over: true},
+                should_user_take_over: true,
+            },
             Icon::Hand,
             Arc::new(NakedTheme),
             ctx,
@@ -391,7 +406,8 @@ impl CLISubagentView {
                             .active_profile(Some(me.terminal_view_id), ctx);
                         *profile_id == *active_profile.id()
                     }
-                    _ => false};
+                    _ => false,
+                };
                 if should_update_permissions {
                     let scope = me.subagent_controller.as_ref(ctx).team_context(ctx);
                     let ai_permission = BlocklistAIPermissions::as_ref(ctx);
@@ -478,7 +494,8 @@ impl CLISubagentView {
             resizable_height: resizable_state_handle(MAX_HEIGHT),
             current_working_directory,
             shell_launch_data,
-            selected_text: Arc::new(RwLock::new(None))};
+            selected_text: Arc::new(RwLock::new(None)),
+        };
         view.set_state_from_updated_inputs(ctx);
         view
     }
@@ -653,7 +670,8 @@ impl CLISubagentView {
                     self.handle_updated_output(&output, ctx);
                 }
             }
-            AIBlockOutputStatus::Failed { .. } => ()}
+            AIBlockOutputStatus::Failed { .. } => (),
+        }
         ctx.notify();
     }
 
@@ -666,8 +684,10 @@ impl CLISubagentView {
                 AIAgentTextSection::Code {
                     code,
                     language,
-                    source} => Some((code, language, source)),
-                _ => None})
+                    source,
+                } => Some((code, language, source)),
+                _ => None,
+            })
             .enumerate()
             .for_each(|(index, (code, language, source))| {
                 self.handle_code_section_stream_update(index, code, language, source, ctx);
@@ -753,7 +773,8 @@ impl CLISubagentView {
                             CodeSource::Link { range_start, .. } => {
                                 range_start.as_ref().map(|ls| ls.line_num)
                             }
-                            _ => None})
+                            _ => None,
+                        })
                     });
                     view.set_show_current_line_highlights(false, ctx);
                     view.set_interaction_state(InteractionState::Selectable, ctx);
@@ -780,7 +801,8 @@ impl CLISubagentView {
                 self.code_editor_views.push(EmbeddedCodeEditorView {
                     view,
                     language: Default::default(),
-                    length: code.len()});
+                    length: code.len(),
+                });
                 self.code_editor_buttons.push(Default::default());
             }
         }
@@ -917,7 +939,8 @@ pub enum CLISubagentViewEvent {
     TextSelected,
     CopiedEmptyText,
     #[cfg(windows)]
-    WindowsCtrlC}
+    WindowsCtrlC,
+}
 
 impl Entity for CLISubagentView {
     type Event = CLISubagentViewEvent;
@@ -967,7 +990,9 @@ impl View for CLISubagentView {
                         find_context: None,
                         font_properties: &Properties {
                             style: Style::Normal,
-                            weight: Weight::Normal}},
+                            weight: Weight::Normal,
+                        },
+                    },
                     app,
                 );
 
@@ -1002,7 +1027,8 @@ impl View for CLISubagentView {
                         child: selectable_text.finish(),
                         background_color: internal_colors::accent_bg(theme).into(),
                         border: Some(Border::all(1.).with_border_fill(theme.accent())),
-                        max_height: resizable_height},
+                        max_height: resizable_height,
+                    },
                     app,
                 )
                 .with_margin_bottom(8.)
@@ -1013,7 +1039,8 @@ impl View for CLISubagentView {
                         child: scrollable_container,
                         hover_state: self.state_handles.input_hover_state.clone(),
                         dismiss_mouse_state: self.state_handles.dismiss_input_mouse_state.clone(),
-                        position_id: USER_QUERY_POSITION_ID.to_string()},
+                        position_id: USER_QUERY_POSITION_ID.to_string(),
+                    },
                     app,
                 );
 
@@ -1086,7 +1113,8 @@ impl View for CLISubagentView {
                                 #[cfg(feature = "local_fs")]
                                 resolved_code_block_paths: None,
                                 #[cfg(feature = "local_fs")]
-                                resolved_blocklist_image_sources: None},
+                                resolved_blocklist_image_sources: None,
+                            },
                             app,
                         ));
                     }
@@ -1117,7 +1145,8 @@ impl View for CLISubagentView {
                                                 internal_colors::neutral_3(theme),
                                             ),
                                         ),
-                                        max_height: resizable_height},
+                                        max_height: resizable_height,
+                                    },
                                     app,
                                 )
                                 .with_margin_bottom(8.)
@@ -1143,7 +1172,8 @@ impl View for CLISubagentView {
                                                 internal_colors::neutral_3(theme),
                                             ),
                                         ),
-                                        max_height: resizable_height},
+                                        max_height: resizable_height,
+                                    },
                                     app,
                                 )
                                 .with_margin_bottom(8.)
@@ -1151,7 +1181,8 @@ impl View for CLISubagentView {
                             );
                         }
                     }
-                    _ => ()}
+                    _ => (),
+                }
             }
         }
 
@@ -1173,7 +1204,8 @@ impl View for CLISubagentView {
                             .invalid_api_key_button_handle,
                         aws_bedrock_credentials_error_view: None,
                         gemini_enterprise_credentials_error_view: None,
-                        icon_right_margin: AVATAR_RIGHT_MARGIN},
+                        icon_right_margin: AVATAR_RIGHT_MARGIN,
+                    },
                     app,
                 ));
 
@@ -1202,7 +1234,8 @@ impl View for CLISubagentView {
                                     .state_handles
                                     .submit_issue_button_handle
                                     .clone(),
-                                should_render_feedback_below: true},
+                                should_render_feedback_below: true,
+                            },
                             |debug_id, ctx| {
                                 ctx.dispatch_typed_action(CLISubagentAction::CopyDebugId(debug_id))
                             },
@@ -1250,7 +1283,8 @@ impl View for CLISubagentView {
                         child: output.finish(),
                         background_color: internal_colors::neutral_2(appearance.theme()),
                         border: Some(output_border),
-                        max_height: resizable_height},
+                        max_height: resizable_height,
+                    },
                     app,
                 )
                 .with_margin_bottom(8.)
@@ -1269,7 +1303,8 @@ impl View for CLISubagentView {
                                 input: input.clone(),
                                 mode,
                                 scroll_state: self.state_handles.input_scroll_state.clone(),
-                                max_height: resizable_height},
+                                max_height: resizable_height,
+                            },
                             app,
                         )),
                         is_allow_menu_open: self.is_allow_menu_open,
@@ -1290,7 +1325,9 @@ impl View for CLISubagentView {
                                 .speedbump_checkbox_handle,
                             speedbump_checkbox_action:
                                 CLISubagentAction::ToggleAlwaysAllowWriteToPty,
-                            ai_settings_link: &self.state_handles.ai_settings_link})},
+                            ai_settings_link: &self.state_handles.ai_settings_link,
+                        }),
+                    },
                     app,
                 ))
             }
@@ -1302,7 +1339,8 @@ impl View for CLISubagentView {
                         is_allow_menu_open: false,
                         allow_menu: None,
                         buttons: vec![&self.reject_button, &self.transfer_control_button],
-                        speedbump: None},
+                        speedbump: None,
+                    },
                     app,
                 ))
             }
@@ -1328,10 +1366,13 @@ impl View for CLISubagentView {
                                 .speedbump_checkbox_handle,
                             speedbump_checkbox_action:
                                 CLISubagentAction::ToggleAlwaysAllowReadFiles,
-                            ai_settings_link: &self.state_handles.ai_settings_link})},
+                            ai_settings_link: &self.state_handles.ai_settings_link,
+                        }),
+                },
                 app,
             )),
-            _ => None}) {
+            _ => None,
+        }) {
             let selected_text = self.selected_text.clone();
             let query_selection_handle = self.state_handles.query_selection_handle.clone();
             let output_selection_handle = self.state_handles.output_selection_handle.clone();
@@ -1415,7 +1456,8 @@ pub enum CLISubagentAction {
     DismissInput,
     SelectText,
     CopyDebugId(String),
-    OpenFeedbackDocs}
+    OpenFeedbackDocs,
+}
 
 impl TypedActionView for CLISubagentView {
     type Action = CLISubagentAction;
@@ -1445,7 +1487,8 @@ impl TypedActionView for CLISubagentView {
                 self.handle_execute_blocked_action(true, ctx);
             }
             CLISubagentAction::RejectBlockedAction {
-                should_user_take_over} => {
+                should_user_take_over,
+            } => {
                 self.handle_reject_blocked_action(*should_user_take_over, ctx);
             }
             CLISubagentAction::TakeControlOfRunningCommand => {
@@ -1529,7 +1572,8 @@ fn get_action_loading_text(action: AIAgentActionType) -> Option<String> {
         AIAgentActionType::ReadFiles(_) => Some(LOAD_OUTPUT_MESSAGE_FOR_READING_FILES.to_string()),
         AIAgentActionType::Grep { .. } => Some(LOAD_OUTPUT_MESSAGE_FOR_GREP.to_string()),
         AIAgentActionType::FileGlobV2 { .. } => Some(LOAD_OUTPUT_MESSAGE_FOR_FILE_GLOB.to_string()),
-        _ => None}
+        _ => None,
+    }
 }
 
 fn get_action_icon(action: AIAgentActionType) -> Option<Icon> {
@@ -1538,7 +1582,8 @@ fn get_action_icon(action: AIAgentActionType) -> Option<Icon> {
         | AIAgentActionType::ReadFiles(_)
         | AIAgentActionType::Grep { .. }
         | AIAgentActionType::FileGlobV2 { .. } => Some(Icon::Search),
-        _ => None}
+        _ => None,
+    }
 }
 
 fn render_action(action: AIAgentActionType, app: &AppContext) -> Option<Box<dyn Element>> {
@@ -1625,7 +1670,8 @@ struct DismissableContainerProps {
     child: Box<dyn Element>,
     hover_state: MouseStateHandle,
     dismiss_mouse_state: MouseStateHandle,
-    position_id: String}
+    position_id: String,
+}
 
 fn render_dismissable_container(
     props: DismissableContainerProps,
@@ -1635,7 +1681,8 @@ fn render_dismissable_container(
         child,
         hover_state,
         dismiss_mouse_state,
-        position_id} = props;
+        position_id,
+    } = props;
 
     let hoverable = Hoverable::new(hover_state, |mouse_state| {
         let mut stack = Stack::new().with_child(SavePosition::new(child, &position_id).finish());
@@ -1687,7 +1734,8 @@ struct ScrollableContainerProps {
     child: Box<dyn Element>,
     background_color: ColorU,
     border: Option<Border>,
-    max_height: f32}
+    max_height: f32,
+}
 
 fn render_scrollable_container(props: ScrollableContainerProps, _app: &AppContext) -> Container {
     let ScrollableContainerProps {
@@ -1695,12 +1743,14 @@ fn render_scrollable_container(props: ScrollableContainerProps, _app: &AppContex
         child,
         background_color,
         border,
-        max_height} = props;
+        max_height,
+    } = props;
 
     let scrollable = NewScrollable::vertical(
         SingleAxisConfig::Clipped {
             handle: scroll_state,
-            child},
+            child,
+        },
         Fill::None,
         Fill::None,
         Fill::None,
@@ -1765,7 +1815,8 @@ struct PermissionsSpeedbumpProps<'a> {
     always_allow_checked: bool,
     speedbump_checkbox_handle: &'a MouseStateHandle,
     speedbump_checkbox_action: CLISubagentAction,
-    ai_settings_link: &'a HighlightedHyperlink}
+    ai_settings_link: &'a HighlightedHyperlink,
+}
 
 fn render_permissions_speedbump(
     props: PermissionsSpeedbumpProps<'_>,
@@ -1884,21 +1935,24 @@ fn get_blocked_action_header(action: AIAgentActionType) -> Option<String> {
         AIAgentActionType::Grep { .. } | AIAgentActionType::FileGlobV2 { .. } => {
             Some(BLOCKED_ACTION_MESSAGE_FOR_GREP_OR_FILE_GLOB.to_string())
         }
-        _ => None}
+        _ => None,
+    }
 }
 
 struct WriteToPtyInputProps {
     input: bytes::Bytes,
     mode: AIAgentPtyWriteMode,
     scroll_state: ClippedScrollStateHandle,
-    max_height: f32}
+    max_height: f32,
+}
 
 fn render_write_to_pty_input(props: WriteToPtyInputProps, app: &AppContext) -> Box<dyn Element> {
     let WriteToPtyInputProps {
         input,
         mode,
         scroll_state,
-        max_height} = props;
+        max_height,
+    } = props;
 
     let appearance = Appearance::as_ref(app);
     let theme = appearance.theme();
@@ -1907,7 +1961,8 @@ fn render_write_to_pty_input(props: WriteToPtyInputProps, app: &AppContext) -> B
     let parsed = if let AIAgentPtyWriteMode::Block = mode {
         ParsedControlCodeOutput {
             display: String::from_utf8_lossy(&input).to_string(),
-            control_code_ranges: vec![]}
+            control_code_ranges: vec![],
+        }
     } else {
         parse_control_codes_from_bytes(&decorated_bytes)
     };
@@ -1932,7 +1987,8 @@ fn render_write_to_pty_input(props: WriteToPtyInputProps, app: &AppContext) -> B
     let scrollable = NewScrollable::vertical(
         SingleAxisConfig::Clipped {
             handle: scroll_state,
-            child: text},
+            child: text,
+        },
         Fill::None,
         Fill::None,
         Fill::None,
@@ -1971,7 +2027,8 @@ fn render_search_action_input(
         }
         AIAgentActionType::Grep {
             ref queries,
-            ref path} => {
+            ref path,
+        } => {
             let display_path = if path == "." {
                 "the current directory"
             } else {
@@ -1991,7 +2048,8 @@ fn render_search_action_input(
         }
         AIAgentActionType::FileGlobV2 {
             ref patterns,
-            ref search_dir} => {
+            ref search_dir,
+        } => {
             let display_path = search_dir.as_deref().unwrap_or("the current directory");
 
             if patterns.len() == 1 {
@@ -2010,7 +2068,8 @@ fn render_search_action_input(
                 )
             }
         }
-        _ => return None};
+        _ => return None,
+    };
 
     let text = Text::new(
         description_text,
@@ -2035,7 +2094,8 @@ struct BlockedActionProps<'a> {
     is_allow_menu_open: bool,
     allow_menu: Option<&'a ViewHandle<Menu<CLISubagentAction>>>,
     buttons: Vec<&'a dyn RenderCompactibleActionButton>,
-    speedbump: Option<PermissionsSpeedbumpProps<'a>>}
+    speedbump: Option<PermissionsSpeedbumpProps<'a>>,
+}
 
 fn render_blocked_action(props: BlockedActionProps<'_>, app: &AppContext) -> Box<dyn Element> {
     let appearance = Appearance::as_ref(app);

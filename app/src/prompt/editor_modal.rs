@@ -7,20 +7,23 @@ use warp_errors::report_if_error;
 use warpui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CornerRadius,
     CrossAxisAlignment, Empty, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
-    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack};
+    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack,
+};
 use warpui::keymap::FixedBinding;
 use warpui::platform::Cursor;
 use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
-    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use crate::appearance::AppearanceEvent;
 use crate::chip_configurator::{ChipConfigurator, ChipConfiguratorAction, ChipConfiguratorLayout};
 use crate::context_chips::prompt::{Prompt, PromptConfiguration, PromptSelection};
 use crate::context_chips::renderer::Renderer as ContextChipRenderer;
 use crate::context_chips::{
-    ChipAvailability, ChipRuntimeCapabilities, ContextChipKind, available_chips};
+    ChipAvailability, ChipRuntimeCapabilities, ContextChipKind, available_chips,
+};
 use crate::server::telemetry::{PromptChoice, TelemetryEvent};
 use crate::settings::{FontSettings, WarpPromptSeparator};
 use crate::terminal::SizeInfo;
@@ -69,10 +72,12 @@ pub fn init(app: &mut AppContext) {
 pub enum OpenSource {
     AppearancePage,
     CommandPalette,
-    InputContextMenu}
+    InputContextMenu,
+}
 
 pub enum EditorModalEvent {
-    Close}
+    Close,
+}
 
 #[derive(Default)]
 struct MouseStateHandles {
@@ -81,7 +86,8 @@ struct MouseStateHandles {
     restore_default_warp_prompt_handle: MouseStateHandle,
     warp_prompt_mouse_state_handle: MouseStateHandle,
     ps1_mouse_state_handle: MouseStateHandle,
-    same_line_prompt_checkbox_state_handle: MouseStateHandle}
+    same_line_prompt_checkbox_state_handle: MouseStateHandle,
+}
 
 pub struct EditorModal {
     mouse_state_handles: MouseStateHandles,
@@ -113,13 +119,15 @@ pub struct EditorModal {
     /// True if there was any change while the modal was open.
     is_dirty: bool,
 
-    chip_runtime_capabilities: ChipRuntimeCapabilities}
+    chip_runtime_capabilities: ChipRuntimeCapabilities,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PromptType {
     PS1,
     Warp,
-    WarpDefault}
+    WarpDefault,
+}
 
 impl PromptType {
     fn warp_prompt_from_settings(app: &AppContext) -> PromptType {
@@ -150,7 +158,8 @@ pub enum EditorModalAction {
     UseWarpPrompt,
     ResetWarpPrompt,
     ToggleSameLinePrompt,
-    SetWarpPromptSeparator { separator: WarpPromptSeparator }}
+    SetWarpPromptSeparator { separator: WarpPromptSeparator },
+}
 
 impl EditorModal {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -164,7 +173,8 @@ impl EditorModal {
         let warp_prompt_separator = match SessionSettings::as_ref(ctx).saved_prompt.value() {
             PromptSelection::CustomChipSelection(config) => config.separator(),
             // If the "default Warp prompt" i.e. no context chips, is selected, then default to no Warp prompt separator.
-            _ => WarpPromptSeparator::None};
+            _ => WarpPromptSeparator::None,
+        };
         let warp_prompt_separator_label = warp_prompt_separator.dropdown_item_label().to_owned();
 
         let warp_prompt_separator_dropdown = ctx.add_typed_action_view(|ctx| {
@@ -175,22 +185,26 @@ impl EditorModal {
                 DropdownItem::new(
                     WarpPromptSeparator::None.dropdown_item_label(),
                     EditorModalAction::SetWarpPromptSeparator {
-                        separator: WarpPromptSeparator::None},
+                        separator: WarpPromptSeparator::None,
+                    },
                 ),
                 DropdownItem::new(
                     WarpPromptSeparator::PercentSign.dropdown_item_label(),
                     EditorModalAction::SetWarpPromptSeparator {
-                        separator: WarpPromptSeparator::PercentSign},
+                        separator: WarpPromptSeparator::PercentSign,
+                    },
                 ),
                 DropdownItem::new(
                     WarpPromptSeparator::DollarSign.dropdown_item_label(),
                     EditorModalAction::SetWarpPromptSeparator {
-                        separator: WarpPromptSeparator::DollarSign},
+                        separator: WarpPromptSeparator::DollarSign,
+                    },
                 ),
                 DropdownItem::new(
                     WarpPromptSeparator::ChevronSymbol.dropdown_item_label(),
                     EditorModalAction::SetWarpPromptSeparator {
-                        separator: WarpPromptSeparator::ChevronSymbol},
+                        separator: WarpPromptSeparator::ChevronSymbol,
+                    },
                 ),
             ];
 
@@ -233,7 +247,8 @@ impl EditorModal {
             chip_runtime_capabilities: Default::default(),
             same_line_prompt_enabled,
             warp_prompt_separator_dropdown,
-            warp_prompt_separator}
+            warp_prompt_separator,
+        }
     }
 
     fn chip_renderer_for_kind(
@@ -357,7 +372,9 @@ impl EditorModal {
                         .used_chips
                         .iter()
                         .filter_map(|r| r.chip_kind().and_then(|k| k.telemetry_name()))
-                        .collect_vec()}};
+                        .collect_vec(),
+                },
+            };
         }
     }
 
@@ -743,7 +760,8 @@ impl EditorModal {
             top: 10.,
             bottom: 10.,
             right: 140.,
-            left: 140.};
+            left: 140.,
+        };
 
         // TODO: the buttons need to resize when the modal is resized.
         let mut button = appearance

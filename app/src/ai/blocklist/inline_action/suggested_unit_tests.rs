@@ -8,23 +8,28 @@ use warp_core::ui::appearance::Appearance;
 use warpui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, Expanded, Flex, FormattedTextElement,
     HighlightedHyperlink, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
-    SavePosition, Shrinkable, SizeConstraintCondition, SizeConstraintSwitch, Text};
+    SavePosition, Shrinkable, SizeConstraintCondition, SizeConstraintSwitch, Text,
+};
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
-    AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext};
+    AppContext, Element, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
+};
 
 use crate::ai::agent::{AIAgentActionId, AIIdentifiers};
 use crate::ai::predict::prompt_suggestions::{
-    ACCEPT_PROMPT_SUGGESTION_KEYBINDING, REJECT_PROMPT_SUGGESTION_KEYSTROKE};
+    ACCEPT_PROMPT_SUGGESTION_KEYBINDING, REJECT_PROMPT_SUGGESTION_KEYSTROKE,
+};
 use crate::server::telemetry::ToggleCodeSuggestionsSettingSource;
 use crate::settings::AISettings;
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
-    ButtonSize, KeystrokeSource, NakedTheme, PrimaryTheme};
+    ButtonSize, KeystrokeSource, NakedTheme, PrimaryTheme,
+};
 use crate::view_components::compactible_action_button::{
-    CompactibleActionButton, MEDIUM_SIZE_SWITCH_THRESHOLD, render_compact_and_regular_button_rows};
+    CompactibleActionButton, MEDIUM_SIZE_SWITCH_THRESHOLD, render_compact_and_regular_button_rows,
+};
 use crate::{TelemetryEvent};
 
 const ACCEPT_LABEL: &str = "Generate tests";
@@ -35,14 +40,16 @@ pub enum SuggestedUnitTestsEvent {
     Accept,
     Cancel,
     Blur,
-    OpenSettings}
+    OpenSettings,
+}
 
 #[derive(Debug, Clone)]
 pub enum SuggestedUnitTestsAction {
     Accept,
     Cancel,
     ToggleSetting,
-    OpenSettings}
+    OpenSettings,
+}
 
 pub struct SuggestedUnitTestsView {
     /// Client and server identifiers for the AI output associated with the suggested prompt.
@@ -61,7 +68,8 @@ pub struct SuggestedUnitTestsView {
     ai_settings_link_highlight_index: HighlightedHyperlink,
 
     /// A randomly-generated string prefix to ensure the [`SavePosition`]s in this view are unique.
-    position_id_prefix: String}
+    position_id_prefix: String,
+}
 
 impl SuggestedUnitTestsView {
     pub fn new(
@@ -116,7 +124,8 @@ impl SuggestedUnitTestsView {
             cancel_button,
             speedbump_mouse_state: Default::default(),
             ai_settings_link_highlight_index: Default::default(),
-            position_id_prefix: random_str}
+            position_id_prefix: random_str,
+        }
     }
 
     pub fn identifiers(&self) -> &AIIdentifiers {

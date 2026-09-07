@@ -4,7 +4,8 @@ use std::sync::Arc;
 
 use ai::index::full_source_code_embedding::RetrievalID;
 use ai::index::full_source_code_embedding::manager::{
-    CodebaseIndexManager, CodebaseIndexManagerEvent};
+    CodebaseIndexManager, CodebaseIndexManagerEvent,
+};
 use ai::index::locations::CodeContextLocation;
 use anyhow::{Context as _, anyhow};
 use futures_util::stream::AbortHandle;
@@ -30,29 +31,37 @@ mod remote_search;
 pub enum GetRelevantFilesControllerEvent {
     Success {
         action_id: AIAgentActionId,
-        result: GetRelevantFilesControllerResult},
+        result: GetRelevantFilesControllerResult,
+    },
     Error {
-        action_id: AIAgentActionId}}
+        action_id: AIAgentActionId,
+    },
+}
 
 impl GetRelevantFilesControllerEvent {
     pub fn action_id(&self) -> &AIAgentActionId {
         match self {
             GetRelevantFilesControllerEvent::Success { action_id, .. } => action_id,
-            GetRelevantFilesControllerEvent::Error { action_id } => action_id}
+            GetRelevantFilesControllerEvent::Error { action_id } => action_id,
+        }
     }
 }
 
 #[derive(Debug)]
 pub enum GetRelevantFilesControllerResult {
     Locations(Arc<HashSet<CodeContextLocation>>),
-    SearchResult(SearchCodebaseResult)}
+    SearchResult(SearchCodebaseResult),
+}
 
 pub enum GetRelevantFilesRequestTarget {
     Local {
-        directory: PathBuf},
+        directory: PathBuf,
+    },
     Remote {
         session_context: SessionContext,
-        requested_codebase_path: Option<String>}}
+        requested_codebase_path: Option<String>,
+    },
+}
 #[derive(Debug, thiserror::Error)]
 pub enum GetRelevantFilesError {
     #[error("Repo outline is still being computed.")]
@@ -60,7 +69,8 @@ pub enum GetRelevantFilesError {
     #[error("Failed to create outline.")]
     CreateFailed,
     #[error("Failed to create outline.")]
-    Missing}
+    Missing,
+}
 
 /// This enum allows us to use both the existing structure for outline-based indexing
 /// and the new full source code indexing manager/model.
@@ -72,7 +82,9 @@ enum RequestHandle {
     RetrievalID {
         repo_path: PathBuf,
         retrieval_id: RetrievalID,
-        start_time: Instant}}
+        start_time: Instant,
+    },
+}
 
 impl RequestHandle {
     fn abort(&mut self, ctx: &mut AppContext) {
@@ -81,7 +93,8 @@ impl RequestHandle {
             RequestHandle::RetrievalID {
                 repo_path,
                 retrieval_id,
-                start_time: _} => {
+                start_time: _,
+            } => {
                 CodebaseIndexManager::handle(ctx).update(ctx, |index_manager, ctx| {
                     if let Err(err) = index_manager
                         .abort_retrieval_request(repo_path, retrieval_id.clone(), ctx)
@@ -101,7 +114,8 @@ pub struct GetRelevantFilesController {
     /// Search requests currently in flight, keyed by the originating action ID.
     /// This allows several SearchCodebase actions to be active at once without newer requests
     /// cancelling unrelated older ones.
-    pending_requests: std::collections::HashMap<AIAgentActionId, RequestHandle>}
+    pending_requests: std::collections::HashMap<AIAgentActionId, RequestHandle>,
+}
 
 impl GetRelevantFilesController {
     pub fn new(ctx: &mut ModelContext<Self>) -> Self {
@@ -125,7 +139,8 @@ impl GetRelevantFilesController {
                     start_time,
                     ..
                 } if retrieval_id == pending_retrieval_id => Some((action_id, start_time)),
-                RequestHandle::RetrievalID { .. } => None})
+                RequestHandle::RetrievalID { .. } => None,
+            })
     }
 
     fn handle_codebase_manager_event(
@@ -137,7 +152,8 @@ impl GetRelevantFilesController {
         match codebase_manager_event {
             CodebaseIndexManagerEvent::RetrievalRequestFailed {
                 retrieval_id,
-                error_message: error} => {
+                error_message: error,
+            } => {
                 let Some((action_id, _search_start)) =
                     self.pending_request_details_for_retrieval_id(retrieval_id)
                 else {
@@ -153,7 +169,8 @@ impl GetRelevantFilesController {
             CodebaseIndexManagerEvent::RetrievalRequestCompleted {
                 retrieval_id,
                 fragments,
-                out_of_sync_delay} => {
+                out_of_sync_delay,
+            } => {
                 let Some((action_id, search_start)) =
                     self.pending_request_details_for_retrieval_id(retrieval_id)
                 else {
@@ -166,7 +183,8 @@ impl GetRelevantFilesController {
                     ctx,
                 );
             }
-            _ => ()}
+            _ => (),
+        }
     }
 
     /// Start a new search query based on the repo outline.
@@ -193,14 +211,16 @@ impl GetRelevantFilesController {
             ),
             GetRelevantFilesRequestTarget::Remote {
                 session_context,
-                requested_codebase_path} => self.send_remote_request(
+                requested_codebase_path,
+            } => self.send_remote_request(
                 session_context,
                 requested_codebase_path,
                 query,
                 partial_path_segments.cloned(),
                 action_id,
                 ctx,
-            )}
+            ),
+        }
     }
 
     fn send_local_request(
@@ -228,7 +248,8 @@ impl GetRelevantFilesController {
                             RequestHandle::RetrievalID {
                                 repo_path: base_path.clone(),
                                 retrieval_id: retrieval_request_id,
-                                start_time: search_start},
+                                start_time: search_start,
+                            },
                         );
 
                         return Ok(());
@@ -257,7 +278,8 @@ impl GetRelevantFilesController {
                                     CodeContextLocation::WholeFile(PathBuf::from(file.path))
                                 })
                                 .collect(),
-                        ))});
+                        )),
+                    });
                 } else {
                     let outline_request = GetRelevantFiles {
                         query,
@@ -265,8 +287,10 @@ impl GetRelevantFilesController {
                             .into_iter()
                             .map(|outline| FileContextRequest {
                                 path: outline.path,
-                                symbols: outline.symbols})
-                            .collect()};
+                                symbols: outline.symbols,
+                            })
+                            .collect(),
+                    };
                     let action_id_clone = action_id.clone();
                     let request_abort_handle = ctx
                         .spawn(
@@ -311,7 +335,8 @@ impl GetRelevantFilesController {
             }
             Some((OutlineStatus::Pending, _)) => Err(GetRelevantFilesError::Pending),
             Some((OutlineStatus::Failed, _)) => Err(GetRelevantFilesError::CreateFailed),
-            None => Err(GetRelevantFilesError::Missing)}
+            None => Err(GetRelevantFilesError::Missing),
+        }
     }
 
     fn send_remote_request(
@@ -339,7 +364,8 @@ impl GetRelevantFilesController {
             remote_search::RemoteSearchRequest::Ready(result) => {
                 ctx.emit(GetRelevantFilesControllerEvent::Success {
                     action_id,
-                    result: GetRelevantFilesControllerResult::SearchResult(result)});
+                    result: GetRelevantFilesControllerResult::SearchResult(result),
+                });
             }
         }
         Ok(())
@@ -358,7 +384,8 @@ impl GetRelevantFilesController {
             Ok(relevant_file_locations) => {
                 ctx.emit(GetRelevantFilesControllerEvent::Success {
                     action_id,
-                    result: GetRelevantFilesControllerResult::Locations(relevant_file_locations)});
+                    result: GetRelevantFilesControllerResult::Locations(relevant_file_locations),
+                });
             }
             Err(e) => {
                 report_error!(anyhow!(e).context("get_relevant_files failed"));
@@ -380,10 +407,12 @@ impl GetRelevantFilesController {
 
         let result = search_result.unwrap_or_else(|e| SearchCodebaseResult::Failed {
             reason: SearchCodebaseFailureReason::ClientError,
-            message: e.to_string()});
+            message: e.to_string(),
+        });
         ctx.emit(GetRelevantFilesControllerEvent::Success {
             action_id,
-            result: GetRelevantFilesControllerResult::SearchResult(result)});
+            result: GetRelevantFilesControllerResult::SearchResult(result),
+        });
     }
 
     /// Returns the path to the root directory for a codebase search where pwd is `directory`.

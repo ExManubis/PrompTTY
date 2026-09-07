@@ -20,20 +20,24 @@ use crate::{TelemetryEvent};
 pub enum TerminalTypeAndProfile {
     Alacritty,
     #[cfg(target_os = "macos")]
-    ITerm(usize)}
+    ITerm(usize),
+}
 
 pub struct CompletedParseEvent {
-    pub terminal: TerminalType}
+    pub terminal: TerminalType,
+}
 
 pub struct ImportedConfigModel {
     started: bool,
-    parsed_terminals: HashMap<TerminalType, Result<Vec<Config>, ConfigError>>}
+    parsed_terminals: HashMap<TerminalType, Result<Vec<Config>, ConfigError>>,
+}
 
 impl ImportedConfigModel {
     pub fn new(_ctx: &mut ModelContext<Self>) -> Self {
         ImportedConfigModel {
             parsed_terminals: Default::default(),
-            started: false}
+            started: false,
+        }
     }
 
     #[cfg(feature = "local_fs")]
@@ -104,7 +108,8 @@ impl ImportedConfigModel {
         self.maybe_send_multiple_hotkeys_telemetry_event(&terminal_type, &configs, ctx);
         self.parsed_terminals.insert(terminal_type, configs);
         ctx.emit(CompletedParseEvent {
-            terminal: terminal_type});
+            terminal: terminal_type,
+        });
     }
 
     pub fn configs(&self) -> impl Iterator<Item = (TerminalTypeAndProfile, &Config)> {
@@ -126,7 +131,8 @@ impl ImportedConfigModel {
                     .enumerate()
                     .map(|(idx, item)| (TerminalTypeAndProfile::ITerm(idx), item))
                     .collect::<Vec<(TerminalTypeAndProfile, &Config)>>()
-                    .into_iter()})
+                    .into_iter(),
+            })
     }
 
     pub(super) fn config(&self, profile: &TerminalTypeAndProfile) -> Option<&Config> {
@@ -220,7 +226,8 @@ impl ImportedConfigModel {
             SettingType::Opacity => config.opacity.should_import,
             SettingType::WindowSize => config.window_size.should_import,
             SettingType::CopyOnSelect => config.copy_on_select.should_import,
-            SettingType::CursorBlinking => config.cursor_blinking.should_import}
+            SettingType::CursorBlinking => config.cursor_blinking.should_import,
+        }
     }
 
     pub fn write_theme(&self, profile: &TerminalTypeAndProfile) -> Option<ThemeType> {

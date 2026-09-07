@@ -7,14 +7,16 @@ use warpui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, DispatchEventResult, EventHandler, Fill, Flex,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, OffsetType, ParentAnchor,
     ParentElement, ParentOffsetBounds, PositioningAxis, SavePosition, ScrollbarWidth, Shrinkable,
-    Stack, XAxisAnchor, YAxisAnchor};
+    Stack, XAxisAnchor, YAxisAnchor,
+};
 use warpui::keymap::EditableBinding;
 use warpui::platform::Cursor;
 use warpui::presenter::ChildView;
 use warpui::ui_components::components::UiComponent;
 use warpui::{
     AppContext, BlurContext, Element, Entity, FocusContext, ModelAsRef, ModelHandle,
-    SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, WindowId, id};
+    SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, WindowId, id,
+};
 
 use super::command_dialog::EnvVarCommandDialog;
 use super::menus::Menus;
@@ -27,10 +29,12 @@ use crate::drive::sharing::{ContentEditability, ShareableObject};
 use crate::editor::EditorView;
 use crate::env_vars::active_env_var_collection_data::{
     ActiveEnvVarCollection, ActiveEnvVarCollectionData, ActiveEnvVarCollectionDataEvent,
-    SavingStatus, TrashStatus};
+    SavingStatus, TrashStatus,
+};
 use crate::env_vars::{
     CloudEnvVarCollection, CloudEnvVarCollectionModel, EnvVar, EnvVarCollection,
-    EnvVarCollectionType, EnvVarValue};
+    EnvVarCollectionType, EnvVarValue,
+};
 use crate::external_secrets::SecretManager;
 use crate::menu::MenuItem;
 use crate::network::{NetworkStatus, NetworkStatusEvent};
@@ -46,7 +50,8 @@ use crate::ui_components::breadcrumb::{BreadcrumbState, render_breadcrumbs};
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
 use crate::ui_components::menu_button::{
-    MenuDirection, highlight_icon_button_with_context_menu, icon_button_with_context_menu};
+    MenuDirection, highlight_icon_button_with_context_menu, icon_button_with_context_menu,
+};
 use crate::util::bindings::CustomAction;
 use crate::view_components::alert::AlertConfig;
 use crate::view_components::{Alert, DismissibleToast, ToastType};
@@ -102,7 +107,8 @@ pub fn init(app: &mut AppContext) {
 pub(super) enum EditorType {
     Name,
     Value,
-    Description}
+    Description,
+}
 
 /// Validation error for a specific field containing secrets
 #[derive(Debug, Clone, PartialEq)]
@@ -110,7 +116,8 @@ pub(super) struct ValidationError {
     /// The highest priority secret level detected in this field
     pub(super) secret_level: SecretLevel,
     /// User-friendly error message
-    pub(super) message: String}
+    pub(super) message: String,
+}
 
 /// Validation state for a single environment variable row
 #[derive(Debug, Clone, Default)]
@@ -120,7 +127,8 @@ pub(super) struct RowValidationState {
     /// Validation error for the variable value field
     pub(super) value_error: Option<ValidationError>,
     /// Validation error for the variable description field
-    pub(super) description_error: Option<ValidationError>}
+    pub(super) description_error: Option<ValidationError>,
+}
 
 /// Validation state for the entire form, including metadata fields
 #[derive(Debug, Clone, Default)]
@@ -128,7 +136,8 @@ pub(super) struct FormValidationState {
     /// Validation error for the form title field
     pub(super) title_error: Option<ValidationError>,
     /// Validation error for the form description field
-    pub(super) description_error: Option<ValidationError>}
+    pub(super) description_error: Option<ValidationError>,
+}
 
 impl RowValidationState {
     /// Returns true if this row has any validation errors
@@ -141,7 +150,8 @@ impl RowValidationState {
         match field {
             EditorType::Name => self.name_error = error,
             EditorType::Value => self.value_error = error,
-            EditorType::Description => self.description_error = error}
+            EditorType::Description => self.description_error = error,
+        }
     }
 
     /// Gets validation error for the specified field
@@ -149,7 +159,8 @@ impl RowValidationState {
         match field {
             EditorType::Name => self.name_error.as_ref(),
             EditorType::Value => self.value_error.as_ref(),
-            EditorType::Description => self.description_error.as_ref()}
+            EditorType::Description => self.description_error.as_ref(),
+        }
     }
 
     /// Gets the highest severity error in this row
@@ -200,7 +211,8 @@ pub(super) struct MouseStateHandles {
     // Both of the below are used in unsaved changes dialog
     pub(super) discard_changes_state: MouseStateHandle,
     pub(super) keep_editing_state: MouseStateHandle,
-    pub(super) secret_tooltip_state: MouseStateHandle}
+    pub(super) secret_tooltip_state: MouseStateHandle,
+}
 
 pub(super) struct VariableEditorRow {
     // The value field keeps track of the EnvVarValue this row holds.
@@ -228,11 +240,13 @@ pub(super) struct VariableEditorRow {
     pub(super) rendered_secret_menu_is_focused: bool,
     pub(super) rendered_command_menu_is_focused: bool,
     // Validation state for secret detection
-    pub(super) validation_state: RowValidationState}
+    pub(super) validation_state: RowValidationState,
+}
 pub(super) struct DialogOpenStates {
     pub(super) secrets_dialog_open: bool,
     pub(super) env_var_command_dialog_open: bool,
-    unsaved_changes_dialog_open: bool}
+    unsaved_changes_dialog_open: bool,
+}
 
 impl DialogOpenStates {
     fn has_open_dialog(&self) -> bool {
@@ -284,14 +298,16 @@ pub struct EnvVarCollectionView {
     // Validation state for the entire form
     pub(super) form_validation_state: FormValidationState,
     // Alert used to display validation errors
-    validation_alert: Alert}
+    validation_alert: Alert,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum EnvVarCollectionEvent {
     Pane(PaneEvent),
     UpdatedEnvVarCollection(SyncId),
     ViewInWarpDrive(WarpDriveItemId),
-    Invoke(EnvVarCollectionType)}
+    Invoke(EnvVarCollectionType),
+}
 #[derive(Debug, Clone)]
 pub struct VariableRowIndex(pub usize);
 
@@ -325,7 +341,8 @@ pub enum EnvVarCollectionAction {
     ForceClose,
     CloseUnsavedChangesDialog,
     // Breadcrumbs action
-    ViewInWarpDrive(WarpDriveItemId)}
+    ViewInWarpDrive(WarpDriveItemId),
+}
 
 /// Defines the view for a collection of environment variables
 impl ValidationError {
@@ -333,10 +350,12 @@ impl ValidationError {
     fn from_secret_level(secret_level: SecretLevel) -> Self {
         let message = match secret_level {
             SecretLevel::Enterprise => "This environment variable cannot be created due to conflicts with your enterprise's secret redaction settings. Contact a team admin for details.".to_string(),
-            SecretLevel::User => "This environment variable cannot be created due to conflicts with your secret redaction settings. Save the secret as an environment variable (in your shell config or a .env file), or update your secret redaction settings in Settings > Privacy.".to_string()};
+            SecretLevel::User => "This environment variable cannot be created due to conflicts with your secret redaction settings. Save the secret as an environment variable (in your shell config or a .env file), or update your secret redaction settings in Settings > Privacy.".to_string(),
+        };
         Self {
             secret_level,
-            message}
+            message,
+        }
     }
 }
 
@@ -520,7 +539,8 @@ impl EnvVarCollectionView {
         let dialog_open_states = DialogOpenStates {
             secrets_dialog_open: false,
             env_var_command_dialog_open: false,
-            unsaved_changes_dialog_open: false};
+            unsaved_changes_dialog_open: false,
+        };
 
         let view_position_id = format!("env_var_collection_view_{}", ctx.view_id());
 
@@ -543,7 +563,8 @@ impl EnvVarCollectionView {
             dialog_open_states,
             view_position_id,
             form_validation_state: Default::default(),
-            validation_alert: Alert::basic()}
+            validation_alert: Alert::basic(),
+        }
     }
 
     pub fn focus(&mut self, ctx: &mut ViewContext<Self>) {
@@ -734,7 +755,8 @@ impl EnvVarCollectionView {
                     Box::new(env_var_collection.as_ref().clone()),
                 )))
             }
-            ActiveEnvVarCollection::None => log::warn!("No env var to invoke")}
+            ActiveEnvVarCollection::None => log::warn!("No env var to invoke"),
+        }
     }
 
     fn save_env_var_collection(&self, ctx: &mut ViewContext<Self>) {
@@ -786,7 +808,8 @@ impl EnvVarCollectionView {
                 EnvVar {
                     name,
                     value,
-                    description: var_description}
+                    description: var_description,
+                }
             })
             .collect();
 
@@ -895,7 +918,8 @@ impl EnvVarCollectionView {
             value: EnvVarValue::Constant(String::new()),
             rendered_command_button_mouse_state: Default::default(),
             rendered_command_menu_is_focused: false,
-            validation_state: Default::default()});
+            validation_state: Default::default(),
+        });
 
         self.set_saving_status(SavingStatus::Unsaved, ctx);
         ctx.notify();
@@ -969,7 +993,8 @@ impl EnvVarCollectionView {
             {
                 self.update_editor_interactivity(ctx);
             }
-            _ => ()}
+            _ => (),
+        }
     }
 
     // Only enable the invoke/load button if the env var is committed and the current version is saved
@@ -1175,7 +1200,8 @@ impl EnvVarCollectionView {
                             index,
                             variable_editor_row.rendered_command_menu_is_focused,
                             editability,
-                        )});
+                        ),
+                    });
 
                 if !FeatureFlag::SharedWithMe.is_enabled() || editability.can_edit() {
                     row_contents.add_child(
@@ -1505,7 +1531,8 @@ impl TypedActionView for EnvVarCollectionView {
                 self.update_open_modal_state(ctx);
                 ctx.notify();
             }
-            EnvVarCollectionAction::ViewInWarpDrive(id) => self.view_in_warp_drive(*id, ctx)}
+            EnvVarCollectionAction::ViewInWarpDrive(id) => self.view_in_warp_drive(*id, ctx),
+        }
     }
 }
 

@@ -35,7 +35,8 @@ use crate::{ChannelState};
 #[derive(Clone, Debug)]
 pub struct DownloadedUpdate {
     pub version: VersionInfo,
-    pub update_id: String}
+    pub update_id: String,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub enum AutoupdateStage {
@@ -51,11 +52,13 @@ pub enum AutoupdateStage {
     /// An update has been downloaded and is ready for relaunch.
     UpdateReady {
         new_version: VersionInfo,
-        update_id: String},
+        update_id: String,
+    },
     /// A relaunch has been initiated to use the new, downloaded version.
     Updating {
         new_version: VersionInfo,
-        update_id: String},
+        update_id: String,
+    },
     /// A relaunch was initiated to use the new version, but failed.
     UnableToLaunchNewVersion { new_version: VersionInfo },
     /// A new version was installed, but Warp hasn't restarted yet.
@@ -63,7 +66,8 @@ pub enum AutoupdateStage {
     /// This state is only used on macOS, where the update isn't fully applied until right before
     /// restarting.
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
-    UpdatedPendingRestart { new_version: VersionInfo }}
+    UpdatedPendingRestart { new_version: VersionInfo },
+}
 
 impl AutoupdateStage {
     /// Returns `true` if we're ready to relaunch and apply an update.
@@ -82,7 +86,8 @@ impl AutoupdateStage {
             | AutoupdateStage::UpdatedPendingRestart { new_version }
             | AutoupdateStage::UnableToLaunchNewVersion { new_version }
             | AutoupdateStage::UnableToUpdateToNewVersion { new_version } => Some(new_version),
-            _ => None}
+            _ => None,
+        }
     }
 }
 
@@ -104,7 +109,8 @@ pub struct AutoupdateState {
     /// Whether the polling loop has been explicitly started. Requests are silently queued but not
     /// executed until `start_polling` is called. This ensures no version-check requests are made
     /// before onboarding completes.
-    polling_started: bool}
+    polling_started: bool,
+}
 
 impl AutoupdateState {
     pub fn new(server_api: Arc<ServerApi>) -> Self {
@@ -114,7 +120,8 @@ impl AutoupdateState {
             stage: AutoupdateStage::default(),
             downloaded_update: None,
             request_queue: VecDeque::new(),
-            polling_started: false}
+            polling_started: false,
+        }
     }
 
     pub fn register(ctx: &mut AppContext, server_api: Arc<ServerApi>) {
@@ -347,14 +354,16 @@ impl AutoupdateState {
                     );
                     UpdateReady::Yes {
                         new_version: downloaded_update.version.clone(),
-                        update_id: downloaded_update.update_id.clone()}
+                        update_id: downloaded_update.update_id.clone(),
+                    }
                 }
                 _ => {
                     // Either we haven't downloaded any updates or we've downloaded a different
                     // version.
                     UpdateReady::CanDownload {
                         new_version: version,
-                        update_id}
+                        update_id,
+                    }
                 }
             }
         }
@@ -393,14 +402,16 @@ impl AutoupdateState {
         match &update_available {
             Ok(UpdateReady::CanDownload {
                 new_version,
-                update_id}) => {
+                update_id,
+            }) => {
                 self.download_new_update(update_id.clone(), request_type, new_version.clone(), ctx);
                 // We report the update status after attempting to download the update.
                 return;
             }
             Ok(UpdateReady::Yes {
                 new_version,
-                update_id}) => {
+                update_id,
+            }) => {
                 // UpdateReady::Yes means the update has already been downloaded.
                 //
                 // If so, and we're already in AutoupdateStage::UpdateReady for this version, that
@@ -421,7 +432,8 @@ impl AutoupdateState {
                 } else {
                     self.stage = AutoupdateStage::UpdateReady {
                         new_version: new_version.clone(),
-                        update_id: update_id.clone()};
+                        update_id: update_id.clone(),
+                    };
                 }
                 ctx.emit(AutoupdateStateEvent::UpdateAvailable);
             }
@@ -491,17 +503,20 @@ impl AutoupdateState {
                 self.clear_old_autoupdate_dirs(&update_id, ctx);
                 self.downloaded_update = Some(DownloadedUpdate {
                     version: new_version.clone(),
-                    update_id: update_id.clone()});
+                    update_id: update_id.clone(),
+                });
                 self.stage = AutoupdateStage::UpdateReady {
                     new_version: new_version.clone(),
-                    update_id: update_id.clone()};
+                    update_id: update_id.clone(),
+                };
                 log::info!(
                     "Downloaded update to {} at update ID {update_id}",
                     new_version.version
                 );
                 Ok(UpdateReady::Yes {
                     new_version,
-                    update_id})
+                    update_id,
+                })
             }
             Ok(DownloadReady::NeedsAuthorization) => {
                 self.stage = AutoupdateStage::UnableToUpdateToNewVersion { new_version };
@@ -554,7 +569,8 @@ impl AutoupdateState {
 
         ctx.emit(AutoupdateStateEvent::CheckComplete {
             result: Box::new(update_available),
-            request_type});
+            request_type,
+        });
         ctx.notify();
 
         // A request might've gotten queued while this last one was in-flight. This point is when
@@ -596,7 +612,8 @@ impl AutoupdateState {
             // decide what to do next.
             AutoupdateStage::Updating {
                 new_version,
-                update_id} => {
+                update_id,
+            } => {
                 let next_stage = get_next_stage(new_version.clone(), update_id.clone());
                 self.set_autoupdate_stage(next_stage, ctx);
             }
@@ -628,9 +645,11 @@ pub enum AutoupdateStateEvent {
         /// Result of the check of whether there is an update available.
         result: Box<Result<UpdateReady>>,
         /// Type of request that this check references.
-        request_type: RequestType},
+        request_type: RequestType,
+    },
     /// Emitted when an update is available.
-    UpdateAvailable}
+    UpdateAvailable,
+}
 
 impl Entity for AutoupdateState {
     type Event = AutoupdateStateEvent;
@@ -647,15 +666,18 @@ pub enum UpdateReady {
         /// The version that has been downloaded.
         new_version: VersionInfo,
         /// Nonce used to identify this update check.
-        update_id: String},
+        update_id: String,
+    },
     /// An update is available but not yet downloaded.
     CanDownload {
         /// The available version to update to.
         new_version: VersionInfo,
         /// Nonce used to identify this update check.
-        update_id: String},
+        update_id: String,
+    },
     /// There is no update available.
-    No}
+    No,
+}
 
 /// Set of results from downloading an update.
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
@@ -666,7 +688,8 @@ pub enum DownloadReady {
     #[cfg_attr(windows, allow(dead_code))]
     NeedsAuthorization,
     /// A newer version could not be downloaded.
-    No}
+    No,
+}
 
 /// Whether or not we're ready to relaunch the app after the user requests that
 /// we apply an update.
@@ -681,7 +704,8 @@ pub enum DownloadReady {
 pub enum ReadyForRelaunch {
     Yes,
     #[cfg_attr(any(target_os = "macos", windows), allow(dead_code))]
-    No}
+    No,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RequestType {
@@ -694,7 +718,8 @@ pub enum RequestType {
     /// Otherwise, abort the check. This is useful if we want to eagerly send the check b/c we
     /// don't want to wait for the next polling interval. Relying on the polling interval alone to
     /// send the daily checks could lead to under-counting.
-    DailyCheck}
+    DailyCheck,
+}
 
 // We only want to announce autoupdates when there's manual check. Otherwise, the autoupdate check
 // may clash with other announcements, such as log in form or referral form.
@@ -715,7 +740,8 @@ pub fn accessibility_content(
             "No updates available",
             WarpA11yRole::HelpRole,
         )),
-        _ => None}
+        _ => None,
+    }
 }
 
 pub fn get_update_state(app: &AppContext) -> AutoupdateStage {
@@ -824,7 +850,8 @@ pub fn initiate_relaunch_for_update(app: &mut AppContext) {
         }
         AutoupdateStage::UpdateReady {
             new_version,
-            update_id} => {
+            update_id,
+        } => {
             // There's a pending update, and we haven't finished applying it.
             let new_version = new_version.clone();
             let new_version_string = new_version.version.clone();
@@ -835,7 +862,8 @@ pub fn initiate_relaunch_for_update(app: &mut AppContext) {
                 autoupdate_state.set_autoupdate_stage(
                     AutoupdateStage::Updating {
                         new_version,
-                        update_id},
+                        update_id,
+                    },
                     ctx,
                 );
             });
@@ -856,7 +884,8 @@ pub fn initiate_relaunch_for_update(app: &mut AppContext) {
                 // relaunches (e.g. if the update got corrupted). This is sent synchronously because
                 // the app is about to quit.
                 let event = TelemetryEvent::AutoupdateRelaunchAttempt {
-                    new_version: new_version_string};
+                    new_version: new_version_string,
+                };
 
                 // Request termination of the app.
                 app.terminate_app(TerminationMode::Cancellable, None);
@@ -880,11 +909,13 @@ where
     let has_update = AutoupdateState::handle(app).update(app, |autoupdate_state, ctx| {
         if let AutoupdateStage::UpdateReady {
             new_version,
-            update_id} = &autoupdate_state.stage
+            update_id,
+        } = &autoupdate_state.stage
         {
             let new_stage = AutoupdateStage::Updating {
                 new_version: new_version.clone(),
-                update_id: update_id.clone()};
+                update_id: update_id.clone(),
+            };
             autoupdate_state.set_autoupdate_stage(new_stage, ctx);
             true
         } else {
@@ -945,7 +976,8 @@ pub fn cancel_relaunch(app: &mut AppContext) {
             autoupdate_state.set_unable_to_launch_state(
                 |new_version: VersionInfo, update_id: String| AutoupdateStage::UpdateReady {
                     new_version,
-                    update_id},
+                    update_id,
+                },
                 ctx,
             );
         });
@@ -1033,11 +1065,13 @@ pub enum RelaunchStatus {
     #[default]
     None,
     Requested,
-    Failed}
+    Failed,
+}
 
 #[derive(Clone, Copy, Default)]
 pub struct RelaunchModel {
-    relaunch_status: RelaunchStatus}
+    relaunch_status: RelaunchStatus,
+}
 
 impl RelaunchModel {
     pub fn new() -> Self {

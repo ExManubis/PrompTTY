@@ -28,7 +28,7 @@ use crate::ai::blocklist::prompt::prompt_alert::{
 };
 use crate::ai::predict::prompt_suggestions::ACCEPT_PROMPT_SUGGESTION_KEYBINDING;
 use crate::appearance::Appearance;
-use crate::shared_enums::InteractionSource;
+use crate::server::telemetry::InteractionSource;
 use crate::settings::InputSettings;
 use crate::terminal::view::passive_suggestions::PromptSuggestionResolution;
 use crate::terminal::view::{ContextMenuAction, InputType, PromptSuggestion, TerminalAction};

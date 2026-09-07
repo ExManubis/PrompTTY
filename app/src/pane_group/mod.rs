@@ -16,7 +16,8 @@ use pathfinder_geometry::rect::RectF;
 use pathfinder_geometry::vector::{Vector2F, vec2f};
 use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::{
-    ParticipantId, Role, RoleRequestId, RoleRequestRejectedReason, RoleRequestResponse, SessionId};
+    ParticipantId, Role, RoleRequestId, RoleRequestRejectedReason, RoleRequestResponse, SessionId,
+};
 use settings::Setting as _;
 use tree::DEFAULT_FLEX_VALUE;
 use typed_path::TypedPath;
@@ -35,19 +36,22 @@ use warp_util::remote_path::RemotePath;
 use warpui::r#async::SpawnedFutureHandle;
 use warpui::elements::{
     ChildView, Clipped, CrossAxisAlignment, DispatchEventResult, Element, EventHandler, Flex,
-    MainAxisSize, ParentElement, Shrinkable, Stack};
+    MainAxisSize, ParentElement, Shrinkable, Stack,
+};
 use warpui::keymap::{Context, EditableBinding, FixedBinding};
 use warpui::notification::NotificationSendError;
 use warpui::windowing::WindowManager;
 use warpui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakViewHandle, WindowId};
+    ViewHandle, WeakViewHandle, WindowId,
+};
 
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent::conversation::{AIAgentHarness, AIConversation, AIConversationId};
 use crate::ai::agent_conversations_model::{
     AgentConversationEntryId, AgentConversationNavigationSubject, AgentConversationsModel,
-    AgentConversationsModelEvent};
+    AgentConversationsModelEvent,
+};
 use crate::ai::ai_document_view::AIDocumentView;
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 #[cfg(not(target_family = "wasm"))]
@@ -69,7 +73,8 @@ use crate::app_state::CodePaneSnapShot;
 use crate::app_state::{
     self, AIFactPaneSnapshot, BranchSnapshot, EnvVarCollectionPaneSnapshot, LeafContents,
     LeafSnapshot, NotebookPaneSnapshot, PaneNodeSnapshot, PaneUuid, SettingsPaneSnapshot,
-    TerminalPaneSnapshot, WorkflowPaneSnapshot};
+    TerminalPaneSnapshot, WorkflowPaneSnapshot,
+};
 use crate::appearance::Appearance;
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::AuthManager;
@@ -96,17 +101,20 @@ use crate::pane_group::pane::ActionOrigin;
 use crate::pane_group::pane::get_started_pane::GetStartedPane;
 #[cfg(not(target_family = "wasm"))]
 use crate::pane_group::pane::terminal_pane::{
-    host_terminal_shared_session_source_type, inherit_share_for_local_child};
+    host_terminal_shared_session_source_type, inherit_share_for_local_child,
+};
 use crate::persistence::ModelEvent;
 use crate::quit_warning::UnsavedStateSummary;
 use crate::resource_center::{
-    Tip, TipAction, TipsCompleted, mark_feature_used_and_write_to_user_defaults};
+    Tip, TipAction, TipsCompleted, mark_feature_used_and_write_to_user_defaults,
+};
 #[cfg(target_family = "wasm")]
 use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::ids::{ObjectUid, SyncId};
 use crate::server::server_api::{ServerApi, ServerApiProvider};
 use crate::server::telemetry::{
-    AnonymousUserSignupEntrypoint, PaletteSource, SharingDialogSource, TelemetryEvent};
+    AnonymousUserSignupEntrypoint, PaletteSource, SharingDialogSource, TelemetryEvent,
+};
 use crate::session_management::SessionNavigationData;
 use crate::settings::{AISettings, DefaultSessionMode, PaneSettings};
 use crate::settings_view::SettingsSection;
@@ -120,7 +128,8 @@ use crate::terminal::general_settings::{GeneralSettings, GeneralSettingsChangedE
 use crate::terminal::local_tty::TerminalManager as LocalTtyTerminalManager;
 #[cfg(all(feature = "local_tty", not(feature = "remote_tty")))]
 use crate::terminal::local_tty::{
-    TerminalViewSurfaceConfig, create_terminal_view_surface, terminal_view_restored_blocks};
+    TerminalViewSurfaceConfig, create_terminal_view_surface, terminal_view_restored_blocks,
+};
 use crate::terminal::model::session::Session;
 use crate::terminal::model::terminal_model::ConversationTranscriptViewerStatus;
 #[cfg(feature = "remote_tty")]
@@ -128,21 +137,27 @@ use crate::terminal::remote_tty::TerminalManager as RemoteTtyTerminalManager;
 use crate::terminal::session_settings::{NewSessionSource, SessionSettings};
 use crate::terminal::shared_session::render_util::ParticipantAvatarParams;
 use crate::terminal::shared_session::role_change_modal::{
-    RoleChangeCloseSource, RoleChangeModal, RoleChangeModalEvent};
+    RoleChangeCloseSource, RoleChangeModal, RoleChangeModalEvent,
+};
 use crate::terminal::shared_session::share_modal::{ShareSessionModal, ShareSessionModalEvent};
 use crate::terminal::shared_session::{
-    self, IsSharedSessionCreator, SharedSessionActionSource, SharedSessionSource};
+    self, IsSharedSessionCreator, SharedSessionActionSource, SharedSessionSource,
+};
 use crate::terminal::view::inline_banner::{
-    ZeroStatePromptSuggestionTriggeredFrom, ZeroStatePromptSuggestionType};
+    ZeroStatePromptSuggestionTriggeredFrom, ZeroStatePromptSuggestionType,
+};
 use crate::terminal::view::load_ai_conversation::{
-    RestoreConversationEntryBehavior, RestoredAIConversation};
+    RestoreConversationEntryBehavior, RestoredAIConversation,
+};
 use crate::terminal::view::ssh_file_upload::FileUploadId;
 use crate::terminal::view::{
     BlockNotification, ConversationRestorationInNewPaneType, ExecuteCommandEvent,
-    LeftPanelTargetView, SyncEvent, TerminalViewState};
+    LeftPanelTargetView, SyncEvent, TerminalViewState,
+};
 use crate::terminal::{
     MockTerminalManager, ShareBlockModal, ShareBlockModalEvent, ShellLaunchData, ShellLaunchState,
-    TerminalManager, TerminalModel, TerminalView};
+    TerminalManager, TerminalModel, TerminalView,
+};
 use crate::undo_close::{UndoCloseStack, UndoCloseStackEvent};
 #[cfg(target_family = "wasm")]
 use crate::uri::browser_url_handler::update_browser_url;
@@ -154,14 +169,16 @@ use crate::workflows::workflow::Workflow;
 use crate::workflows::{WorkflowSelectionSource, WorkflowSource, WorkflowType};
 use crate::workspace::tab_group::TabGroupId;
 use crate::workspace::{
-    self, CommandSearchOptions, PaneViewLocator, TabBarLocation, WorkspaceAction};
+    self, CommandSearchOptions, PaneViewLocator, TabBarLocation, WorkspaceAction,
+};
 use crate::workspaces::user_workspaces::{ResolvedTeamScope, UserWorkspaces};
 use crate::{cmd_or_ctrl_shift};
 
 mod ambient_pane_restoration;
 mod child_agent;
 pub(crate) use child_agent::materialization::{
-    ChildPaneMaterialization, decide_child_pane_materialization};
+    ChildPaneMaterialization, decide_child_pane_materialization,
+};
 pub mod focus_state;
 pub mod pane;
 pub mod tree;
@@ -189,7 +206,8 @@ pub use pane::terminal_pane::TerminalPane;
 pub use pane::workflow_pane::WorkflowPane;
 pub use pane::{
     AnyPaneContent, BackingView, PaneConfiguration, PaneConfigurationEvent, PaneContent, PaneEvent,
-    PaneHeaderAction, PaneHeaderCustomAction, PaneId, PaneView, TerminalPaneId};
+    PaneHeaderAction, PaneHeaderCustomAction, PaneId, PaneView, TerminalPaneId,
+};
 pub use tree::{Direction, PaneData, PaneFlex, PaneNode, SplitDirection};
 use warp_errors::report_error;
 pub use working_directories::{WorkingDirectoriesEvent, WorkingDirectoriesModel};
@@ -275,7 +293,8 @@ pub const AGENT_MODE_PANE_DEFAULT_MINIMUM_WIDTH: f32 = 400.;
 #[derive(Debug, Clone, Copy)]
 pub enum ActivationReason {
     Click,
-    Hover}
+    Hover,
+}
 
 #[derive(Debug, Clone)]
 pub enum PaneGroupAction {
@@ -289,7 +308,8 @@ pub enum PaneGroupAction {
     Move {
         id: PaneId,
         target_pane_id: PaneId,
-        direction: Direction},
+        direction: Direction,
+    },
     EndResizing,
     ResizeLeft,
     ResizeRight,
@@ -303,13 +323,15 @@ pub enum PaneGroupAction {
     NavigateDown,
     ToggleMaximizePane,
     HandleFocusChange,
-    FocusTerminalView(EntityId)}
+    FocusTerminalView(EntityId),
+}
 #[derive(PartialEq)]
 enum PaneRemovalReason {
     // This pane is being removed from the pane group because it is being moved to another tab or becoming a tab of its own
     Move,
     // This pane is being removed because it is being closed
-    Close}
+    Close,
+}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -488,17 +510,21 @@ pub enum Event {
     AppStateChanged,
     Escape,
     Exited {
-        add_to_undo_stack: bool},
+        add_to_undo_stack: bool,
+    },
     LeftPanelToggled {
-        is_open: bool},
+        is_open: bool,
+    },
     ExecuteCommand(ExecuteCommandEvent),
     PaneTitleUpdated,
     SendNotification {
         notification: BlockNotification,
-        pane_id: PaneId},
+        pane_id: PaneId,
+    },
     OpenSettings(SettingsSection),
     OpenAutoReloadModal {
-        purchased_credits: i32},
+        purchased_credits: i32,
+    },
     AskAIAssistant(AskAIType),
     /// Pass input sync event up from underlying TerminalViews
     /// to the Workspace to sync throughout the window.
@@ -519,7 +545,8 @@ pub enum Event {
     OpenDriveObjectShareDialog {
         cloud_object_type_and_id: CloudObjectTypeAndId,
         invitee_email: Option<String>,
-        source: SharingDialogSource},
+        source: SharingDialogSource,
+    },
     // Tell the workspace to open the workflow modal with an unsaved workflow.
     OpenWorkflowModalWithTemporary(Box<Workflow>),
     OpenPromptEditor,
@@ -530,19 +557,24 @@ pub enum Event {
         /// The file path to open.
         path: LocalOrRemotePath,
         /// The session that the path was opened from.
-        session: Arc<Session>},
+        session: Arc<Session>,
+    },
     OpenWarpDriveLink {
-        open_warp_drive_args: OpenWarpDriveObjectArgs},
+        open_warp_drive_args: OpenWarpDriveObjectArgs,
+    },
     #[cfg(feature = "local_fs")]
     OpenCodeInWarp {
         source: CodeSource,
         layout: crate::util::file::external_editor::settings::EditorLayout,
-        line_col: Option<LineAndColumnArg>},
+        line_col: Option<LineAndColumnArg>,
+    },
     #[cfg(feature = "local_fs")]
     PreviewCodeInWarp {
-        source: CodeSource},
+        source: CodeSource,
+    },
     OpenCodeDiff {
-        view: ViewHandle<CodeDiffView>},
+        view: ViewHandle<CodeDiffView>,
+    },
     OpenCodeReviewPane(CodeReviewPanelArg),
     ToggleCodeReviewPane(CodeReviewPanelArg),
     /// Tell the workspace to run a workflow in the active tab's active session.
@@ -550,33 +582,41 @@ pub enum Event {
         workflow: Arc<WorkflowType>,
         workflow_source: WorkflowSource,
         workflow_selection_source: WorkflowSelectionSource,
-        argument_override: Option<HashMap<String, String>>},
+        argument_override: Option<HashMap<String, String>>,
+    },
     /// Invoke env var from pane
     InvokeEnvVarCollection {
         env_var_collection: Arc<EnvVarCollectionType>,
-        in_subshell: bool},
+        in_subshell: bool,
+    },
     CloseSharedSessionPaneRequested {
-        pane_id: PaneId},
+        pane_id: PaneId,
+    },
     /// Dirty the workspace so the tab indicator shows.
     MaximizePaneToggled,
     /// A remote server resolved the repo root for a session in this pane group.
     RemoteRepoNavigated {
-        remote_path: RemotePath},
+        remote_path: RemotePath,
+    },
     /// Refresh the workspace-level active session state.
     ActiveSessionChanged,
     FocusPaneGroup,
     FocusPane {
-        pane_to_focus: PaneId},
+        pane_to_focus: PaneId,
+    },
     FocusPaneInWorkspace {
-        locator: PaneViewLocator},
+        locator: PaneViewLocator,
+    },
     ViewInWarpDrive(WarpDriveItemId),
     MoveToSpace {
         cloud_object_type_and_id: CloudObjectTypeAndId,
-        space: Space},
+        space: Space,
+    },
     PaneFocused,
     DroppedOnTabBar {
         origin: ActionOrigin,
-        pane_id: PaneId},
+        pane_id: PaneId,
+    },
     /// Switches the focus to the specified tab and moves the given
     /// pane_id into the tab as a hidden pane. This will insert it into the pane
     /// group, but it will not yet render it
@@ -585,14 +625,16 @@ pub enum Event {
         pane_id: PaneId,
         /// The axis used for the destination tab's temporary hidden-pane
         /// preview while a cross-tab pane drag is hovering that tab.
-        hidden_pane_preview_direction: Direction},
+        hidden_pane_preview_direction: Direction,
+    },
     /// Updates the hovered tab index which will change what preview indicator is displayed
     /// as a header is dragged
     UpdateHoveredTabIndex {
         tab_hover_index: TabBarHoverIndex,
         /// Drag cursor rect. The workspace uses it to resolve which tab group a
         /// `BeforeTab` insertion lands.
-        drag_position: RectF},
+        drag_position: RectF,
+    },
     /// Clears the hovered tab index so it no longer appears as highlighted drop target
     ClearHoveredTabIndex,
     OpenWarpDriveObjectInPane(ObjectUid),
@@ -600,108 +642,139 @@ pub enum Event {
     /// fresh tab. Bubbled up by `TerminalView::Event::OpenChildAgentInNewTab`
     /// from the orchestration pill bar's 3-dot menu.
     OpenChildAgentInNewTab {
-        conversation_id: AIConversationId},
+        conversation_id: AIConversationId,
+    },
     OpenSuggestedAgentModeWorkflowModal {
-        workflow_and_id: SuggestedAgentModeWorkflowAndId},
+        workflow_and_id: SuggestedAgentModeWorkflowAndId,
+    },
     OpenSuggestedRuleModal {
-        rule_and_id: SuggestedRuleAndId},
+        rule_and_id: SuggestedRuleAndId,
+    },
     OpenAIFactCollection {
         /// If set, open the fact collection to the specific rule.
-        sync_id: Option<SyncId>},
+        sync_id: Option<SyncId>,
+    },
     AnonymousUserSignup,
     /// Request that the workspace open the command palette.
     OpenPalette {
         mode: PaletteMode,
         source: PaletteSource,
-        query: Option<String>},
+        query: Option<String>,
+    },
     /// A terminal pane SSHed into a remote host has initiated a file upload
     /// using a local session.
     FileUploadCommand {
         upload_id: FileUploadId,
         command: String,
         remote_pane_id: TerminalPaneId,
-        local_pane_id: TerminalPaneId},
+        local_pane_id: TerminalPaneId,
+    },
     /// A local terminal pane managing a file upload is requesting a password.
     FileUploadPasswordPending {
-        local_pane_id: TerminalPaneId},
+        local_pane_id: TerminalPaneId,
+    },
     /// A local terminal pane managing a file upload has completed its task.
     FileUploadFinished {
         local_pane_id: TerminalPaneId,
-        exit_code: ExitCode},
+        exit_code: ExitCode,
+    },
     OpenFileUploadSession {
         remote_pane_id: TerminalPaneId,
-        upload_id: FileUploadId},
+        upload_id: FileUploadId,
+    },
     TerminateFileUploadSession {
         remote_pane_id: TerminalPaneId,
-        upload_id: FileUploadId},
+        upload_id: FileUploadId,
+    },
     ShowToast {
         message: String,
         flavor: ToastFlavor,
-        pane_id: Option<PaneId>},
+        pane_id: Option<PaneId>,
+    },
     SignupAnonymousUser {
-        entrypoint: AnonymousUserSignupEntrypoint},
+        entrypoint: AnonymousUserSignupEntrypoint,
+    },
     OpenThemeChooser,
     InvalidatedActiveConversation,
     OpenConversationHistory,
     OpenMCPSettingsPage {
-        page: Option<MCPServersSettingsPage>},
+        page: Option<MCPServersSettingsPage>,
+    },
     OpenAddPromptPane {
         /// The initial prompt body content.
-        initial_content: Option<String>},
+        initial_content: Option<String>,
+    },
     OpenAddRulePane,
     OpenEnvironmentManagementPane,
     OpenFilesPalette {
-        source: PaletteSource},
+        source: PaletteSource,
+    },
     ToggleLeftPanel {
         target_view: LeftPanelTargetView,
-        force_open: bool},
+        force_open: bool,
+    },
     #[cfg(feature = "local_fs")]
     OpenFileWithTarget {
         path: PathBuf,
         target: FileTarget,
-        line_col: Option<LineAndColumnArg>},
+        line_col: Option<LineAndColumnArg>,
+    },
     /// File was renamed in the file tree
     #[cfg(feature = "local_fs")]
     FileRenamed {
         old_path: PathBuf,
-        new_path: PathBuf},
+        new_path: PathBuf,
+    },
     /// File was deleted in the file tree
     #[cfg(feature = "local_fs")]
     FileDeleted {
-        path: PathBuf},
+        path: PathBuf,
+    },
     OpenAgentProfileEditor {
-        profile_id: ExecutionProfileId},
+        profile_id: ExecutionProfileId,
+    },
     RepoChanged,
     AttachPathAsContext {
-        path: PathBuf},
+        path: PathBuf,
+    },
     AttachPlanAsContext {
-        ai_document_id: AIDocumentId},
+        ai_document_id: AIDocumentId,
+    },
     CDToDirectory {
-        path: PathBuf},
+        path: PathBuf,
+    },
     OpenDirectoryInNewTab {
-        path: PathBuf},
+        path: PathBuf,
+    },
     InsertCodeReviewComments {
         repo_path: LocalOrRemotePath,
         comments: Vec<PendingImportedReviewComment>,
         diff_mode: DiffMode,
-        open_code_review: Option<CodeReviewPanelArg>},
+        open_code_review: Option<CodeReviewPanelArg>,
+    },
     OpenCodeReviewPaneAndScrollToComment {
         open_code_review: CodeReviewPanelArg,
         comment: AttachedReviewComment,
-        diff_mode: DiffMode},
+        diff_mode: DiffMode,
+    },
     ImportAllCodeReviewComments {
         open_code_review: CodeReviewPanelArg,
         comments: Vec<AttachedReviewComment>,
-        diff_mode: DiffMode},
+        diff_mode: DiffMode,
+    },
     RunTabConfigSkill {
-        path: PathBuf},
+        path: PathBuf,
+    },
     /// Request to open LSP logs in a terminal pane
     OpenLspLogs {
-        log_path: PathBuf},
+        log_path: PathBuf,
+    },
     ShowCloudAgentCapacityModal {
-        variant: crate::workspace::view::cloud_agent_capacity_modal::CloudAgentCapacityModalVariant},
+        variant: crate::workspace::view::cloud_agent_capacity_modal::CloudAgentCapacityModalVariant,
+    },
     #[cfg(not(target_family = "wasm"))]
-    OpenPluginInstructionsPane(crate::terminal::CLIAgent, PluginModalKind)}
+    OpenPluginInstructionsPane(crate::terminal::CLIAgent, PluginModalKind),
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TabBarHoverIndex {
@@ -712,21 +785,25 @@ pub enum TabBarHoverIndex {
     /// right before/after a group from a drop inside the group at its boundaries.
     BeforeTab {
         index: usize,
-        group: Option<TabGroupId>},
-    OverTab(usize)}
+        group: Option<TabGroupId>,
+    },
+    OverTab(usize),
+}
 
 /// Axis of the tab bar a pane is being dragged over. Selects horizontal vs
 /// vertical-axis geometry when resolving the hovered insertion point.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TabBarAxis {
     Horizontal,
-    Vertical}
+    Vertical,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct DraggedBorder {
     border_id: EntityId,
     direction: SplitDirection,
-    previous_mouse_location: Vector2F}
+    previous_mouse_location: Vector2F,
+}
 
 /// Options that can be set when adding a new local terminal pane.
 #[derive(Debug, Default, Clone)]
@@ -742,17 +819,20 @@ pub struct NewTerminalOptions {
     /// Whether or not to start sharing the terminal session as soon as it's ready.
     pub is_shared_session_creator: IsSharedSessionCreator,
     /// The AI conversation to restore when the terminal is created.
-    pub conversation_restoration: Option<ConversationRestorationInNewPaneType>}
+    pub conversation_restoration: Option<ConversationRestorationInNewPaneType>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum DefaultSessionModeBehavior {
     Apply,
-    Ignore}
+    Ignore,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum NewPaneVisibility {
     Visible,
-    HiddenForMove}
+    HiddenForMove,
+}
 
 #[derive(Debug, Clone, Copy)]
 struct AddPaneOptions {
@@ -760,7 +840,8 @@ struct AddPaneOptions {
     base_pane_id: Option<PaneId>,
     focus_new_pane: bool,
     visibility: NewPaneVisibility,
-    emit_app_state_changed: bool}
+    emit_app_state_changed: bool,
+}
 
 impl NewTerminalOptions {
     /// Return new options with the initial directory set to `path`.
@@ -789,7 +870,8 @@ pub enum PanesLayout {
     SingleTerminal(Box<NewTerminalOptions>),
     Snapshot(Box<PaneNodeSnapshot>),
     Template(PaneTemplateType),
-    AmbientAgent}
+    AmbientAgent,
+}
 
 impl Default for PanesLayout {
     fn default() -> Self {
@@ -803,7 +885,8 @@ impl Default for PanesLayout {
 pub enum PaneDragDropLocation {
     TabBar(TabBarLocation),
     PaneGroup(PaneId),
-    Other}
+    Other,
+}
 
 pub struct PaneGroup {
     tips_completed: ModelHandle<TipsCompleted>,
@@ -912,7 +995,8 @@ pub struct PaneGroup {
     child_agent_origin: Option<ChildAgentOrigin>,
 
     /// Tab-level custom title set via the rename-tab flow.
-    custom_title: Option<String>}
+    custom_title: Option<String>,
+}
 
 /// A cloud orchestration parent whose direct children (per the server's
 /// `?ancestor_run_id=` listing) have not yet all materialized as local child
@@ -931,7 +1015,8 @@ struct PendingParentChildSeed {
     /// Handle for a scheduled one-shot retry after a transient fetch
     /// failure, so a transient error can't silently strand the parent
     /// pending forever without ever linking its children.
-    retry_handle: Option<SpawnedFutureHandle>}
+    retry_handle: Option<SpawnedFutureHandle>,
+}
 
 /// Origin metadata for a split-off child agent tab; used to re-adopt the
 /// pane back to its source on tab close.
@@ -940,7 +1025,8 @@ pub struct ChildAgentOrigin {
     /// Source pane group; weak so we don't keep the source tab alive.
     pub source_pane_group: WeakViewHandle<PaneGroup>,
     /// The child agent conversation hosted in this tab's lone pane.
-    pub conversation_id: AIConversationId}
+    pub conversation_id: AIConversationId,
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum PaneState {
@@ -949,25 +1035,29 @@ pub enum PaneState {
     /// This pane is not focused.
     Unfocused,
     // In split pane with one pane maximized.
-    Maximized}
+    Maximized,
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum SplitPaneState {
     InSplitPane(PaneState),
-    NotInSplitPane}
+    NotInSplitPane,
+}
 
 // Helper to group together certain structs necessary to instantiate a new terminal view.
 #[derive(Clone)]
 pub struct TerminalViewResources {
     pub tips_completed: ModelHandle<TipsCompleted>,
     pub server_api: Arc<ServerApi>,
-    pub model_event_sender: Option<SyncSender<ModelEvent>>}
+    pub model_event_sender: Option<SyncSender<ModelEvent>>,
+}
 
 impl SplitPaneState {
     pub fn is_in_split_pane(&self) -> bool {
         match self {
             SplitPaneState::InSplitPane(_) => true,
-            SplitPaneState::NotInSplitPane => false}
+            SplitPaneState::NotInSplitPane => false,
+        }
     }
 
     /// Is the focused pane.
@@ -975,8 +1065,10 @@ impl SplitPaneState {
         match self {
             SplitPaneState::InSplitPane(state) => match state {
                 PaneState::Focused | PaneState::Maximized => true,
-                PaneState::Unfocused => false},
-            SplitPaneState::NotInSplitPane => true}
+                PaneState::Unfocused => false,
+            },
+            SplitPaneState::NotInSplitPane => true,
+        }
     }
 
     /// Is in split pane and is the focused pane.
@@ -984,8 +1076,10 @@ impl SplitPaneState {
         match self {
             SplitPaneState::InSplitPane(state) => match state {
                 PaneState::Focused | PaneState::Maximized => true,
-                PaneState::Unfocused => false},
-            SplitPaneState::NotInSplitPane => false}
+                PaneState::Unfocused => false,
+            },
+            SplitPaneState::NotInSplitPane => false,
+        }
     }
 
     pub fn is_maximized(&self) -> bool {
@@ -998,7 +1092,8 @@ impl SplitPaneState {
 #[derive(Default)]
 struct InitialFocus {
     focused_pane: Option<PaneId>,
-    active_session: Option<TerminalPaneId>}
+    active_session: Option<TerminalPaneId>,
+}
 
 impl InitialFocus {
     fn merge(&mut self, other: InitialFocus) {
@@ -1024,7 +1119,8 @@ impl InitialFocus {
 /// Pane ID is stored per-leaf, and must be bubbled up the tree.
 struct LeftmostPaneId {
     pane_id: PaneId,
-    session_id: TerminalPaneId}
+    session_id: TerminalPaneId,
+}
 
 /// The [`InitialLayoutCallback`] provides state to pane group constructors
 /// to build the initial layout of the pane group. Specifically, it provides
@@ -1053,7 +1149,8 @@ enum AIDocumentPaneVisibilityAction {
     /// Toggle visibility of the requested AI document pane.
     ///
     /// If the requested pane is open, this will close it. Otherwise it will open it.
-    Toggle}
+    Toggle,
+}
 
 impl PaneGroup {
     /// Executes the provided callback for each TerminalView contained within
@@ -1168,21 +1265,24 @@ impl PaneGroup {
             match event {
                 PaneViewEvent::MovePaneWithinPaneGroup {
                     target_id,
-                    direction} => {
+                    direction,
+                } => {
                     ctx.emit(Event::ClearHoveredTabIndex);
                     self.move_pane(pane_id, *target_id, *direction, ctx);
                 }
                 PaneViewEvent::DroppedOnTabBar { origin } => {
                     ctx.emit(Event::DroppedOnTabBar {
                         origin: *origin,
-                        pane_id});
+                        pane_id,
+                    });
                     ctx.emit(Event::ClearHoveredTabIndex);
                 }
                 PaneViewEvent::DraggedOntoTabBar {
                     origin,
                     tab_hover_index,
                     hidden_pane_preview_direction,
-                    drag_position} => {
+                    drag_position,
+                } => {
                     if matches!(origin, ActionOrigin::Pane) {
                         // Clear hidden closed panes since dragging invalidates undo functionality
                         self.clear_hidden_closed_panes(ctx);
@@ -1196,14 +1296,16 @@ impl PaneGroup {
                                 ctx.emit(Event::SwitchTabFocusAndMovePane {
                                     tab_idx: *tab_idx,
                                     pane_id,
-                                    hidden_pane_preview_direction: *hidden_pane_preview_direction})
+                                    hidden_pane_preview_direction: *hidden_pane_preview_direction,
+                                })
                             }
                         };
                     }
 
                     ctx.emit(Event::UpdateHoveredTabIndex {
                         tab_hover_index: *tab_hover_index,
-                        drag_position: *drag_position})
+                        drag_position: *drag_position,
+                    })
                 }
 
                 PaneViewEvent::PaneDraggedOutsideTabBarOrPaneGroup => {
@@ -1272,7 +1374,8 @@ impl PaneGroup {
                 .as_ref()
                 .map(|val| InitialFocus {
                     focused_pane: Some(val.pane_id),
-                    active_session: Some(val.session_id)})
+                    active_session: Some(val.session_id),
+                })
                 .unwrap_or_default();
             (pane_data, initial_focus)
         }
@@ -1295,7 +1398,8 @@ impl PaneGroup {
                 commands,
                 is_focused,
                 pane_mode,
-                shell} => {
+                shell,
+            } => {
                 let uuid = Uuid::new_v4();
 
                 #[cfg(feature = "local_tty")]
@@ -1328,7 +1432,8 @@ impl PaneGroup {
                         chosen_shell,
                         None,
                         ctx,
-                    )};
+                    ),
+                };
 
                 let has_commands = !commands.is_empty();
 
@@ -1349,7 +1454,8 @@ impl PaneGroup {
                             terminal_view.enter_agent_view_for_new_conversation(
                                 None,
                                 AgentViewEntryOrigin::Input {
-                                    was_prompt_autodetected: false},
+                                    was_prompt_autodetected: false,
+                                },
                                 ctx,
                             );
                         });
@@ -1375,16 +1481,19 @@ impl PaneGroup {
                 let is_focused = is_focused.unwrap_or_default();
                 let focus = InitialFocus {
                     focused_pane: is_focused.then_some(pane_id),
-                    active_session: is_focused.then_some(terminal_pane_id)};
+                    active_session: is_focused.then_some(terminal_pane_id),
+                };
 
                 let leftmost_pane_id = is_left_pane.then_some(LeftmostPaneId {
                     pane_id,
-                    session_id: terminal_pane_id});
+                    session_id: terminal_pane_id,
+                });
                 (leftmost_pane_id, PaneData::new(pane_id), focus)
             }
             PaneTemplateType::PaneBranchTemplate {
                 split_direction,
-                panes} => {
+                panes,
+            } => {
                 let mut len = 0;
                 let mut nodes = Vec::new();
                 let mut focus = InitialFocus::default();
@@ -1401,7 +1510,8 @@ impl PaneGroup {
                     launch_config::SplitDirection::Horizontal => vec2f(
                         (view_size.x() - total_divider_size) / num_children,
                         view_size.y(),
-                    )};
+                    ),
+                };
 
                 for (idx, node) in panes.iter().enumerate() {
                     let (child_leftmost_pane_id, child, child_focus) =
@@ -1474,7 +1584,8 @@ impl PaneGroup {
                     app_state::SplitDirection::Horizontal => vec2f(
                         (view_size.x() - total_divider_size) / num_children,
                         view_size.y(),
-                    )};
+                    ),
+                };
 
                 for (flex, node) in pane.children {
                     match PaneGroup::restore_pane_tree(
@@ -1545,7 +1656,8 @@ impl PaneGroup {
                 deferred_panes.push((pane_id, leaf));
                 let focus = InitialFocus {
                     focused_pane: is_focused.then_some(pane_id),
-                    active_session: None};
+                    active_session: None,
+                };
                 Ok((PaneData::new(pane_id), focus))
             }
             LeafContents::Terminal(terminal_snapshot) => {
@@ -1603,7 +1715,8 @@ impl PaneGroup {
                         .map(
                             |conversations| ConversationRestorationInNewPaneType::Startup {
                                 conversations,
-                                active_conversation_id: terminal_snapshot.active_conversation_id},
+                                active_conversation_id: terminal_snapshot.active_conversation_id,
+                            },
                         )
                 };
                 let (terminal_view, terminal_manager) = PaneGroup::create_session(
@@ -1682,7 +1795,8 @@ impl PaneGroup {
 
                 let focus = InitialFocus {
                     focused_pane: leaf.is_focused.then_some(pane_id),
-                    active_session: terminal_snapshot.is_active.then_some(terminal_pane_id)};
+                    active_session: terminal_snapshot.is_active.then_some(terminal_pane_id),
+                };
 
                 Ok((PaneData::new(pane_id), focus))
             }
@@ -1690,20 +1804,23 @@ impl PaneGroup {
                 let pane: Box<dyn AnyPaneContent + 'static> = match snapshot {
                     NotebookPaneSnapshot::CloudNotebook {
                         notebook_id,
-                        settings} => Box::new(NotebookPane::restore(notebook_id, &settings, ctx)?),
+                        settings,
+                    } => Box::new(NotebookPane::restore(notebook_id, &settings, ctx)?),
                     NotebookPaneSnapshot::LocalFileNotebook { path } => Box::new(FilePane::new(
                         path.map(LocalOrRemotePath::Local),
                         None,
                         #[cfg(feature = "local_fs")]
                         None,
                         ctx,
-                    ))};
+                    )),
+                };
 
                 let pane_id = pane.as_pane().id();
                 pane_contents.insert(pane_id, pane);
                 let focus = InitialFocus {
                     focused_pane: leaf.is_focused.then_some(pane_id),
-                    active_session: None};
+                    active_session: None,
+                };
 
                 Ok((PaneData::new(pane_id), focus))
             }
@@ -1712,7 +1829,8 @@ impl PaneGroup {
                 let CodePaneSnapShot::Local {
                     tabs,
                     active_tab_index,
-                    source} = snapshot;
+                    source,
+                } = snapshot;
 
                 let Some(source) = source.filter(|s: &CodeSource| s.is_restorable()) else {
                     return Err(anyhow::anyhow!(
@@ -1728,7 +1846,8 @@ impl PaneGroup {
                 pane_contents.insert(pane_id, Box::new(pane));
                 let focus = InitialFocus {
                     focused_pane: leaf.is_focused.then_some(pane_id),
-                    active_session: None};
+                    active_session: None,
+                };
                 Ok((PaneData::new(pane_id), focus))
             }
             #[cfg(not(feature = "local_fs"))]
@@ -1738,13 +1857,16 @@ impl PaneGroup {
             LeafContents::EnvVarCollection(snapshot) => {
                 let pane: Box<dyn AnyPaneContent + 'static> = match snapshot {
                     EnvVarCollectionPaneSnapshot::CloudEnvVarCollection {
-                        env_var_collection_id} => Box::new(EnvVarCollectionPane::restore(env_var_collection_id, ctx)?)};
+                        env_var_collection_id,
+                    } => Box::new(EnvVarCollectionPane::restore(env_var_collection_id, ctx)?),
+                };
 
                 let pane_id = pane.as_pane().id();
                 pane_contents.insert(pane_id, pane);
                 let focus = InitialFocus {
                     focused_pane: leaf.is_focused.then_some(pane_id),
-                    active_session: None};
+                    active_session: None,
+                };
 
                 Ok((PaneData::new(pane_id), focus))
             }
@@ -1752,13 +1874,16 @@ impl PaneGroup {
                 let pane: Box<dyn AnyPaneContent + 'static> = match snapshot {
                     WorkflowPaneSnapshot::CloudWorkflow {
                         workflow_id,
-                        settings} => Box::new(WorkflowPane::restore(workflow_id, settings, ctx)?)};
+                        settings,
+                    } => Box::new(WorkflowPane::restore(workflow_id, settings, ctx)?),
+                };
 
                 let pane_id = pane.as_pane().id();
                 pane_contents.insert(pane_id, pane);
                 let focus = InitialFocus {
                     focused_pane: leaf.is_focused.then_some(pane_id),
-                    active_session: None};
+                    active_session: None,
+                };
 
                 Ok((PaneData::new(pane_id), focus))
             }
@@ -1766,18 +1891,21 @@ impl PaneGroup {
                 let pane: Box<dyn AnyPaneContent + 'static> = match snapshot {
                     SettingsPaneSnapshot::Local {
                         current_page,
-                        search_query} => Box::new(SettingsPane::new(
+                        search_query,
+                    } => Box::new(SettingsPane::new(
                         current_page,
                         search_query.as_deref(),
                         ctx.window_id(),
                         ctx,
-                    ))};
+                    )),
+                };
 
                 let pane_id = pane.as_pane().id();
                 pane_contents.insert(pane_id, pane);
                 let focus = InitialFocus {
                     focused_pane: leaf.is_focused.then_some(pane_id),
-                    active_session: None};
+                    active_session: None,
+                };
                 Ok((PaneData::new(pane_id), focus))
             }
             LeafContents::AIFact(snapshot) => {
@@ -1785,12 +1913,14 @@ impl PaneGroup {
                     return Err(anyhow::anyhow!("AI fact pane not enabled"));
                 }
                 let pane: Box<dyn AnyPaneContent + 'static> = match snapshot {
-                    AIFactPaneSnapshot::Personal => Box::new(AIFactPane::new(ctx))};
+                    AIFactPaneSnapshot::Personal => Box::new(AIFactPane::new(ctx)),
+                };
                 let pane_id = pane.as_pane().id();
                 pane_contents.insert(pane_id, pane);
                 let focus = InitialFocus {
                     focused_pane: leaf.is_focused.then_some(pane_id),
-                    active_session: None};
+                    active_session: None,
+                };
                 Ok((PaneData::new(pane_id), focus))
             }
             LeafContents::AmbientAgent(snapshot) => {
@@ -1820,13 +1950,16 @@ impl PaneGroup {
                             _ => task_data
                                 .as_ref()
                                 .map(|(tid, _)| AmbientRestoreKind::PendingRestoration {
-                                    task_id: *tid})
-                                .unwrap_or(AmbientRestoreKind::NewCloudConversation)}
+                                    task_id: *tid,
+                                })
+                                .unwrap_or(AmbientRestoreKind::NewCloudConversation),
+                        }
                     }
                     Some((task_id, None)) => {
                         AmbientRestoreKind::PendingRestoration { task_id: *task_id }
                     }
-                    None => AmbientRestoreKind::NewCloudConversation};
+                    None => AmbientRestoreKind::NewCloudConversation,
+                };
 
                 let mut pending_task: Option<AmbientAgentTaskId> = None;
                 let (terminal_view, terminal_manager) = match restore_kind {
@@ -1871,7 +2004,8 @@ impl PaneGroup {
 
                 let focus = InitialFocus {
                     focused_pane: leaf.is_focused.then_some(pane_id),
-                    active_session: None};
+                    active_session: None,
+                };
                 Ok((PaneData::new(pane_id), focus))
             }
             LeafContents::CodeReview(_) => {
@@ -1911,7 +2045,8 @@ impl PaneGroup {
                     pane_contents.insert(pane_id, pane);
                     let focus = InitialFocus {
                         focused_pane: leaf.is_focused.then_some(pane_id),
-                        active_session: None};
+                        active_session: None,
+                    };
                     Ok((PaneData::new(pane_id), focus))
                 }
             }
@@ -1954,7 +2089,8 @@ impl PaneGroup {
                             document_id,
                             version,
                             content,
-                            title} => {
+                            title,
+                        } => {
                             // Parse the document_id from string to AIDocumentId
                             let doc_id = match AIDocumentId::try_from(document_id.as_str()) {
                                 Ok(id) => id,
@@ -2040,7 +2176,8 @@ impl PaneGroup {
 
                 PaneNodeSnapshot::Branch(BranchSnapshot {
                     direction: branch.axis().into(),
-                    children})
+                    children,
+                })
             }
             PaneNode::Leaf(pane_id) => {
                 // If this leaf is the replacement side of an active swap,
@@ -2074,7 +2211,8 @@ impl PaneGroup {
                             llm_model_override: None,
                             active_profile_id: None,
                             conversation_ids_to_restore: Vec::new(),
-                            active_conversation_id: None})
+                            active_conversation_id: None,
+                        })
                     }
                 };
 
@@ -2099,7 +2237,8 @@ impl PaneGroup {
                     // substituted original.
                     is_focused: *pane_id == self.focused_pane_id(app),
                     custom_vertical_tabs_title,
-                    contents})
+                    contents,
+                })
             }
         }
     }
@@ -2243,7 +2382,8 @@ impl PaneGroup {
                         .map(|(pane_id, _)| pane_id)
                         .collect(),
                     false,
-                )}
+                ),
+            }
         } else {
             // The requested document isn't visible. Regardless of action, close any open AI document
             // panes first (replacement semantics), then open the requested document.
@@ -2385,7 +2525,8 @@ impl PaneGroup {
                         .selected_text_from_input(ctx)
                         .or_else(|| terminal_view.as_ref(ctx).selected_text(ctx))
                 }
-                _ => None}
+                _ => None,
+            }
         };
 
         text.filter(|text: &String| !text.is_empty())
@@ -2591,7 +2732,8 @@ impl PaneGroup {
             ShareSessionModalEvent::StartSharing {
                 terminal_pane_id,
                 scrollback_type,
-                source} => {
+                source,
+            } => {
                 self.terminal_with_open_share_session_modal = None;
                 ctx.notify();
 
@@ -2738,7 +2880,8 @@ impl PaneGroup {
                 match source {
                     RoleChangeCloseSource::ViewerRequest => modal.close_for_viewer_request(ctx),
                     RoleChangeCloseSource::SharerResponse => modal.close_for_sharer_response(ctx),
-                    RoleChangeCloseSource::SharerGrant => modal.close_for_sharer_grant(ctx)}
+                    RoleChangeCloseSource::SharerGrant => modal.close_for_sharer_grant(ctx),
+                }
 
                 modal.all_child_modals_are_closed()
             });
@@ -2786,7 +2929,8 @@ impl PaneGroup {
         match event {
             RoleChangeModalEvent::CancelRequest {
                 terminal_pane_id,
-                role_request_id} => {
+                role_request_id,
+            } => {
                 self.close_shared_session_role_change_modal(
                     RoleChangeCloseSource::ViewerRequest,
                     ctx,
@@ -2803,7 +2947,8 @@ impl PaneGroup {
                 terminal_pane_id,
                 participant_id,
                 role_request_id,
-                role} => {
+                role,
+            } => {
                 let response = RoleRequestResponse::Approved { new_role: *role };
 
                 if let Some(terminal_view) = self.terminal_view_from_pane_id(*terminal_pane_id, ctx)
@@ -2822,9 +2967,11 @@ impl PaneGroup {
             RoleChangeModalEvent::DenyRequest {
                 terminal_pane_id,
                 participant_id,
-                role_request_id} => {
+                role_request_id,
+            } => {
                 let response = RoleRequestResponse::Rejected {
-                    reason: RoleRequestRejectedReason::RejectedBySharer};
+                    reason: RoleRequestRejectedReason::RejectedBySharer,
+                };
                 if let Some(terminal_view) = self.terminal_view_from_pane_id(*terminal_pane_id, ctx)
                 {
                     terminal_view.update(ctx, |view, ctx| {
@@ -2850,7 +2997,8 @@ impl PaneGroup {
             RoleChangeModalEvent::GrantRole {
                 terminal_pane_id,
                 participant_id,
-                dont_show_again} => {
+                dont_show_again,
+            } => {
                 if *dont_show_again {
                     if let Err(e) = SessionSettings::handle(ctx).update(ctx, |settings, ctx| {
                         settings
@@ -2882,7 +3030,8 @@ impl PaneGroup {
                 if let Some(role_request_id) = role_request_id {
                     terminal_view.update(ctx, |view, ctx| {
                         let response = RoleRequestResponse::Approved {
-                            new_role: Role::Executor};
+                            new_role: Role::Executor,
+                        };
                         view.respond_to_shared_session_role_request(
                             participant_id.clone(),
                             role_request_id.clone(),
@@ -2922,7 +3071,8 @@ impl PaneGroup {
         let resources = TerminalViewResources {
             tips_completed: tips_completed.clone(),
             server_api: server_api.clone(),
-            model_event_sender: model_event_sender.clone()};
+            model_event_sender: model_event_sender.clone(),
+        };
 
         let view_bounds = Self::estimated_view_bounds(ctx);
 
@@ -3072,7 +3222,8 @@ impl PaneGroup {
             child_agent_panes: HashMap::new(),
             transitively_shared_child_panes: HashMap::new(),
             child_agent_origin: None,
-            custom_title: None};
+            custom_title: None,
+        };
 
         // Notify any restored panes that they belong to this pane group.
         pane_group.reattach_panes(ctx);
@@ -3112,7 +3263,8 @@ impl PaneGroup {
             .is_some_and(|terminal_view_id| {
                 match self.find_pane_id_for_terminal_view(terminal_view_id, ctx) {
                     Some(owner_pane_id) => owner_pane_id != pane_id,
-                    None => true}
+                    None => true,
+                }
             })
     }
 
@@ -3134,7 +3286,8 @@ impl PaneGroup {
         pane_history.push(pane_id);
         let focus = InitialFocus {
             focused_pane: Some(pane_id),
-            active_session: Some(terminal_pane_id)};
+            active_session: Some(terminal_pane_id),
+        };
         (PaneData::new(pane_id), focus)
     }
 
@@ -3281,7 +3434,8 @@ impl PaneGroup {
         pane_history.push(pane_id);
         let focus = InitialFocus {
             focused_pane: Some(pane_id),
-            active_session: Some(terminal_pane_id)};
+            active_session: Some(terminal_pane_id),
+        };
         (PaneData::new(pane_id), focus)
     }
 
@@ -3372,7 +3526,8 @@ impl PaneGroup {
                     pane_contents,
                     pane_history,
                     ctx,
-                )}
+                ),
+            }
         };
 
         let mut pane_group = Self::new_internal(
@@ -3413,7 +3568,8 @@ impl PaneGroup {
             pane_history.push(pane_id);
             let initial_focus = InitialFocus {
                 focused_pane: Some(pane_id),
-                active_session: pane_id.as_terminal_pane_id()};
+                active_session: pane_id.as_terminal_pane_id(),
+            };
             (PaneData::new(pane_id), initial_focus)
         };
         Self::new_internal(
@@ -3681,7 +3837,8 @@ impl PaneGroup {
                     AIAgentHarness::Gemini => Some(Harness::Gemini),
                     AIAgentHarness::Codex => Some(Harness::Codex),
                     AIAgentHarness::Oz => None,
-                    AIAgentHarness::Unknown => Some(Harness::Unknown)};
+                    AIAgentHarness::Unknown => Some(Harness::Unknown),
+                };
                 let fallback_title = cli_conversation.metadata.title.clone();
                 terminal_view.update(ctx, |view, ctx| {
                     view.restore_conversation_and_directory_context(
@@ -3754,7 +3911,8 @@ impl PaneGroup {
                 ctx.notify();
             }
             PaneGroupFocusEvent::InSplitPaneChanged => ctx.notify(),
-            PaneGroupFocusEvent::FocusedPaneMaximizedChanged => ctx.notify()}
+            PaneGroupFocusEvent::FocusedPaneMaximizedChanged => ctx.notify(),
+        }
     }
 
     fn handle_share_block_modal_event(
@@ -3771,7 +3929,9 @@ impl PaneGroup {
             ShareBlockModalEvent::ShowToast { message, flavor } => ctx.emit(Event::ShowToast {
                 message: message.clone(),
                 flavor: *flavor,
-                pane_id: None})}
+                pane_id: None,
+            }),
+        }
     }
 
     /// Used to add a new pane but not splitting panes.
@@ -4025,7 +4185,8 @@ impl PaneGroup {
         let resources = TerminalViewResources {
             tips_completed: self.tips_completed.clone(),
             server_api: self.server_api.clone(),
-            model_event_sender: self.model_event_sender.clone()};
+            model_event_sender: self.model_event_sender.clone(),
+        };
         let view_bounds = Self::estimated_view_bounds(ctx);
         // Per-child cloud-mode pane: the parent already polls for
         // descendants, so disable polling on this child.
@@ -4229,7 +4390,8 @@ impl PaneGroup {
         self.focus_next_terminal_pane_and_activate_session(*pane_id, PaneRemovalReason::Move, ctx);
         if self.pane_count() == 1 {
             ctx.emit(Event::Exited {
-                add_to_undo_stack: false});
+                add_to_undo_stack: false,
+            });
         }
 
         match self.pane_contents.get(pane_id) {
@@ -4237,7 +4399,8 @@ impl PaneGroup {
                 let pane = data.as_pane();
                 pane.detach(self, DetachType::Moved, ctx);
             }
-            None => report_error!("Could not find data for pane", extra: { "pane_id" => ?pane_id })};
+            None => report_error!("Could not find data for pane", extra: { "pane_id" => ?pane_id }),
+        };
 
         if !self.panes.remove(*pane_id) {
             report_error!("Pane not found");
@@ -4368,7 +4531,8 @@ impl PaneGroup {
                             ctx.emit(Event::OpenPalette {
                                 mode: PaletteMode::Navigation,
                                 source: PaletteSource::QuitModal,
-                                query: Some("running".to_string())});
+                                query: Some("running".to_string()),
+                            });
                         })
                     }
                 })
@@ -4599,7 +4763,8 @@ impl PaneGroup {
         if is_in_tree && self.panes.visible_pane_count() <= 1 {
             // A lone split-off child closes by removing its tab.
             ctx.emit(Event::Exited {
-                add_to_undo_stack: false});
+                add_to_undo_stack: false,
+            });
             return true;
         }
 
@@ -4686,7 +4851,8 @@ impl PaneGroup {
                 // pre-emptively delete any state that we might want to retain
                 // if the user re-opens the closed tab.
                 ctx.emit(Event::Exited {
-                    add_to_undo_stack: true});
+                    add_to_undo_stack: true,
+                });
 
                 return;
             }
@@ -4724,7 +4890,8 @@ impl PaneGroup {
                 // pre-emptively delete any state that we might want to retain
                 // if the user re-opens the closed tab.
                 ctx.emit(Event::Exited {
-                    add_to_undo_stack: true});
+                    add_to_undo_stack: true,
+                });
 
                 return;
             }
@@ -4785,7 +4952,8 @@ impl PaneGroup {
                 .close_temporary_replacement_pane(pane_id, ctx)
                 .unwrap_or(pane_to_focus);
             ctx.emit(Event::FocusPane {
-                pane_to_focus: focused_pane_id});
+                pane_to_focus: focused_pane_id,
+            });
             ctx.notify();
         } else {
             // Normal pane close behavior
@@ -5037,7 +5205,8 @@ impl PaneGroup {
             PaneEvent::ReplaceWithCodePane {
                 path,
                 source,
-                scroll_fraction} => {
+                scroll_fraction,
+            } => {
                 self.replace_file_pane_with_code_pane(
                     pane_id,
                     path.clone(),
@@ -5050,7 +5219,8 @@ impl PaneGroup {
             PaneEvent::ReplaceWithFilePane {
                 path,
                 source,
-                scroll_fraction} => {
+                scroll_fraction,
+            } => {
                 self.replace_code_pane_with_file_pane(
                     pane_id,
                     path.clone(),
@@ -5064,7 +5234,8 @@ impl PaneGroup {
             }
             PaneEvent::RemoteRepoNavigated { remote_path } => {
                 ctx.emit(Event::RemoteRepoNavigated {
-                    remote_path: remote_path.clone()});
+                    remote_path: remote_path.clone(),
+                });
             }
         }
     }
@@ -5152,7 +5323,8 @@ impl PaneGroup {
                 base_pane_id: None,
                 focus_new_pane: false,
                 visibility: NewPaneVisibility::HiddenForMove,
-                emit_app_state_changed: true},
+                emit_app_state_changed: true,
+            },
             ctx,
         );
     }
@@ -5274,7 +5446,8 @@ impl PaneGroup {
         let resources = TerminalViewResources {
             tips_completed: self.tips_completed.clone(),
             server_api: self.server_api.clone(),
-            model_event_sender: self.model_event_sender.clone()};
+            model_event_sender: self.model_event_sender.clone(),
+        };
         let view_bounds = Self::estimated_view_bounds(ctx);
         let (terminal_view, terminal_manager) =
             Self::create_cloud_mode_terminal(resources, view_bounds.size(), true, ctx);
@@ -5370,7 +5543,8 @@ impl PaneGroup {
                         AIAgentHarness::Gemini => Some(Harness::Gemini),
                         AIAgentHarness::Codex => Some(Harness::Codex),
                         AIAgentHarness::Oz => None,
-                        AIAgentHarness::Unknown => Some(Harness::Unknown)};
+                        AIAgentHarness::Unknown => Some(Harness::Unknown),
+                    };
                     let fallback_title = cli_conversation.metadata.title.clone();
                     view.restore_conversation_and_directory_context(
                         CloudConversationData::CLIAgent(cli_conversation),
@@ -5576,7 +5750,8 @@ impl PaneGroup {
         match pane_ids.iter().position(|pane_id| *pane_id == current_pane) {
             Some(0) => pane_ids.last().copied(),
             Some(idx) => pane_ids.get(idx - 1).copied(),
-            None => None}
+            None => None,
+        }
     }
 
     /// Choose a new active session pane, to handle the current one closing.
@@ -5640,7 +5815,8 @@ impl PaneGroup {
         match pane_ids.iter().position(|pane_id| *pane_id == current_pane) {
             Some(idx) if idx == last_position => pane_ids.first().copied(),
             Some(idx) => pane_ids.get(idx + 1).copied(),
-            None => None}
+            None => None,
+        }
     }
 
     fn navigate_prev_pane(&mut self, ctx: &mut ViewContext<Self>) {
@@ -5770,7 +5946,8 @@ impl PaneGroup {
             .keys()
             .find(|id| match self.terminal_view_from_pane_id(**id, ctx) {
                 Some(terminal_view) => terminal_view_id == terminal_view.id(),
-                _ => false})
+                _ => false,
+            })
             .cloned();
 
         if let Some(pane_id) = pane_id {
@@ -5809,7 +5986,8 @@ impl PaneGroup {
         if let Some(border) = &mut self.dragged_border {
             let delta = match border.direction {
                 SplitDirection::Horizontal => position.x() - border.previous_mouse_location.x(),
-                SplitDirection::Vertical => position.y() - border.previous_mouse_location.y()};
+                SplitDirection::Vertical => position.y() - border.previous_mouse_location.y(),
+            };
 
             self.panes.adjust_pane_size(border.border_id, delta, ctx);
 
@@ -6007,7 +6185,8 @@ impl PaneGroup {
                                 has_conversation_restoration,
                                 is_historical,
                                 should_use_live_appearance,
-                                has_restored_command_blocks},
+                                has_restored_command_blocks,
+                            },
                             surface_init,
                             ctx,
                         )
@@ -6190,13 +6369,15 @@ impl PaneGroup {
             ShellLaunchState::ShellSpawned {
                 available_shell: None,
                 display_name: ShellName::blank(),
-                shell_type: ShellType::Zsh},
+                shell_type: ShellType::Zsh,
+            },
             resources,
             Some(&restored_blocks),
             Some(ConversationRestorationInNewPaneType::Historical {
                 conversation,
                 should_use_live_appearance: true,
-                ambient_agent_task_id}),
+                ambient_agent_task_id,
+            }),
             initial_size,
             ctx.window_id(),
             ctx,
@@ -6251,7 +6432,8 @@ impl PaneGroup {
             ShellLaunchState::ShellSpawned {
                 available_shell: None,
                 display_name: ShellName::blank(),
-                shell_type: ShellType::Zsh},
+                shell_type: ShellType::Zsh,
+            },
             resources,
             None, // No restored blocks
             None, // No conversation restoration
@@ -6315,7 +6497,8 @@ impl PaneGroup {
         let resources = TerminalViewResources {
             tips_completed: self.tips_completed.clone(),
             server_api: self.server_api.clone(),
-            model_event_sender: self.model_event_sender.clone()};
+            model_event_sender: self.model_event_sender.clone(),
+        };
 
         let view_bounds = Self::estimated_view_bounds(ctx);
         let (terminal_view, terminal_manager) = Self::create_loading_terminal_manager_and_view(
@@ -6362,7 +6545,8 @@ impl PaneGroup {
                 ConversationRestorationInNewPaneType::Historical {
                     conversation: *conversation,
                     should_use_live_appearance: true,
-                    ambient_agent_task_id: None}
+                    ambient_agent_task_id: None,
+                }
             }
             CloudConversationData::CLIAgent(cli_conversation) => {
                 if !FeatureFlag::AgentHarness.is_enabled() {
@@ -6371,7 +6555,8 @@ impl PaneGroup {
                 }
                 ConversationRestorationInNewPaneType::HistoricalCLIAgent {
                     conversation: *cli_conversation,
-                    should_use_live_appearance: true}
+                    should_use_live_appearance: true,
+                }
             }
         };
 
@@ -6385,7 +6570,8 @@ impl PaneGroup {
         let resources = TerminalViewResources {
             tips_completed: self.tips_completed.clone(),
             server_api: self.server_api.clone(),
-            model_event_sender: self.model_event_sender.clone()};
+            model_event_sender: self.model_event_sender.clone(),
+        };
 
         let view_bounds = Self::estimated_view_bounds(ctx);
         let (view, terminal_manager) = PaneGroup::create_session(
@@ -6503,7 +6689,8 @@ impl PaneGroup {
         let resources = TerminalViewResources {
             tips_completed: self.tips_completed.clone(),
             server_api: self.server_api.clone(),
-            model_event_sender: self.model_event_sender.clone()};
+            model_event_sender: self.model_event_sender.clone(),
+        };
 
         let view_bounds = Self::estimated_view_bounds(ctx);
         let (view, terminal_manager) = PaneGroup::create_session(
@@ -6639,7 +6826,8 @@ impl PaneGroup {
         let pane_id = new_pane.as_pane().id();
         match options.visibility {
             NewPaneVisibility::Visible => {}
-            NewPaneVisibility::HiddenForMove => self.panes.hide_pane_for_move(pane_id)}
+            NewPaneVisibility::HiddenForMove => self.panes.hide_pane_for_move(pane_id),
+        }
 
         let pane_id = self.init_pane(new_pane, ctx)?;
         let split_succeeded = match options.base_pane_id {
@@ -6704,7 +6892,8 @@ impl PaneGroup {
                 base_pane_id,
                 focus_new_pane,
                 visibility: NewPaneVisibility::Visible,
-                emit_app_state_changed: true},
+                emit_app_state_changed: true,
+            },
             ctx,
         )
     }
@@ -7090,7 +7279,8 @@ impl PaneGroup {
                 .terminal_surface_id_for_conversation(&conversation_id)
             {
                 ctx.dispatch_typed_action(&WorkspaceAction::FocusTerminalViewInWorkspace {
-                    terminal_view_id: owner_view_id});
+                    terminal_view_id: owner_view_id,
+                });
                 return;
             }
             self.log_swap_resolution_failure(focused_pane_id, conversation_id, ctx);
@@ -7617,7 +7807,8 @@ impl PaneGroup {
                 let pane = data.as_pane();
                 pane.detach(self, DetachType::Closed, ctx);
             }
-            None => report_error!("Could not find data for pane", extra: { "pane_id" => ?pane_id })};
+            None => report_error!("Could not find data for pane", extra: { "pane_id" => ?pane_id }),
+        };
     }
 
     /// Detach all panes from this group. This is called when a tab is closed, but may still
@@ -7699,7 +7890,8 @@ impl PaneGroup {
                     rect
                 }
             }
-            None => RectF::new(Vector2F::zero(), *FALLBACK_INITIAL_WINDOW_SIZE)};
+            None => RectF::new(Vector2F::zero(), *FALLBACK_INITIAL_WINDOW_SIZE),
+        };
 
         // Subtract the padding used in the workspace view for the panel
         // border.
@@ -7847,7 +8039,8 @@ impl PaneGroup {
                     // if this is called in live codepaths beyond the create-environment deep
                     // link flow.
                     AgentViewEntryOrigin::Input {
-                        was_prompt_autodetected: false},
+                        was_prompt_autodetected: false,
+                    },
                     terminal_view_ctx,
                 );
 
@@ -7938,7 +8131,8 @@ impl PaneGroup {
         let resources = TerminalViewResources {
             tips_completed: self.tips_completed.clone(),
             server_api: self.server_api.clone(),
-            model_event_sender: self.model_event_sender.clone()};
+            model_event_sender: self.model_event_sender.clone(),
+        };
 
         let view_bounds = Self::estimated_view_bounds(ctx);
 
@@ -8032,7 +8226,8 @@ impl TypedActionView for PaneGroup {
                             let model = model.lock();
                             model.shell_launch_state().available_shell()
                         }
-                        _ => None}
+                        _ => None,
+                    }
                 };
                 self.add_terminal_pane(*direction, chosen_shell, ctx);
             }
@@ -8057,9 +8252,11 @@ impl TypedActionView for PaneGroup {
             Move {
                 id,
                 target_pane_id,
-                direction} => self.move_pane(*id, *target_pane_id, *direction, ctx),
+                direction,
+            } => self.move_pane(*id, *target_pane_id, *direction, ctx),
             HandleFocusChange => self.handle_focus_change(ctx),
-            FocusTerminalView(terminal_view_id) => self.focus_terminal_view(*terminal_view_id, ctx)}
+            FocusTerminalView(terminal_view_id) => self.focus_terminal_view(*terminal_view_id, ctx),
+        }
     }
 }
 

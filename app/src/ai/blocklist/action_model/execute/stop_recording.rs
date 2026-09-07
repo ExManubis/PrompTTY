@@ -16,7 +16,10 @@ use crate::ai::{
         action_model::{
             RecordingTelemetryEvent,
             recording_controller::{RecordingController, StopRecordingControllerError},
-            recording_finalize::{FinalizeReason, finalize_recording_by_id}}}};
+            recording_finalize::{FinalizeReason, finalize_recording_by_id},
+        },
+    },
+};
 #[cfg(not(target_family = "wasm"))]
 pub struct StopRecordingExecutor;
 
@@ -51,10 +54,12 @@ impl StopRecordingExecutor {
         {
             let ExecuteActionInput {
                 action,
-                conversation_id} = input;
+                conversation_id,
+            } = input;
             let AIAgentActionType::StopRecording {
                 recording_id,
-                should_persist} = &action.action
+                should_persist,
+            } = &action.action
             else {
                 return ActionExecution::<()>::InvalidAction.into();
             };
@@ -161,23 +166,28 @@ fn recording_stopped_telemetry(
             outcome: "success".to_string(),
             duration_secs: Some(duration.as_secs_f64()),
             size_bytes: Some(*size_bytes),
-            termination_reason},
+            termination_reason,
+        },
         StopRecordingResult::Discarded => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "cancelled".to_string(),
             duration_secs: None,
             size_bytes: None,
-            termination_reason},
+            termination_reason,
+        },
         StopRecordingResult::Cancelled => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "cancelled".to_string(),
             duration_secs: None,
             size_bytes: None,
-            termination_reason},
+            termination_reason,
+        },
         StopRecordingResult::Error(_) => RecordingTelemetryEvent::Stopped {
             recording_id: recording_id.to_string(),
             outcome: "error".to_string(),
             duration_secs: None,
             size_bytes: None,
-            termination_reason}}
+            termination_reason,
+        },
+    }
 }

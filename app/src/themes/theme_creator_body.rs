@@ -11,14 +11,16 @@ use warp_core::ui::theme::WarpTheme;
 use warpui::elements::{
     Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult,
     EventHandler, Fill, Flex, Icon, MainAxisAlignment, MainAxisSize, MouseStateHandle,
-    ParentElement, Radius, Rect, SavePosition, Shrinkable, Text};
+    ParentElement, Radius, Rect, SavePosition, Shrinkable, Text,
+};
 use warpui::fonts::Weight;
 use warpui::platform::Cursor;
 use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::text_input::TextInput;
 use warpui::{
-    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use crate::appearance::{Appearance, AppearanceManager};
 use crate::editor::{EditorView, Event as EditorEvent};
@@ -26,7 +28,8 @@ use crate::themes::theme::{InMemoryThemeOptions, ThemeKind};
 use crate::user_config;
 #[cfg(feature = "local_fs")]
 use crate::{
-    server::telemetry::TelemetryEvent, themes::theme::CustomTheme};
+    server::telemetry::TelemetryEvent, themes::theme::CustomTheme,
+};
 
 const BUTTON_PADDING: f32 = 12.;
 const BUTTON_FONT_SIZE: f32 = 14.;
@@ -45,13 +48,15 @@ const CREATE_BUTTON_TEXT: &str = "Create theme";
 struct MouseStateHandles {
     image_picker_mouse_state: MouseStateHandle,
     cancel_mouse_state: MouseStateHandle,
-    create_mouse_state: MouseStateHandle}
+    create_mouse_state: MouseStateHandle,
+}
 
 pub struct ThemeCreatorBody {
     button_mouse_states: MouseStateHandles,
     editor: ViewHandle<EditorView>,
     theme_options: Option<InMemoryThemeOptions>,
-    image_state: ThemeCreatorImageState}
+    image_state: ThemeCreatorImageState,
+}
 
 #[derive(Debug)]
 pub enum ThemeCreatorBodyAction {
@@ -60,19 +65,22 @@ pub enum ThemeCreatorBodyAction {
     HandleImageSelected(PathBuf),
     SetBackgroundColor(usize),
     Cancel,
-    FilePickerCancelled}
+    FilePickerCancelled,
+}
 
 pub enum ThemeCreatorBodyEvent {
     Close,
     OpenFilePicker,
     SetCustomTheme { theme: ThemeKind },
-    ShowErrorToast { message: String }}
+    ShowErrorToast { message: String },
+}
 
 #[derive(Debug)]
 pub enum ThemeCreatorImageState {
     Empty,
     Uploading,
-    Uploaded}
+    Uploaded,
+}
 
 impl fmt::Display for ThemeCreatorImageState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -96,7 +104,8 @@ impl ThemeCreatorBody {
             button_mouse_states: Default::default(),
             editor,
             theme_options: None,
-            image_state: ThemeCreatorImageState::Empty}
+            image_state: ThemeCreatorImageState::Empty,
+        }
     }
 
     fn editor(ctx: &mut ViewContext<Self>) -> ViewHandle<EditorView> {
@@ -191,7 +200,8 @@ impl ThemeCreatorBody {
                     )),
                     |path| {
                         ctx.emit(ThemeCreatorBodyEvent::SetCustomTheme {
-                            theme: ThemeKind::Custom(CustomTheme::new(theme_name, path))});
+                            theme: ThemeKind::Custom(CustomTheme::new(theme_name, path)),
+                        });
                         errored = false;
                         self.close(ctx);
                         ctx.notify();
@@ -232,7 +242,8 @@ impl ThemeCreatorBody {
                             return Some((success_callback)(path));
                         }
                     }
-                    None => return Some((success_callback)(path))}
+                    None => return Some((success_callback)(path)),
+                }
             }
         }
         None
@@ -641,6 +652,7 @@ impl TypedActionView for ThemeCreatorBody {
                 self.set_theme_from_image_path(path.clone(), ctx);
                 ctx.notify();
             }
-            ThemeCreatorBodyAction::FilePickerCancelled => self.handle_file_picker_cancelled(ctx)}
+            ThemeCreatorBodyAction::FilePickerCancelled => self.handle_file_picker_cancelled(ctx),
+        }
     }
 }

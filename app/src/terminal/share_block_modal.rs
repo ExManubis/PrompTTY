@@ -16,31 +16,36 @@ use warpui::elements::{
     Align, Border, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss, Element,
     Empty, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Point, Radius,
     SavePosition, ScrollData, ScrollStateHandle, Scrollable, ScrollableElement, ScrollbarWidth,
-    Shrinkable, Stack, Text, try_rect_with_z};
+    Shrinkable, Stack, Text, try_rect_with_z,
+};
 use warpui::event::{DispatchedEvent, ModifiersState};
 use warpui::fonts::{FamilyId, Properties, Style, Weight};
 use warpui::keymap::FixedBinding;
 use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::radio_buttons::{
-    RadioButtonItem, RadioButtonLayout, RadioButtonStateHandle};
+    RadioButtonItem, RadioButtonLayout, RadioButtonStateHandle,
+};
 use warpui::units::{IntoLines, IntoPixels, Lines, Pixels};
 use warpui::{
     AfterLayoutContext, AppContext, ClipBounds, Entity, Event, EventContext, FocusContext,
     LayoutContext, PaintContext, SingletonEntity, SizeConstraint, TypedActionView, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 use super::grid_renderer::CellGlyphCache;
 use super::model::grid::RespectDisplayedOutput;
 use crate::ai::generate_block_title::api::GenerateBlockTitleRequest;
 use crate::appearance::Appearance;
 use crate::editor::{
-    EditOrigin, EditorView, Event as EditorEvent, SingleLineEditorOptions, TextOptions};
+    EditOrigin, EditorView, Event as EditorEvent, SingleLineEditorOptions, TextOptions,
+};
 use crate::server::block::{Block as ServerBlock, DisplaySetting};
 use crate::server::server_api::block::BlockClient;
 use crate::server::telemetry::TelemetryEvent;
 use crate::settings::{
-    AISettings, EnforceMinimumContrast, FontSettings, FontSettingsChangedEvent, PrivacySettings};
+    AISettings, EnforceMinimumContrast, FontSettings, FontSettingsChangedEvent, PrivacySettings,
+};
 use crate::settings_view::SettingsSection;
 use crate::terminal::TerminalModel;
 use crate::terminal::grid_renderer::{self};
@@ -88,12 +93,15 @@ enum ShareRequestState {
     Failed,
     Succeeded {
         link: String,
-        share_type: ShareBlockType}}
+        share_type: ShareBlockType,
+    },
+}
 
 #[derive(PartialEq, Copy, Clone, Debug, Serialize)]
 pub enum ShareBlockType {
     HtmlEmbed,
-    Permalink}
+    Permalink,
+}
 
 #[derive(Default)]
 struct MouseStateHandles {
@@ -103,12 +111,14 @@ struct MouseStateHandles {
     create_link_button_mouse_state: MouseStateHandle,
     copy_button_mouse_state: MouseStateHandle,
     manage_permalinks_mouse_state: MouseStateHandle,
-    redact_secrets_mouse_state: MouseStateHandle}
+    redact_secrets_mouse_state: MouseStateHandle,
+}
 
 #[derive(Default, Clone)]
 struct EmbedDisplayHandles {
     embed_display_state_handle: RadioButtonStateHandle,
-    embed_display_mouse_states: Vec<MouseStateHandle>}
+    embed_display_mouse_states: Vec<MouseStateHandle>,
+}
 
 pub struct ShareBlockModal {
     /// The model for the session containing the block being shared. This is an `Option` because
@@ -130,7 +140,8 @@ pub struct ShareBlockModal {
     obfuscate_secrets: ObfuscateSecrets,
     /// We abort the block title generation requests early if the user updated the title text field
     /// before the request completes, rendering the current pending banner request irrelevant.
-    title_generation_future_handle: Option<SpawnedFutureHandle>}
+    title_generation_future_handle: Option<SpawnedFutureHandle>,
+}
 
 #[derive(Clone, Copy, Debug)]
 pub enum ShareBlockModalAction {
@@ -140,7 +151,8 @@ pub enum ShareBlockModalAction {
     GenerateSharedBlock(ShareBlockType),
     Scroll(Lines),
     ToggleShowPrompt,
-    ToggleObfuscateSecrets}
+    ToggleObfuscateSecrets,
+}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -165,7 +177,9 @@ pub enum ShareBlockModalEvent {
     Close,
     ShowToast {
         message: String,
-        flavor: ToastFlavor}}
+        flavor: ToastFlavor,
+    },
+}
 
 impl ShareBlockModal {
     pub fn new(
@@ -234,7 +248,8 @@ impl ShareBlockModal {
             embed_display_options,
             show_prompt: false,
             obfuscate_secrets: get_secret_obfuscation_mode(ctx),
-            title_generation_future_handle: None}
+            title_generation_future_handle: None,
+        }
     }
 
     fn toggle_show_prompt(&mut self, ctx: &mut ViewContext<Self>) {
@@ -312,7 +327,8 @@ impl ShareBlockModal {
                 .and_then(|block_index| model.block_list().block_at(block_index))
             {
                 None => return,
-                Some(block) => block};
+                Some(block) => block,
+            };
 
             if block.render_prompt_on_same_line() {
                 if display_setting == DisplaySetting::Output {
@@ -350,21 +366,24 @@ impl ShareBlockModal {
             },
             match share_type {
                 ShareBlockType::HtmlEmbed => Self::on_save_embed_returned,
-                ShareBlockType::Permalink => Self::on_save_link_returned},
+                ShareBlockType::Permalink => Self::on_save_link_returned,
+            },
         );
     }
 
     fn display_failure_toast(&mut self, ctx: &mut ViewContext<Self>) {
         ctx.emit(ShareBlockModalEvent::ShowToast {
             message: BLOCK_CREATION_FAILED_MESSAGE.to_string(),
-            flavor: ToastFlavor::Error});
+            flavor: ToastFlavor::Error,
+        });
     }
 
     fn on_save_link_returned(&mut self, res: Result<String>, ctx: &mut ViewContext<Self>) {
         if let Ok(link) = res {
             self.request_state = ShareRequestState::Succeeded {
                 link,
-                share_type: ShareBlockType::Permalink};
+                share_type: ShareBlockType::Permalink,
+            };
             self.copy(ctx);
             ctx.notify();
         } else {
@@ -377,7 +396,8 @@ impl ShareBlockModal {
         if let Ok(link) = res {
             self.request_state = ShareRequestState::Succeeded {
                 link,
-                share_type: ShareBlockType::HtmlEmbed};
+                share_type: ShareBlockType::HtmlEmbed,
+            };
             self.copy_embed(ctx);
             ctx.notify();
         } else {
@@ -415,7 +435,8 @@ impl ShareBlockModal {
                     report_error!("Opened block share modal without block");
                     return;
                 }
-                Some(block) => block};
+                Some(block) => block,
+            };
 
             let terminal_width: usize = model.block_list().size().columns;
             let (command, output) = block.get_block_content_summary(terminal_width, 100, 200);
@@ -466,7 +487,8 @@ impl ShareBlockModal {
             ctx.clipboard().write(ClipboardContent::plain_text(link));
             ctx.emit(ShareBlockModalEvent::ShowToast {
                 message: "Link copied.".to_string(),
-                flavor: ToastFlavor::Default});
+                flavor: ToastFlavor::Default,
+            });
         }
     }
 
@@ -507,7 +529,8 @@ impl ShareBlockModal {
             .write(ClipboardContent::plain_text(embed_snippet));
         ctx.emit(ShareBlockModalEvent::ShowToast {
             message: "Embed code copied.".to_string(),
-            flavor: ToastFlavor::Success});
+            flavor: ToastFlavor::Success,
+        });
     }
 
     fn render_close_modal_button(&self, appearance: &Appearance) -> Box<dyn Element> {
@@ -576,7 +599,8 @@ impl ShareBlockModal {
                 top: NEW_BUTTON_VERTICAL_PADDING,
                 bottom: NEW_BUTTON_VERTICAL_PADDING,
                 left: NEW_BUTTON_HORIZONTAL_PADDING,
-                right: NEW_BUTTON_HORIZONTAL_PADDING}),
+                right: NEW_BUTTON_HORIZONTAL_PADDING,
+            }),
             ..Default::default()
         }
     }
@@ -730,7 +754,8 @@ impl ShareBlockModal {
                         top: 7.,
                         bottom: 7.,
                         left: 12.,
-                        right: 12.})
+                        right: 12.,
+                    })
                     .set_width(170.),
             )
             .build()
@@ -791,7 +816,8 @@ impl ShareBlockModal {
                 }
                 _ => Align::new(self.render_create_block_buttons_row(appearance))
                     .right()
-                    .finish()})
+                    .finish(),
+            })
             .with_margin_top(INNER_MARGIN)
             .finish(),
             "share_modal:footer",
@@ -833,7 +859,8 @@ impl ShareBlockModal {
         )
         .with_style(Properties {
             style: Style::Normal,
-            weight: Weight::Medium})
+            weight: Weight::Medium,
+        })
         .with_color(theme.active_ui_text_color().into())
         .finish();
         let header = Flex::row()
@@ -864,7 +891,8 @@ impl ShareBlockModal {
                             top: 10.,
                             bottom: 10.,
                             left: 16.,
-                            right: 12.}),
+                            right: 12.,
+                        }),
                         background: Some(appearance.theme().surface_2().into()),
                         font_size: Some(14.),
                         ..Default::default()
@@ -1052,7 +1080,8 @@ impl TypedActionView for ShareBlockModal {
             Scroll(top) => self.scroll(*top, ctx),
             CopyLink => self.copy(ctx),
             CopyEmbed => self.copy_embed(ctx),
-            ToggleObfuscateSecrets => self.toggle_obfuscate_secrets(ctx)}
+            ToggleObfuscateSecrets => self.toggle_obfuscate_secrets(ctx),
+        }
     }
 }
 
@@ -1135,7 +1164,8 @@ struct SingleBlock {
     use_ligature_rendering: bool,
     display_setting: DisplaySetting,
     show_prompt: bool,
-    native_prompt_text: Option<Text>}
+    native_prompt_text: Option<Text>,
+}
 
 impl SingleBlock {
     #[allow(clippy::too_many_arguments)]
@@ -1172,7 +1202,8 @@ impl SingleBlock {
             use_ligature_rendering: false,
             display_setting,
             show_prompt,
-            native_prompt_text: None}
+            native_prompt_text: None,
+        }
     }
 
     fn with_ligature_rendering(mut self) -> Self {
@@ -1483,7 +1514,8 @@ impl Element for SingleBlock {
             position,
             delta,
             precise,
-            modifiers: ModifiersState { ctrl: false, .. }}) = event.at_z_index(self.z_index().unwrap(), ctx)
+            modifiers: ModifiersState { ctrl: false, .. },
+        }) = event.at_z_index(self.z_index().unwrap(), ctx)
             && self.rect().unwrap().contains_point(*position)
         {
             if *precise {
@@ -1502,7 +1534,8 @@ impl ScrollableElement for SingleBlock {
         Some(ScrollData {
             scroll_start: self.scroll_top.to_pixels(self.cell_height),
             visible_px: self.visible_lines?.to_pixels(self.cell_height),
-            total_size: self.total_lines?.to_pixels(self.cell_height)})
+            total_size: self.total_lines?.to_pixels(self.cell_height),
+        })
     }
 
     fn scroll(&mut self, delta: Pixels, ctx: &mut EventContext) {

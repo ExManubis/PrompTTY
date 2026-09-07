@@ -84,7 +84,8 @@ pub enum InputTypeAutoDetectionSource {
     /// Toggling voice input forced AI mode.
     VoiceInputToggle,
     /// Inserting from the AI `@` context menu forced AI mode.
-    AtContextMenuInsert}
+    AtContextMenuInsert,
+}
 
 impl From<InputClassifierDecisionSource> for InputTypeAutoDetectionSource {
     fn from(value: InputClassifierDecisionSource) -> Self {
@@ -102,7 +103,8 @@ use super::telemetry_banner::should_collect_ai_ugc_telemetry;
 use crate::input_classifier::InputClassifierModel;
 use crate::settings::{AISettings, AISettingsChangedEvent, InputBoxType, InputSettings};
 use crate::terminal::cli_agent_sessions::{
-    CLIAgentInputState, CLIAgentSessionsModel, CLIAgentSessionsModelEvent};
+    CLIAgentInputState, CLIAgentSessionsModel, CLIAgentSessionsModelEvent,
+};
 use crate::terminal::input::decorations::ParsedTokensSnapshot;
 use crate::terminal::model::rich_content::RichContentType;
 use crate::terminal::model::session::SessionId;
@@ -122,7 +124,8 @@ pub struct InputConfig {
     pub input_type: InputType,
 
     /// If `true`, we will not attempt to auto-detect the best input type.
-    pub is_locked: bool}
+    pub is_locked: bool,
+}
 
 impl InputConfig {
     /// Create a sensible default InputConfig based on user's auto-detection setting.
@@ -191,7 +194,8 @@ impl From<InputConfig> for InputMode {
     fn from(config: InputConfig) -> Self {
         let protocol_input_type = match config.input_type {
             InputType::Shell => ProtocolInputType::Shell,
-            InputType::AI => ProtocolInputType::AI};
+            InputType::AI => ProtocolInputType::AI,
+        };
 
         InputMode::new(protocol_input_type, config.is_locked)
     }
@@ -227,7 +231,8 @@ pub struct BlocklistAIInputModel {
     policy: InputModePolicyHandle,
 
     autodetect_abort_handle: Option<AbortHandle>,
-    model: Arc<FairMutex<TerminalModel>>}
+    model: Arc<FairMutex<TerminalModel>>,
+}
 
 impl BlocklistAIInputModel {
     /// Creates input state for a terminal surface.
@@ -308,7 +313,8 @@ impl BlocklistAIInputModel {
             last_explicit_input_type_set_at: None,
             was_lock_set_with_empty_buffer: false,
             autodetect_abort_handle: None,
-            model}
+            model,
+        }
     }
 
     /// Builds a self-contained input model for tests, usable from other crates
@@ -341,7 +347,8 @@ impl BlocklistAIInputModel {
             last_explicit_input_type_set_at: None,
             was_lock_set_with_empty_buffer: false,
             autodetect_abort_handle: None,
-            model})
+            model,
+        })
     }
 
     /// Returns whether the surface presents a selected conversation as active.
@@ -564,7 +571,8 @@ impl BlocklistAIInputModel {
         self.set_input_config_internal(
             InputConfig {
                 input_type,
-                is_locked: false},
+                is_locked: false,
+            },
             None,
             ctx,
         );
@@ -581,7 +589,8 @@ impl BlocklistAIInputModel {
         let new_config = if is_terminal_use_active_or_pending {
             InputConfig {
                 input_type: InputType::AI,
-                is_locked: true}
+                is_locked: true,
+            }
         } else {
             // If NLD is enabled and input is currently locked, unlock it, as we want to
             // resume autodetection for the next input.
@@ -709,7 +718,8 @@ impl BlocklistAIInputModel {
             let block_index = block_list.last_non_hidden_block_by_index();
             match block_list.last_non_hidden_rich_content_block_after_block(block_index) {
                 Some((_, content)) => content.content_type == Some(RichContentType::AIBlock),
-                _ => false}
+                _ => false,
+            }
         };
 
         let classifier = InputClassifierModel::as_ref(ctx).classifier();
@@ -788,7 +798,8 @@ impl BlocklistAIInputModel {
 
                     let context = input_classifier::Context {
                         current_input_type,
-                        is_agent_follow_up};
+                        is_agent_follow_up,
+                    };
                     let classification =
                         classifier.detect_input_type(input.clone(), &context).await;
 
@@ -836,23 +847,28 @@ pub enum BlocklistAIInputEvent {
     /// Emitted when the terminal input type is updated.
     InputTypeChanged {
         /// The new input config.
-        config: InputConfig},
+        config: InputConfig,
+    },
     /// Emitted when the input lock state is updated.
     LockChanged {
         /// The new input config.
-        config: InputConfig}}
+        config: InputConfig,
+    },
+}
 
 impl BlocklistAIInputEvent {
     pub fn did_update_input_config(&self) -> bool {
         match self {
             BlocklistAIInputEvent::InputTypeChanged { .. }
-            | BlocklistAIInputEvent::LockChanged { .. } => true}
+            | BlocklistAIInputEvent::LockChanged { .. } => true,
+        }
     }
 
     pub fn updated_config(&self) -> &InputConfig {
         match self {
             BlocklistAIInputEvent::InputTypeChanged { config }
-            | BlocklistAIInputEvent::LockChanged { config } => config}
+            | BlocklistAIInputEvent::LockChanged { config } => config,
+        }
     }
 }
 
@@ -868,7 +884,8 @@ enum HistoryMatch {
     MatchedAt(DateTime<Local>),
     /// An entry matched, but the source has no timestamp for it (e.g. a command
     /// read from a shell history file such as `.zsh_history`).
-    MatchedWithoutTimestamp}
+    MatchedWithoutTimestamp,
+}
 
 /// Returns the [`HistoryMatch`] for the most-recent entry that closely matches
 /// the provided word, using the given similarity threshold, or
@@ -899,7 +916,8 @@ async fn most_recent_close_match<'a>(
         if matcher.real_quick_ratio() >= cutoff && matcher.ratio() >= cutoff {
             return match start_ts {
                 Some(ts) => HistoryMatch::MatchedAt(ts),
-                None => HistoryMatch::MatchedWithoutTimestamp};
+                None => HistoryMatch::MatchedWithoutTimestamp,
+            };
         }
     }
 

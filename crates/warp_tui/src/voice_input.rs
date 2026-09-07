@@ -7,7 +7,8 @@ pub(crate) use warp::tui_export::VoiceInputLifecycleState as TuiVoiceInputState;
 use warp::tui_export::{
     AIRequestUsageModel, BlocklistAIInputModel, RequestTeamScope, StartListeningError,
     TeamContextResolver, TelemetryEvent, TranscribeError, UserWorkspaces, VoiceInput,
-    VoiceInputToggledFrom, VoiceSessionResult, VoiceTranscriber};
+    VoiceInputToggledFrom, VoiceSessionResult, VoiceTranscriber,
+};
 use warp_core::settings::Setting as _;
 use warp_errors::report_error;
 use warpui::event::KeyState;
@@ -21,7 +22,8 @@ pub(crate) enum TuiVoiceInputEvent {
     StateChanged(TuiVoiceInputState),
     Completed(String),
     Failed(String),
-    Cancelled}
+    Cancelled,
+}
 
 /// The physical modifier hold-to-talk is configured to use, if any.
 pub(crate) fn configured_hold_key(ctx: &AppContext) -> Option<KeyCode> {
@@ -41,7 +43,8 @@ pub(crate) enum VoiceInputStartSource {
     /// A hold-to-talk press of the given physical modifier, which keeps the
     /// recording open until that same modifier is released.
     HoldKey(KeyCode),
-    Button}
+    Button,
+}
 
 impl VoiceInputStartSource {
     pub(crate) fn clears_input(self) -> bool {
@@ -51,14 +54,17 @@ impl VoiceInputStartSource {
     fn hold_key(self) -> Option<KeyCode> {
         match self {
             Self::HoldKey(key) => Some(key),
-            Self::SlashCommand | Self::Keybinding | Self::Button => None}
+            Self::SlashCommand | Self::Keybinding | Self::Button => None,
+        }
     }
 
     fn toggled_from(self) -> VoiceInputToggledFrom {
         match self {
             Self::SlashCommand | Self::Button => VoiceInputToggledFrom::Button,
             Self::Keybinding | Self::HoldKey(_) => VoiceInputToggledFrom::Key {
-                state: KeyState::Pressed}}
+                state: KeyState::Pressed,
+            },
+        }
     }
 }
 
@@ -74,7 +80,8 @@ pub(crate) struct TuiVoiceInputModel {
     transcription_handle: Option<SpawnedFutureHandle>,
     /// Resolves this model's team context on demand, so transcription requests are scoped to
     /// the owning input view's window rather than an ambient, unscoped workspace read.
-    team_context_resolver: TeamContextResolver}
+    team_context_resolver: TeamContextResolver,
+}
 
 impl Entity for TuiVoiceInputModel {
     type Event = TuiVoiceInputEvent;
@@ -93,7 +100,8 @@ impl TuiVoiceInputModel {
             animation_clock: AnimationClock::starting_at(Duration::ZERO),
             recording_handle: None,
             transcription_handle: None,
-            team_context_resolver}
+            team_context_resolver,
+        }
     }
 
     pub(crate) fn state(&self) -> TuiVoiceInputState {
@@ -234,7 +242,8 @@ impl TuiVoiceInputModel {
                     voice_input.set_transcribing_active(false);
                 });
             }
-            TuiVoiceInputState::Idle => return}
+            TuiVoiceInputState::Idle => return,
+        }
         if let Some(handle) = self.recording_handle.take() {
             handle.abort();
         }
@@ -268,11 +277,13 @@ impl TuiVoiceInputModel {
         let wav_base64 = match result {
             VoiceSessionResult::Audio {
                 wav_base64,
-                session_duration_ms} => {
+                session_duration_ms,
+            } => {
                 warp::                wav_base64
             }
             VoiceSessionResult::Aborted {
-                session_duration_ms} => {
+                session_duration_ms,
+            } => {
                 warp::                self.fail("Voice input stopped", ctx);
                 return;
             }
@@ -317,7 +328,8 @@ impl TuiVoiceInputModel {
                 let hint = match error {
                     TranscribeError::QuotaLimit => "Voice input limit reached",
                     TranscribeError::ServerOverloaded => "Voice transcription is unavailable",
-                    _ => "Failed to transcribe voice input"};
+                    _ => "Failed to transcribe voice input",
+                };
                 ctx.emit(TuiVoiceInputEvent::Failed(hint.to_owned()));
             }
         }

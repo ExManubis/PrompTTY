@@ -660,8 +660,8 @@ fn test_warp_tui_variant_properties() {
     assert!(!CLIAgent::WarpTui.supports_bash_mode());
     assert!(!CLIAgent::WarpTui.supports_cli_agent_footer());
     assert!(matches!(
-        crate::terminal::cli_agent_type::CLIAgentType::from(CLIAgent::WarpTui),
-        crate::terminal::cli_agent_type::CLIAgentType::WarpTui
+        crate::server::telemetry::CLIAgentType::from(CLIAgent::WarpTui),
+        crate::server::telemetry::CLIAgentType::WarpTui
     ));
     // Serialized name round-trips (also covered by
     // `test_serialized_name_round_trips_known_agents`, asserted explicitly here).

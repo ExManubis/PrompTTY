@@ -4,21 +4,24 @@ use warp_core::ui::appearance::Appearance;
 use warp_errors::{report_error, report_if_error};
 use warpui::elements::{
     Border, Container, CornerRadius, Flex, Hoverable, MainAxisAlignment, MainAxisSize,
-    MouseStateHandle, ParentElement, Radius, Shrinkable, Text};
+    MouseStateHandle, ParentElement, Radius, Shrinkable, Text,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::Keystroke;
 use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::radio_buttons::{self, RadioButtonItem, RadioButtonStateHandle};
 use warpui::{
-    Element, Entity, ModelContext, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext};
+    Element, Entity, ModelContext, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
+};
 
 use super::config::{QuakeModeWindow, ThemeType};
 use crate::settings::import::config::{Config, ParsedTerminalSetting, SettingType};
 use crate::settings::import::model::{ImportedConfigModel, TerminalTypeAndProfile};
 use crate::settings::{
     AppEditorSettings, CursorBlink, FontSettings, GlobalHotkeyMode, SelectionSettings,
-    ThemeSettings};
+    ThemeSettings,
+};
 use crate::terminal::alt_screen_reporting::AltScreenReporting;
 use crate::terminal::keys_settings::KeysSettings;
 use crate::terminal::session_settings::SessionSettings;
@@ -63,19 +66,22 @@ pub enum SettingsImportAction {
     ImportButtonClicked,
     ResetButtonClicked,
     SetSelectedConfig(usize),
-    ToggleSetting(usize, SettingType)}
+    ToggleSetting(usize, SettingType),
+}
 
 enum State {
     Loading,
     Failed,
     Active,
-    Completed { imported_idx: Option<usize> }}
+    Completed { imported_idx: Option<usize> },
+}
 
 impl State {
     fn is_complete(&self) -> bool {
         match self {
             State::Active | State::Loading => false,
-            State::Failed | State::Completed { .. } => true}
+            State::Failed | State::Completed { .. } => true,
+        }
     }
 }
 
@@ -85,7 +91,8 @@ pub struct SettingsImportView {
     skip_button_handle: MouseStateHandle,
     radio_button_state: RadioButtonStateHandle,
     radio_button_mouse_states: Vec<MouseStateHandle>,
-    state: State}
+    state: State,
+}
 
 pub struct ConfigMenuItem {
     config_name: String,
@@ -93,17 +100,20 @@ pub struct ConfigMenuItem {
     menu_item_mouse_state: MouseStateHandle,
     expanded: bool,
     terminal_type_and_profile: TerminalTypeAndProfile,
-    settings: Vec<ToggleableSetting>}
+    settings: Vec<ToggleableSetting>,
+}
 
 pub struct ToggleableSetting {
     pub setting_type: SettingType,
-    pub checkbox_handle: MouseStateHandle}
+    pub checkbox_handle: MouseStateHandle,
+}
 
 impl ToggleableSetting {
     pub fn new(setting_type: SettingType) -> Self {
         ToggleableSetting {
             setting_type,
-            checkbox_handle: Default::default()}
+            checkbox_handle: Default::default(),
+        }
     }
 }
 
@@ -141,7 +151,8 @@ impl SettingsImportView {
                 State::Active
             } else {
                 State::Loading
-            }}
+            },
+        }
     }
 
     fn create_menu_items<'a>(
@@ -154,7 +165,8 @@ impl SettingsImportView {
                 menu_item_mouse_state: Default::default(),
                 expanded: false,
                 settings: create_toggleable_settings(config),
-                terminal_type_and_profile: terminal})
+                terminal_type_and_profile: terminal,
+            })
             .collect()
     }
 
@@ -412,7 +424,8 @@ impl SettingsImportView {
                 _ => preference_text_elements.push(self.render_secondary_text(
                     appearance,
                     format!("{} other settings", num_prefs - theme_subtraction),
-                ))}
+                )),
+            }
         }
 
         let block_completed = self.state.is_complete();
@@ -769,7 +782,8 @@ impl SettingsImportView {
                     report_if_error!(theme_settings.selected_system_themes.set_value(
                         SelectedSystemThemes {
                             light: light_kind.clone(),
-                            dark: dark_kind.clone()},
+                            dark: dark_kind.clone(),
+                        },
                         ctx,
                     ));
                     report_if_error!(theme_settings.use_system_theme.set_value(true, ctx));
@@ -890,7 +904,8 @@ impl SettingsImportView {
                         model.should_import(terminal_type_and_profile, &setting_type);
                     ParsedTerminalSetting {
                         setting_type,
-                        was_imported_by_user}
+                        was_imported_by_user,
+                    }
                 })
                 .collect_vec()
         });
@@ -929,7 +944,8 @@ impl View for SettingsImportView {
 
         let imported_config_idx = match self.state {
             State::Completed { imported_idx } => imported_idx,
-            _ => None};
+            _ => None,
+        };
 
         let hide_buttons = matches!(
             self.state,
@@ -940,7 +956,8 @@ impl View for SettingsImportView {
             State::Completed { imported_idx: None } | State::Failed => {
                 Container::new(Flex::row().finish()).finish()
             }
-            State::Completed { imported_idx: _ } => self.render_reset_button(appearance)};
+            State::Completed { imported_idx: _ } => self.render_reset_button(appearance),
+        };
 
         let config_radio_buttons = appearance
             .ui_builder()
@@ -958,7 +975,8 @@ impl View for SettingsImportView {
                     top: 0.,
                     bottom: DROPDOWN_BOTTOM_MARGIN,
                     right: DROPDOWN_HORIZONTAL_MARGIN,
-                    left: DROPDOWN_HORIZONTAL_MARGIN}),
+                    left: DROPDOWN_HORIZONTAL_MARGIN,
+                }),
                 ..Default::default()
             })
             .with_button_vertical_offset(DROPDOWN_VERTICAL_PADDING);
@@ -969,7 +987,8 @@ impl View for SettingsImportView {
         let mut display_new_session_text = false;
 
         if let State::Completed {
-            imported_idx: Some(idx)} = self.state
+            imported_idx: Some(idx),
+        } = self.state
         {
             let config_menu_item: &ConfigMenuItem = &self.configs[idx];
             let model_handle = ImportedConfigModel::as_ref(app);
@@ -1079,7 +1098,8 @@ impl TypedActionView for SettingsImportView {
                     }
                 }
                 self.state = State::Completed {
-                    imported_idx: self.radio_button_state.get_selected_idx()};
+                    imported_idx: self.radio_button_state.get_selected_idx(),
+                };
 
                 ctx.notify();
             }
@@ -1119,7 +1139,8 @@ impl TypedActionView for SettingsImportView {
                 if matches!(
                     self.state,
                     State::Completed {
-                        imported_idx: Some(_)}
+                        imported_idx: Some(_),
+                    }
                 ) {
                     self.state = State::Completed { imported_idx: None }
                 }
@@ -1131,7 +1152,8 @@ impl TypedActionView for SettingsImportView {
 pub enum SettingsImportEvent {
     /// Completed, with whether or not a theme was imported.
     Completed(bool),
-    NoConfigsFound}
+    NoConfigsFound,
+}
 
 impl Entity for SettingsImportView {
     type Event = SettingsImportEvent;

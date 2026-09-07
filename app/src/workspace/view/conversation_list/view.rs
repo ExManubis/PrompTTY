@@ -11,7 +11,8 @@ use warpui::elements::{
     CrossAxisAlignment, Element, Fill, Flex, FormattedTextElement, Hoverable, MainAxisAlignment,
     MainAxisSize, MouseStateHandle, OffsetPositioning, Padding, ParentAnchor, ParentElement,
     ParentOffsetBounds, Radius, SavePosition, ScrollStateHandle, Scrollable, ScrollableElement,
-    ScrollbarWidth, Shrinkable, Stack, Text, UniformList, UniformListState};
+    ScrollbarWidth, Shrinkable, Stack, Text, UniformList, UniformListState,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::FixedBinding;
 use warpui::keymap::macros::*;
@@ -19,13 +20,15 @@ use warpui::platform::Cursor;
 use warpui::text_layout::TextAlignment;
 use warpui::{
     AppContext, BlurContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle, WindowId};
+    ViewContext, ViewHandle, WindowId,
+};
 
 use super::view_model::{ConversationEntry, ConversationListViewModel};
 use crate::ai::active_agent_views_model::{ActiveAgentViewsModel, ConversationOrTaskId};
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent_conversations_model::{
-    AgentConversationEntryId, AgentConversationNavigationSubject, AgentConversationsModel};
+    AgentConversationEntryId, AgentConversationNavigationSubject, AgentConversationsModel,
+};
 use crate::ai::agent_management::telemetry::{AgentManagementTelemetryEvent, OpenedFrom};
 use crate::ai::blocklist::history_model::BlocklistAIHistoryModel;
 use crate::ai::conversation_rename::rename_conversation;
@@ -34,7 +37,8 @@ use crate::drive::sharing::ShareableObject;
 use crate::drive::sharing::dialog::SharingDialog;
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys,
-    PropagateHorizontalNavigationKeys, SingleLineEditorOptions, TextOptions};
+    PropagateHorizontalNavigationKeys, SingleLineEditorOptions, TextOptions,
+};
 use crate::menu::{Event as MenuEvent, Menu, MenuItem, MenuItemFields};
 use crate::server::telemetry::SharingDialogSource;
 use crate::view_components::DismissibleToast;
@@ -44,7 +48,8 @@ use crate::workspace::header_toolbar_item::HeaderToolbarItemKind;
 use crate::workspace::tab_settings::TabSettings;
 use crate::workspace::view::conversation_list::item::{
     ItemProps, ItemState, OverflowMenuDisplay, STATIC_ITEM_MIN_HEIGHT, StaticItemProps,
-    render_item, render_static_item};
+    render_item, render_static_item,
+};
 use crate::workspace::{ToastStack, WorkspaceAction};
 
 const VIEW_ALL_LABEL: &str = "View all";
@@ -60,7 +65,8 @@ struct StateHandles {
     list_hover: MouseStateHandle,
     zero_state_button: MouseStateHandle,
     active_header: MouseStateHandle,
-    past_header: MouseStateHandle}
+    past_header: MouseStateHandle,
+}
 
 impl Default for StateHandles {
     fn default() -> Self {
@@ -72,14 +78,16 @@ impl Default for StateHandles {
             list_hover: MouseStateHandle::default(),
             zero_state_button: MouseStateHandle::default(),
             active_header: MouseStateHandle::default(),
-            past_header: MouseStateHandle::default()}
+            past_header: MouseStateHandle::default(),
+        }
     }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum ConversationSection {
     Active,
-    Past}
+    Past,
+}
 
 /// Represents an item in the uniform list - either a section header or a conversation.
 #[derive(Clone, Debug)]
@@ -88,34 +96,42 @@ enum ListItem {
     Conversation {
         entry: ConversationEntry,
         /// The section the conversation is rendered under.
-        section: ConversationSection},
+        section: ConversationSection,
+    },
     /// The "+ New conversation" item at the end of the active section.
     StartNewConversation,
-    ToggleViewAllButton}
+    ToggleViewAllButton,
+}
 
 #[derive(Clone, Copy)]
 struct OverflowMenuState {
     conversation_id: AgentConversationEntryId,
     /// When `Some`, the menu was opened via right-click and should be
     /// positioned at the cursor location rather than the kebab button.
-    position: Option<Vector2F>}
+    position: Option<Vector2F>,
+}
 
 #[derive(Clone, Debug)]
 pub enum ConversationListViewAction {
     DeleteConversation {
         conversation_id: AIConversationId,
-        terminal_view_id: Option<EntityId>},
+        terminal_view_id: Option<EntityId>,
+    },
     ToggleOverflowMenu {
         conversation_id: AgentConversationEntryId,
         /// When `Some`, the menu was opened via right-click and should be
         /// positioned where the right click took place.
-        position: Option<Vector2F>},
+        position: Option<Vector2F>,
+    },
     OpenShareDialog {
-        conversation_id: AgentConversationEntryId},
+        conversation_id: AgentConversationEntryId,
+    },
     DeleteFromOverflowMenu {
-        conversation_id: AgentConversationEntryId},
+        conversation_id: AgentConversationEntryId,
+    },
     OpenItem {
-        id: AgentConversationEntryId},
+        id: AgentConversationEntryId,
+    },
     ArrowUp,
     ArrowDown,
     Enter,
@@ -126,18 +142,23 @@ pub enum ConversationListViewAction {
     ToggleViewAll,
     ForkConversation {
         conversation_id: AgentConversationEntryId,
-        destination: ForkedConversationDestination},
+        destination: ForkedConversationDestination,
+    },
     StartRename {
-        id: AgentConversationEntryId},
+        id: AgentConversationEntryId,
+    },
     FinishRename,
-    CancelRename}
+    CancelRename,
+}
 
 pub enum Event {
     NewConversationInNewTab,
     ShowDeleteConfirmationDialog {
         conversation_id: AIConversationId,
         conversation_title: String,
-        terminal_view_id: Option<EntityId>}}
+        terminal_view_id: Option<EntityId>,
+    },
+}
 
 pub struct ConversationListView {
     window_id: WindowId,
@@ -164,7 +185,8 @@ pub struct ConversationListView {
     /// Total number of past items before truncation
     /// (we use this to decide whether or not to show the view all button).
     total_past_items: usize,
-    state_handles: StateHandles}
+    state_handles: StateHandles,
+}
 
 pub fn register_conversation_list_view_bindings(app: &mut AppContext) {
     app.register_fixed_bindings([
@@ -297,7 +319,8 @@ impl ConversationListView {
             list_items: Arc::new(Vec::new()),
             view_all: false,
             total_past_items: 0,
-            state_handles: StateHandles::default()};
+            state_handles: StateHandles::default(),
+        };
         view.sync_list_items(ctx);
         view
     }
@@ -332,11 +355,13 @@ impl ConversationListView {
             if is_active {
                 active_items.push(ListItem::Conversation {
                     entry: entry.clone(),
-                    section: ConversationSection::Active});
+                    section: ConversationSection::Active,
+                });
             } else {
                 past_items.push(ListItem::Conversation {
                     entry: entry.clone(),
-                    section: ConversationSection::Past});
+                    section: ConversationSection::Past,
+                });
             }
         }
 
@@ -351,8 +376,10 @@ impl ConversationListView {
                 active_items.push(ListItem::Conversation {
                     entry: ConversationEntry {
                         id: conv_id,
-                        highlight_indices: vec![]},
-                    section: ConversationSection::Active});
+                        highlight_indices: vec![],
+                    },
+                    section: ConversationSection::Active,
+                });
             }
         }
 
@@ -371,7 +398,8 @@ impl ConversationListView {
                         });
                     entry_time.max(local_time)
                 }
-                _ => None};
+                _ => None,
+            };
             get_time(b).cmp(&get_time(a))
         });
 
@@ -435,7 +463,8 @@ impl ConversationListView {
             ListItem::Conversation { entry, .. } => entry.id == conversation_id,
             ListItem::SectionHeader(_)
             | ListItem::StartNewConversation
-            | ListItem::ToggleViewAllButton => false})
+            | ListItem::ToggleViewAllButton => false,
+        })
     }
 
     /// Whether the given entry is currently shown in the Active section.
@@ -445,7 +474,8 @@ impl ConversationListView {
                 item,
                 ListItem::Conversation {
                     entry,
-                    section: ConversationSection::Active} if entry.id == conversation_id
+                    section: ConversationSection::Active,
+                } if entry.id == conversation_id
             )
         })
     }
@@ -497,7 +527,8 @@ impl ConversationListView {
     fn is_selectable(&self, index: usize) -> bool {
         self.get_list_item(index).is_some_and(|item| match item {
             ListItem::Conversation { .. } | ListItem::StartNewConversation => true,
-            ListItem::SectionHeader(_) | ListItem::ToggleViewAllButton => false})
+            ListItem::SectionHeader(_) | ListItem::ToggleViewAllButton => false,
+        })
     }
 
     // Find the last item in the list that is selectable (i.e. is a conversation item).
@@ -530,7 +561,8 @@ impl ConversationListView {
                 return;
             }
             // Start searching from current position.
-            Some(index) => index};
+            Some(index) => index,
+        };
 
         // Search backwards for the first selectable item.
         for new_index in (0..start).rev() {
@@ -870,7 +902,8 @@ fn render_section_header(
     let title_text = Text::new_inline(
         match section {
             ConversationSection::Active => "ACTIVE",
-            ConversationSection::Past => "PAST"},
+            ConversationSection::Past => "PAST",
+        },
         appearance.ui_font_family(),
         11.,
     )
@@ -932,7 +965,8 @@ impl TypedActionView for ConversationListView {
         match action {
             ConversationListViewAction::DeleteConversation {
                 conversation_id,
-                terminal_view_id} => {
+                terminal_view_id,
+            } => {
                 let window_id = ctx.window_id();
                 // A conversation can only be deleted once it's done.
                 let conversation_is_done = BlocklistAIHistoryModel::as_ref(ctx)
@@ -961,11 +995,13 @@ impl TypedActionView for ConversationListView {
                 ctx.emit(Event::ShowDeleteConfirmationDialog {
                     conversation_id: *conversation_id,
                     conversation_title,
-                    terminal_view_id: *terminal_view_id});
+                    terminal_view_id: *terminal_view_id,
+                });
             }
             ConversationListViewAction::ToggleOverflowMenu {
                 conversation_id,
-                position} => {
+                position,
+            } => {
                 let is_open_for_same_conversation = self
                     .overflow_menu_state
                     .is_some_and(|s| s.conversation_id == *conversation_id);
@@ -974,7 +1010,8 @@ impl TypedActionView for ConversationListView {
                 } else {
                     self.overflow_menu_state = Some(OverflowMenuState {
                         conversation_id: *conversation_id,
-                        position: *position});
+                        position: *position,
+                    });
 
                     let conversation_id = *conversation_id;
                     let Some(entry) = self
@@ -988,7 +1025,8 @@ impl TypedActionView for ConversationListView {
                     let mut delete_item = MenuItemFields::new("Delete")
                         .with_override_text_color(Appearance::as_ref(ctx).theme().ansi_fg_red())
                         .with_on_select_action(ConversationListViewAction::DeleteFromOverflowMenu {
-                            conversation_id})
+                            conversation_id,
+                        })
                         .with_disabled(!entry.capabilities.can_delete);
                     if !entry.capabilities.can_delete {
                         delete_item =
@@ -1016,14 +1054,16 @@ impl TypedActionView for ConversationListView {
                                     .with_on_select_action(
                                         ConversationListViewAction::ForkConversation {
                                             conversation_id,
-                                            destination: ForkedConversationDestination::SplitPane},
+                                            destination: ForkedConversationDestination::SplitPane,
+                                        },
                                     )
                                     .into_item(),
                                 MenuItemFields::new("Fork in new tab")
                                     .with_on_select_action(
                                         ConversationListViewAction::ForkConversation {
                                             conversation_id,
-                                            destination: ForkedConversationDestination::NewTab},
+                                            destination: ForkedConversationDestination::NewTab,
+                                        },
                                     )
                                     .into_item(),
                             ])
@@ -1118,7 +1158,8 @@ impl TypedActionView for ConversationListView {
                 ctx.emit(Event::ShowDeleteConfirmationDialog {
                     conversation_id: ai_conversation_id,
                     conversation_title,
-                    terminal_view_id});
+                    terminal_view_id,
+                });
             }
             ConversationListViewAction::OpenItem { id } => {
                 let Some(action) = AgentConversationsModel::resolve_open_action(
@@ -1187,7 +1228,8 @@ impl TypedActionView for ConversationListView {
             }
             ConversationListViewAction::ForkConversation {
                 conversation_id,
-                destination} => {
+                destination,
+            } => {
                 let Some(ai_conversation_id) = self
                     .view_model
                     .as_ref(ctx)
@@ -1205,7 +1247,8 @@ impl TypedActionView for ConversationListView {
                     summarization_prompt: None,
                     initial_prompt: None,
                     initial_attachments: vec![],
-                    destination: *destination});
+                    destination: *destination,
+                });
             }
             ConversationListViewAction::StartRename { id } => {
                 self.start_rename(*id, ctx);
@@ -1351,7 +1394,8 @@ impl View for ConversationListView {
                                                 OverflowMenuDisplay::OpenAtKebab
                                             }
                                         }
-                                        _ => OverflowMenuDisplay::Closed};
+                                        _ => OverflowMenuDisplay::Closed,
+                                    };
                                     let is_share_dialog_open =
                                         share_dialog_open_for == Some(entry.id);
                                     Some(render_item(
@@ -1371,7 +1415,8 @@ impl View for ConversationListView {
                                             sharing_dialog: &sharing_dialog,
                                             is_share_dialog_open,
                                             list_position_id: &list_position_id,
-                                            tooltip_opens_right},
+                                            tooltip_opens_right,
+                                        },
                                         app,
                                     ))
                                 }
@@ -1379,7 +1424,8 @@ impl View for ConversationListView {
                                     StaticItemProps {
                                         is_selected,
                                         index,
-                                        state: &start_new_conversation_state},
+                                        state: &start_new_conversation_state,
+                                    },
                                     app,
                                 )),
                                 ListItem::ToggleViewAllButton => {

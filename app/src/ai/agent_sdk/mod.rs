@@ -15,7 +15,8 @@ pub(crate) use driver::harness::{ClaudeHarness, task_env_vars, validate_cli_inst
 use telemetry::CliTelemetryEvent;
 use tracing::Instrument as _;
 use warp_cli::agent::{
-    AgentCommand, AgentProfileCommand, Harness, OutputFormat, Prompt, RunAgentArgs};
+    AgentCommand, AgentProfileCommand, Harness, OutputFormat, Prompt, RunAgentArgs,
+};
 use warp_cli::api_key::ApiKeyCommand;
 use warp_cli::artifact::ArtifactCommand;
 use warp_cli::environment::{EnvironmentCommand, ImageCommand};
@@ -45,13 +46,15 @@ use warpui::{AppContext, ModelSpawner, SingletonEntity};
 
 use crate::ai::agent::api::ServerConversationToken;
 use crate::ai::agent::api::convert_conversation::{
-    RestorationMode, convert_conversation_data_to_ai_conversation};
+    RestorationMode, convert_conversation_data_to_ai_conversation,
+};
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent_sdk::driver::harness::{HarnessKind, harness_kind};
 use crate::ai::agent_sdk::driver::{AgentDriverOptions, AgentRunPrompt, Task};
 use crate::ai::agent_sdk::mcp_config::build_mcp_servers_from_specs;
 use crate::ai::agent_sdk::setup_observability::{
-    OzRunTimelineEvent, SetupClientEventReporter, SetupStep};
+    OzRunTimelineEvent, SetupClientEventReporter, SetupStep,
+};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
 use crate::ai::ambient_agents::task::HarnessConfig;
 use crate::ai::attachment_utils::attachments_download_dir;
@@ -60,7 +63,8 @@ use crate::ai::aws_credentials::refresh_aws_credentials;
 use crate::ai::cloud_environments::CloudAmbientAgentEnvironment;
 use crate::ai::llms::LLMId;
 use crate::ai::skills::{
-    ResolveSkillError, ResolvedSkill, clone_repo_for_skill, resolve_skill_spec};
+    ResolveSkillError, ResolvedSkill, clone_repo_for_skill, resolve_skill_spec,
+};
 use crate::auth::AuthStateProvider;
 use crate::auth::auth_manager::{AuthManager, AuthManagerEvent};
 use crate::cloud_object::CloudObjectLookup as _;
@@ -239,7 +243,8 @@ fn format_skill_resolution_error(err: ResolveSkillError) -> String {
         ResolveSkillError::OrgMismatch {
             repo,
             expected,
-            found} => {
+            found,
+        } => {
             format!("Repository '{repo}' found but belongs to org '{found}', expected '{expected}'")
         }
         ResolveSkillError::ParseFailed { path, message } => {
@@ -341,7 +346,8 @@ fn run_agent(
         AgentCommand::Delete(args) => {
             agent_management::delete_agent(ctx, global_options.output_format, args)
         }
-        AgentCommand::Skills(args) => agent_config::list_skills(ctx, args)}
+        AgentCommand::Skills(args) => agent_config::list_skills(ctx, args),
+    }
 }
 
 /// Build the merged agent configuration from all sources and the Task for the driver.
@@ -361,7 +367,8 @@ fn build_merged_config_and_task(
 
     let loaded_file = match args.config_file.file.as_deref() {
         Some(path) => Some(config_file::load_config_file(path)?),
-        None => None};
+        None => None,
+    };
 
     let cli_mcp_servers = build_mcp_servers_from_specs(&args.all_mcp_specs())?;
 
@@ -379,7 +386,8 @@ fn build_merged_config_and_task(
     // Skill provides base_prompt and optionally name
     let (skill_name, runtime_base_prompt) = match resolved_skill {
         Some(skill) => (Some(skill.name.clone()), Some(skill.instructions.clone())),
-        None => (None, None)};
+        None => (None, None),
+    };
 
     // When a non-Oz harness is active, --model targets the harness rather than the Oz model.
     let harness_model_id = if args.harness != Harness::Oz {
@@ -390,7 +398,8 @@ fn build_merged_config_and_task(
     let harness_override = (args.harness != Harness::Oz).then_some(HarnessConfig {
         harness_type: args.harness,
         model_id: harness_model_id,
-        reasoning_level: None});
+        reasoning_level: None,
+    });
 
     let oz_model = if args.harness == Harness::Oz {
         args.model.model.clone().or(file_merged.model_id)
@@ -416,11 +425,13 @@ fn build_merged_config_and_task(
             .or(file_merged.computer_use_enabled),
         harness: harness_override,
         harness_auth_secrets: None,
-        additional_source_repos: None};
+        additional_source_repos: None,
+    };
 
     let runtime_mcp_specs = match merged_config.mcp_servers.as_ref() {
         Some(mcp_servers) => config_file::mcp_specs_from_mcp_servers(mcp_servers)?,
-        None => Vec::new()};
+        None => Vec::new(),
+    };
 
     let model_override: Option<LLMId> = merged_config
         .model_id
@@ -452,7 +463,8 @@ fn build_merged_config_and_task(
         model: model_override,
         profile: args.profile.clone(),
         mcp_specs: runtime_mcp_specs,
-        harness: harness_kind(args.harness)?};
+        harness: harness_kind(args.harness)?,
+    };
 
     Ok((merged_config, task))
 }
@@ -468,7 +480,8 @@ fn build_server_side_task(
 
     let runtime_mcp_specs = match cli_mcp_servers.as_ref() {
         Some(mcp_servers) => config_file::mcp_specs_from_mcp_servers(mcp_servers)?,
-        None => Vec::new()};
+        None => Vec::new(),
+    };
 
     let harness_model_id = if args.harness != Harness::Oz {
         args.model.model.clone()
@@ -488,7 +501,8 @@ fn build_server_side_task(
     let harness_override = (args.harness != Harness::Oz).then_some(HarnessConfig {
         harness_type: args.harness,
         model_id: harness_model_id,
-        reasoning_level: None});
+        reasoning_level: None,
+    });
 
     let skill_name = resolved_skill.as_ref().map(|s| s.name.clone());
     let model_id_string = model_override.as_ref().map(|id| id.to_string());
@@ -508,18 +522,21 @@ fn build_server_side_task(
         computer_use_enabled: args.computer_use.computer_use_override(),
         harness: harness_override,
         harness_auth_secrets: None,
-        additional_source_repos: None};
+        additional_source_repos: None,
+    };
 
     let skill = resolved_skill.as_ref().map(|s| s.parsed_skill.clone());
 
     let task = Task {
         prompt: AgentRunPrompt::ServerSide {
             skill,
-            attachments_dir: None},
+            attachments_dir: None,
+        },
         model: model_override,
         profile,
         mcp_specs: runtime_mcp_specs,
-        harness: harness_kind(args.harness)?};
+        harness: harness_kind(args.harness)?,
+    };
 
     Ok((config, task))
 }
@@ -535,7 +552,8 @@ fn reconcile_task_harness(
         return Err(AgentDriverError::TaskHarnessMismatch {
             task_id: task_id.to_string(),
             expected: task_harness.to_string(),
-            got: selected_harness.to_string()});
+            got: selected_harness.to_string(),
+        });
     }
 
     harness_kind(*selected_harness)
@@ -590,7 +608,8 @@ fn run_task(
                 }
             }
         }
-        TaskCommand::Message(message_cmd) => ambient::run_message(ctx, global_options, message_cmd)}
+        TaskCommand::Message(message_cmd) => ambient::run_message(ctx, global_options, message_cmd),
+    }
 }
 
 /// Singleton model that provides a ModelContext for spawning async operations
@@ -625,7 +644,8 @@ impl AgentDriverRunner {
         let background = foreground.spawn(|_, ctx| ctx.background_executor()).await?;
         let setup_events = match task_id {
             Some(task_id) => SetupClientEventReporter::new(task_id, server_api.clone(), background),
-            None => SetupClientEventReporter::noop(server_api.clone(), background)};
+            None => SetupClientEventReporter::noop(server_api.clone(), background),
+        };
         setup_events
             .post_timeline_event(OzRunTimelineEvent::WorkerContainerReady)
             .await;
@@ -722,7 +742,8 @@ impl AgentDriverRunner {
                                 AwsCredentialsRefreshStrategy::OidcManaged {
                                     task_id: bedrock_task_id,
                                     role_arn,
-                                    region: role_region},
+                                    region: role_region,
+                                },
                             );
                             refresh_aws_credentials(manager, ctx)
                         })
@@ -740,7 +761,8 @@ impl AgentDriverRunner {
                         harness: harness.to_string(),
                         reason: format!(
                             "The {harness} harness is only supported for local child agent launches."
-                        )});
+                        ),
+                    });
                 }
                 HarnessKind::Oz | HarnessKind::ThirdParty(_) => {}
             }
@@ -1009,7 +1031,8 @@ impl AgentDriverRunner {
         let working_dir = match args.cwd.as_ref() {
             Some(dir) => dunce::canonicalize(dir)
                 .with_context(|| format!("Unable to resolve {}", dir.display())),
-            None => std::env::current_dir().context("Unable to determine working directory")}
+            None => std::env::current_dir().context("Unable to determine working directory"),
+        }
         .map_err(AgentDriverError::ConfigBuildFailed)?;
 
         if let Some(task_id_str) = args.task_id.as_ref() {
@@ -1067,7 +1090,8 @@ impl AgentDriverRunner {
                     checkpoint_interval: None,
                     skip_initial_turn: args.skip_initial_turn,
                     strict_mcp_startup: args.strict_mcp_startup,
-                    mcp_startup_timeout: args.mcp_startup_timeout.map(|duration| duration.into())};
+                    mcp_startup_timeout: args.mcp_startup_timeout.map(|duration| duration.into()),
+                };
 
                 Ok((merged_config, task, driver_options))
             })
@@ -1101,7 +1125,8 @@ impl AgentDriverRunner {
                     .map(|s| format!("/{}", s.skill_identifier))
                     // If we get to this point and we don't have a prompt, saved prompt, or skill,
                     // error. `clap` should have handled this when parsing args already.
-                    .ok_or(AgentDriverError::InvalidRuntimeState)?};
+                    .ok_or(AgentDriverError::InvalidRuntimeState)?,
+            };
 
             Self::initialize_new_task(
                 foreground,
@@ -1229,7 +1254,8 @@ impl AgentDriverRunner {
                     .get_ambient_agent_task(&task_id)
                     .await
                     .map(Some),
-                None => Ok(None)}
+                None => Ok(None),
+            }
         };
 
         // Handoff snapshot attachments for follow-up executions are written to
@@ -1334,7 +1360,8 @@ impl AgentDriverRunner {
                 )
             }
             Ok(None) => (None, None, None, None, Vec::new()),
-            Err(err) => return Err(AgentDriverError::TaskMetadataFetchFailed(err))};
+            Err(err) => return Err(AgentDriverError::TaskMetadataFetchFailed(err)),
+        };
 
         // Validate the requested `--harness` against the task's harness setting. This avoids the
         // extra conversation-metadata roundtrip that would otherwise be needed downstream when the
@@ -1417,7 +1444,8 @@ impl AgentDriverRunner {
                     ConversationRestorationInNewPaneType::Historical {
                         conversation,
                         should_use_live_appearance: false,
-                        ambient_agent_task_id: None},
+                        ambient_agent_task_id: None,
+                    },
                 ))))
             }
             HarnessKind::ThirdParty(h) => {
@@ -1436,7 +1464,9 @@ impl AgentDriverRunner {
                 harness: harness.to_string(),
                 reason: format!(
                     "The {harness} harness is only supported for local child agent launches."
-                )})}
+                ),
+            }),
+        }
     }
 
     /// Resolve the environment and store into `driver_options`.
@@ -1532,7 +1562,8 @@ impl AgentDriverRunner {
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum CommandAuthentication {
     PendingApiKey(String),
-    RefreshUser}
+    RefreshUser,
+}
 
 fn command_authentication(
     pending_api_key: Option<String>,
@@ -1541,7 +1572,8 @@ fn command_authentication(
     match pending_api_key {
         Some(api_key) => Some(CommandAuthentication::PendingApiKey(api_key)),
         None if is_logged_in => Some(CommandAuthentication::RefreshUser),
-        None => None}
+        None => None,
+    }
 }
 
 /// Returns `true` if the given CLI command requires authentication.
@@ -1551,29 +1583,35 @@ fn command_requires_auth(command: &CliCommand) -> bool {
             AgentCommand::Run { .. } => false,
             AgentCommand::RunCloud { .. } => true,
             AgentCommand::Profile(sub) => match sub {
-                AgentProfileCommand::List => true},
+                AgentProfileCommand::List => true,
+            },
             AgentCommand::List(_) => true,
             AgentCommand::Get(_) => true,
             AgentCommand::Create(_) => true,
             AgentCommand::Update(_) => true,
             AgentCommand::Delete(_) => true,
-            AgentCommand::Skills(_) => true},
+            AgentCommand::Skills(_) => true,
+        },
         CliCommand::Environment(environment_cmd) => match environment_cmd {
             EnvironmentCommand::List => true,
             EnvironmentCommand::Create { .. } => true,
             EnvironmentCommand::Delete { .. } => true,
             EnvironmentCommand::Update { .. } => true,
             EnvironmentCommand::Get { .. } => true,
-            EnvironmentCommand::Image(ImageCommand::List) => true},
+            EnvironmentCommand::Image(ImageCommand::List) => true,
+        },
         CliCommand::MCP(mcp_cmd) => match mcp_cmd {
-            MCPCommand::List => true},
+            MCPCommand::List => true,
+        },
         CliCommand::Run(task_cmd) => match task_cmd {
             TaskCommand::List { .. } => true,
             TaskCommand::Get { .. } => true,
             TaskCommand::Conversation { .. } => true,
-            TaskCommand::Message { .. } => true},
+            TaskCommand::Message { .. } => true,
+        },
         CliCommand::Model(model_cmd) => match model_cmd {
-            ModelCommand::List => true},
+            ModelCommand::List => true,
+        },
         CliCommand::MemoryStore(_) => true,
         CliCommand::Memory(_) => true,
         CliCommand::Login => false,
@@ -1587,7 +1625,8 @@ fn command_requires_auth(command: &CliCommand) -> bool {
         CliCommand::HarnessSupport(_) => true,
         CliCommand::Artifact(_) => true,
         CliCommand::ApiKey(_) => true,
-        CliCommand::Runner(_) => true}
+        CliCommand::Runner(_) => true,
+    }
 }
 
 /// Launch a CLI command, checking authentication first if needed.
@@ -1710,7 +1749,8 @@ fn authenticate_and_dispatch(
         CommandAuthentication::PendingApiKey(api_key) => {
             auth_manager.authenticate_api_key(api_key, ctx);
         }
-        CommandAuthentication::RefreshUser => auth_manager.refresh_user(ctx)});
+        CommandAuthentication::RefreshUser => auth_manager.refresh_user(ctx),
+    });
 }
 
 /// Check if we're running within Warp (for example, if this is an invocation of the Warp CLI
@@ -1755,7 +1795,8 @@ fn resolve_orchestration_harness_label() -> &'static str {
         Some(Harness::OpenCode) => "opencode",
         Some(Harness::Gemini) => "gemini",
         Some(Harness::Codex) => "codex",
-        Some(Harness::Unknown) | None => "unknown"}
+        Some(Harness::Unknown) | None => "unknown",
+    }
 }
 
 /// Map each CLI command into a telemetry event to emit when it's executed.
@@ -1766,10 +1807,12 @@ fn command_to_telemetry_event(command: &CliCommand) -> CliTelemetryEvent {
             requested_mcp_servers: args.mcp_specs.len() + args.mcp_servers.len(),
             has_environment: args.environment.is_some(),
             task_id: args.task_id.clone(),
-            harness: args.harness.to_string()},
+            harness: args.harness.to_string(),
+        },
         CliCommand::Agent(AgentCommand::RunCloud(_)) => CliTelemetryEvent::AgentRunAmbient,
         CliCommand::Agent(AgentCommand::Profile(sub)) => match sub {
-            AgentProfileCommand::List => CliTelemetryEvent::AgentProfileList},
+            AgentProfileCommand::List => CliTelemetryEvent::AgentProfileList,
+        },
         CliCommand::Agent(AgentCommand::List(_)) => CliTelemetryEvent::AgentList,
         CliCommand::Agent(AgentCommand::Get(_)) => CliTelemetryEvent::AgentGet,
         CliCommand::Agent(AgentCommand::Create(_)) => CliTelemetryEvent::AgentCreate,
@@ -1804,27 +1847,35 @@ fn command_to_telemetry_event(command: &CliCommand) -> CliTelemetryEvent {
         CliCommand::Run(TaskCommand::Conversation(_)) => CliTelemetryEvent::ConversationGet,
         CliCommand::Run(TaskCommand::Message(message_cmd)) => match message_cmd {
             MessageCommand::Watch(_) => CliTelemetryEvent::RunMessageWatch {
-                harness: resolve_orchestration_harness_label()},
+                harness: resolve_orchestration_harness_label(),
+            },
             MessageCommand::Send(_) => CliTelemetryEvent::RunMessageSend {
-                harness: resolve_orchestration_harness_label()},
+                harness: resolve_orchestration_harness_label(),
+            },
             MessageCommand::List(_) => CliTelemetryEvent::RunMessageList {
-                harness: resolve_orchestration_harness_label()},
+                harness: resolve_orchestration_harness_label(),
+            },
             MessageCommand::Read(_) => CliTelemetryEvent::RunMessageRead {
-                harness: resolve_orchestration_harness_label()},
+                harness: resolve_orchestration_harness_label(),
+            },
             MessageCommand::MarkDelivered(_) => CliTelemetryEvent::RunMessageMarkDelivered {
-                harness: resolve_orchestration_harness_label()}},
+                harness: resolve_orchestration_harness_label(),
+            },
+        },
         CliCommand::Model(ModelCommand::List) => CliTelemetryEvent::ModelList,
         CliCommand::MemoryStore(memory_store_cmd) => match memory_store_cmd {
             MemoryStoreCommand::List => CliTelemetryEvent::MemoryStoreList,
             MemoryStoreCommand::Get(_) => CliTelemetryEvent::MemoryStoreGetStore,
             MemoryStoreCommand::Update(_) => CliTelemetryEvent::MemoryStoreUpdateStore,
-            MemoryStoreCommand::ListStoreAgents(_) => CliTelemetryEvent::MemoryStoreListStoreAgents},
+            MemoryStoreCommand::ListStoreAgents(_) => CliTelemetryEvent::MemoryStoreListStoreAgents,
+        },
         CliCommand::Memory(memory_cmd) => match memory_cmd {
             MemoryCommand::List(_) => CliTelemetryEvent::MemoryStoreListMemories,
             MemoryCommand::Create(_) => CliTelemetryEvent::MemoryStoreCreateMemory,
             MemoryCommand::Update(_) => CliTelemetryEvent::MemoryStoreUpdateMemory,
             MemoryCommand::Delete(_) => CliTelemetryEvent::MemoryStoreDeleteMemory,
-            MemoryCommand::Versions(_) => CliTelemetryEvent::MemoryStoreListVersions},
+            MemoryCommand::Versions(_) => CliTelemetryEvent::MemoryStoreListVersions,
+        },
         CliCommand::Login => CliTelemetryEvent::Login,
         CliCommand::Logout => CliTelemetryEvent::Logout,
         CliCommand::Whoami => CliTelemetryEvent::Whoami,
@@ -1833,7 +1884,8 @@ fn command_to_telemetry_event(command: &CliCommand) -> CliTelemetryEvent {
         CliCommand::Integration(integration_cmd) => match integration_cmd {
             IntegrationCommand::Create(_) => CliTelemetryEvent::IntegrationCreate,
             IntegrationCommand::Update(_) => CliTelemetryEvent::IntegrationUpdate,
-            IntegrationCommand::List => CliTelemetryEvent::IntegrationList},
+            IntegrationCommand::List => CliTelemetryEvent::IntegrationList,
+        },
         CliCommand::Schedule(c) => match c.subcommand() {
             None | Some(ScheduleSubcommand::Create(_)) => CliTelemetryEvent::ScheduleCreate,
             Some(ScheduleSubcommand::List) => CliTelemetryEvent::ScheduleList,
@@ -1841,31 +1893,37 @@ fn command_to_telemetry_event(command: &CliCommand) -> CliTelemetryEvent {
             Some(ScheduleSubcommand::Pause(_)) => CliTelemetryEvent::SchedulePause,
             Some(ScheduleSubcommand::Unpause(_)) => CliTelemetryEvent::ScheduleUnpause,
             Some(ScheduleSubcommand::Update(_)) => CliTelemetryEvent::ScheduleUpdate,
-            Some(ScheduleSubcommand::Delete(_)) => CliTelemetryEvent::ScheduleDelete},
+            Some(ScheduleSubcommand::Delete(_)) => CliTelemetryEvent::ScheduleDelete,
+        },
         CliCommand::Secret(secret_cmd) => match secret_cmd {
             SecretCommand::Create(_) => CliTelemetryEvent::SecretCreate,
             SecretCommand::Delete(_) => CliTelemetryEvent::SecretDelete,
             SecretCommand::Update(_) => CliTelemetryEvent::SecretUpdate,
-            SecretCommand::List(_) => CliTelemetryEvent::SecretList},
+            SecretCommand::List(_) => CliTelemetryEvent::SecretList,
+        },
         CliCommand::Federate(federate_cmd) => match federate_cmd {
             FederateCommand::IssueToken(_) => CliTelemetryEvent::FederateIssueToken,
-            FederateCommand::IssueGcpToken(_) => CliTelemetryEvent::FederateIssueGcpToken},
+            FederateCommand::IssueGcpToken(_) => CliTelemetryEvent::FederateIssueGcpToken,
+        },
         CliCommand::HarnessSupport(args) => match &args.command {
             HarnessSupportCommand::Ping => CliTelemetryEvent::HarnessSupportPing,
             HarnessSupportCommand::ReportArtifact(report_args) => match &report_args.command {
                 ReportArtifactCommand::PullRequest(_) => {
                     CliTelemetryEvent::HarnessSupportReportArtifact {
-                        artifact_type: "pull_request"}
+                        artifact_type: "pull_request",
+                    }
                 }
             },
             HarnessSupportCommand::ReportExternalReference(_) => {
                 CliTelemetryEvent::HarnessSupportReportArtifact {
-                    artifact_type: "external_reference"}
+                    artifact_type: "external_reference",
+                }
             }
             HarnessSupportCommand::NotifyUser(_) => CliTelemetryEvent::HarnessSupportNotifyUser,
             HarnessSupportCommand::FinishTask(finish_args) => {
                 CliTelemetryEvent::HarnessSupportFinishTask {
-                    success: finish_args.status == TaskStatus::Success}
+                    success: finish_args.status == TaskStatus::Success,
+                }
             }
             HarnessSupportCommand::ReportShutdown(_) => {
                 CliTelemetryEvent::HarnessSupportReportShutdown
@@ -1874,16 +1932,20 @@ fn command_to_telemetry_event(command: &CliCommand) -> CliTelemetryEvent {
         CliCommand::Artifact(artifact_cmd) => match artifact_cmd {
             ArtifactCommand::Upload(_) => CliTelemetryEvent::ArtifactUpload,
             ArtifactCommand::Get(_) => CliTelemetryEvent::ArtifactGet,
-            ArtifactCommand::Download(_) => CliTelemetryEvent::ArtifactDownload},
+            ArtifactCommand::Download(_) => CliTelemetryEvent::ArtifactDownload,
+        },
         CliCommand::ApiKey(api_key_cmd) => match api_key_cmd {
             ApiKeyCommand::List(_) => CliTelemetryEvent::ApiKeyList,
             ApiKeyCommand::Create(_) => CliTelemetryEvent::ApiKeyCreate,
-            ApiKeyCommand::Expire(_) => CliTelemetryEvent::ApiKeyExpire},
+            ApiKeyCommand::Expire(_) => CliTelemetryEvent::ApiKeyExpire,
+        },
         CliCommand::Runner(runner_cmd) => match runner_cmd {
             RunnerCommand::List(_) => CliTelemetryEvent::RunnerList,
             RunnerCommand::Create(_) => CliTelemetryEvent::RunnerCreate,
             RunnerCommand::Update(_) => CliTelemetryEvent::RunnerUpdate,
-            RunnerCommand::Delete(_) => CliTelemetryEvent::RunnerDelete}}
+            RunnerCommand::Delete(_) => CliTelemetryEvent::RunnerDelete,
+        },
+    }
 }
 
 #[cfg(test)]

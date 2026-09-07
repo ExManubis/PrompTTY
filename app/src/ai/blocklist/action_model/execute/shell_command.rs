@@ -22,7 +22,8 @@ use super::{ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessA
 use crate::ai::agent::{
     AIAgentActionId, AIAgentActionResultType, AIAgentActionType, AIAgentPtyWriteMode, LrcActivity,
     ReadShellCommandOutputResult, RequestCommandOutputResult, ShellCommandDelay, ShellCommandError,
-    TransferShellCommandControlToUserResult, WriteToLongRunningShellCommandResult};
+    TransferShellCommandControlToUserResult, WriteToLongRunningShellCommandResult,
+};
 use crate::ai::blocklist::BlocklistAIPermissions;
 use crate::ai::blocklist::action_model::recording_controller::RecordingController;
 use crate::ai::blocklist::permissions::CommandExecutionPermission;
@@ -30,7 +31,8 @@ use crate::ai::execution_profiles::WriteToPtyPermission;
 use crate::terminal::TerminalModel;
 use crate::terminal::event::BlockMetadataReceivedEvent;
 use crate::terminal::model::block::{
-    Block, BlockId, CURSOR_MARKER, formatted_terminal_contents_for_input};
+    Block, BlockId, CURSOR_MARKER, formatted_terminal_contents_for_input,
+};
 use crate::terminal::model::session::SessionType;
 use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model_events::{ModelEvent, ModelEventDispatcher};
@@ -51,7 +53,8 @@ pub struct ShellCommandExecutor {
     control_handback_sender: Option<oneshot::Sender<()>>,
     /// Liveness signals for the long-running commands this agent is monitoring.
     /// Shared with the snapshot futures, which have no `ModelContext`.
-    activity_monitor: Arc<LrcActivityMonitor>}
+    activity_monitor: Arc<LrcActivityMonitor>,
+}
 
 impl ShellCommandExecutor {
     pub const MAX_WAIT_DURATION: Duration = Duration::from_secs(2);
@@ -76,7 +79,8 @@ impl ShellCommandExecutor {
             force_refresh_senders: HashMap::new(),
             terminal_view_id,
             control_handback_sender: None,
-            activity_monitor: Arc::new(LrcActivityMonitor::new())}
+            activity_monitor: Arc::new(LrcActivityMonitor::new()),
+        }
     }
 
     /// Begins collecting liveness signals for the command this action will
@@ -96,7 +100,8 @@ impl ShellCommandExecutor {
             .set_monitoring_enabled(is_local && lrc_activity_signals_supported());
 
         let guard = LrcMonitoringGuard {
-            monitor: self.activity_monitor.clone()};
+            monitor: self.activity_monitor.clone(),
+        };
         if self.activity_monitor.arm() {
             self.sample_activity(ctx);
         }
@@ -210,7 +215,8 @@ impl ShellCommandExecutor {
                             .block_list()
                             .active_block()
                             .has_agent_written_to_block(),
-                        _ => false};
+                        _ => false,
+                    };
 
                     if should_autoexecute {
                     }
@@ -220,7 +226,8 @@ impl ShellCommandExecutor {
             }
             AIAgentActionType::ReadShellCommandOutput { .. } => true,
             AIAgentActionType::TransferShellCommandControlToUser { .. } => false,
-            _ => false}
+            _ => false,
+        }
     }
 
     /// Decorate the command so that we can turn off pager.
@@ -236,7 +243,8 @@ impl ShellCommandExecutor {
             // console. Add a backslash to avoid executing an alias.
             Some(ShellType::PowerShell) => format!("({command}) | \\Out-Host"),
             // If we can't determine a shell type, run command as it is.
-            None => command.clone()}
+            None => command.clone(),
+        }
     }
 
     pub(super) fn execute(
@@ -303,7 +311,8 @@ impl ShellCommandExecutor {
                     });
                 ctx.emit(ShellCommandExecutorEvent::ExecuteCommand {
                     action_id: action_id.clone(),
-                    command: decorated_command});
+                    command: decorated_command,
+                });
 
                 let block_selector = BlockSelector::RequestedCommandId(action_id.clone());
                 let command = command.clone();
@@ -345,7 +354,8 @@ impl ShellCommandExecutor {
             AIAgentActionType::WriteToLongRunningShellCommand {
                 block_id,
                 input,
-                mode} => {
+                mode,
+            } => {
                 let Some(block) = model.block_list().block_with_id(block_id) else {
                     return ActionExecution::Sync(
                         AIAgentActionResultType::WriteToLongRunningShellCommand(
@@ -367,7 +377,8 @@ impl ShellCommandExecutor {
                                 output,
                                 exit_code,
                                 start_ts,
-                                completed_ts},
+                                completed_ts,
+                            },
                         ),
                     );
                 }
@@ -382,7 +393,8 @@ impl ShellCommandExecutor {
 
                 ctx.emit(ShellCommandExecutorEvent::WriteToPty {
                     input: input.clone(),
-                    mode: *mode});
+                    mode: *mode,
+                });
 
                 let block_selector = BlockSelector::Id(block_id.clone());
                 ActionExecution::new_async(
@@ -430,7 +442,8 @@ impl ShellCommandExecutor {
                             output,
                             exit_code,
                             start_ts,
-                            completed_ts},
+                            completed_ts,
+                        },
                     ));
                 }
                 drop(model);
@@ -481,7 +494,8 @@ impl ShellCommandExecutor {
                 // Emit event to transfer control to user.
                 ctx.emit(ShellCommandExecutorEvent::TransferControlToUser {
                     action_id: action_id.clone(),
-                    reason: reason.clone()});
+                    reason: reason.clone(),
+                });
 
                 // Create a channel to wait for control handback.
                 let (handback_tx, handback_rx) = oneshot::channel();
@@ -509,10 +523,13 @@ impl ShellCommandExecutor {
                         let transfer_result = select! {
                             val = handback_rx => match val {
                                 Ok(_) => TransferControlResult::ControlHandedBack,
-                                Err(_) => TransferControlResult::Cancelled},
+                                Err(_) => TransferControlResult::Cancelled,
+                            },
                             val = block_finished_rx => match val {
                                 Ok(_) => TransferControlResult::BlockFinished,
-                                Err(_) => TransferControlResult::Cancelled}};
+                                Err(_) => TransferControlResult::Cancelled,
+                            },
+                        };
 
                         // Convert to ActionResult
                         let model = terminal_model.lock();
@@ -528,7 +545,8 @@ impl ShellCommandExecutor {
                                                 output: block.output_with_secrets_unobfuscated(),
                                                 exit_code: block.exit_code(),
                                                 start_ts: block.start_ts().cloned(),
-                                                completed_ts: block.completed_ts().cloned()}
+                                                completed_ts: block.completed_ts().cloned(),
+                                            }
                                         } else {
                                             let grid_contents = if model.is_alt_screen_active() {
                                                 formatted_terminal_contents_for_input(
@@ -549,12 +567,15 @@ impl ShellCommandExecutor {
                                                 cursor: CURSOR_MARKER,
                                                 is_alt_screen_active: model.is_alt_screen_active(),
                                                 is_preempted: false,
-                                                activity: monitor.report(block.id())}
+                                                activity: monitor.report(block.id()),
+                                            }
                                         }
                                     }
-                                    None => ActionResult::BlockNotFound}
+                                    None => ActionResult::BlockNotFound,
+                                }
                             }
-                            TransferControlResult::Cancelled => ActionResult::Cancelled}
+                            TransferControlResult::Cancelled => ActionResult::Cancelled,
+                        }
                     }
                 };
 
@@ -570,7 +591,8 @@ impl ShellCommandExecutor {
                     action_result_for_transfer_shell_command_control_to_user(result)
                 })
             }
-            _ => ActionExecution::InvalidAction}
+            _ => ActionExecution::InvalidAction,
+        }
     }
 
     /// Called when user hands control back to agent after TransferShellCommandControlToUser.
@@ -614,7 +636,8 @@ impl ShellCommandExecutor {
             /// User clicked `Check now` in the warping indicator, short-circuiting
             /// the agent-set poll timer. Treated as a preemption so the server does
             /// not interpret the early snapshot as a completion.
-            ForceRefresh}
+            ForceRefresh,
+        }
 
         async move {
             let _monitoring = monitoring;
@@ -632,7 +655,8 @@ impl ShellCommandExecutor {
                 Some(ShellCommandDelay::OnCompletion) => {
                     Timer::after(Self::MAX_AGENT_DELAY_DURATION)
                 }
-                None => Timer::after(Self::MAX_WAIT_DURATION)}
+                None => Timer::after(Self::MAX_WAIT_DURATION),
+            }
             .fuse();
 
             pin!(block_metadata_received_rx);
@@ -641,15 +665,18 @@ impl ShellCommandExecutor {
             let wake_reason = select! {
                 val = block_metadata_received_rx => match val {
                     Ok(_) => WakeReason::BlockFinished,
-                    Err(_) => return ActionResult::Cancelled},
+                    Err(_) => return ActionResult::Cancelled,
+                },
                 val = force_refresh_rx => match val {
                     // User asked the agent to check now; fall through to the snapshot
                     // code path below. Treated as a preemption (snapshot arrives before
                     // the agent's own timer would have fired).
                     Ok(_) => WakeReason::ForceRefresh,
                     // Sender was dropped (e.g. because the executor is being torn down).
-                    Err(_) => return ActionResult::Cancelled},
-                _ = timeout => WakeReason::Timeout};
+                    Err(_) => return ActionResult::Cancelled,
+                },
+                _ = timeout => WakeReason::Timeout,
+            };
 
             // Mark the snapshot as preempted if woken early, allowing the server to distinguish
             // true completion from a forced client poll (`ForceRefresh`) or a timeout during `on_completion`.
@@ -672,7 +699,8 @@ impl ShellCommandExecutor {
                             output: block.output_with_secrets_unobfuscated(),
                             exit_code: block.exit_code(),
                             start_ts: block.start_ts().cloned(),
-                            completed_ts: block.completed_ts().cloned()}
+                            completed_ts: block.completed_ts().cloned(),
+                        }
                     } else {
                         let grid_contents = if model.is_alt_screen_active() {
                             formatted_terminal_contents_for_input(
@@ -694,10 +722,12 @@ impl ShellCommandExecutor {
                             cursor: CURSOR_MARKER,
                             is_alt_screen_active: model.is_alt_screen_active(),
                             is_preempted,
-                            activity: monitor.report(block.id())}
+                            activity: monitor.report(block.id()),
+                        }
                     }
                 }
-                None => ActionResult::BlockNotFound}
+                None => ActionResult::BlockNotFound,
+            }
         }
     }
 
@@ -761,7 +791,8 @@ impl ShellCommandExecutor {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 enum BlockSelector {
     Id(BlockId),
-    RequestedCommandId(AIAgentActionId)}
+    RequestedCommandId(AIAgentActionId),
+}
 
 impl BlockSelector {
     fn get_block<'a>(&self, model: &'a TerminalModel) -> Option<&'a Block> {
@@ -769,7 +800,8 @@ impl BlockSelector {
             BlockSelector::Id(block_id) => model.block_list().block_with_id(block_id),
             BlockSelector::RequestedCommandId(requested_command_id) => model
                 .block_list()
-                .block_for_ai_action_id(requested_command_id)}
+                .block_for_ai_action_id(requested_command_id),
+        }
     }
 }
 
@@ -784,13 +816,15 @@ fn action_result_for_requested_command(
             output,
             exit_code,
             start_ts,
-            completed_ts} => AIAgentActionResultType::RequestCommandOutput(RequestCommandOutputResult::Completed {
+            completed_ts,
+        } => AIAgentActionResultType::RequestCommandOutput(RequestCommandOutputResult::Completed {
             command,
             block_id,
             output,
             exit_code,
             start_ts,
-            completed_ts}),
+            completed_ts,
+        }),
         ActionResult::LongRunningCommandSnapshot {
             block_id,
             grid_contents,
@@ -805,7 +839,8 @@ fn action_result_for_requested_command(
                 grid_contents,
                 cursor: cursor.to_owned(),
                 is_alt_screen_active,
-                activity},
+                activity,
+            },
         ),
         ActionResult::BlockNotFound | ActionResult::Cancelled => {
             AIAgentActionResultType::RequestCommandOutput(
@@ -825,13 +860,15 @@ fn action_result_for_write_to_long_running_shell_command(
             output,
             exit_code,
             start_ts,
-            completed_ts} => AIAgentActionResultType::WriteToLongRunningShellCommand(
+            completed_ts,
+        } => AIAgentActionResultType::WriteToLongRunningShellCommand(
             WriteToLongRunningShellCommandResult::CommandFinished {
                 block_id,
                 output,
                 exit_code,
                 start_ts,
-                completed_ts},
+                completed_ts,
+            },
         ),
         ActionResult::LongRunningCommandSnapshot {
             block_id,
@@ -839,21 +876,24 @@ fn action_result_for_write_to_long_running_shell_command(
             cursor,
             is_alt_screen_active,
             is_preempted,
-            activity} => AIAgentActionResultType::WriteToLongRunningShellCommand(
+            activity,
+        } => AIAgentActionResultType::WriteToLongRunningShellCommand(
             WriteToLongRunningShellCommandResult::Snapshot {
                 block_id,
                 grid_contents,
                 cursor: cursor.to_owned(),
                 is_alt_screen_active,
                 is_preempted,
-                activity},
+                activity,
+            },
         ),
         ActionResult::Cancelled => AIAgentActionResultType::WriteToLongRunningShellCommand(
             WriteToLongRunningShellCommandResult::Cancelled,
         ),
         ActionResult::BlockNotFound => AIAgentActionResultType::WriteToLongRunningShellCommand(
             WriteToLongRunningShellCommandResult::Error(ShellCommandError::BlockNotFound),
-        )}
+        ),
+    }
 }
 
 /// Returns the result from reading shell command output.
@@ -867,14 +907,16 @@ fn action_result_for_read_shell_command_output(
             exit_code,
             block_id,
             start_ts,
-            completed_ts} => AIAgentActionResultType::ReadShellCommandOutput(
+            completed_ts,
+        } => AIAgentActionResultType::ReadShellCommandOutput(
             ReadShellCommandOutputResult::CommandFinished {
                 command,
                 block_id,
                 output,
                 exit_code,
                 start_ts,
-                completed_ts},
+                completed_ts,
+            },
         ),
         ActionResult::LongRunningCommandSnapshot {
             block_id,
@@ -882,7 +924,8 @@ fn action_result_for_read_shell_command_output(
             cursor,
             is_alt_screen_active,
             is_preempted,
-            activity} => AIAgentActionResultType::ReadShellCommandOutput(
+            activity,
+        } => AIAgentActionResultType::ReadShellCommandOutput(
             ReadShellCommandOutputResult::LongRunningCommandSnapshot {
                 command,
                 block_id,
@@ -890,14 +933,16 @@ fn action_result_for_read_shell_command_output(
                 cursor: cursor.to_owned(),
                 is_alt_screen_active,
                 is_preempted,
-                activity},
+                activity,
+            },
         ),
         ActionResult::Cancelled => {
             AIAgentActionResultType::ReadShellCommandOutput(ReadShellCommandOutputResult::Cancelled)
         }
         ActionResult::BlockNotFound => AIAgentActionResultType::ReadShellCommandOutput(
             ReadShellCommandOutputResult::Error(ShellCommandError::BlockNotFound),
-        )}
+        ),
+    }
 }
 
 /// Returns the result from transferring shell command control to user.
@@ -910,13 +955,15 @@ fn action_result_for_transfer_shell_command_control_to_user(
             output,
             exit_code,
             start_ts,
-            completed_ts} => AIAgentActionResultType::TransferShellCommandControlToUser(
+            completed_ts,
+        } => AIAgentActionResultType::TransferShellCommandControlToUser(
             TransferShellCommandControlToUserResult::CommandFinished {
                 block_id,
                 output,
                 exit_code,
                 start_ts,
-                completed_ts},
+                completed_ts,
+            },
         ),
         ActionResult::LongRunningCommandSnapshot {
             block_id,
@@ -924,36 +971,43 @@ fn action_result_for_transfer_shell_command_control_to_user(
             cursor,
             is_alt_screen_active,
             is_preempted,
-            activity} => AIAgentActionResultType::TransferShellCommandControlToUser(
+            activity,
+        } => AIAgentActionResultType::TransferShellCommandControlToUser(
             TransferShellCommandControlToUserResult::Snapshot {
                 block_id,
                 grid_contents,
                 cursor: cursor.to_owned(),
                 is_alt_screen_active,
                 is_preempted,
-                activity},
+                activity,
+            },
         ),
         ActionResult::Cancelled => AIAgentActionResultType::TransferShellCommandControlToUser(
             TransferShellCommandControlToUserResult::Cancelled,
         ),
         ActionResult::BlockNotFound => AIAgentActionResultType::TransferShellCommandControlToUser(
             TransferShellCommandControlToUserResult::Error(ShellCommandError::BlockNotFound),
-        )}
+        ),
+    }
 }
 
 #[derive(Debug, Clone)]
 pub enum ShellCommandExecutorEvent {
     ExecuteCommand {
         action_id: AIAgentActionId,
-        command: String},
+        command: String,
+    },
     WriteToPty {
         input: Bytes,
-        mode: AIAgentPtyWriteMode},
+        mode: AIAgentPtyWriteMode,
+    },
     CancelExecution,
     /// Emitted when the agent requests to transfer control of a long-running command to the user.
     TransferControlToUser {
         action_id: AIAgentActionId,
-        reason: String}}
+        reason: String,
+    },
+}
 
 impl Entity for ShellCommandExecutor {
     type Event = ShellCommandExecutorEvent;
@@ -964,7 +1018,8 @@ impl Entity for ShellCommandExecutor {
 enum TransferControlResult {
     ControlHandedBack,
     BlockFinished,
-    Cancelled}
+    Cancelled,
+}
 
 /// The possible results of taking an action.
 #[derive(Debug, Clone)]
@@ -974,7 +1029,8 @@ enum ActionResult {
         output: String,
         exit_code: ExitCode,
         start_ts: Option<DateTime<Local>>,
-        completed_ts: Option<DateTime<Local>>},
+        completed_ts: Option<DateTime<Local>>,
+    },
     LongRunningCommandSnapshot {
         block_id: BlockId,
         grid_contents: String,
@@ -983,9 +1039,11 @@ enum ActionResult {
         is_preempted: bool,
         /// Evidence that the command is still doing work, for snapshots where
         /// the grid alone cannot distinguish silence from a hang.
-        activity: Option<LrcActivity>},
+        activity: Option<LrcActivity>,
+    },
     Cancelled,
-    BlockNotFound}
+    BlockNotFound,
+}
 
 /// Whether liveness signals are trustworthy enough to collect on this platform.
 ///
@@ -997,7 +1055,8 @@ fn lrc_activity_signals_supported() -> bool {
 /// Keeps liveness sampling armed for as long as an action that might report a
 /// snapshot is in flight.
 struct LrcMonitoringGuard {
-    monitor: Arc<LrcActivityMonitor>}
+    monitor: Arc<LrcActivityMonitor>,
+}
 
 impl Drop for LrcMonitoringGuard {
     fn drop(&mut self) {

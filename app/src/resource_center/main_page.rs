@@ -1,21 +1,25 @@
 use warpui::elements::{
     Align, ClippedScrollStateHandle, ClippedScrollable, Container, Element, Empty, Fill, Flex,
-    Hoverable, MainAxisSize, MouseStateHandle, ParentElement, Shrinkable};
+    Hoverable, MainAxisSize, MouseStateHandle, ParentElement, Shrinkable,
+};
 use warpui::platform::Cursor;
 use warpui::presenter::ChildView;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WindowId};
+    ViewHandle, WindowId,
+};
 
 use super::section_views::feature_section::FeatureSectionEvent;
 use super::section_views::{
     BUTTON_PADDING, DETAIL_FONT_SIZE, FOOTER_ICON_SIZE, SCROLLBAR_OFFSET, SCROLLBAR_WIDTH,
-    SECTION_SPACING, SectionViewHandle};
+    SECTION_SPACING, SectionViewHandle,
+};
 use super::sections::sections;
 use super::{
     ChangelogSectionView, ContentSectionData, ContentSectionView, FeatureSection,
-    FeatureSectionData, FeatureSectionView, Section, TipsCompleted};
+    FeatureSectionData, FeatureSectionView, Section, TipsCompleted,
+};
 use crate::appearance::Appearance;
 use crate::changelog_model::ChangelogModel;
 use crate::channel::ChannelState;
@@ -28,21 +32,25 @@ use crate::workspace::WorkspaceAction;
 #[derive(Default)]
 struct MouseStateHandles {
     copy_version: MouseStateHandle,
-    skip_tips: MouseStateHandle}
+    skip_tips: MouseStateHandle,
+}
 
 pub enum ResourceCenterMainEvent {
-    Close}
+    Close,
+}
 
 pub struct ResourceCenterMainView {
     button_mouse_states: MouseStateHandles,
     clipped_scroll_state: ClippedScrollStateHandle,
     section_views: Vec<SectionViewHandle>,
-    tips_completed: ModelHandle<TipsCompleted>}
+    tips_completed: ModelHandle<TipsCompleted>,
+}
 
 #[derive(Debug, Clone)]
 pub enum ResourceCenterMainAction {
     Close,
-    SkipTips}
+    SkipTips,
+}
 
 impl ResourceCenterMainView {
     pub fn new(
@@ -61,7 +69,8 @@ impl ResourceCenterMainView {
             button_mouse_states: Default::default(),
             clipped_scroll_state: Default::default(),
             section_views,
-            tips_completed}
+            tips_completed,
+        }
     }
 
     fn initialize_section_views(
@@ -110,19 +119,24 @@ impl ResourceCenterMainView {
                             Some(version) => {
                                 match Settings::has_changelog_been_shown(version, ctx) {
                                     true => !is_tips_completed && !is_onboarded,
-                                    false => false}
+                                    false => false,
+                                }
                             }
-                            None => !is_tips_completed && !is_onboarded},
+                            None => !is_tips_completed && !is_onboarded,
+                        },
                         // Expand Maximize Warp section once user has completed welcome tips,
                         // and keep open after users have completed/skipped all tips
                         FeatureSection::MaximizeWarp => match ChannelState::app_version() {
                             Some(version) => {
                                 match Settings::has_changelog_been_shown(version, ctx) {
                                     true => is_tips_completed || is_onboarded,
-                                    false => false}
+                                    false => false,
+                                }
                             }
-                            None => is_tips_completed || is_onboarded},
-                        _ => false};
+                            None => is_tips_completed || is_onboarded,
+                        },
+                        _ => false,
+                    };
 
                     // Show tips progress for every section except changelog
                     let show_tips_progress = !matches!(data.section_name, FeatureSection::WhatsNew);
@@ -141,7 +155,8 @@ impl ResourceCenterMainView {
                 }
                 Section::Changelog() => SectionViewHandle::Changelog(
                     Self::build_changelog_section_view(changelog_model_handle.clone(), ctx),
-                )})
+                ),
+            })
             .collect()
     }
 
@@ -218,7 +233,8 @@ impl ResourceCenterMainView {
     ) -> ViewHandle<ChangelogSectionView> {
         let showing_new_changelog = match ChannelState::app_version() {
             Some(version) => !Settings::has_changelog_been_shown(version, ctx),
-            None => false};
+            None => false,
+        };
 
         ctx.add_typed_action_view(|ctx: &mut ViewContext<_>| {
             ChangelogSectionView::new(changelog_model_handle, showing_new_changelog, ctx)
@@ -366,7 +382,9 @@ pub enum ActionTarget {
     None,
     View {
         window_id: WindowId,
-        input_id: Option<EntityId>}}
+        input_id: Option<EntityId>,
+    },
+}
 
 impl Entity for ActionTarget {
     type Event = ();

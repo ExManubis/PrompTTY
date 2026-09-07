@@ -43,19 +43,20 @@ use crate::palette::PaletteMode;
 use crate::root_view::RootView;
 use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::sync_queue::SyncQueue;
-use crate::shared_enums::PaletteSource;
-use crate::server::telemetry::TelemetryEvent;
+use crate::server::telemetry::{PaletteSource, TelemetryEvent};
 use crate::session_management::{RunningSessionSummary, SessionNavigationData};
 use crate::settings::{
     AISettings, CRASH_REPORTING_ENABLED_DEFAULTS_KEY, CloudPreferencesSettings, PrivacySettings,
-    TELEMETRY_ENABLED_DEFAULTS_KEY};
+    TELEMETRY_ENABLED_DEFAULTS_KEY,
+};
 use crate::terminal::general_settings::GeneralSettings;
 use crate::terminal::shared_session::manager::Manager as SharedSessionManager;
 use crate::workflows::manager::WorkflowManager;
 use crate::workspace::{Workspace, WorkspaceAction};
 use crate::workspaces::update_manager::TeamUpdateManager;
 use crate::{
-    GlobalResourceHandlesProvider, focus_running_window_and_show_native_modal, persistence};
+    GlobalResourceHandlesProvider, focus_running_window_and_show_native_modal, persistence,
+};
 
 pub fn init(app: &mut AppContext) {
     auth_view_modal::init(app);
@@ -138,7 +139,8 @@ pub fn maybe_log_out(app: &mut AppContext) {
                         &WorkspaceAction::OpenPalette {
                             mode: PaletteMode::Navigation,
                             source: PaletteSource::LogOutModal,
-                            query: Some("running".to_owned())},
+                            query: Some("running".to_owned()),
+                        },
                     );
                 }
             }))

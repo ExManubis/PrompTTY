@@ -12,7 +12,8 @@ use warpui::elements::{
     Fill, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
     ParentAnchor, ParentElement, ParentOffsetBounds, PositionedElementAnchor,
     PositionedElementOffsetBounds, Radius, SavePosition, ScrollTarget, ScrollToPositionMode,
-    ScrollbarWidth, SizeConstraintCondition, SizeConstraintSwitch, Stack, Text};
+    ScrollbarWidth, SizeConstraintCondition, SizeConstraintSwitch, Stack, Text,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::geometry::vector::vec2f;
 use warpui::keymap::FixedBinding;
@@ -21,7 +22,8 @@ use warpui::prelude::Coords;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Entity, FocusContext, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakViewHandle};
+    ViewHandle, WeakViewHandle,
+};
 
 use super::editor_text_colors;
 use super::settings_page::{InputListItem, render_input_list};
@@ -32,17 +34,20 @@ use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
 use crate::ai::cloud_environments::{AmbientAgentEnvironment, GithubRepo};
 use crate::appearance::Appearance;
 use crate::editor::{
-    EditorOptions, EditorView, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions, TextOptions};
+    EditorOptions, EditorView, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions, TextOptions,
+};
 use crate::root_view::CreateEnvironmentArg;
 use crate::server::ids::SyncId;
 use crate::server::server_api::ServerApiProvider;
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons::Icon;
 use crate::view_components::action_button::{
-    ActionButton, DangerSecondaryTheme, PrimaryTheme, SecondaryTheme};
+    ActionButton, DangerSecondaryTheme, PrimaryTheme, SecondaryTheme,
+};
 use crate::view_components::{
     SubmittableTextInput, SubmittableTextInputEvent, WarningBoxButtonConfig, WarningBoxConfig,
-    render_warning_box};
+    render_warning_box,
+};
 use crate::workspaces::user_workspaces::UserWorkspaces;
 
 const SUBMIT_BUTTON_FOCUSED: &str = "SubmitButtonFocused";
@@ -84,7 +89,8 @@ pub struct EnvironmentFormValues {
     pub description: String,
     pub selected_repos: Vec<GithubRepo>,
     pub docker_image: String,
-    pub setup_commands: Vec<String>}
+    pub setup_commands: Vec<String>,
+}
 
 impl EnvironmentFormValues {
     /// Converts form values to an AmbientAgentEnvironment for submission.
@@ -136,27 +142,34 @@ pub enum EnvironmentFormInitArgs {
     Create,
     Edit {
         env_id: SyncId,
-        initial_values: Box<EnvironmentFormValues>}}
+        initial_values: Box<EnvironmentFormValues>,
+    },
+}
 
 /// Persisted mode for the UpdateEnvironmentForm.
 /// Contains only what's needed after initialization (just the env_id for Edit mode).
 #[derive(Clone, Debug)]
 pub enum EnvironmentFormMode {
     Create,
-    Edit { env_id: SyncId }}
+    Edit { env_id: SyncId },
+}
 
 /// Events emitted by UpdateEnvironmentForm.
 #[derive(Debug, Clone)]
 pub enum UpdateEnvironmentFormEvent {
     Created {
         environment: AmbientAgentEnvironment,
-        share_with_team: bool},
+        share_with_team: bool,
+    },
     Updated {
         env_id: SyncId,
-        environment: AmbientAgentEnvironment},
+        environment: AmbientAgentEnvironment,
+    },
     DeleteRequested {
-        env_id: SyncId},
-    Cancelled}
+        env_id: SyncId,
+    },
+    Cancelled,
+}
 
 /// Actions handled by UpdateEnvironmentForm.
 #[derive(Debug, Clone)]
@@ -181,7 +194,8 @@ pub enum UpdateEnvironmentFormAction {
     LaunchAgentForSelectedRepos,
     RetryFetchGithubRepos,
     StartGithubAuth,
-    OpenUrl(String)}
+    OpenUrl(String),
+}
 
 /// State for the GitHub repos dropdown.
 #[derive(Clone, Default)]
@@ -195,7 +209,8 @@ pub struct GithubReposDropdownState {
     pub selected_index: Option<usize>,
     app_install_link: Option<String>,
     repo_row_mouse_states: Vec<MouseStateHandle>,
-    scroll_state: ClippedScrollStateHandle}
+    scroll_state: ClippedScrollStateHandle,
+}
 
 #[cfg(not(target_family = "wasm"))]
 #[derive(Clone, Debug)]
@@ -203,26 +218,34 @@ enum CachedSuggestImageResult {
     Success {
         image: String,
         needs_custom_image: bool,
-        reason: String},
+        reason: String,
+    },
     AuthRequired {
-        auth_url: String}}
+        auth_url: String,
+    },
+}
 
 #[derive(Clone, Debug)]
 #[cfg_attr(target_family = "wasm", allow(dead_code))]
 enum SuggestImageState {
     Idle,
     Loading {
-        key: String},
+        key: String,
+    },
     Success {
         key: String,
         needs_custom_image: bool,
-        reason: String},
+        reason: String,
+    },
     AuthRequired {
         key: String,
-        auth_url: String},
+        auth_url: String,
+    },
     Error {
         key: String,
-        message: String}}
+        message: String,
+    },
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EnvironmentFormCopy {
@@ -234,7 +257,8 @@ pub struct EnvironmentFormCopy {
     description_placeholder: &'static str,
     setup_commands_placeholder: &'static str,
     setup_commands_helper: &'static str,
-    show_description_character_count: bool}
+    show_description_character_count: bool,
+}
 
 impl EnvironmentFormCopy {
     pub fn orchestration_modal() -> Self {
@@ -247,7 +271,8 @@ impl EnvironmentFormCopy {
             description_placeholder: DESCRIPTION_PLACEHOLDER,
             setup_commands_placeholder: "e.g., node start",
             setup_commands_helper: "Press Enter or click the submit button to add each command.",
-            show_description_character_count: false}
+            show_description_character_count: false,
+        }
     }
 }
 
@@ -262,7 +287,8 @@ impl Default for EnvironmentFormCopy {
             description_placeholder: DESCRIPTION_PLACEHOLDER,
             setup_commands_placeholder: "e.g. cd my-repo && pip install -r requirements.txt",
             setup_commands_helper: "Setup commands run independently. Each command runs from the workspace root (/workspace). If a command depends on the previous one, combine them with &&.",
-            show_description_character_count: true}
+            show_description_character_count: true,
+        }
     }
 }
 pub struct UpdateEnvironmentForm {
@@ -339,7 +365,8 @@ pub struct UpdateEnvironmentForm {
 
     /// Indicates where the GitHub authorization flow was initiated from.
     /// Affects the redirect URL used after auth completes.
-    auth_source: AuthSource}
+    auth_source: AuthSource,
+}
 
 const DESCRIPTION_MAX_CHARS: usize = 240;
 const DESCRIPTION_PLACEHOLDER: &str = "e.g., this environment is for all front end focused agents";
@@ -362,7 +389,8 @@ const HEADER_VERTICAL_LAYOUT_THRESHOLD: f32 = 520.;
 #[derive(Clone, Copy)]
 enum RepoDropdownSelectionDirection {
     Up,
-    Down}
+    Down,
+}
 
 impl UpdateEnvironmentForm {
     pub fn new(init_args: EnvironmentFormInitArgs, ctx: &mut ViewContext<Self>) -> Self {
@@ -638,7 +666,8 @@ impl UpdateEnvironmentForm {
             show_footer_cancel_button: false,
             show_share_with_team_controls: true,
             should_handle_escape_from_editor: false,
-            auth_source: AuthSource::default()};
+            auth_source: AuthSource::default(),
+        };
 
         // Initialize based on init args
         form.apply_mode(&init_args, ctx);
@@ -767,7 +796,8 @@ impl UpdateEnvironmentForm {
             .scroll_state
             .scroll_to_position(ScrollTarget {
                 position_id: Self::repo_dropdown_row_position_id(index),
-                mode: ScrollToPositionMode::FullyIntoView});
+                mode: ScrollToPositionMode::FullyIntoView,
+            });
     }
 
     pub fn set_mode(&mut self, init_args: EnvironmentFormInitArgs, ctx: &mut ViewContext<Self>) {
@@ -813,7 +843,8 @@ impl UpdateEnvironmentForm {
             (EnvironmentFormMode::Create, true) => "Create",
             (EnvironmentFormMode::Create, false) => "Create environment",
             (EnvironmentFormMode::Edit { .. }, true) => "Save",
-            (EnvironmentFormMode::Edit { .. }, false) => "Save environment"};
+            (EnvironmentFormMode::Edit { .. }, false) => "Save environment",
+        };
         self.submit_button.update(ctx, |button, ctx| {
             button.set_label(button_text, ctx);
         });
@@ -850,7 +881,8 @@ impl UpdateEnvironmentForm {
             }
             EnvironmentFormInitArgs::Edit {
                 env_id: _,
-                initial_values} => {
+                initial_values,
+            } => {
                 self.share_with_team = false;
 
                 // Populate form with initial values
@@ -1233,7 +1265,8 @@ impl UpdateEnvironmentForm {
         match self.github_dropdown_state.auth_fetched_at {
             Some(fetched_at) => fetched_at.elapsed() >= AUTH_URL_REFRESH_THRESHOLD,
             // No timestamp means the age is unknown — treat as stale to be safe.
-            None => self.github_dropdown_state.auth_url.is_some()}
+            None => self.github_dropdown_state.auth_url.is_some(),
+        }
     }
 
     fn open_github_auth_url_or_fallback(&self, ctx: &mut ViewContext<Self>) {
@@ -1392,7 +1425,8 @@ impl UpdateEnvironmentForm {
             CachedSuggestImageResult::Success {
                 image,
                 needs_custom_image,
-                reason} => {
+                reason,
+            } => {
                 self.apply_suggest_image_success(
                     key.to_string(),
                     image,
@@ -1404,7 +1438,8 @@ impl UpdateEnvironmentForm {
             CachedSuggestImageResult::AuthRequired { auth_url } => {
                 self.suggest_image_state = SuggestImageState::AuthRequired {
                     key: key.to_string(),
-                    auth_url};
+                    auth_url,
+                };
             }
         }
     }
@@ -1424,7 +1459,8 @@ impl UpdateEnvironmentForm {
             CachedSuggestImageResult::Success {
                 image: image.clone(),
                 needs_custom_image,
-                reason: reason.clone()},
+                reason: reason.clone(),
+            },
         );
 
         // Only update the input if the request key still matches the current repo selection
@@ -1439,7 +1475,8 @@ impl UpdateEnvironmentForm {
         self.suggest_image_state = SuggestImageState::Success {
             key,
             needs_custom_image,
-            reason};
+            reason,
+        };
 
     }
 
@@ -1510,30 +1547,35 @@ impl UpdateEnvironmentForm {
                             me.suggest_image_cache.insert(
                                 key.clone(),
                                 CachedSuggestImageResult::AuthRequired {
-                                    auth_url: output.auth_url.clone()},
+                                    auth_url: output.auth_url.clone(),
+                                },
                             );
                             me.suggest_image_state = SuggestImageState::AuthRequired {
                                 key: key.clone(),
-                                auth_url: output.auth_url};
+                                auth_url: output.auth_url,
+                            };
                         }
                         warp_graphql::queries::suggest_cloud_environment_image::SuggestCloudEnvironmentImageResult::UserFacingError(_) => {
                             let error_message = "Failed to suggest a Docker image".to_string();
                             me.suggest_image_state = SuggestImageState::Error {
                                 key: key.clone(),
-                                message: error_message};
+                                message: error_message,
+                            };
                         }
                         warp_graphql::queries::suggest_cloud_environment_image::SuggestCloudEnvironmentImageResult::Unknown => {
                             let error_message = "Unknown response from suggestCloudEnvironmentImage".to_string();
                             me.suggest_image_state = SuggestImageState::Error {
                                 key: key.clone(),
-                                message: error_message};
+                                message: error_message,
+                            };
                         }
                     },
                     Err(e) => {
                         let error_message = format!("Failed to suggest a Docker image: {}", e);
                         me.suggest_image_state = SuggestImageState::Error {
                             key: key.clone(),
-                            message: error_message};
+                            message: error_message,
+                        };
                     }
                 }
                 ctx.notify();
@@ -1676,7 +1718,8 @@ impl UpdateEnvironmentForm {
     fn render_header(&self, appearance: &Appearance, app: &AppContext) -> Box<dyn Element> {
         let (title, button_handle) = match &self.mode {
             EnvironmentFormMode::Create => ("Create environment", &self.submit_button),
-            EnvironmentFormMode::Edit { .. } => ("Edit environment", &self.submit_button)};
+            EnvironmentFormMode::Edit { .. } => ("Edit environment", &self.submit_button),
+        };
 
         let submit_actions = || self.render_submit_actions(appearance, app, button_handle);
 
@@ -1820,7 +1863,8 @@ impl UpdateEnvironmentForm {
                     .unwrap_or_default(),
                 on_remove_action: UpdateEnvironmentFormAction::RemoveSetupCommand(index),
                 is_disabled: false,
-                tooltip_mouse_state: None});
+                tooltip_mouse_state: None,
+            });
 
         let helper_text = Text::new(
             self.copy.setup_commands_helper,
@@ -2858,7 +2902,8 @@ impl UpdateEnvironmentForm {
                     }
                     image_without_tag
                 }
-                _ => return None}
+                _ => return None,
+            }
         };
 
         // Handle explicit "library/" prefix for official images (e.g. docker.io/library/python)
@@ -3145,7 +3190,8 @@ impl UpdateEnvironmentForm {
                 SuggestImageState::Success {
                     key,
                     needs_custom_image: true,
-                    reason},
+                    reason,
+                },
                 Some(current_key),
             ) if key == current_key => {
                 Some(self.render_suggest_image_callout_with_action(reason, appearance))
@@ -3179,7 +3225,8 @@ impl UpdateEnvironmentForm {
                     appearance,
                 ))
             }
-            _ => None}
+            _ => None,
+        }
     }
 
     fn render_suggest_image_callout_with_action(
@@ -3228,12 +3275,14 @@ impl TypedActionView for UpdateEnvironmentForm {
                     EnvironmentFormMode::Create => {
                         ctx.emit(UpdateEnvironmentFormEvent::Created {
                             environment,
-                            share_with_team: self.share_with_team});
+                            share_with_team: self.share_with_team,
+                        });
                     }
                     EnvironmentFormMode::Edit { env_id } => {
                         ctx.emit(UpdateEnvironmentFormEvent::Updated {
                             env_id: *env_id,
-                            environment});
+                            environment,
+                        });
                     }
                 }
             }

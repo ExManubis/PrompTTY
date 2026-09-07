@@ -27,7 +27,8 @@ pub struct StartupShellView {
     custom_path_editor: ViewHandle<EditorView>,
     /// This holds the current validity of the user's custom shell path, for
     /// drawing an error border if it's invalid.
-    is_custom_path_valid: bool}
+    is_custom_path_valid: bool,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum NewSessionShellAction {
@@ -35,7 +36,8 @@ pub enum NewSessionShellAction {
     /// the custom shell path editor if a non-custom shell was chosen.
     Set(AvailableShell),
     /// Displays the custom shell path editor.
-    ShowCustomPathInput}
+    ShowCustomPathInput,
+}
 
 impl NewSessionShellAction {
     /// Produces a [`TelemetryEvent`] that corresponds to this UI action.
@@ -47,10 +49,13 @@ impl NewSessionShellAction {
         match self {
             NewSessionShellAction::Set(option) => TelemetryEvent::FeaturesPageAction {
                 action: "NewSessionShellOverride".to_string(),
-                value: option.telemetry_value()},
+                value: option.telemetry_value(),
+            },
             NewSessionShellAction::ShowCustomPathInput => TelemetryEvent::FeaturesPageAction {
                 action: "ShowCustomPathInput".to_string(),
-                value: String::new()}}
+                value: String::new(),
+            },
+        }
     }
 }
 
@@ -105,7 +110,8 @@ impl StartupShellView {
             shell_dropdown,
             custom_path_editor: shell_editor,
             is_custom_path_valid: true,
-            should_display_editor: custom_shell_text.is_some()}
+            should_display_editor: custom_shell_text.is_some(),
+        }
     }
 
     fn maybe_update_editor_state(&mut self, ctx: &mut ViewContext<Self>) {
@@ -181,7 +187,8 @@ impl StartupShellView {
                     self.handle_action(&NewSessionShellAction::Set(shell), ctx);
                 }
             }
-            _ => ()}
+            _ => (),
+        }
     }
 }
 

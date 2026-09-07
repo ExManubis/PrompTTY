@@ -10,15 +10,18 @@ use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonE
 
 use super::{
     ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput,
-    describe_failed_files, read_local_file_context};
+    describe_failed_files, read_local_file_context,
+};
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionId, AIAgentActionResultType, AIAgentActionType,
-    SearchCodebaseFailureReason, SearchCodebaseRequest, SearchCodebaseResult};
+    SearchCodebaseFailureReason, SearchCodebaseRequest, SearchCodebaseResult,
+};
 use crate::ai::blocklist::action_model::execute::get_server_output_id;
 use crate::ai::blocklist::{BlocklistAIPermissions, SessionContext};
 use crate::ai::get_relevant_files::controller::{
     GetRelevantFilesController, GetRelevantFilesControllerEvent, GetRelevantFilesControllerResult,
-    GetRelevantFilesError, GetRelevantFilesRequestTarget};
+    GetRelevantFilesError, GetRelevantFilesRequestTarget,
+};
 use crate::features::FeatureFlag;
 use crate::server::team_scope::RequestTeamScope;
 use crate::terminal::model::session::active_session::ActiveSession;
@@ -34,7 +37,8 @@ pub struct SearchCodebaseExecutor {
     /// Cached repo roots derived during preprocessing so permission checks and execution can agree
     /// on which repository the action actually targets.
     root_repo_paths: HashMap<AIAgentActionId, PathBuf>,
-    terminal_view_id: EntityId}
+    terminal_view_id: EntityId,
+}
 
 impl SearchCodebaseExecutor {
     pub fn new(
@@ -51,7 +55,8 @@ impl SearchCodebaseExecutor {
             match event {
                 GetRelevantFilesControllerEvent::Success {
                     action_id,
-                    result: GetRelevantFilesControllerResult::SearchResult(result)} => {
+                    result: GetRelevantFilesControllerResult::SearchResult(result),
+                } => {
                     let Some(result_tx) = me.active_searches.remove(action_id) else {
                         return;
                     };
@@ -93,15 +98,19 @@ impl SearchCodebaseExecutor {
                                             message: format!(
                                                 "Failed to read files: {failed_files}"
                                             ),
-                                            reason: SearchCodebaseFailureReason::InvalidFilePaths}
+                                            reason: SearchCodebaseFailureReason::InvalidFilePaths,
+                                        }
                                     } else {
                                         SearchCodebaseResult::Success {
-                                            files: result.file_contexts}
+                                            files: result.file_contexts,
+                                        }
                                     }
                                 }
                                 Err(e) => SearchCodebaseResult::Failed {
                                     reason: SearchCodebaseFailureReason::ClientError,
-                                    message: e.to_string()}}
+                                    message: e.to_string(),
+                                },
+                            }
                         },
                         move |me, result, _| {
                             let Some(result_tx) = me.active_searches.remove(&action_id) else {
@@ -122,7 +131,8 @@ impl SearchCodebaseExecutor {
                     if let Err(e) = result_tx.send(SearchCodebaseResult::Failed {
                         message: "The search failed. Try another way to locate the relevant files."
                             .to_owned(),
-                        reason: SearchCodebaseFailureReason::GetRelevantFilesError}) {
+                        reason: SearchCodebaseFailureReason::GetRelevantFilesError,
+                    }) {
                         log::warn!("Failed to send search codebase results to receiver {e:?}.");
                     }
                 }
@@ -134,7 +144,8 @@ impl SearchCodebaseExecutor {
             get_relevant_files_controller,
             active_searches: HashMap::new(),
             root_repo_paths: HashMap::new(),
-            terminal_view_id}
+            terminal_view_id,
+        }
     }
 
     pub(super) fn should_autoexecute(
@@ -150,7 +161,8 @@ impl SearchCodebaseExecutor {
                     action: AIAgentActionType::SearchCodebase(..),
                     ..
                 },
-            conversation_id} = input
+            conversation_id,
+        } = input
         else {
             return false;
         };
@@ -186,7 +198,8 @@ impl SearchCodebaseExecutor {
                 AIAgentActionType::SearchCodebase(SearchCodebaseRequest {
                     query,
                     partial_paths,
-                    codebase_path}),
+                    codebase_path,
+                }),
             ..
         } = action
         else {
@@ -214,7 +227,8 @@ impl SearchCodebaseExecutor {
                 return ActionExecution::Sync(AIAgentActionResultType::SearchCodebase(
                     SearchCodebaseResult::Failed {
                         reason: SearchCodebaseFailureReason::CodebaseNotIndexed,
-                        message: "The search failed because the codebase is not available. Try another way to locate the relevant files.".to_owned()},
+                        message: "The search failed because the codebase is not available. Try another way to locate the relevant files.".to_owned(),
+                    },
                 ));
             };
 
@@ -236,7 +250,8 @@ impl SearchCodebaseExecutor {
                     controller.send_request(
                         GetRelevantFilesRequestTarget::Remote {
                             session_context,
-                            requested_codebase_path},
+                            requested_codebase_path,
+                        },
                         query.clone(),
                         partial_paths.as_ref(),
                         id.clone(),
@@ -251,16 +266,19 @@ impl SearchCodebaseExecutor {
                             let action_result =
                                 res.unwrap_or_else(|e| SearchCodebaseResult::Failed {
                                     message: e.to_string(),
-                                    reason: SearchCodebaseFailureReason::ClientError});
+                                    reason: SearchCodebaseFailureReason::ClientError,
+                                });
                             AIAgentActionResultType::SearchCodebase(action_result)
                         },
-                    )},
+                    ),
+                },
                 Err(e) => {
                     log::warn!("Failed to send remote get_relevant_files request: {e:?}");
                     ActionExecution::Sync(AIAgentActionResultType::SearchCodebase(
                         SearchCodebaseResult::Failed {
                             reason: SearchCodebaseFailureReason::CodebaseNotIndexed,
-                            message: "Remote codebase search is unavailable.".to_owned()},
+                            message: "Remote codebase search is unavailable.".to_owned(),
+                        },
                     ))
                 }
             }
@@ -279,7 +297,8 @@ impl SearchCodebaseExecutor {
                     SearchCodebaseResult::Failed {
                         reason: SearchCodebaseFailureReason::MissingCurrentWorkingDirectory,
                         message: "The search failed. Try another way to locate the relevant files."
-                            .to_string()},
+                            .to_string(),
+                    },
                 ));
             };
 
@@ -332,7 +351,8 @@ impl SearchCodebaseExecutor {
                 .update(ctx, |controller, ctx| {
                     controller.send_request(
                         GetRelevantFilesRequestTarget::Local {
-                            directory: root_dir_for_search.clone()},
+                            directory: root_dir_for_search.clone(),
+                        },
                         query.clone(),
                         partial_paths.as_ref(),
                         id.clone(),
@@ -347,10 +367,12 @@ impl SearchCodebaseExecutor {
                             let action_result =
                                 res.unwrap_or_else(|e| SearchCodebaseResult::Failed {
                                     message: e.to_string(),
-                                    reason: SearchCodebaseFailureReason::ClientError});
+                                    reason: SearchCodebaseFailureReason::ClientError,
+                                });
                             AIAgentActionResultType::SearchCodebase(action_result)
                         },
-                    )},
+                    ),
+                },
                 Err(e) => {
                     log::warn!("Failed to send get_relevant_files request for directory: {e:?}");
 
@@ -368,7 +390,8 @@ impl SearchCodebaseExecutor {
                     ActionExecution::Sync(AIAgentActionResultType::SearchCodebase(
                         SearchCodebaseResult::Failed {
                             reason: SearchCodebaseFailureReason::CodebaseNotIndexed,
-                            message: error_message},
+                            message: error_message,
+                        },
                     ))
                 }
             }
@@ -425,7 +448,8 @@ impl SearchCodebaseExecutor {
             match codebase_path {
                 Some(codebase_path) if codebase_path == Path::new(".") => pwd,
                 Some(codebase_path) => codebase_path,
-                None => pwd}
+                None => pwd,
+            }
         } else {
             pwd
         };

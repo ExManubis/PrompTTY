@@ -6,17 +6,20 @@ use warp_core::ui::Icon;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::color::internal_colors;
 use warpui_core::elements::shimmering_text::{
-    ShimmerConfig, ShimmeringTextElement, ShimmeringTextStateHandle};
+    ShimmerConfig, ShimmeringTextElement, ShimmeringTextStateHandle,
+};
 use warpui_core::elements::{
     Align, ChildAnchor, ConstrainedBox, Container, CrossAxisAlignment, Flex, FormattedTextElement,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
-    ParentElement, ParentOffsetBounds, Stack};
+    ParentElement, ParentOffsetBounds, Stack,
+};
 use warpui_core::keymap::Keystroke;
 use warpui_core::text_layout::TextAlignment;
 use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
 use warpui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
-    ViewContext};
+    ViewContext,
+};
 
 use super::OnboardingSlide;
 use crate::OnboardingEvent;
@@ -24,18 +27,21 @@ use crate::model::OnboardingStateModel;
 
 #[derive(Clone, Debug)]
 pub enum IntroSlideEvent {
-    LoginRequested}
+    LoginRequested,
+}
 
 #[derive(Clone, Debug)]
 pub enum IntroSlideAction {
     GetStartedClicked,
-    LoginClicked}
+    LoginClicked,
+}
 
 pub struct IntroSlide {
     onboarding_state: ModelHandle<OnboardingStateModel>,
     get_started_button: button::Button,
     shimmering_title_handle: ShimmeringTextStateHandle,
-    login_mouse_state: MouseStateHandle}
+    login_mouse_state: MouseStateHandle,
+}
 
 impl IntroSlide {
     pub(crate) fn new(onboarding_state: ModelHandle<OnboardingStateModel>) -> Self {
@@ -43,7 +49,8 @@ impl IntroSlide {
             onboarding_state,
             get_started_button: button::Button::default(),
             shimmering_title_handle: ShimmeringTextStateHandle::new(),
-            login_mouse_state: MouseStateHandle::default()}
+            login_mouse_state: MouseStateHandle::default(),
+        }
     }
 }
 
@@ -178,7 +185,8 @@ impl IntroSlide {
                         ctx.dispatch_typed_action(IntroSlideAction::GetStartedClicked);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         Flex::column()

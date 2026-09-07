@@ -4570,21 +4570,16 @@ impl AppContext {
         });
     }
 
-    pub fn record_app_focus(&mut self, user_id: Option<String>, anonymous_id: String) {
-        self.app_focus_info.record_app_focus(user_id, anonymous_id);
+    pub fn record_app_focus(&mut self) {
+        self.app_focus_info.record_app_focus();
     }
 
-    pub fn record_app_blur(&mut self, user_id: Option<String>, anonymous_id: String) {
-        self.app_focus_info.record_app_blur(user_id, anonymous_id);
+    pub fn record_app_blur(&mut self) {
+        self.app_focus_info.record_app_blur();
     }
 
-    pub fn try_record_daily_app_focus_duration(
-        &mut self,
-        user_id: Option<String>,
-        anonymous_id: String,
-    ) {
-        self.app_focus_info
-            .try_record_daily_app_focus_duration(user_id, anonymous_id);
+    pub fn try_record_daily_app_focus_duration(&mut self) {
+        self.app_focus_info.try_record_daily_app_focus_duration();
     }
 
     pub fn is_screen_reader_enabled(&self) -> Option<bool> {

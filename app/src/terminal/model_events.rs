@@ -18,14 +18,16 @@ use crate::terminal::ClipboardType;
 use crate::terminal::event::{
     AfterBlockCompletedEvent, BlockCompletedEvent, BlockMetadataReceivedEvent,
     BlockWorkingDirectoryUpdatedEvent, Event, ExecutedExecutorCommandEvent, InitSubshellEvent,
-    SourcedRcFileInSubshellEvent, TerminalMode};
+    SourcedRcFileInSubshellEvent, TerminalMode,
+};
 use crate::terminal::model::session::Sessions;
 use crate::terminal::shell::ShellType;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum SshRemoteServerSupport {
     Enabled,
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
-    Disabled}
+    Disabled,
+}
 
 impl SshRemoteServerSupport {
     fn should_use_remote_server(self, feature_enabled: bool, is_ssh_wrapper_session: bool) -> bool {
@@ -40,7 +42,8 @@ pub struct ModelEventDispatcher {
     last_start_prompt_marker: Option<PromptKind>,
     active_session_id: Option<SessionId>,
     sessions: ModelHandle<Sessions>,
-    ssh_remote_server_support: SshRemoteServerSupport}
+    ssh_remote_server_support: SshRemoteServerSupport,
+}
 
 impl ModelEventDispatcher {
     pub fn new(
@@ -71,7 +74,8 @@ impl ModelEventDispatcher {
             active_session_id: None,
             last_start_prompt_marker: None,
             sessions,
-            ssh_remote_server_support}
+            ssh_remote_server_support,
+        }
     }
     fn should_use_ssh_remote_server(&self, is_ssh_wrapper_session: bool) -> bool {
         self.ssh_remote_server_support.should_use_remote_server(
@@ -99,7 +103,8 @@ impl ModelEventDispatcher {
     fn handle_terminal_model_event(&mut self, event: Event, ctx: &mut ModelContext<Self>) {
         let event_to_emit = match event {
             Event::Handler(HandlerEvent::InitShell {
-                pending_session_info}) => {
+                pending_session_info,
+            }) => {
                 self.sessions.update(ctx, |sessions, ctx| {
                     sessions.register_pending_session(pending_session_info.as_ref(), ctx);
                 });
@@ -109,10 +114,12 @@ impl ModelEventDispatcher {
                 );
                 if self.should_use_ssh_remote_server(is_ssh_wrapper_session) {
                     ModelEvent::SshInitShell {
-                        pending_session_info}
+                        pending_session_info,
+                    }
                 } else {
                     ModelEvent::Handler(AnsiHandlerEvent::InitShell {
-                        pending_session_info})
+                        pending_session_info,
+                    })
                 }
             }
             Event::Handler(HandlerEvent::Bootstrapped(bootstrapped_event)) => {
@@ -130,7 +137,8 @@ impl ModelEventDispatcher {
 
                 ModelEvent::Handler(AnsiHandlerEvent::Bootstrapped {
                     session_id,
-                    is_subshell})
+                    is_subshell,
+                })
             }
             Event::RemoteServerReady { session_id } => {
                 log::info!("Remote server ready for session {session_id:?}");
@@ -153,11 +161,13 @@ impl ModelEventDispatcher {
             }
             Event::Handler(HandlerEvent::PromptEnd) => match self.last_start_prompt_marker.take() {
                 None | Some(PromptKind::Left) => ModelEvent::Handler(AnsiHandlerEvent::EndPrompt),
-                Some(PromptKind::Right) => ModelEvent::Handler(AnsiHandlerEvent::EndRPrompt)},
+                Some(PromptKind::Right) => ModelEvent::Handler(AnsiHandlerEvent::EndRPrompt),
+            },
             Event::Handler(HandlerEvent::Precmd {
                 session_id,
                 handled_after_inband,
-                env_vars}) => {
+                env_vars,
+            }) => {
                 // Update the active session to the one that corresponds to the received SessionId.
                 self.active_session_id = session_id;
 
@@ -183,11 +193,14 @@ impl ModelEventDispatcher {
                     ModelEvent::Handler(AnsiHandlerEvent::InBandCommandFinished)
                 }
                 CommandType::User => ModelEvent::Handler(AnsiHandlerEvent::UserCommandFinished),
-                _ => return},
+                _ => return,
+            },
             Event::Handler(HandlerEvent::SetMode {
-                mode: ansi::Mode::BracketedPaste}) => ModelEvent::Handler(AnsiHandlerEvent::SetBracketedPaste),
+                mode: ansi::Mode::BracketedPaste,
+            }) => ModelEvent::Handler(AnsiHandlerEvent::SetBracketedPaste),
             Event::Handler(HandlerEvent::UnsetMode {
-                mode: ansi::Mode::BracketedPaste}) => ModelEvent::Handler(AnsiHandlerEvent::UnsetBracketedPaste),
+                mode: ansi::Mode::BracketedPaste,
+            }) => ModelEvent::Handler(AnsiHandlerEvent::UnsetBracketedPaste),
             Event::CompletionsFinished(res, replacement_span) => {
                 ModelEvent::CompletionsFinished(res, replacement_span)
             }
@@ -203,10 +216,12 @@ impl ModelEventDispatcher {
             Event::AfterBlockStarted {
                 block_id,
                 command,
-                is_for_in_band_command} => ModelEvent::AfterBlockStarted {
+                is_for_in_band_command,
+            } => ModelEvent::AfterBlockStarted {
                 block_id,
                 command,
-                is_for_in_band_command},
+                is_for_in_band_command,
+            },
             Event::BlockMetadataReceived(block_metadata_received_event) => {
                 ModelEvent::BlockMetadataReceived(block_metadata_received_event)
             }
@@ -256,16 +271,20 @@ impl ModelEventDispatcher {
             Event::ImageReceived {
                 image_id,
                 image_data,
-                image_protocol} => ModelEvent::ImageReceived {
+                image_protocol,
+            } => ModelEvent::ImageReceived {
                 image_id,
                 image_data,
-                image_protocol},
+                image_protocol,
+            },
             Event::BootstrapPrecmdDone => ModelEvent::BootstrapPrecmdDone,
             Event::AgentTaggedInChanged {
                 block_id,
-                is_tagged_in} => ModelEvent::AgentTaggedInChanged {
+                is_tagged_in,
+            } => ModelEvent::AgentTaggedInChanged {
                 block_id,
-                is_tagged_in},
+                is_tagged_in,
+            },
             Event::PluggableNotification { title, body } => {
                 ModelEvent::PluggableNotification { title, body }
             }
@@ -273,7 +292,8 @@ impl ModelEventDispatcher {
             Event::LifecycleRecovery(record) => {
                 crate::                return;
             }
-            _ => return};
+            _ => return,
+        };
 
         ctx.emit(event_to_emit);
     }
@@ -299,7 +319,8 @@ impl ModelEventDispatcher {
             session_info,
             spawning_command,
             restored_block_commands,
-            rcfiles_duration_seconds} = event;
+            rcfiles_duration_seconds,
+        } = event;
 
         let (is_ssh_wrapper_session, session_id, shell_type_name, shell_path) = (
             matches!(
@@ -350,7 +371,8 @@ impl ModelEventDispatcher {
 /// The type of prompt for which a `PromptStart` event has been received.
 enum PromptKind {
     Left,
-    Right}
+    Right,
+}
 
 /// Set of events that were dispatched from the [`crate::terminal::TerminalModel`] while parsing
 /// PTY output.
@@ -368,7 +390,8 @@ pub enum ModelEvent {
     AfterBlockStarted {
         block_id: BlockId,
         command: String,
-        is_for_in_band_command: bool},
+        is_for_in_band_command: bool,
+    },
     /// Sent when a new block is created.
     BlockMetadataReceived(BlockMetadataReceivedEvent),
     /// Sent when an existing block's working directory has been updated
@@ -385,7 +408,8 @@ pub enum ModelEvent {
     TerminalClear,
     Bell,
     Exit {
-        reason: ExitReason},
+        reason: ExitReason,
+    },
     /// An indication that we are about to initiate an interactive SSH session
     /// (which may or may not use the SSH wrapper).
     PreInteractiveSSHSession,
@@ -432,37 +456,46 @@ pub enum ModelEvent {
     ImageReceived {
         image_id: u32,
         image_data: Vec<u8>,
-        image_protocol: ImageProtocol},
+        image_protocol: ImageProtocol,
+    },
     BootstrapPrecmdDone,
     AgentTaggedInChanged {
         block_id: BlockId,
-        is_tagged_in: bool},
+        is_tagged_in: bool,
+    },
     /// A pluggable notification triggered via OSC 9 or OSC 777 escape sequences.
     PluggableNotification {
         title: Option<String>,
-        body: String},
+        body: String,
+    },
     /// Emitted when an SSH session's `InitShell` is intercepted by the
     /// `SshRemoteServer` feature flag. `RemoteServerController` subscribes to
     /// this instead of `Handler(InitShell)` so `PtyController` never sees it.
     SshInitShell {
-        pending_session_info: Box<SessionInfo>},
+        pending_session_info: Box<SessionInfo>,
+    },
     /// Emitted by `ModelEventDispatcher::request_remote_server_block`
     /// when the remote-server binary is missing and the user must choose.
     RemoteServerBlockRequested {
-        session_id: SessionId},
+        session_id: SessionId,
+    },
     /// Emitted right before the remote shell for a session exits. Used to
     /// tear down per-session resources (e.g. the remote-server-proxy ssh
     /// child) before the outer ssh tunnel starts closing.
     ExitShell {
-        session_id: SessionId}}
+        session_id: SessionId,
+    },
+}
 
 #[derive(Clone, Debug)]
 pub enum AnsiHandlerEvent {
     InitShell {
-        pending_session_info: Box<SessionInfo>},
+        pending_session_info: Box<SessionInfo>,
+    },
     Bootstrapped {
         session_id: SessionId,
-        is_subshell: bool},
+        is_subshell: bool,
+    },
     Precmd,
     Preexec,
     UserCommandFinished,
@@ -472,7 +505,8 @@ pub enum AnsiHandlerEvent {
     EndPrompt,
     EndRPrompt,
     SetBracketedPaste,
-    UnsetBracketedPaste}
+    UnsetBracketedPaste,
+}
 
 impl Entity for ModelEventDispatcher {
     type Event = ModelEvent;

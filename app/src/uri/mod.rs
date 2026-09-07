@@ -31,7 +31,8 @@ use crate::launch_configs::launch_config::LaunchConfig;
 use crate::linear::{LinearAction, LinearIssueWork};
 use crate::root_view::{
     NewWorkspaceSource, OpenLaunchConfigArg, open_new_window_get_handles,
-    open_new_with_workspace_source};
+    open_new_with_workspace_source,
+};
 use crate::server::ids::ServerId;
 use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
 use crate::settings_view::{SettingsSection, settings_widget_deeplink_target};
@@ -39,15 +40,18 @@ use crate::tab_configs::TabConfig;
 use crate::user_config::{load_launch_configs, load_tab_configs, tab_configs_dir};
 use crate::util::openable_file_type::{
     is_file_openable_in_warp, is_markdown_file, is_runnable_shell_script,
-    renders_in_warp_notebook_viewer, starts_with_shebang};
+    renders_in_warp_notebook_viewer, starts_with_shebang,
+};
 use crate::view_components::DismissibleToast;
 use crate::workspace::auto_handoff::trigger_auto_handoff_to_cloud;
 use crate::workspace::util::PaneViewLocator;
 use crate::workspace::{
     AutoCloudHandoffTrigger, ToastStack, Workspace, WorkspaceAction, WorkspaceRegistry,
-    active_terminal_in_window};
+    active_terminal_in_window,
+};
 use crate::{
-    ChannelState, OpenPath, quake_mode_window_id, quake_mode_window_is_open, safe_info};
+    ChannelState, OpenPath, quake_mode_window_id, quake_mode_window_is_open, safe_info,
+};
 
 const DESKTOP_REDIRECT_URI_PATH: &str = "/desktop_redirect";
 
@@ -55,7 +59,8 @@ const DESKTOP_REDIRECT_URI_PATH: &str = "/desktop_redirect";
 /// The `autoinstall` value is the raw query param string; it is matched case-insensitively
 /// against gallery titles in `autoinstall_from_gallery`.
 pub struct OpenMCPSettingsArgs {
-    pub autoinstall: Option<String>}
+    pub autoinstall: Option<String>,
+}
 
 /// Args for the `warp://settings` deeplink family, dispatched to the
 /// `root_view:open_settings_in_{existing,new}_window` actions.
@@ -67,7 +72,9 @@ pub enum OpenSettingsArgs {
     /// `warp://settings?widget=<widget_id>` — open settings scrolled to a widget.
     Widget {
         page: SettingsSection,
-        widget_id: &'static str}}
+        widget_id: &'static str,
+    },
+}
 
 /// Source query parameter value indicating auth was initiated from cloud agent setup.
 /// Used to skip opening settings page after GitHub auth completes.
@@ -113,7 +120,8 @@ pub enum UriHost {
     /// Opens a saved tab config in an existing window or a new one.
     TabConfig,
     /// Focuses a specific terminal pane by its persistent session UUID.
-    Session}
+    Session,
+}
 
 impl FromStr for UriHost {
     type Err = anyhow::Error;
@@ -136,7 +144,8 @@ impl FromStr for UriHost {
             "linear" => Ok(Self::Linear),
             "tab_config" if FeatureFlag::TabConfigs.is_enabled() => Ok(Self::TabConfig),
             "session" => Ok(Self::Session),
-            _ => Err(anyhow!("Received url with unexpected host: {}", s))}
+            _ => Err(anyhow!("Received url with unexpected host: {}", s)),
+        }
     }
 }
 
@@ -195,7 +204,8 @@ impl UriHost {
                             &OpenLaunchConfigArg {
                                 launch_config: config.clone(),
                                 ui_location: LaunchConfigUiLocation::Uri,
-                                open_in_active_window: false},
+                                open_in_active_window: false,
+                            },
                         )
                     } else {
                         log::warn!(
@@ -270,7 +280,8 @@ impl UriHost {
                         None => ctx.dispatch_global_action(
                             "root_view:open_conversation_viewer",
                             &conversation_id,
-                        )}
+                        ),
+                    }
                 } else {
                     log::warn!("Failed to open conversation with uri={url}");
                 }
@@ -310,7 +321,9 @@ impl UriHost {
                         server_id,
                         settings: OpenWarpDriveObjectSettings {
                             focused_folder_id,
-                            invitee_email}};
+                            invitee_email,
+                        },
+                    };
                     // If there's an existing window, open the object in that window, otherwise open a new window
                     if let Some((primary_window_id, root_view_id)) = primary_window_and_view {
                         // `args` may contain user-identifiable fields
@@ -521,7 +534,8 @@ impl UriHost {
                                 *win_id,
                                 PaneViewLocator {
                                     pane_group_id: pane_group.id(),
-                                    pane_id},
+                                    pane_id,
+                                },
                             ))
                         })
                     });
@@ -549,7 +563,8 @@ impl UriHost {
         use WindowBehaviorHint as W;
         match self {
             Self::Auth => W::ShowPrimaryWindow(WindowActivationFallbackBehavior::NewWindow {
-                replace_existing: true}),
+                replace_existing: true,
+            }),
             Self::Team | Self::Drive | Self::Settings => W::default(),
             // These URLs always open new windows.
             Self::Launch | Self::SharedSession | Self::Conversation | Self::Home => W::Nothing,
@@ -563,7 +578,8 @@ impl UriHost {
             Self::Linear => W::default(),
             // Handler picks the window itself based on `?new_window=true`.
             Self::TabConfig => W::Nothing,
-            Self::Session => W::Nothing}
+            Self::Session => W::Nothing,
+        }
     }
 }
 
@@ -575,12 +591,14 @@ impl UriHost {
 enum WindowBehaviorHint {
     /// Determined by the [`get_primary_window`] function.
     ShowPrimaryWindow(WindowActivationFallbackBehavior),
-    Nothing}
+    Nothing,
+}
 
 impl Default for WindowBehaviorHint {
     fn default() -> Self {
         Self::ShowPrimaryWindow(WindowActivationFallbackBehavior::NewWindow {
-            replace_existing: false})
+            replace_existing: false,
+        })
     }
 }
 
@@ -628,7 +646,9 @@ enum WindowActivationFallbackBehavior {
         /// generally default to `false` to avoid closing a window with information that the user
         /// may still want. One exception is the Auth route where the old window just showed the
         /// auth page.
-        replace_existing: bool}}
+        replace_existing: bool,
+    },
+}
 
 impl WindowActivationFallbackBehavior {
     /// Perform the desired window fallback behavior for the URI being handled. This may change the
@@ -858,7 +878,8 @@ fn parse_open_file_editor_url(url: &Url) -> Result<(PathBuf, Option<LineAndColum
         path,
         line.map(|line_num| LineAndColumnArg {
             line_num,
-            column_num: column}),
+            column_num: column,
+        }),
     ))
 }
 
@@ -871,7 +892,8 @@ fn parse_auto_handoff_trigger(url: &Url) -> AutoCloudHandoffTrigger {
         Some(trigger) if matches!(trigger.as_ref(), "sleep" | "macos_sleep" | "macos-sleep") => {
             AutoCloudHandoffTrigger::MacOsSleep
         }
-        Some(_) | None => AutoCloudHandoffTrigger::Uri}
+        Some(_) | None => AutoCloudHandoffTrigger::Uri,
+    }
 }
 
 #[derive(Debug)]
@@ -880,17 +902,21 @@ enum Action {
     NewWindow,
     OpenFileEditor {
         path: PathBuf,
-        line_col: Option<LineAndColumnArg>},
+        line_col: Option<LineAndColumnArg>,
+    },
     Docker,
     OpenRepo,
     CloudAgentSetup,
     NewCloudAgentConversation,
     NewAgentConversation,
     CreateEnvironment {
-        repos: Vec<String>},
+        repos: Vec<String>,
+    },
     FocusCloudMode,
     AutoHandoffToCloud {
-        trigger: AutoCloudHandoffTrigger}}
+        trigger: AutoCloudHandoffTrigger,
+    },
+}
 
 impl Action {
     fn parse(url: &Url) -> Result<Self> {
@@ -916,11 +942,13 @@ impl Action {
             }
             "/focus_cloud_mode" => Ok(Self::FocusCloudMode),
             "/auto_handoff_to_cloud" | "/auto-handoff-to-cloud" => Ok(Self::AutoHandoffToCloud {
-                trigger: parse_auto_handoff_trigger(url)}),
+                trigger: parse_auto_handoff_trigger(url),
+            }),
             _ => Err(anyhow!(
                 "Received \"action\" intent with unexpected action: {}",
                 url.path()
-            ))}
+            )),
+        }
     }
 
     fn handle(&self, primary_window_id: Option<WindowId>, url: &Url, ctx: &mut AppContext) {
@@ -1069,7 +1097,8 @@ impl Action {
                 use crate::root_view::CreateEnvironmentArg;
 
                 let arg = CreateEnvironmentArg {
-                    repos: repos.clone()};
+                    repos: repos.clone(),
+                };
 
                 let primary_window_and_view = primary_window_id.and_then(|window_id| {
                     ctx.root_view_id(window_id)
@@ -1100,7 +1129,8 @@ impl Action {
                         active_agent_views
                             .get_terminal_view_id_for_conversation(conversation_id, ctx)
                     }
-                    None => None};
+                    None => None,
+                };
                 if terminal_view_id.is_none() {
                     terminal_view_id = find_cloud_mode_terminal_view_id(primary_window_id, ctx);
                 }
@@ -1163,8 +1193,10 @@ impl Action {
             | Self::AutoHandoffToCloud { .. } => W::default(),
             Self::NewTab => W::ShowPrimaryWindow(WindowActivationFallbackBehavior::Notify {
                 title: "New tab created".to_owned(),
-                description: "Go to Warp to see your new tab.".to_owned()}),
-            Self::NewWindow => W::Nothing}
+                description: "Go to Warp to see your new tab.".to_owned(),
+            }),
+            Self::NewWindow => W::Nothing,
+        }
     }
 }
 
@@ -1246,7 +1278,8 @@ enum OpenFileAction {
     Editor,
     /// Open a session at the parent directory and queue the file as the pending command,
     /// or just open a session at the directory path if `path` is a directory.
-    ExecuteInSession}
+    ExecuteInSession,
+}
 
 /// Pure routing decision for `open_file`. Extracted so it can be unit-tested without
 /// standing up a full `AppContext`.
@@ -1328,7 +1361,8 @@ fn open_file(window_id: Option<WindowId>, path: PathBuf, ctx: &mut AppContext) {
             } else {
                 open_new_with_workspace_source(
                     NewWorkspaceSource::Session {
-                        options: Box::default()},
+                        options: Box::default(),
+                    },
                     ctx,
                 )
                 .0
@@ -1349,7 +1383,8 @@ fn open_file(window_id: Option<WindowId>, path: PathBuf, ctx: &mut AppContext) {
         let directory_path = if path.is_file() {
             match path.parent() {
                 Some(parent) => parent.to_path_buf(),
-                None => PathBuf::new()}
+                None => PathBuf::new(),
+            }
         } else {
             path.clone()
         };
@@ -1371,7 +1406,8 @@ fn open_file(window_id: Option<WindowId>, path: PathBuf, ctx: &mut AppContext) {
             }
         } else {
             let open_path = OpenPath {
-                path: directory_path};
+                path: directory_path,
+            };
             ctx.dispatch_global_action("root_view:open_new_from_path", &open_path);
 
             // Run command after window has been added
@@ -1418,7 +1454,8 @@ fn open_file_editor(
         } else {
             open_new_with_workspace_source(
                 NewWorkspaceSource::Session {
-                    options: Box::default()},
+                    options: Box::default(),
+                },
                 ctx,
             )
             .0
@@ -1433,7 +1470,8 @@ fn open_file_editor(
                 let source = CodeSource::Link {
                     path: path.clone(),
                     range_start: line_col,
-                    range_end: None};
+                    range_end: None,
+                };
                 workspace.open_file_with_target(path, target, line_col, source, ctx);
             });
         }
@@ -1611,7 +1649,8 @@ fn settings_section_for_simple_subpage(subpage: &str) -> Option<SettingsSection>
         "platform" => Some(SettingsSection::WarpCloudAgentAPIKeys),
         "appearance" => Some(SettingsSection::Appearance),
         "warp_agent" => Some(SettingsSection::WarpAgent),
-        _ => None}
+        _ => None,
+    }
 }
 
 /// Validates an incoming custom URI for security and returns the host.
@@ -1646,7 +1685,8 @@ fn validate_custom_uri(url: &Url) -> Result<UriHost> {
         | UriHost::TabConfig
         | UriHost::Session => true,
         // Auth and Home only allow the desktop redirect path
-        UriHost::Auth | UriHost::Home => false};
+        UriHost::Auth | UriHost::Home => false,
+    };
 
     ensure!(
         host_allows_arbitrary_path || url.path() == DESKTOP_REDIRECT_URI_PATH,

@@ -5,18 +5,21 @@ use warp_core::ui::icons::Icon;
 use warp_core::ui::theme::{AnsiColorIdentifier, Fill};
 use warpui::elements::{
     Border, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
-    Expanded, Flex, MainAxisSize, Padding, ParentElement, Radius, Shrinkable, Text};
+    Expanded, Flex, MainAxisSize, Padding, ParentElement, Radius, Shrinkable, Text,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::{
     AppContext, Element, Entity, EntityId, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle};
+    ViewHandle,
+};
 
 use super::cloud_conversation_continuation::TombstoneCta;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent_management::telemetry::{AgentManagementTelemetryEvent, ArtifactType};
 use crate::ai::ambient_agents::{
     AmbientAgentTask, AmbientAgentTaskId, AmbientConversationStatus,
-    conversation_output_status_from_conversation};
+    conversation_output_status_from_conversation,
+};
 use crate::ai::artifacts::{Artifact, ArtifactButtonsRow, ArtifactButtonsRowEvent};
 use crate::ai::blocklist::{BlocklistAIHistoryModel, format_credits};
 use crate::appearance::Appearance;
@@ -46,11 +49,13 @@ struct TombstoneDisplayData {
     /// Working directory at start of conversation
     working_directory: Option<String>,
     /// Artifacts from the conversation
-    artifacts: Vec<Artifact>}
+    artifacts: Vec<Artifact>,
+}
 
 #[derive(Debug, Clone)]
 pub enum ConversationEndedTombstoneEvent {
-    ContinueInCloud { task_id: AmbientAgentTaskId }}
+    ContinueInCloud { task_id: AmbientAgentTaskId },
+}
 
 impl TombstoneDisplayData {
     fn from_conversation(
@@ -82,7 +87,8 @@ impl TombstoneDisplayData {
             .as_ref()
             .and_then(|status| match status {
                 AmbientConversationStatus::Error { error } => Some(error.to_string()),
-                _ => None});
+                _ => None,
+            });
 
         // Calculate run time from exchanges
         let run_time = (|| {
@@ -103,7 +109,8 @@ impl TombstoneDisplayData {
             run_time,
             credits: Some(format_credits(conversation.credits_spent())),
             working_directory: conversation.initial_working_directory(),
-            artifacts: conversation.artifacts().to_vec()}
+            artifacts: conversation.artifacts().to_vec(),
+        }
     }
 
     fn enrich_from_task(&mut self, task: AmbientAgentTask) {
@@ -154,7 +161,8 @@ pub struct ConversationEndedTombstoneView {
     #[cfg(not(target_family = "wasm"))]
     continue_locally_button: Option<ViewHandle<ActionButton>>,
     #[cfg(target_family = "wasm")]
-    open_in_warp_button: Option<ViewHandle<ActionButton>>}
+    open_in_warp_button: Option<ViewHandle<ActionButton>>,
+}
 
 impl ConversationEndedTombstoneView {
     #[cfg_attr(target_family = "wasm", allow(unused_variables))]
@@ -199,7 +207,8 @@ impl ConversationEndedTombstoneView {
                         })
                 }))
             }
-            Some(TombstoneCta::ContinueLocally { .. }) | None => None};
+            Some(TombstoneCta::ContinueLocally { .. }) | None => None,
+        };
 
         #[cfg(not(target_family = "wasm"))]
         let continue_locally_button = match tombstone_cta {
@@ -214,7 +223,8 @@ impl ConversationEndedTombstoneView {
                         })
                 }))
             }
-            Some(TombstoneCta::ContinueInCloud { .. }) | None => None};
+            Some(TombstoneCta::ContinueInCloud { .. }) | None => None,
+        };
 
         // In wasm, continuing locally is impossible so we instead
         // offer to open the conversation in warp (where you can continue locally).
@@ -243,14 +253,16 @@ impl ConversationEndedTombstoneView {
             #[cfg(not(target_family = "wasm"))]
             continue_locally_button,
             #[cfg(target_family = "wasm")]
-            open_in_warp_button};
+            open_in_warp_button,
+        };
 
         ctx.subscribe_to_view(
             &view.artifact_buttons_view,
             |_, _, event, ctx| match event {
                 ArtifactButtonsRowEvent::OpenPlan { notebook_uid } => {
                     ctx.dispatch_typed_action(&WorkspaceAction::OpenNotebook {
-                        id: SyncId::ServerId((*notebook_uid).into())});
+                        id: SyncId::ServerId((*notebook_uid).into()),
+                    });
                 }
                 ArtifactButtonsRowEvent::CopyBranch { branch } => {
                     ctx.clipboard()
@@ -510,11 +522,13 @@ impl ConversationEndedTombstoneView {
 #[derive(Debug, Clone)]
 pub enum ConversationEndedTombstoneAction {
     ContinueInCloud {
-        task_id: AmbientAgentTaskId},
+        task_id: AmbientAgentTaskId,
+    },
     #[cfg(not(target_family = "wasm"))]
     ContinueLocally(AIConversationId),
     #[cfg(target_family = "wasm")]
-    OpenInWarp(AIConversationId)}
+    OpenInWarp(AIConversationId),
+}
 
 impl View for ConversationEndedTombstoneView {
     fn ui_name() -> &'static str {
@@ -599,7 +613,8 @@ impl TypedActionView for ConversationEndedTombstoneView {
             #[cfg(not(target_family = "wasm"))]
             ConversationEndedTombstoneAction::ContinueLocally(conversation_id) => {
                 ctx.dispatch_typed_action(&WorkspaceAction::ContinueConversationLocally {
-                    conversation_id: *conversation_id});
+                    conversation_id: *conversation_id,
+                });
             }
             #[cfg(target_family = "wasm")]
             ConversationEndedTombstoneAction::OpenInWarp(conversation_id) => {

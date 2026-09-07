@@ -9,6 +9,7 @@ pub(crate) mod linearization;
 pub(crate) mod redaction;
 pub(crate) mod task;
 mod task_store;
+mod identifiers;
 pub(super) mod telemetry;
 pub(super) mod util;
 
@@ -33,7 +34,7 @@ use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::ParticipantId;
 use task::TaskId;
-pub use telemetry::AIIdentifiers;
+pub use identifiers::AIIdentifiers;
 use uuid::Uuid;
 use warp_core::features::FeatureFlag;
 use warp_editor::render::model::LineCount;

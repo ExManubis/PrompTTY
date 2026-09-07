@@ -7,14 +7,17 @@
 use warp_core::ui::appearance::Appearance;
 use warp_errors::report_error;
 use warpui::elements::{
-    ClippedScrollStateHandle, Container, Element, Flex, MouseStateHandle, ParentElement, Text};
+    ClippedScrollStateHandle, Container, Element, Flex, MouseStateHandle, ParentElement, Text,
+};
 use warpui::{SingletonEntity, ViewContext};
 
 use crate::code_review::git_dialog::{
     GitDialog, GitDialogAction, GitDialogEvent, GitDialogMode, render_branch_section,
-    render_file_changes_box, should_send_git_ops_ai_request, show_toast, user_facing_git_error};
+    render_file_changes_box, should_send_git_ops_ai_request, show_toast, user_facing_git_error,
+};
 use crate::code_review::telemetry_event::{
-    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind};
+    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind,
+};
 use crate::ui_components::icons::Icon;
 use crate::util::git::{FileChangeEntry, PrInfo};
 use crate::view_components::{DismissibleToast, ToastLink};
@@ -23,14 +26,16 @@ use crate::workspace::ToastStack;
 /// PR-mode sub-actions, dispatched wrapped in `GitDialogAction::Pr`.
 #[derive(Clone, Debug, PartialEq)]
 pub enum PrSubAction {
-    ToggleChangesExpanded}
+    ToggleChangesExpanded,
+}
 
 pub struct PrState {
     base_branch_name: Option<String>,
     file_changes: Vec<FileChangeEntry>,
     changes_expanded: bool,
     summary_mouse_state: MouseStateHandle,
-    changes_scroll_state: ClippedScrollStateHandle}
+    changes_scroll_state: ClippedScrollStateHandle,
+}
 
 pub(super) fn confirm_label_for() -> &'static str {
     "Create PR"
@@ -59,7 +64,8 @@ pub(super) fn new_state(base_branch_name: Option<String>) -> PrState {
         file_changes: Vec::new(),
         changes_expanded: false,
         summary_mouse_state: MouseStateHandle::default(),
-        changes_scroll_state: ClippedScrollStateHandle::default()}
+        changes_scroll_state: ClippedScrollStateHandle::default(),
+    }
 }
 
 /// Kicks off an on-demand fetch of the committed branch diff
@@ -133,7 +139,8 @@ pub(super) fn finish_create_pr(
 ) {
     let (status, error) = match &result {
         Ok(_) => (GitDialogStatus::Succeeded, None),
-        Err(err) => (GitDialogStatus::Failed, Some(err.to_string()))};
+        Err(err) => (GitDialogStatus::Failed, Some(err.to_string())),
+    };
     match &result {
         Ok(pr_info) => show_pr_created_toast(pr_info, ctx),
         Err(err) => {

@@ -15,7 +15,8 @@ use warp::tui_export::{
     AcceptSlashCommandOrSavedPrompt, Appearance, ConversationSelectionHandle,
     ParsedSlashCommandInput, SlashCommandDataSource as _, SlashCommandMixer, SlashMenuSource,
     TelemetryEvent, TuiSlashCommandDataSource, UpdatedActiveCommands,
-    should_close_slash_command_menu_for_exact_match, slash_command_query, slash_commands};
+    should_close_slash_command_menu_for_exact_match, slash_command_query, slash_commands,
+};
 use warp_editor::model::CoreEditorModel;
 use warp_search_core::inline_menu::{InlineMenuResultsUpdate, InputDrivenInlineMenuLifecycle};
 use warpui::SingletonEntity;
@@ -23,7 +24,8 @@ use warpui_core::{AppContext, Entity, ModelContext, ModelHandle};
 
 use crate::inline_menu::{
     MAX_INLINE_MENU_ROWS, TuiInlineMenuListState, TuiInlineMenuRow, TuiInlineMenuRowStyle,
-    TuiInlineMenuSnapshot, TuiInlineMenuStatus, result_row_capacity};
+    TuiInlineMenuSnapshot, TuiInlineMenuStatus, result_row_capacity,
+};
 use crate::input_suggestions_mode::{TuiInputSuggestionsMode, TuiInputSuggestionsModeModel};
 
 const MAX_VISIBLE_ROWS: usize = result_row_capacity(MAX_INLINE_MENU_ROWS, false, false);
@@ -33,7 +35,8 @@ const MAX_VISIBLE_ROWS: usize = result_row_capacity(MAX_INLINE_MENU_ROWS, false,
 pub(crate) struct TuiSlashCommandRow {
     pub(crate) title: String,
     pub(crate) description: Option<String>,
-    pub(crate) action: AcceptSlashCommandOrSavedPrompt}
+    pub(crate) action: AcceptSlashCommandOrSavedPrompt,
+}
 fn highlighted_prefix_len_for_parsed_input(
     parsed_input: &ParsedSlashCommandInput,
     input: &str,
@@ -46,7 +49,8 @@ fn highlighted_prefix_len_for_parsed_input(
             let prefix = format!("/{}", detected.name);
             input.starts_with(&prefix).then(|| prefix.chars().count())
         }
-        ParsedSlashCommandInput::None | ParsedSlashCommandInput::Composing { .. } => None}
+        ParsedSlashCommandInput::None | ParsedSlashCommandInput::Composing { .. } => None,
+    }
 }
 
 fn argument_hint_text_for_parsed_input(
@@ -70,7 +74,9 @@ pub(crate) enum TuiSlashCommandState {
     Closed,
     Open {
         query: String,
-        list: TuiInlineMenuListState<TuiSlashCommandRow>}}
+        list: TuiInlineMenuListState<TuiSlashCommandRow>,
+    },
+}
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct TuiSlashCommandModelEvent;
@@ -85,7 +91,8 @@ pub(crate) struct TuiSlashCommandModel {
     opened_telemetry_emitted: bool,
     highlighted_prefix_len: Option<usize>,
     argument_hint_text: Option<&'static str>,
-    conversation_selection: ConversationSelectionHandle}
+    conversation_selection: ConversationSelectionHandle,
+}
 
 impl TuiSlashCommandModel {
     pub(crate) fn new(
@@ -123,7 +130,8 @@ impl TuiSlashCommandModel {
             opened_telemetry_emitted: false,
             highlighted_prefix_len: None,
             argument_hint_text: None,
-            conversation_selection};
+            conversation_selection,
+        };
         model.update_from_input(false, ctx);
         model
     }
@@ -148,12 +156,14 @@ impl TuiSlashCommandModel {
             mixer,
             state: TuiSlashCommandState::Open {
                 query: String::new(),
-                list},
+                list,
+            },
             lifecycle: InputDrivenInlineMenuLifecycle::default(),
             opened_telemetry_emitted: false,
             highlighted_prefix_len: None,
             argument_hint_text: None,
-            conversation_selection}
+            conversation_selection,
+        }
     }
 
     #[cfg(test)]
@@ -289,13 +299,15 @@ impl TuiSlashCommandModel {
                     state_suffix: self.state_suffix(&row.title, ctx),
                     promotional_suffix: None,
                     is_selectable: true,
-                    style: TuiInlineMenuRowStyle::InlineMenuItem})
+                    style: TuiInlineMenuRowStyle::InlineMenuItem,
+                })
                 .collect(),
             selected_index: list.selected_index(),
             scroll_offset: list.scroll_offset(),
             scroll_anchor: list.scroll_anchor(),
             max_visible_rows: MAX_VISIBLE_ROWS,
-            status})
+            status,
+        })
     }
 
     fn auto_approve_enabled(&self, ctx: &AppContext) -> bool {
@@ -412,14 +424,16 @@ impl TuiSlashCommandModel {
                 list.set_loading(true);
                 self.state = TuiSlashCommandState::Open {
                     query: query.clone(),
-                    list};
+                    list,
+                };
                 if !self.opened_telemetry_emitted {
                     self.opened_telemetry_emitted = true;
                     warp::                }
             }
             TuiSlashCommandState::Open {
                 query: current_query,
-                list} => {
+                list,
+            } => {
                 *current_query = query.clone();
                 list.set_loading(true);
             }
@@ -537,7 +551,8 @@ fn row_from_result(
     Some(TuiSlashCommandRow {
         title: detail.title,
         description: detail.description,
-        action: result.accept_result()})
+        action: result.accept_result(),
+    })
 }
 
 #[cfg(test)]

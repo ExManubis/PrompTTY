@@ -20,7 +20,8 @@ use settings::ToggleableSetting as _;
 use settings_file_footer::{SettingsFooterKind, SettingsFooterMouseStates, render_footer};
 use settings_page::{
     HEADER_PADDING, MatchData, SettingsPage, SettingsPageEvent, SettingsPageMeta,
-    SettingsPageViewHandle};
+    SettingsPageViewHandle,
+};
 use show_blocks_view::{ShowBlocksEvent, ShowBlocksView};
 use warp_agent_page::{WarpAgentPageAction, WarpAgentPageEvent, WarpAgentPageView};
 use warp_core::channel::ChannelState;
@@ -34,12 +35,14 @@ use warpui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult, Empty,
     EventHandler, Expanded, Fill, Flex, MainAxisSize, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, SavePosition, ScrollbarWidth, Shrinkable, Stack,
-    Text, Wrap};
+    Text, Wrap,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::{ContextPredicate, EnabledPredicate, FixedBinding};
 use warpui::{
     Action, AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView,
-    UpdateView as _, View, ViewContext, ViewHandle, id};
+    UpdateView as _, View, ViewContext, ViewHandle, id,
+};
 
 use self::telemetry::SettingsTelemetryEvent;
 use crate::ai::custom_model_routers::CustomModelRouter;
@@ -47,7 +50,8 @@ use crate::ai::execution_profiles::ExecutionProfileId;
 use crate::appearance::Appearance;
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
-    TextColors, TextOptions};
+    TextColors, TextOptions,
+};
 use crate::menu::{self, Menu, MenuItem, MenuItemFields};
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::view;
@@ -110,7 +114,8 @@ pub use features_page::FeaturesPageAction;
 pub use privacy_page::PrivacyPageAction;
 pub use settings_page::{
     AdditionalInfo, InputListItem, LocalOnlyIconState, ToggleState, render_body_item_label,
-    render_info_icon, render_input_list, render_separator};
+    render_info_icon, render_input_list, render_separator,
+};
 pub(crate) use warp_agent_page::custom_model_routers_widget_id;
 
 /// Original sidebar width used when the settings-file footer is not
@@ -174,7 +179,8 @@ pub(super) fn editor_text_colors(appearance: &Appearance) -> TextColors {
     TextColors {
         default_color: theme.active_ui_text_color(),
         disabled_color: theme.disabled_ui_text_color(),
-        hint_color: theme.disabled_ui_text_color()}
+        hint_color: theme.disabled_ui_text_color(),
+    }
 }
 
 /// Small inline pill rendered next to a settings label to mark a feature as beta.
@@ -236,16 +242,20 @@ pub enum SettingsViewEvent {
     SignupAnonymousUser,
     ShowToast {
         message: String,
-        flavor: ToastFlavor},
+        flavor: ToastFlavor,
+    },
     OpenAIFactCollection,
     OpenMCPServerCollection,
     OpenCustomRouterEditor(Option<CustomModelRouter>),
     OpenCustomRouterFile(PathBuf),
     OpenExecutionProfileEditor(ExecutionProfileId),
     OpenLspLogs {
-        log_path: PathBuf},
+        log_path: PathBuf,
+    },
     OpenProjectRulesPane {
-        rule_paths: Vec<PathBuf>}}
+        rule_paths: Vec<PathBuf>,
+    },
+}
 
 /// Different navigation sections within the settings view
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
@@ -271,7 +281,8 @@ pub enum SettingsSection {
     EditorAndCodeReview,
     // ── Cloud platform umbrella subpages ──
     CloudEnvironments,
-    WarpCloudAgentAPIKeys}
+    WarpCloudAgentAPIKeys,
+}
 
 impl SettingsSection {
     /// Pages that only make sense when a Warp-hosted account/server exists.
@@ -294,7 +305,8 @@ impl SettingsSection {
             | SettingsSection::Knowledge
             | SettingsSection::ThirdPartyCLIAgents
             | SettingsSection::CodeIndexing
-            | SettingsSection::EditorAndCodeReview => false}
+            | SettingsSection::EditorAndCodeReview => false,
+        }
     }
 }
 
@@ -318,7 +330,8 @@ impl Display for SettingsSection {
             SettingsSection::EditorAndCodeReview => write!(f, "Editor and Code Review"),
             SettingsSection::CloudEnvironments => write!(f, "Environments"),
             SettingsSection::WarpCloudAgentAPIKeys => write!(f, "API keys"),
-            _ => write!(f, "{self:?}")}
+            _ => write!(f, "{self:?}"),
+        }
     }
 }
 
@@ -357,7 +370,8 @@ impl SettingsSection {
             Self::CloudEnvironments => "Environments",
             // Keeps the "Oz" spelling the slug was seeded from; only the
             // Display label above dropped it.
-            Self::WarpCloudAgentAPIKeys => "Oz Cloud API Keys"}
+            Self::WarpCloudAgentAPIKeys => "Oz Cloud API Keys",
+        }
     }
 
     /// Parses a [`Self::slug`], also accepting the legacy spellings that
@@ -393,7 +407,8 @@ impl SettingsSection {
             "Editor and Code Review" | "EditorAndCodeReview" => Self::EditorAndCodeReview,
             "Environments" | "CloudEnvironments" => Self::CloudEnvironments,
             "Oz Cloud API Keys" | "OzCloudAPIKeys" => Self::WarpCloudAgentAPIKeys,
-            _ => return None};
+            _ => return None,
+        };
         Some(section)
     }
 }
@@ -417,7 +432,8 @@ pub fn settings_widget_deeplink_target(slug: &str) -> Option<(SettingsSection, &
             SettingsSection::ThirdPartyCLIAgents,
             cli_agent_settings_widget_id(),
         )),
-        _ => None}
+        _ => None,
+    }
 }
 
 pub struct DisplayCount(pub usize);
@@ -723,13 +739,15 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
 #[derive(Clone)]
 pub struct SettingActionPairDescriptions {
     enable: String,
-    disable: String}
+    disable: String,
+}
 
 impl SettingActionPairDescriptions {
     pub fn new(enable: &str, disable: &str) -> Self {
         Self {
             enable: enable.to_owned(),
-            disable: disable.to_owned()}
+            disable: disable.to_owned(),
+        }
     }
 }
 
@@ -738,13 +756,15 @@ impl SettingActionPairDescriptions {
 #[derive(Clone)]
 pub struct SettingActionPairContexts {
     enable_predicate: ContextPredicate,
-    disable_predicate: ContextPredicate}
+    disable_predicate: ContextPredicate,
+}
 
 impl SettingActionPairContexts {
     pub fn new(enable_predicate: ContextPredicate, disable_predicate: ContextPredicate) -> Self {
         Self {
             enable_predicate,
-            disable_predicate}
+            disable_predicate,
+        }
     }
 }
 
@@ -773,7 +793,8 @@ pub struct ToggleSettingActionPair<T: Action + Clone> {
     enabled_predicate: Option<EnabledPredicate>,
 
     /// Whether or not this pairing applies to the current platform (Mac, Linux, Web, etc.)
-    supported_on_current_platform: bool}
+    supported_on_current_platform: bool,
+}
 
 impl<T: Action + Clone> ToggleSettingActionPair<T> {
     /// `description_suffix` will be visible to the user,
@@ -798,15 +819,18 @@ impl<T: Action + Clone> ToggleSettingActionPair<T> {
         ToggleSettingActionPair {
             descriptions: SettingActionPairDescriptions {
                 enable: format!("Enable {description_suffix}"),
-                disable: format!("Disable {description_suffix}")},
+                disable: format!("Disable {description_suffix}"),
+            },
             contexts: SettingActionPairContexts {
                 enable_predicate: context_prefix.to_owned() & !id!(context_boolean_flag),
-                disable_predicate: context_prefix.to_owned() & id!(context_boolean_flag)},
+                disable_predicate: context_prefix.to_owned() & id!(context_boolean_flag),
+            },
             toggle_action,
             custom_action: None,
             binding_group: BindingGroup::Settings,
             supported_on_current_platform: true,
-            enabled_predicate: None}
+            enabled_predicate: None,
+        }
     }
 
     pub fn custom(
@@ -822,7 +846,8 @@ impl<T: Action + Clone> ToggleSettingActionPair<T> {
             custom_action,
             binding_group: BindingGroup::Settings,
             supported_on_current_platform: true,
-            enabled_predicate: None}
+            enabled_predicate: None,
+        }
     }
 
     pub fn with_group(mut self, group: BindingGroup) -> Self {
@@ -856,7 +881,8 @@ impl<T: Action + Clone> ToggleSettingActionPair<T> {
                         custom_action,
                         binding_group,
                         supported_on_current_platform,
-                        enabled_predicate} = action_pair;
+                        enabled_predicate,
+                    } = action_pair;
 
                     if !supported_on_current_platform {
                         None
@@ -923,7 +949,8 @@ pub enum DebugSettingsAction {
     /// Whether or not the "bootstrap block" or "initialization block" is visible.
     ToggleInitializationBlock,
     /// Whether or not in-band generator commands are visible in the BlockList.
-    ToggleInBandCommandBlocks}
+    ToggleInBandCommandBlocks,
+}
 
 #[derive(Debug, Clone)]
 pub enum SettingsAction {
@@ -949,12 +976,14 @@ pub enum SettingsAction {
     Up,
     Down,
     /// For internal, debug-related settings which don't appear in the UI.
-    Debug(DebugSettingsAction)}
+    Debug(DebugSettingsAction),
+}
 
 #[derive(Copy, Clone, Debug)]
 enum CycleDirection {
     Up,
-    Down}
+    Down,
+}
 
 /// A stop in the arrow-key navigation order over the sidebar.
 ///
@@ -982,7 +1011,9 @@ enum NavStop {
         /// moves relative to the umbrella's position in the nav order.
         nav_index: usize,
         first_subpage: SettingsSection,
-        last_subpage: SettingsSection}}
+        last_subpage: SettingsSection,
+    },
+}
 
 /// Builds the ordered list of arrow-key nav stops from `nav_items`.
 ///
@@ -1022,7 +1053,8 @@ where
                     vec![NavStop::CollapsedUmbrella {
                         nav_index,
                         first_subpage,
-                        last_subpage}]
+                        last_subpage,
+                    }]
                 }
             }
         })
@@ -1045,7 +1077,8 @@ fn current_stop_index(
         NavStop::CollapsedUmbrella { nav_index, .. } => matches!(
             nav_items.get(*nav_index),
             Some(SettingsNavItem::Umbrella(u)) if u.contains(section)
-        )})
+        ),
+    })
 }
 
 /// Returns the next index after applying `direction`, wrapping around the
@@ -1094,7 +1127,8 @@ macro_rules! update_page {
                 $ctx.update_view(handle, $update)
             }
             SettingsPageViewHandle::MCPServers(handle) => $ctx.update_view(handle, $update),
-            SettingsPageViewHandle::WarpDrive(handle) => $ctx.update_view(handle, $update)}
+            SettingsPageViewHandle::WarpDrive(handle) => $ctx.update_view(handle, $update),
+        }
     };
 }
 
@@ -1122,7 +1156,8 @@ pub struct SettingsView {
     /// Mouse state handles for the nav-rail footer buttons. Constructed once
     /// per `SettingsView` per `WARP.md`'s guidance that inline
     /// `MouseStateHandle::default()` breaks hover/click tracking.
-    footer_mouse_states: SettingsFooterMouseStates}
+    footer_mouse_states: SettingsFooterMouseStates,
+}
 
 impl SettingsView {
     pub fn new(page: Option<SettingsSection>, ctx: &mut ViewContext<Self>) -> Self {
@@ -1153,7 +1188,8 @@ impl SettingsView {
             ShowBlocksEvent::ShowToast { message, flavor } => {
                 ctx.emit(SettingsViewEvent::ShowToast {
                     message: message.clone(),
-                    flavor: *flavor})
+                    flavor: *flavor,
+                })
             }
         });
 
@@ -1367,7 +1403,8 @@ impl SettingsView {
             Some(section) if !ChannelState::cloud_enabled() && section.requires_warp_cloud() => {
                 SettingsSection::default()
             }
-            other => other.unwrap_or_default()};
+            other => other.unwrap_or_default(),
+        };
 
         // Auto-expand the umbrella if the initial page is one of its subpages.
         for item in &mut nav_items {
@@ -1395,7 +1432,8 @@ impl SettingsView {
             nav_items,
             settings_file_error: None,
             settings_error_banner_dismissed: false,
-            footer_mouse_states: SettingsFooterMouseStates::default()}
+            footer_mouse_states: SettingsFooterMouseStates::default(),
+        }
     }
 
     /// Pushes the current settings-file error state from `Workspace` into this
@@ -1499,7 +1537,8 @@ impl SettingsView {
                                 .iter()
                                 .any(|subpage| self.section_passes_search_filter(*subpage))
                                 .then_some(nav_index),
-                            SettingsNavItem::Page(_) => None})
+                            SettingsNavItem::Page(_) => None,
+                        })
                         .collect();
                     for nav_index in matching_umbrellas {
                         if let Some(SettingsNavItem::Umbrella(umbrella)) =
@@ -1524,7 +1563,8 @@ impl SettingsView {
                             .iter()
                             .flat_map(|item| match item {
                                 SettingsNavItem::Page(section) => vec![*section],
-                                SettingsNavItem::Umbrella(umbrella) => umbrella.subpages.clone()})
+                                SettingsNavItem::Umbrella(umbrella) => umbrella.subpages.clone(),
+                            })
                             .find(|section| self.section_passes_search_filter(*section))
                     } else {
                         self.filtered_pages(ctx)
@@ -1679,7 +1719,8 @@ impl SettingsView {
             FeaturesSettingsPageEvent::SearchForKeybinding(query) => {
                 self.search_for_keybinding(query, ctx);
             }
-            FeaturesSettingsPageEvent::FocusModal => ctx.focus(&self.search_editor)}
+            FeaturesSettingsPageEvent::FocusModal => ctx.focus(&self.search_editor),
+        }
     }
 
     fn handle_warpify_page_event(
@@ -1837,7 +1878,8 @@ impl SettingsView {
         ctx: &mut ViewContext<Self>,
     ) {
         match event {
-            CLIAgentsPageEvent::FocusModal => ctx.focus(&self.search_editor)}
+            CLIAgentsPageEvent::FocusModal => ctx.focus(&self.search_editor),
+        }
     }
 
     fn handle_code_indexing_page_event(
@@ -1851,11 +1893,13 @@ impl SettingsView {
             }
             CodeIndexingPageEvent::OpenLspLogs { log_path } => {
                 ctx.emit(SettingsViewEvent::OpenLspLogs {
-                    log_path: log_path.clone()});
+                    log_path: log_path.clone(),
+                });
             }
             CodeIndexingPageEvent::OpenProjectRules { rule_paths } => {
                 ctx.emit(SettingsViewEvent::OpenProjectRulesPane {
-                    rule_paths: rule_paths.clone()});
+                    rule_paths: rule_paths.clone(),
+                });
             }
         }
     }
@@ -1974,7 +2018,8 @@ impl SettingsView {
             SettingsPageViewHandle::MCPServers(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::CodeIndexing(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::EditorAndCodeReview(v) => v.as_ref(app).should_render(app),
-            SettingsPageViewHandle::WarpDrive(v) => v.as_ref(app).should_render(app)}
+            SettingsPageViewHandle::WarpDrive(v) => v.as_ref(app).should_render(app),
+        }
     }
 
     /// Open the MCP servers page, optionally to list page or edit page.
@@ -2076,7 +2121,8 @@ impl SettingsView {
                 Some(idx) => next_stop_index(idx, stops.len(), direction),
                 // Current page isn't in the visible nav order (e.g. it was
                 // just filtered out); jump to the first visible stop.
-                None => 0};
+                None => 0,
+            };
 
         // Selecting a subpage auto-expands its umbrella in
         // set_and_refresh_current_page_internal, which is exactly the behavior
@@ -2092,7 +2138,9 @@ impl SettingsView {
                 ..
             } => match direction {
                 CycleDirection::Up => last_subpage,
-                CycleDirection::Down => first_subpage}};
+                CycleDirection::Down => first_subpage,
+            },
+        };
 
         self.set_and_refresh_current_page_internal(target_section, false, false, ctx);
     }
@@ -2166,7 +2214,8 @@ impl SettingsView {
             SettingsPageViewHandle::WarpAgent(view) => {
                 view.read(app, |view, _| view.get_modal_content(app))
             }
-            _ => None}
+            _ => None,
+        }
     }
 
     fn render_search_editor(&self, appearance: &Appearance) -> Box<dyn Element> {
@@ -2249,7 +2298,8 @@ impl SettingsView {
             SettingsNavItem::Umbrella(umbrella) if umbrella.label == label => {
                 Some(umbrella.expanded)
             }
-            SettingsNavItem::Umbrella(_) | SettingsNavItem::Page(_) => None})
+            SettingsNavItem::Umbrella(_) | SettingsNavItem::Page(_) => None,
+        })
     }
 
     pub fn search_query(&self, app: &AppContext) -> String {
@@ -2278,7 +2328,8 @@ impl View for SettingsView {
                 .find(|(page, _)| page.section == self.current_settings_page)
             {
                 None => (Empty::new().finish(), None),
-                Some((page, _)) => (page.view_handle.child_view(), Some(&page.view_handle))}
+                Some((page, _)) => (page.view_handle.child_view(), Some(&page.view_handle)),
+            }
         };
 
         let theme = appearance.theme();
@@ -2629,7 +2680,8 @@ impl TypedActionView for SettingsView {
                     Direction::Left => PaneEvent::SplitLeft(None),
                     Direction::Right => PaneEvent::SplitRight(None),
                     Direction::Up => PaneEvent::SplitUp(None),
-                    Direction::Down => PaneEvent::SplitDown(None)};
+                    Direction::Down => PaneEvent::SplitDown(None),
+                };
                 ctx.emit(SettingsViewEvent::Pane(event));
             }
             SettingsAction::ToggleMaximizePane => {
@@ -2648,7 +2700,8 @@ impl TypedActionView for SettingsView {
             SettingsAction::FocusSelf => ctx.emit(SettingsViewEvent::Pane(PaneEvent::FocusSelf)),
             SettingsAction::Up => self.key_up(ctx),
             SettingsAction::Down => self.key_down(ctx),
-            SettingsAction::Debug(action) => self.debug_settings_action(action, ctx)}
+            SettingsAction::Debug(action) => self.debug_settings_action(action, ctx),
+        }
     }
 }
 

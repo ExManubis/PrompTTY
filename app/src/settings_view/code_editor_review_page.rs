@@ -9,16 +9,19 @@ use warpui::keymap::ContextPredicate;
 use warpui::ui_components::components::UiComponent;
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{
-    Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+    Action, AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 #[cfg(feature = "local_fs")]
 use super::features::external_editor::ExternalEditorView;
 use super::settings_page::{
     MatchData, PageTitle, PageType, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
-    render_body_item, render_dropdown_item};
+    render_body_item, render_dropdown_item,
+};
 use super::{
     LocalOnlyIconState, SettingsAction, SettingsSection, ToggleSettingActionPair, ToggleState,
-    flags};
+    flags,
+};
 use crate::appearance::Appearance;
 use crate::settings::{AppEditorSettings, CodeEditorLineNumberMode, CodeSettings};
 use crate::terminal::general_settings::GeneralSettings;
@@ -32,7 +35,8 @@ pub struct EditorAndCodeReviewPageView {
     page: PageType<Self>,
     #[cfg(feature = "local_fs")]
     external_editor_view: Option<ViewHandle<ExternalEditorView>>,
-    code_editor_line_number_mode_dropdown: ViewHandle<Dropdown<EditorAndCodeReviewPageAction>>}
+    code_editor_line_number_mode_dropdown: ViewHandle<Dropdown<EditorAndCodeReviewPageAction>>,
+}
 
 impl EditorAndCodeReviewPageView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -57,7 +61,8 @@ impl EditorAndCodeReviewPageView {
             page: Self::build_page(ctx),
             #[cfg(feature = "local_fs")]
             external_editor_view,
-            code_editor_line_number_mode_dropdown}
+            code_editor_line_number_mode_dropdown,
+        }
     }
 
     fn build_page(ctx: &mut ViewContext<Self>) -> PageType<Self> {
@@ -150,7 +155,8 @@ pub enum EditorAndCodeReviewPageAction {
     ToggleShowHiddenFiles,
     ToggleFormatOnSave,
     ToggleAutoSave,
-    SetCodeEditorLineNumberMode(CodeEditorLineNumberMode)}
+    SetCodeEditorLineNumberMode(CodeEditorLineNumberMode),
+}
 
 impl TypedActionView for EditorAndCodeReviewPageView {
     type Action = EditorAndCodeReviewPageAction;
@@ -342,7 +348,8 @@ impl SettingsWidget for ExternalEditorCodeWidget {
 
 #[derive(Default)]
 struct AutoOpenCodeReviewPaneCodeWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for AutoOpenCodeReviewPaneCodeWidget {
     type View = EditorAndCodeReviewPageView;
@@ -382,7 +389,8 @@ impl SettingsWidget for AutoOpenCodeReviewPaneCodeWidget {
 
 #[derive(Default)]
 struct CodeReviewPanelToggleWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for CodeReviewPanelToggleWidget {
     type View = EditorAndCodeReviewPageView;
@@ -424,7 +432,8 @@ impl SettingsWidget for CodeReviewPanelToggleWidget {
 
 #[derive(Default)]
 struct CodeReviewDiffStatsToggleWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for CodeReviewDiffStatsToggleWidget {
     type View = EditorAndCodeReviewPageView;
@@ -465,7 +474,8 @@ impl SettingsWidget for CodeReviewDiffStatsToggleWidget {
 
 #[derive(Default)]
 struct ProjectExplorerToggleWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for ProjectExplorerToggleWidget {
     type View = EditorAndCodeReviewPageView;
@@ -507,7 +517,8 @@ impl SettingsWidget for ProjectExplorerToggleWidget {
 
 #[derive(Default)]
 struct GlobalSearchToggleWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for GlobalSearchToggleWidget {
     type View = EditorAndCodeReviewPageView;
@@ -546,7 +557,8 @@ impl SettingsWidget for GlobalSearchToggleWidget {
 
 #[derive(Default)]
 struct ShowHiddenFilesToggleWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for ShowHiddenFilesToggleWidget {
     type View = EditorAndCodeReviewPageView;
@@ -587,7 +599,8 @@ impl SettingsWidget for ShowHiddenFilesToggleWidget {
 
 #[derive(Default)]
 struct FormatOnSaveToggleWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for FormatOnSaveToggleWidget {
     type View = EditorAndCodeReviewPageView;
@@ -629,7 +642,8 @@ impl SettingsWidget for FormatOnSaveToggleWidget {
 
 #[derive(Default)]
 struct AutoSaveToggleWidget {
-    switch_state: SwitchStateHandle}
+    switch_state: SwitchStateHandle,
+}
 
 impl SettingsWidget for AutoSaveToggleWidget {
     type View = EditorAndCodeReviewPageView;

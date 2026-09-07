@@ -20,7 +20,8 @@ use warpui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ClippedScrollStateHandle, ClippedScrollable,
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty, Flex, Hoverable,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
-    ParentElement, ParentOffsetBounds, Radius, Rect, ScrollbarWidth, Shrinkable, Stack};
+    ParentElement, ParentOffsetBounds, Radius, Rect, ScrollbarWidth, Shrinkable, Stack,
+};
 use warpui::fonts::{FamilyId, Weight};
 use warpui::keymap::EditableBinding;
 use warpui::platform::Cursor;
@@ -29,7 +30,8 @@ use warpui::ui_components::button::{Button, ButtonVariant, TextAndIcon, TextAndI
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle, WindowId};
+    ViewContext, ViewHandle, WindowId,
+};
 
 use super::aliases::WorkflowAliases;
 use super::command_parser::WorkflowCommandDisplayData;
@@ -41,7 +43,8 @@ use crate::cloud_object::breadcrumbs::ContainingObject;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::cloud_object::model::view::CloudViewModel;
 use crate::cloud_object::{
-    CloudObject, CloudObjectEventEntrypoint, ObjectType, Owner, Revision, Space};
+    CloudObject, CloudObjectEventEntrypoint, ObjectType, Owner, Revision, Space,
+};
 use crate::drive::cloud_object_styling::warp_drive_icon_color;
 use crate::drive::drive_helpers::has_feature_gated_anonymous_user_reached_workflow_limit;
 use crate::drive::items::WarpDriveItemId;
@@ -49,15 +52,18 @@ use crate::drive::sharing::{ContentEditability, ShareableObject, SharingAccessLe
 use crate::drive::workflows::ai_assist::GeneratedCommandMetadataError;
 use crate::drive::workflows::arguments::ArgumentsState;
 use crate::drive::workflows::enum_creation_dialog::{
-    EnumCreationDialog, EnumCreationDialogEvent, WorkflowEnumData};
+    EnumCreationDialog, EnumCreationDialogEvent, WorkflowEnumData,
+};
 use crate::drive::workflows::workflow_arg_selector::{
-    WorkflowArgSelector, WorkflowArgSelectorEvent};
+    WorkflowArgSelector, WorkflowArgSelectorEvent,
+};
 use crate::drive::workflows::workflow_arg_type_helpers::{self, ArgumentEditorRowIndex};
 use crate::drive::{CloudObjectTypeAndId, DriveObjectType, OpenWarpDriveObjectSettings};
 use crate::editor::{
     EditorOptions, EditorView, EnterAction, EnterSettings, Event as EditorEvent, InteractionState,
     PlainTextEditorViewAction as EditorAction, PropagateAndNoOpNavigationKeys,
-    SingleLineEditorOptions, TextOptions, TextStyleOperation};
+    SingleLineEditorOptions, TextOptions, TextStyleOperation,
+};
 use crate::menu::{MenuItem, MenuItemFields};
 use crate::network::NetworkStatus;
 use crate::pane_group::focus_state::PaneFocusHandle;
@@ -65,15 +71,18 @@ use crate::pane_group::pane::view;
 use crate::pane_group::{BackingView, PaneConfiguration, PaneEvent};
 use crate::server::cloud_objects::update_manager::{
     FetchSingleObjectOption, ObjectOperation, OperationSuccessType, UpdateManager,
-    UpdateManagerEvent};
+    UpdateManagerEvent,
+};
 use crate::server::ids::{ClientId, ServerId, SyncId};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::ai::AIClient;
 use crate::server::telemetry::{
-    CloudObjectTelemetryMetadata, SharingDialogSource, TelemetryCloudObjectType, TelemetryEvent};
+    CloudObjectTelemetryMetadata, SharingDialogSource, TelemetryCloudObjectType, TelemetryEvent,
+};
 use crate::settings::AISettings;
 use crate::settings::app_installation_detection::{
-    UserAppInstallDetectionSettings, UserAppInstallStatus};
+    UserAppInstallDetectionSettings, UserAppInstallStatus,
+};
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::ui_components::breadcrumb::{BreadcrumbState, render_breadcrumbs};
 use crate::ui_components::buttons::{accent_icon_button, icon_button};
@@ -171,7 +180,8 @@ const MODAL_HORIZONTAL_MARGIN: f32 = 28.;
 pub(super) enum AiAssistState {
     PreRequest,
     RequestInFlight,
-    Generated}
+    Generated,
+}
 
 /// A grouping of various error states the modal can be in. Any of these being
 /// `true` prevents the save button from being clickable.
@@ -181,13 +191,15 @@ struct WorkflowEditorErrorState {
     content_empty_error: bool,
     /// The command must not have any arguments that are invalid (e.g. start
     /// with a numeric number or special character like *).
-    invalid_argument_error: bool}
+    invalid_argument_error: bool,
+}
 
 impl WorkflowEditorErrorState {
     pub fn new() -> Self {
         Self {
             content_empty_error: true,
-            invalid_argument_error: false}
+            invalid_argument_error: false,
+        }
     }
 
     pub fn has_any_error(&self) -> bool {
@@ -213,7 +225,8 @@ pub enum WorkflowAction {
     CopyLink(String),
     OpenLinkOnDesktop(Url),
     Trash,
-    Untrash}
+    Untrash,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum WorkflowViewEvent {
@@ -224,24 +237,30 @@ pub enum WorkflowViewEvent {
     OpenDriveObjectShareDialog {
         cloud_object_type_and_id: CloudObjectTypeAndId,
         invitee_email: Option<String>,
-        source: SharingDialogSource},
+        source: SharingDialogSource,
+    },
     RunWorkflow {
         workflow: Arc<WorkflowType>,
         source: WorkflowSource,
-        argument_override: Option<HashMap<String, String>>}}
+        argument_override: Option<HashMap<String, String>>,
+    },
+}
 
 enum UnsavedChangeType {
     ForEdit,
-    ForClose}
+    ForClose,
+}
 
 enum ContainerConfiguration {
     Pane(ModelHandle<PaneConfiguration>),
-    SuggestionDialog}
+    SuggestionDialog,
+}
 
 #[derive(Default, Debug)]
 struct EnvironmentVariablesState {
     default_env_vars: Option<SyncId>,
-    is_dirty: bool}
+    is_dirty: bool,
+}
 
 #[derive(Default)]
 struct UiStateHandles {
@@ -259,7 +278,8 @@ struct UiStateHandles {
     execute_command_mouse_state: MouseStateHandle,
     alias_header_tool_tip: MouseStateHandle,
     add_environment_variables_mouse_state: MouseStateHandle,
-    clipped_scroll_state: ClippedScrollStateHandle}
+    clipped_scroll_state: ClippedScrollStateHandle,
+}
 
 pub struct WorkflowView {
     workflow_view_mode: WorkflowViewMode,
@@ -302,7 +322,8 @@ pub struct WorkflowView {
     /// `true` if this workflow view is for viewing/editing an AI workflow.
     ///
     /// This is currently internal-only, gated with the `am_workflows` feature flag.
-    is_for_agent_mode: bool}
+    is_for_agent_mode: bool,
+}
 
 impl WorkflowView {
     pub fn is_agent_mode_workflow(&self) -> bool {
@@ -438,7 +459,8 @@ impl WorkflowView {
             show_enum_creation_dialog: false,
             enum_creation_dialog,
             all_workflow_enums: Default::default(),
-            is_for_agent_mode: false};
+            is_for_agent_mode: false,
+        };
 
         me.subscribe_to_model_updates(ctx);
         me
@@ -507,7 +529,8 @@ impl WorkflowView {
         match event {
             CloudModelEvent::ObjectUpdated {
                 type_and_id: CloudObjectTypeAndId::Workflow(sync_id),
-                source: _} => {
+                source: _,
+            } => {
                 if self.workflow_id() == *sync_id && !self.is_editable() {
                     self.reset(ctx);
                 }
@@ -515,7 +538,8 @@ impl WorkflowView {
             CloudModelEvent::ObjectTrashed { .. }
             | CloudModelEvent::ObjectDeleted { .. }
             | CloudModelEvent::ObjectUntrashed { .. } => ctx.notify(),
-            _ => ()}
+            _ => (),
+        }
     }
 
     fn handle_update_manager_event(
@@ -695,7 +719,8 @@ impl WorkflowView {
             WorkflowViewMode::View => {
                 WorkflowViewMode::supported_view_mode(Some(self.workflow_id), ctx)
             }
-            mode => mode};
+            mode => mode,
+        };
 
         self.revision_ts = workflow.metadata.revision;
 
@@ -790,7 +815,8 @@ impl WorkflowView {
             {
                 self.env_vars_state = EnvironmentVariablesState {
                     default_env_vars: *environment_variables,
-                    is_dirty: false};
+                    is_dirty: false,
+                };
                 self.env_vars_selector.update(ctx, |selector, ctx| {
                     selector.set_selected_env_vars(*environment_variables, ctx)
                 });
@@ -815,7 +841,8 @@ impl WorkflowView {
             ctx.emit(WorkflowViewEvent::OpenDriveObjectShareDialog {
                 cloud_object_type_and_id: object_id_to_share,
                 invitee_email: Some(invitee_email),
-                source: SharingDialogSource::InviteeRequest});
+                source: SharingDialogSource::InviteeRequest,
+            });
         }
 
         if matches!(mode, WorkflowViewMode::View) {
@@ -867,7 +894,9 @@ impl WorkflowView {
             space: space.map(Into::into),
             team_uid: match self.owner {
                 Some(Owner::Team { team_uid, .. }) => Some(team_uid),
-                _ => None}}
+                _ => None,
+            },
+        }
     }
 
     pub fn is_team_workflow(&self) -> bool {
@@ -938,7 +967,8 @@ impl WorkflowView {
             }
             EditorEvent::Navigate(NavigationKey::ShiftTab) => match self.arguments_rows.last() {
                 Some(row) => ctx.focus(&row.default_value_editor),
-                None => ctx.focus(&self.content_editor)},
+                None => ctx.focus(&self.content_editor),
+            },
             _ => {}
         }
     }
@@ -1002,7 +1032,8 @@ impl WorkflowView {
             // when the editor supports tab completions, we'll need to change this logic
             EditorEvent::Navigate(NavigationKey::Tab) => match self.arguments_rows.first() {
                 Some(row) => ctx.focus(&row.description_editor),
-                None => ctx.focus(&self.name_editor)},
+                None => ctx.focus(&self.name_editor),
+            },
             EditorEvent::Navigate(NavigationKey::ShiftTab) => ctx.focus(&self.description_editor),
             EditorEvent::Navigate(NavigationKey::Up) => self
                 .content_editor
@@ -1116,7 +1147,8 @@ impl WorkflowView {
                 {
                     match self.arguments_rows.get(index + 1) {
                         Some(next_row) => ctx.focus(&next_row.description_editor),
-                        None => ctx.focus(&self.name_editor)}
+                        None => ctx.focus(&self.name_editor),
+                    }
                 }
             }
             WorkflowArgSelectorEvent::InputShiftTab => {
@@ -1209,7 +1241,8 @@ impl WorkflowView {
 
                     let description = match description_editor.is_empty(ctx) {
                         true => None,
-                        false => Some(description_editor.buffer_text(ctx))};
+                        false => Some(description_editor.buffer_text(ctx)),
+                    };
 
                     let type_selector = argument_row.arg_type_editor.as_ref(ctx);
                     let text_editor = type_selector.text_editor.as_ref(ctx);
@@ -1236,7 +1269,8 @@ impl WorkflowView {
             WorkflowViewMode::Edit => CloudModel::as_ref(ctx)
                 .get_workflow(&self.workflow_id)
                 .map(|workflow| workflow.permissions().owner),
-            WorkflowViewMode::Create => self.owner};
+            WorkflowViewMode::Create => self.owner,
+        };
 
         self.arguments_rows.iter().for_each(|argument_row| {
             let type_selector = argument_row.arg_type_editor.as_ref(ctx);
@@ -1333,7 +1367,8 @@ impl WorkflowView {
     fn update_editors_interactivity(&mut self, ctx: &mut ViewContext<Self>) {
         let interaction_state = match self.workflow_view_mode {
             WorkflowViewMode::View => InteractionState::Selectable,
-            WorkflowViewMode::Edit | WorkflowViewMode::Create => InteractionState::Editable};
+            WorkflowViewMode::Edit | WorkflowViewMode::Create => InteractionState::Editable,
+        };
         self.name_editor.update(ctx, |editor, ctx| {
             editor.set_interaction_state(interaction_state, ctx);
         });
@@ -1413,7 +1448,8 @@ impl WorkflowView {
             }
             // NOTE: prevent transition from create to any other mode
             // we also shouldn't be showing the toggle button in create view
-            WorkflowViewMode::Create => WorkflowViewMode::Create};
+            WorkflowViewMode::Create => WorkflowViewMode::Create,
+        };
 
         // Always reset the view with cloud model when we transition to the view or edit mode.
         // This reset is necessary when transitioning to edit mode so that we can reset the `revision_ts`.
@@ -1448,20 +1484,23 @@ impl WorkflowView {
                     ctx.emit(WorkflowViewEvent::RunWorkflow {
                         workflow: Arc::new(WorkflowType::Cloud(Box::new(cloned_cloud_workflow))),
                         source: owner.into(),
-                        argument_override: None});
+                        argument_override: None,
+                    });
                 };
             } else if let Some(owner) = self.owner {
                 ctx.emit(WorkflowViewEvent::RunWorkflow {
                     workflow: Arc::new(WorkflowType::Local(new_workflow)),
                     source: owner.into(),
-                    argument_override: None})
+                    argument_override: None,
+                })
             }
         } else if let Some(workflow) = self.get_cloud_workflow(ctx) {
             if let Some(owner) = self.owner {
                 ctx.emit(WorkflowViewEvent::RunWorkflow {
                     workflow: Arc::new(WorkflowType::Cloud(Box::new(workflow))),
                     source: owner.into(),
-                    argument_override: Some(self.command_display_data.get_argument_values())});
+                    argument_override: Some(self.command_display_data.get_argument_values()),
+                });
             } else {
                 log::warn!("Invalid space for workflow");
             }
@@ -1492,7 +1531,8 @@ impl WorkflowView {
                 name: workflow_name,
                 query: content,
                 arguments: self.arguments_with_metadata(ctx),
-                description: None}
+                description: None,
+            }
         } else {
             Workflow::Command {
                 name: workflow_name,
@@ -1504,7 +1544,8 @@ impl WorkflowView {
                 author: None,
                 author_url: None,
                 shells: vec![],
-                environment_variables: self.env_vars_state.default_env_vars}
+                environment_variables: self.env_vars_state.default_env_vars,
+            }
         };
 
         let workflow_description = self.description_editor.as_ref(ctx).buffer_text(ctx);
@@ -1605,7 +1646,8 @@ impl WorkflowView {
                     report_error!("Attempting to create workflow but now space found");
                 }
             }
-            _ => report_error!("Did not match conditions to either create or save the workflow")}
+            _ => report_error!("Did not match conditions to either create or save the workflow"),
+        }
     }
 
     fn workflow_contains_secrets(&self, app: &AppContext) -> bool {
@@ -1900,7 +1942,8 @@ impl WorkflowView {
 
                 Some((mode_text, edit_button))
             }
-            _ => None};
+            _ => None,
+        };
 
         if let Some((mode_text, mut edit_button)) = text_and_button {
             if matches!(editability, ContentEditability::RequiresLogin) {
@@ -2285,7 +2328,8 @@ impl WorkflowView {
             top: 6.,
             bottom: 7.,
             left: 6.,
-            right: 6.};
+            right: 6.,
+        };
 
         let button = appearance
             .ui_builder()
@@ -2319,7 +2363,8 @@ impl WorkflowView {
             ButtonVariant::Accent,
             match self.workflow_view_mode {
                 WorkflowViewMode::Create => CREATE_BUTTON_TEXT.into(),
-                WorkflowViewMode::Edit | WorkflowViewMode::View => SAVE_BUTTON_TEXT.into()},
+                WorkflowViewMode::Edit | WorkflowViewMode::View => SAVE_BUTTON_TEXT.into(),
+            },
             None,
             self.ui_state_handles.save_workflow_state.clone(),
             appearance,
@@ -2364,7 +2409,8 @@ impl WorkflowView {
         let label_and_icon = match self.ai_metadata_assist_state {
             AiAssistState::PreRequest => Some((AI_ASSIST_BUTTON_TEXT, Icon::AiAssistant)),
             AiAssistState::RequestInFlight => Some((AI_ASSIST_LOADING_TEXT, Icon::Refresh)),
-            AiAssistState::Generated => None};
+            AiAssistState::Generated => None,
+        };
 
         if let Some((label, icon)) = label_and_icon {
             // AI-generated workflow metadata is only supported for Command workflows currently.
@@ -2562,7 +2608,8 @@ impl WorkflowView {
                                 name: parameter.name,
                                 description: Some(parameter.description),
                                 default_value: Some(parameter.default_value),
-                                arg_type: Default::default()})
+                                arg_type: Default::default(),
+                            })
                             .collect_vec();
 
                         let workflow = Workflow::Command {
@@ -2575,7 +2622,8 @@ impl WorkflowView {
                             author: None,
                             author_url: None,
                             shells: vec![],
-                            environment_variables: None};
+                            environment_variables: None,
+                        };
 
                         pane.populate_missing_field_with_suggestion(workflow, ctx);
                         ctx.notify();
@@ -2691,7 +2739,8 @@ impl WorkflowView {
                         return None;
                     }
                 }
-                None => true}
+                None => true,
+            }
         };
 
         let appearance = Appearance::as_ref(app);
@@ -2820,7 +2869,8 @@ impl View for WorkflowView {
 
         let vertical_margin = match &self.container_configuration {
             ContainerConfiguration::Pane(_) => CORE_VERTICAL_MARGIN_IN_PANE,
-            ContainerConfiguration::SuggestionDialog => 0.};
+            ContainerConfiguration::SuggestionDialog => 0.,
+        };
 
         let mut row = Flex::row();
         row.add_child(
@@ -2854,7 +2904,8 @@ impl View for WorkflowView {
             // workflow, both view and edit modes are allowed.
             (false, ContentEditability::Editable) => true,
             // Otherwise, only one of view and edit mode is allowed.
-            (_, _) => false};
+            (_, _) => false,
+        };
 
         if mode_toggleable {
             row.add_child(
@@ -3030,7 +3081,8 @@ impl TypedActionView for WorkflowView {
             }
             WorkflowAction::Trash => self.trash_object(ctx),
             WorkflowAction::Untrash => self.untrash_object(ctx),
-            WorkflowAction::CloseEnumDialog => self.hide_enum_creation_dialog(ctx)}
+            WorkflowAction::CloseEnumDialog => self.hide_enum_creation_dialog(ctx),
+        }
     }
 }
 

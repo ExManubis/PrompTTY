@@ -3,21 +3,22 @@ use warp_core::ui::Icon;
 use warp_core::ui::appearance::Appearance;
 use warpui::elements::{
     ConstrainedBox, Container, CrossAxisAlignment, Flex, Hoverable, MainAxisSize, MouseStateHandle,
-    ParentElement, Shrinkable, Text};
+    ParentElement, Shrinkable, Text,
+};
 use warpui::fonts::Properties;
 use warpui::platform::Cursor;
 use warpui::prelude::Empty;
 use warpui::text_layout::ClipConfig;
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakModelHandle};
+    ViewHandle, WeakModelHandle,
+};
 
 use super::super::{AmbientAgentViewModelEvent, Status};
 use crate::ai::agent::conversation::ConversationStatus;
 use crate::ai::agent_conversations_model::{AgentConversationsModel, AgentConversationsModelEvent};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
-use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
-use crate::ai::ambient_agents::handoff_types::CloudModeEntryPoint;
+use crate::ai::ambient_agents::telemetry::{CloudAgentTelemetryEvent, CloudModeEntryPoint};
 use crate::ai::blocklist::agent_view::{AgentViewEntryOrigin, render_block_container};
 use crate::pane_group::pane::{PaneConfiguration, PaneConfigurationEvent, PaneStack};
 use crate::terminal::view::ambient_agent::AmbientAgentViewModel;
@@ -29,7 +30,8 @@ const DEFAULT_CLOUD_AGENT_TITLE: &str = "New cloud agent";
 
 #[derive(Default)]
 struct StateHandles {
-    block: MouseStateHandle}
+    block: MouseStateHandle,
+}
 
 /// Rich content block rendered in the terminal mode blocklist to represent an ambient agent run.
 pub struct AmbientAgentEntryBlock {
@@ -37,7 +39,8 @@ pub struct AmbientAgentEntryBlock {
     terminal_manager: ModelHandle<Box<dyn TerminalManager>>,
     pane_stack: WeakModelHandle<PaneStack<TerminalView>>,
     state_handles: StateHandles,
-    fetched_task_id: Option<AmbientAgentTaskId>}
+    fetched_task_id: Option<AmbientAgentTaskId>,
+}
 
 impl AmbientAgentEntryBlock {
     pub fn new(
@@ -75,7 +78,8 @@ impl AmbientAgentEntryBlock {
             terminal_manager,
             pane_stack,
             state_handles: Default::default(),
-            fetched_task_id: None}
+            fetched_task_id: None,
+        }
     }
 }
 
@@ -96,7 +100,8 @@ impl AmbientAgentEntryBlock {
                 self.maybe_fetch_task_data(ctx);
                 ctx.notify();
             }
-            _ => ()}
+            _ => (),
+        }
     }
 
     fn handle_pane_configuration_event(
@@ -182,7 +187,8 @@ impl AmbientAgentEntryBlock {
             Status::AgentRunning => Some("Agent is working on task"),
             Status::Failed { .. } => Some("Agent failed"),
             Status::NeedsGithubAuth { .. } => Some("Authentication required"),
-            Status::Cancelled { .. } => Some("Cancelled")}
+            Status::Cancelled { .. } => Some("Cancelled"),
+        }
     }
 
     fn ambient_status_for_icon(&self, app: &AppContext) -> Option<ConversationStatus> {
@@ -193,8 +199,10 @@ impl AmbientAgentEntryBlock {
             }
             Status::Failed { .. } => Some(ConversationStatus::Error),
             Status::NeedsGithubAuth { .. } => Some(ConversationStatus::Blocked {
-                blocked_action: "GitHub authentication required".to_owned()}),
-            Status::Cancelled { .. } => Some(ConversationStatus::Cancelled)}
+                blocked_action: "GitHub authentication required".to_owned(),
+            }),
+            Status::Cancelled { .. } => Some(ConversationStatus::Cancelled),
+        }
     }
 
     fn icon_variant(&self, app: &AppContext) -> IconWithStatusVariant {
@@ -204,20 +212,26 @@ impl AmbientAgentEntryBlock {
         match terminal_view_agent_icon_variant(terminal_view, app) {
             Some(IconWithStatusVariant::OzAgent {
                 status: None,
-                is_ambient}) => IconWithStatusVariant::OzAgent {
+                is_ambient,
+            }) => IconWithStatusVariant::OzAgent {
                 status: fallback_status,
-                is_ambient},
+                is_ambient,
+            },
             Some(IconWithStatusVariant::CLIAgent {
                 agent,
                 status: None,
-                is_ambient}) => IconWithStatusVariant::CLIAgent {
+                is_ambient,
+            }) => IconWithStatusVariant::CLIAgent {
                 agent,
                 status: fallback_status,
-                is_ambient},
+                is_ambient,
+            },
             Some(variant) => variant,
             None => IconWithStatusVariant::OzAgent {
                 status: fallback_status,
-                is_ambient: true}}
+                is_ambient: true,
+            },
+        }
     }
 }
 
@@ -326,7 +340,8 @@ impl View for AmbientAgentEntryBlock {
 #[derive(Clone, Copy, Debug)]
 pub enum AmbientAgentEntryBlockAction {
     /// Navigate to the ambient agent view.
-    OpenAmbientAgent}
+    OpenAmbientAgent,
+}
 
 impl Entity for AmbientAgentEntryBlock {
     type Event = ();

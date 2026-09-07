@@ -24,16 +24,19 @@ use warp::tui_export::{
     ModelEventDispatcher, ReceivedMessageDisplay, RenderableAIError, SummarizationType,
     TelemetryEvent, TerminalModel, TodoOperation, TodoStatus, TuiOnboardingMarker,
     TuiOnboardingMarkers, TuiOnboardingMarkersEvent, failed_output_presentation,
-    should_show_failed_output_usage_notice};
+    should_show_failed_output_usage_notice,
+};
 use warpui::SingletonEntity;
 use warpui_core::elements::MouseStateHandle;
 use warpui_core::elements::tui::{
     Modifier, TuiBuffer, TuiBufferExt, TuiChildView, TuiConstraint, TuiContainer, TuiElement,
     TuiFlex, TuiLayoutContext, TuiPaintContext, TuiPaintSurface, TuiParentElement, TuiRect,
-    TuiScreenPosition, TuiSelectionSpan, TuiSize, TuiText};
+    TuiScreenPosition, TuiSelectionSpan, TuiSize, TuiText,
+};
 use warpui_core::{
     AppContext, Entity, EntityId, EntityIdMap, ModelHandle, TuiView, TypedActionView, ViewContext,
-    ViewHandle};
+    ViewHandle,
+};
 
 use super::tui_ask_question_view::{TuiAskQuestionView, TuiAskQuestionViewEvent};
 use super::tui_file_edits_view::{TuiFileEditsView, TuiFileEditsViewEvent};
@@ -41,7 +44,8 @@ use super::tui_generic_tool_call_view::{TuiGenericToolCallView, TuiGenericToolCa
 use super::tui_shell_command_view::{TuiShellCommandView, TuiShellCommandViewEvent};
 use crate::agent_block_sections::{
     render_completed_todos_section, render_fallback_tool_call_section, render_input_section,
-    render_summarization_section, render_thinking_section, render_todo_list_section};
+    render_summarization_section, render_thinking_section, render_todo_list_section,
+};
 use crate::agent_message::render_agent_message;
 use crate::orchestration_block::{TuiOrchestrationBlock, TuiOrchestrationBlockEvent};
 use crate::orchestration_model::{TuiOrchestrationEvent, TuiOrchestrationModel};
@@ -51,7 +55,8 @@ use crate::tui_builder::TuiUiBuilder;
 use crate::tui_cli_subagent_view::TuiCLISubagentView;
 use crate::tui_code_block_view::{TuiCodeBlockPayload, TuiCodeBlockView, TuiCodeBlockViewEvent};
 use crate::tui_markdown::{
-    TuiMarkdownBlockHooks, TuiMarkdownPalette, render_formatted_table, render_formatted_text};
+    TuiMarkdownBlockHooks, TuiMarkdownPalette, render_formatted_table, render_formatted_text,
+};
 use crate::tui_plan_view::{TuiPlanView, TuiPlanViewEvent};
 use crate::tui_review_comments::render_review_comments_tool_call;
 const OUT_OF_CREDITS_TITLE: &str = "I’m sorry, I couldn’t complete that request.";
@@ -63,7 +68,8 @@ const FAILURE_WARNING_PREFIX: &str = "⚠ ";
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 struct TuiCodeBlockKey {
     message_id: MessageId,
-    section_index: usize}
+    section_index: usize,
+}
 
 fn should_consume_first_credit_gate(
     is_restored: bool,
@@ -90,10 +96,13 @@ enum TuiRichTextSection {
     Code(TuiCodeBlockKey),
     Table {
         structured: Option<FormattedTable>,
-        fallback: String},
+        fallback: String,
+    },
     Image {
         alt_text: String,
-        source: String}}
+        source: String,
+    },
+}
 
 /// Renderable pieces of an agent block; this will grow as we render richer sections.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -107,29 +116,35 @@ enum TuiAIBlockSection {
     Thinking {
         message_id: MessageId,
         finished_duration: Option<Duration>,
-        body: Vec<TuiRichTextSection>},
+        body: Vec<TuiRichTextSection>,
+    },
     Summarization {
         message_id: MessageId,
-        body: Vec<TuiRichTextSection>},
+        body: Vec<TuiRichTextSection>,
+    },
     /// The agent's task list (todo list), rendered as a collapsible block.
     TodoList {
         message_id: MessageId,
-        todos: Vec<AIAgentTodo>},
+        todos: Vec<AIAgentTodo>,
+    },
     /// A compact completion row for todos the agent just marked done.
     CompletedTodos {
-        completed: Vec<AIAgentTodo>},
+        completed: Vec<AIAgentTodo>,
+    },
     /// A message delivered by another agent in the orchestration.
     AgentMessage(ReceivedMessageDisplay),
     Failure(FailedOutputPresentation),
     FirstCreditGate,
-    UsageNotice}
+    UsageNotice,
+}
 
 /// Per-message UI state for collapsible sections (thinking blocks,
 /// conversation summaries, and task lists), keyed by the owning output
 /// message.
 #[derive(Default)]
 pub(crate) struct CollapsibleSectionStates {
-    states: RefCell<HashMap<MessageId, CollapsibleSectionState>>}
+    states: RefCell<HashMap<MessageId, CollapsibleSectionState>>,
+}
 
 /// UI state for a single collapsible section.
 #[derive(Default)]
@@ -142,7 +157,8 @@ struct CollapsibleSectionState {
     /// Hover state for the section header. Owned here (not created inline
     /// during render) so it survives element-tree rebuilds, following the
     /// GUI's `MouseStateHandle` pattern.
-    hover_state: MouseStateHandle}
+    hover_state: MouseStateHandle,
+}
 
 impl CollapsibleSectionStates {
     /// Whether the section for `message_id` is collapsed: the manual override
@@ -185,9 +201,11 @@ fn render_failure_section(
     match presentation {
         FailedOutputPresentation::Message(message)
         | FailedOutputPresentation::AwsBedrockCredentialsExpiredOrInvalid {
-            fallback_message: message}
+            fallback_message: message,
+        }
         | FailedOutputPresentation::GeminiEnterpriseCredentialsExpiredOrInvalid {
-            fallback_message: message} => TuiText::from_spans([
+            fallback_message: message,
+        } => TuiText::from_spans([
             (FAILURE_WARNING_PREFIX.to_owned(), error_style),
             (message.clone(), body_style),
         ])
@@ -227,7 +245,8 @@ fn render_failure_section(
             ("× ".to_owned(), error_style),
             (message.clone(), body_style),
         ])
-        .finish()}
+        .finish(),
+    }
 }
 
 fn render_usage_notice(app: &AppContext) -> Box<dyn TuiElement> {
@@ -240,9 +259,11 @@ fn failure_text(presentation: &FailedOutputPresentation) -> String {
     match presentation {
         FailedOutputPresentation::Message(message)
         | FailedOutputPresentation::AwsBedrockCredentialsExpiredOrInvalid {
-            fallback_message: message}
+            fallback_message: message,
+        }
         | FailedOutputPresentation::GeminiEnterpriseCredentialsExpiredOrInvalid {
-            fallback_message: message}
+            fallback_message: message,
+        }
         | FailedOutputPresentation::ContextWindowExceeded { message } => message.clone(),
         FailedOutputPresentation::OutOfCredits { .. } => {
             format!("{OUT_OF_CREDITS_TITLE}\n  {OUT_OF_CREDITS_DETAIL}")
@@ -264,7 +285,8 @@ enum TuiToolCallView {
     Generic(ViewHandle<TuiGenericToolCallView>),
     Plan(ViewHandle<TuiPlanView>),
     ShellCommand(ViewHandle<TuiShellCommandView>),
-    OrchestrationBlock(ViewHandle<TuiOrchestrationBlock>)}
+    OrchestrationBlock(ViewHandle<TuiOrchestrationBlock>),
+}
 
 impl TuiToolCallView {
     /// The registered view's entity id, for [`TuiView::child_view_ids`].
@@ -275,7 +297,8 @@ impl TuiToolCallView {
             Self::Generic(view) => view.id(),
             Self::Plan(view) => view.id(),
             Self::ShellCommand(view) => view.id(),
-            Self::OrchestrationBlock(view) => view.id()}
+            Self::OrchestrationBlock(view) => view.id(),
+        }
     }
 
     /// Renders the registered child view into the block's element tree.
@@ -286,7 +309,8 @@ impl TuiToolCallView {
             Self::Generic(view) => TuiChildView::new(view),
             Self::Plan(view) => TuiChildView::new(view),
             Self::ShellCommand(view) => TuiChildView::new(view),
-            Self::OrchestrationBlock(view) => TuiChildView::new(view)}
+            Self::OrchestrationBlock(view) => TuiChildView::new(view),
+        }
     }
 }
 
@@ -300,14 +324,18 @@ pub(super) enum TuiAIBlockEvent {
     /// Replacement guidance submitted from a tool permission request.
     ReplacementGuidanceSubmitted {
         conversation_id: AIConversationId,
-        text: String}}
+        text: String,
+    },
+}
 
 /// User interactions handled by the owning agent block.
 #[derive(Clone, Debug)]
 pub(crate) enum TuiAIBlockAction {
     SetSectionCollapsed {
         message_id: MessageId,
-        collapsed: bool}}
+        collapsed: bool,
+    },
+}
 
 /// A thin TUI rich-content view adapter backed by one agent exchange.
 ///
@@ -348,7 +376,8 @@ pub(super) struct TuiAIBlock {
     time_to_first_token: OnceCell<TimeDelta>,
     time_to_last_token: Option<TimeDelta>,
     terminal_telemetry_emitted: bool,
-    last_measured_width: Cell<Option<u16>>}
+    last_measured_width: Cell<Option<u16>>,
+}
 
 /// Extracts model state into renderable agent block sections.
 impl TuiAIBlock {
@@ -382,7 +411,8 @@ impl TuiAIBlock {
             time_to_first_token: OnceCell::new(),
             time_to_last_token: None,
             terminal_telemetry_emitted: false,
-            last_measured_width: Cell::new(None)};
+            last_measured_width: Cell::new(None),
+        };
         block.sync_action_views(&action_model, ctx);
         block.sync_code_block_views(ctx);
         block.sync_first_credit_gate(ctx);
@@ -439,7 +469,8 @@ impl TuiAIBlock {
             let (block_id, should_schedule_auto_expand) = match event {
                 ModelEvent::AfterBlockStarted { block_id, .. } => (block_id, true),
                 ModelEvent::BlockCompleted(completed) => (&completed.block_id, false),
-                _ => return};
+                _ => return,
+            };
             let Some(action_id) = me.requested_command_action_id(block_id) else {
                 return;
             };
@@ -512,7 +543,8 @@ impl TuiAIBlock {
             AIBlockOutputStatus::Pending | AIBlockOutputStatus::PartiallyReceived { .. } => return,
             AIBlockOutputStatus::Complete { .. } => (false, false),
             AIBlockOutputStatus::Cancelled { .. } => (false, true),
-            AIBlockOutputStatus::Failed { .. } => (true, false)};
+            AIBlockOutputStatus::Failed { .. } => (true, false),
+        };
         self.terminal_telemetry_emitted = true;
         warp::    }
 
@@ -583,7 +615,8 @@ impl TuiAIBlock {
                     | TuiToolCallView::ShellCommand(_)
                     | TuiToolCallView::OrchestrationBlock(_),
                 )
-                | None => true};
+                | None => true,
+            };
             if !needs_init {
                 continue;
             }
@@ -600,7 +633,8 @@ impl TuiAIBlock {
                 )
             });
             ctx.subscribe_to_view(&view, |me, _, event, ctx| match event {
-                TuiAskQuestionViewEvent::LayoutChanged => me.invalidate_layout(ctx)});
+                TuiAskQuestionViewEvent::LayoutChanged => me.invalidate_layout(ctx),
+            });
             materialized_active_blocker |= view.as_ref(ctx).is_awaiting_answers(ctx);
             self.action_views
                 .insert(action_id, TuiToolCallView::AskQuestion(view));
@@ -637,7 +671,8 @@ impl TuiAIBlock {
                 TuiGenericToolCallViewEvent::ReplacementGuidanceSubmitted(text) => {
                     ctx.emit(TuiAIBlockEvent::ReplacementGuidanceSubmitted {
                         conversation_id: me.conversation_id,
-                        text: text.clone()});
+                        text: text.clone(),
+                    });
                 }
             });
             materialized_active_blocker |= view.as_ref(ctx).active_permission_prompt(ctx).is_some();
@@ -670,7 +705,8 @@ impl TuiAIBlock {
                 TuiFileEditsViewEvent::ReplacementGuidanceSubmitted(text) => {
                     ctx.emit(TuiAIBlockEvent::ReplacementGuidanceSubmitted {
                         conversation_id: me.conversation_id,
-                        text: text.clone()});
+                        text: text.clone(),
+                    });
                 }
             });
             materialized_active_blocker |= view.as_ref(ctx).active_permission_prompt(ctx).is_some();
@@ -691,7 +727,8 @@ impl TuiAIBlock {
                 TuiPlanView::new(action, output_streaming, action_model, ctx)
             });
             ctx.subscribe_to_view(&view, |me, _, event, ctx| match event {
-                TuiPlanViewEvent::LayoutChanged => me.invalidate_layout(ctx)});
+                TuiPlanViewEvent::LayoutChanged => me.invalidate_layout(ctx),
+            });
             self.action_views
                 .insert(action_id, TuiToolCallView::Plan(view));
             ctx.notify();
@@ -727,7 +764,8 @@ impl TuiAIBlock {
                 TuiShellCommandViewEvent::ReplacementGuidanceSubmitted(text) => {
                     ctx.emit(TuiAIBlockEvent::ReplacementGuidanceSubmitted {
                         conversation_id: me.conversation_id,
-                        text: text.clone()});
+                        text: text.clone(),
+                    });
                 }
             });
             materialized_active_blocker |= view.as_ref(ctx).active_permission_prompt(ctx).is_some();
@@ -797,7 +835,8 @@ impl TuiAIBlock {
                     ctx.emit(TuiAIBlockEvent::BlockingStateChanged);
                     me.invalidate_layout(ctx);
                 }
-                TuiOrchestrationBlockEvent::LayoutInvalidated => me.invalidate_layout(ctx)});
+                TuiOrchestrationBlockEvent::LayoutInvalidated => me.invalidate_layout(ctx),
+            });
             materialized_active_blocker |= view.as_ref(ctx).is_awaiting_confirmation(ctx);
             self.action_views
                 .insert(action_id, TuiToolCallView::OrchestrationBlock(view));
@@ -866,7 +905,8 @@ impl TuiAIBlock {
                 .active_permission_prompt(ctx)
                 .map(BlockingInputSource::Permission),
             // Plan tool views render inline and never replace the input.
-            TuiToolCallView::Plan(_) => None}
+            TuiToolCallView::Plan(_) => None,
+        }
     }
 
     /// Reconciles persistent code children from the latest rendered output.
@@ -896,7 +936,8 @@ impl TuiAIBlock {
                     | AIAgentOutputMessageType::ArtifactCreated(_)
                     | AIAgentOutputMessageType::SkillInvoked(_)
                     | AIAgentOutputMessageType::MessagesReceivedFromAgents { .. }
-                    | AIAgentOutputMessageType::EventsFromAgents { .. } => None};
+                    | AIAgentOutputMessageType::EventsFromAgents { .. } => None,
+                };
                 let Some(text) = text else {
                     continue;
                 };
@@ -916,12 +957,14 @@ impl TuiAIBlock {
                         }
                         AIAgentTextSection::PlainText { .. }
                         | AIAgentTextSection::Table { .. }
-                        | AIAgentTextSection::Image { .. } => None};
+                        | AIAgentTextSection::Image { .. } => None,
+                    };
                     if let Some(payload) = payload {
                         descriptors.push((
                             TuiCodeBlockKey {
                                 message_id: message.id.clone(),
-                                section_index},
+                                section_index,
+                            },
                             payload,
                         ));
                     }
@@ -1204,7 +1247,8 @@ impl TuiAIBlock {
 
         let mut rendered_views = EntityIdMap::default();
         let mut ctx = TuiLayoutContext {
-            rendered_views: &mut rendered_views};
+            rendered_views: &mut rendered_views,
+        };
         let mut section_top = block_top.saturating_add(usize::from(BLOCK_TOP_PADDING_ROWS));
         let mut collected = Vec::new();
         let mut overlapped_any = false;
@@ -1296,7 +1340,8 @@ impl TuiAIBlock {
                                 | TuiToolCallView::Generic(_)
                                 | TuiToolCallView::Plan(_)
                                 | TuiToolCallView::ShellCommand(_)
-                                | TuiToolCallView::OrchestrationBlock(_) => return None}
+                                | TuiToolCallView::OrchestrationBlock(_) => return None,
+                            }
                         }
                         render_fallback_tool_call_section(
                             action,
@@ -1311,7 +1356,8 @@ impl TuiAIBlock {
             TuiAIBlockSection::Thinking {
                 message_id,
                 finished_duration,
-                body} => render_thinking_section(
+                body,
+            } => render_thinking_section(
                 &self.collapsible_states,
                 message_id,
                 *finished_duration,
@@ -1350,7 +1396,8 @@ impl TuiAIBlock {
             TuiAIBlockSection::AgentMessage(_) => return None,
             TuiAIBlockSection::Failure(presentation) => render_failure_section(presentation, app),
             TuiAIBlockSection::FirstCreditGate => render_first_credit_gate(app),
-            TuiAIBlockSection::UsageNotice => render_usage_notice(app)})
+            TuiAIBlockSection::UsageNotice => render_usage_notice(app),
+        })
     }
     fn rich_text_sections(message_id: &MessageId, text: &AIAgentText) -> Vec<TuiRichTextSection> {
         text.sections
@@ -1365,14 +1412,18 @@ impl TuiAIBlock {
                 AIAgentTextSection::Code { .. } | AIAgentTextSection::MermaidDiagram { .. } => {
                     TuiRichTextSection::Code(TuiCodeBlockKey {
                         message_id: message_id.clone(),
-                        section_index})
+                        section_index,
+                    })
                 }
                 AIAgentTextSection::Table { table } => TuiRichTextSection::Table {
                     structured: table.structured_table().cloned(),
-                    fallback: table.rendered_lines().join("\n")},
+                    fallback: table.rendered_lines().join("\n"),
+                },
                 AIAgentTextSection::Image { image } => TuiRichTextSection::Image {
                     alt_text: image.alt_text.clone(),
-                    source: image.source.clone()}})
+                    source: image.source.clone(),
+                },
+            })
             .collect()
     }
 
@@ -1411,7 +1462,8 @@ impl TuiAIBlock {
                     }
                     AIAgentOutputMessageType::Reasoning {
                         text,
-                        finished_duration} => {
+                        finished_duration,
+                    } => {
                         let body = Self::rich_text_sections(&message.id, text);
                         // Some providers intentionally emit duration/signature-only reasoning
                         // records for conversation continuity when no user-visible summary exists;
@@ -1420,7 +1472,8 @@ impl TuiAIBlock {
                             sections.push(TuiAIBlockSection::Thinking {
                                 message_id: message.id.clone(),
                                 finished_duration: *finished_duration,
-                                body});
+                                body,
+                            });
                         }
                     }
                     AIAgentOutputMessageType::Summarization {
@@ -1432,20 +1485,23 @@ impl TuiAIBlock {
                         if !body.is_empty() {
                             sections.push(TuiAIBlockSection::Summarization {
                                 message_id: message.id.clone(),
-                                body});
+                                body,
+                            });
                         }
                     }
                     AIAgentOutputMessageType::TodoOperation(operation) => match operation {
                         TodoOperation::UpdateTodos { todos } if !todos.is_empty() => {
                             sections.push(TuiAIBlockSection::TodoList {
                                 message_id: message.id.clone(),
-                                todos: todos.clone()});
+                                todos: todos.clone(),
+                            });
                         }
                         TodoOperation::MarkAsCompleted { completed_todos }
                             if !completed_todos.is_empty() =>
                         {
                             sections.push(TuiAIBlockSection::CompletedTodos {
-                                completed: completed_todos.clone()});
+                                completed: completed_todos.clone(),
+                            });
                         }
                         // Empty operations carry nothing to render (matching
                         // the GUI's guards).
@@ -1520,7 +1576,8 @@ impl TuiAIBlock {
                 | TuiToolCallView::FileEdits(_)
                 | TuiToolCallView::Generic(_)
                 | TuiToolCallView::Plan(_)
-                | TuiToolCallView::OrchestrationBlock(_) => false})
+                | TuiToolCallView::OrchestrationBlock(_) => false,
+            })
     }
 
     fn markdown_palette(app: &AppContext, muted: bool) -> TuiMarkdownPalette {
@@ -1571,7 +1628,8 @@ impl TuiAIBlock {
             } => render_formatted_table(table, palette),
             TuiRichTextSection::Table {
                 structured: None,
-                fallback} => TuiText::new(fallback.clone())
+                fallback,
+            } => TuiText::new(fallback.clone())
                 .with_style(palette.body)
                 .finish(),
             TuiRichTextSection::Image { alt_text, source } => {
@@ -1674,11 +1732,13 @@ impl TuiAIBlock {
                                 app,
                             )
                         }
-                    }},
+                    },
+                },
                 TuiAIBlockSection::Thinking {
                     message_id,
                     finished_duration,
-                    body} => render_thinking_section(
+                    body,
+                } => render_thinking_section(
                     &self.collapsible_states,
                     message_id,
                     *finished_duration,
@@ -1731,7 +1791,8 @@ impl TuiAIBlock {
                     render_failure_section(presentation, app)
                 }
                 TuiAIBlockSection::FirstCreditGate => render_first_credit_gate(app),
-                TuiAIBlockSection::UsageNotice => render_usage_notice(app)};
+                TuiAIBlockSection::UsageNotice => render_usage_notice(app),
+            };
 
             // One row of bottom padding separates sections; the last section
             // ends flush so blocks don't stack trailing and leading spacing.
@@ -1798,7 +1859,8 @@ fn section_logical_text(section: &TuiAIBlockSection) -> Option<String> {
         | TuiAIBlockSection::AgentMessage(_) => None,
         TuiAIBlockSection::Failure(presentation) => Some(failure_text(presentation)),
         TuiAIBlockSection::FirstCreditGate => Some(FIRST_CREDIT_GATE_TITLE.to_owned()),
-        TuiAIBlockSection::UsageNotice => Some(FAILED_OUTPUT_USAGE_NOTICE_TEXT.to_owned())}
+        TuiAIBlockSection::UsageNotice => Some(FAILED_OUTPUT_USAGE_NOTICE_TEXT.to_owned()),
+    }
 }
 
 /// Registers the view with the TUI runtime.
@@ -1832,7 +1894,8 @@ impl TypedActionView for TuiAIBlock {
         match action {
             TuiAIBlockAction::SetSectionCollapsed {
                 message_id,
-                collapsed} => {
+                collapsed,
+            } => {
                 self.collapsible_states
                     .set_collapsed(message_id.clone(), *collapsed);
                 self.invalidate_layout(ctx);

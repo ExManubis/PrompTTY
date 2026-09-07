@@ -8,7 +8,8 @@ use warpui::elements::{
     DispatchEventResult, Element, Empty, EventHandler, Fill, Flex, Hoverable, Icon,
     MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Radius, Rect, SavePosition, ScrollStateHandle, Scrollable,
-    ScrollableElement, ScrollbarWidth, Shrinkable, Stack, Text, UniformList, UniformListState};
+    ScrollableElement, ScrollbarWidth, Shrinkable, Stack, Text, UniformList, UniformListState,
+};
 use warpui::fonts::{FamilyId, Weight};
 use warpui::geometry::vector::vec2f;
 use warpui::keymap::FixedBinding;
@@ -17,19 +18,23 @@ use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::windowing::{StateEvent, WindowManager};
 use warpui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, Tracked, TypedActionView,
-    UpdateModel, View, ViewContext, ViewHandle};
+    UpdateModel, View, ViewContext, ViewHandle,
+};
 
 use super::theme;
 use crate::appearance::{Appearance, AppearanceManager};
 use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
-    TextOptions};
+    TextOptions,
+};
 use crate::resource_center::{
-    Tip, TipAction, TipsCompleted, mark_feature_used_and_write_to_user_defaults};
+    Tip, TipAction, TipsCompleted, mark_feature_used_and_write_to_user_defaults,
+};
 use crate::server::telemetry::TelemetryEvent;
 use crate::settings::{ThemeSettings, respect_system_theme};
 use crate::themes::theme::{
-    RespectSystemTheme, SelectedSystemThemes, ThemeKind, WarpTheme, WarpThemeConfig};
+    RespectSystemTheme, SelectedSystemThemes, ThemeKind, WarpTheme, WarpThemeConfig,
+};
 use crate::ui_components::buttons::{close_button, icon_button};
 use crate::ui_components::icons;
 use crate::ui_components::window_focus_dimming::WindowFocusDimming;
@@ -55,13 +60,15 @@ const THEME_CHOOSER_ITEM_PADDING: f32 = 16.;
 #[derive(Default)]
 struct MouseStateHandles {
     create_theme_button_hover_state: MouseStateHandle,
-    close_button_mouse_state: MouseStateHandle}
+    close_button_mouse_state: MouseStateHandle,
+}
 
 pub enum ThemeChooserEvent {
     Click,
     Close(ThemeChooserMode),
     OpenThemeCreatorModal,
-    OpenThemeDeletionModal(ThemeKind)}
+    OpenThemeDeletionModal(ThemeKind),
+}
 
 #[derive(Clone, Copy, Debug)]
 #[allow(clippy::enum_variant_names)]
@@ -72,7 +79,8 @@ pub enum ThemeChooserMode {
     /// Select a theme to use when the system is using a light theme.
     SystemLight,
     /// Select a theme to use when the system is using a dark theme.
-    SystemDark}
+    SystemDark,
+}
 
 impl ThemeChooserMode {
     /// Returns the mode the theme chooser should use if the aim is to change
@@ -81,8 +89,10 @@ impl ThemeChooserMode {
         match respect_system_theme(ThemeSettings::as_ref(app)) {
             RespectSystemTheme::On(_) => match app.system_theme() {
                 SystemTheme::Dark => ThemeChooserMode::SystemDark,
-                SystemTheme::Light => ThemeChooserMode::SystemLight},
-            RespectSystemTheme::Off => ThemeChooserMode::SystemAgnostic}
+                SystemTheme::Light => ThemeChooserMode::SystemLight,
+            },
+            RespectSystemTheme::Off => ThemeChooserMode::SystemAgnostic,
+        }
     }
 
     pub fn into_theme_kind(self, ctx: &AppContext) -> ThemeKind {
@@ -96,7 +106,8 @@ impl ThemeChooserMode {
             (ThemeChooserMode::SystemDark, RespectSystemTheme::On(system_themes)) => {
                 system_themes.dark.clone()
             }
-            (_, _) => ThemeKind::default()}
+            (_, _) => ThemeKind::default(),
+        }
     }
 
     fn render_hint_text(&self, appearance: &Appearance) -> Box<dyn Element> {
@@ -109,7 +120,8 @@ impl ThemeChooserMode {
                 .paragraph("Pick a theme for when your system is in light mode.".to_string()),
             ThemeChooserMode::SystemDark => appearance
                 .ui_builder()
-                .paragraph("Pick a theme for when your system is in dark mode.".to_string())};
+                .paragraph("Pick a theme for when your system is in dark mode.".to_string()),
+        };
         hint_text
             .build()
             .with_margin_left(TITLE_MARGIN)
@@ -129,7 +141,8 @@ pub struct ThemeChooser {
     mode: ThemeChooserMode,
     search_editor: ViewHandle<EditorView>,
     tips_completed: ModelHandle<TipsCompleted>,
-    window_id: warpui::WindowId}
+    window_id: warpui::WindowId,
+}
 
 #[derive(Debug)]
 pub enum ThemeChooserAction {
@@ -139,7 +152,8 @@ pub enum ThemeChooserAction {
     Up,
     Down,
     OpenThemeCreator,
-    OpenThemeDeletionModal(ThemeKind)}
+    OpenThemeDeletionModal(ThemeKind),
+}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -214,7 +228,8 @@ impl ThemeChooser {
             mode: ThemeChooserMode::for_active_theme(ctx),
             search_editor,
             tips_completed,
-            window_id: ctx.window_id()}
+            window_id: ctx.window_id(),
+        }
     }
 
     pub fn handle_theme_change(&mut self, ctx: &mut ViewContext<Self>) {
@@ -241,7 +256,8 @@ impl ThemeChooser {
                 // model state.
                 let theme = match system_theme {
                     SystemTheme::Light => selected_system_themes.light.clone(),
-                    SystemTheme::Dark => selected_system_themes.dark.clone()};
+                    SystemTheme::Dark => selected_system_themes.dark.clone(),
+                };
                 self.select_theme(theme, ctx);
             }
             (RespectSystemTheme::Off, ThemeChooserMode::SystemAgnostic, _) => {
@@ -388,7 +404,8 @@ impl ThemeChooser {
                     report_if_error!(theme_settings.selected_system_themes.set_value(
                         SelectedSystemThemes {
                             light: selected_kind.clone(),
-                            dark: selected_themes.dark},
+                            dark: selected_themes.dark,
+                        },
                         ctx,
                     ));
                 });
@@ -398,7 +415,8 @@ impl ThemeChooser {
                     report_if_error!(theme_settings.selected_system_themes.set_value(
                         SelectedSystemThemes {
                             light: selected_themes.light,
-                            dark: selected_kind.clone()},
+                            dark: selected_kind.clone(),
+                        },
                         ctx,
                     ));
                 });
@@ -470,7 +488,8 @@ impl ThemeChooser {
             Some(selected_kind) => self
                 .theme_position(selected_kind.clone())
                 .unwrap_or_default()
-                .saturating_sub(1)};
+                .saturating_sub(1),
+        };
         self.list_state.scroll_to(index);
         self.select_and_save_theme(&self.selected_theme(index), ctx);
     }
@@ -485,7 +504,8 @@ impl ThemeChooser {
             Some(selected_kind) => {
                 match self.theme_position(selected_kind.clone()) {
                     None => 0, // selected element is not visible
-                    Some(index) => (index + 1).min(self.visible_theme_count() - 1)}
+                    Some(index) => (index + 1).min(self.visible_theme_count() - 1),
+                }
             }
         };
         self.list_state.scroll_to(index);
@@ -495,13 +515,15 @@ impl ThemeChooser {
     fn visible_theme_count(&self) -> usize {
         match &*self.filtered_themes {
             None => self.themes.len(),
-            Some(themes) => themes.len()}
+            Some(themes) => themes.len(),
+        }
     }
 
     fn selected_theme(&self, index: usize) -> ThemeKind {
         match &*self.filtered_themes {
             None => self.themes[index].kind.clone(),
-            Some(themes) => themes[index].kind.clone()}
+            Some(themes) => themes[index].kind.clone(),
+        }
     }
 
     fn is_selected_theme_visible(&self) -> bool {
@@ -707,7 +729,8 @@ impl ThemeChooser {
                     .map(|(_, item)| {
                         let selected = match &selected_kind {
                             Some(selected_kind) => selected_kind == &item.kind,
-                            None => false};
+                            None => false,
+                        };
                         let element = item.render(
                             selected,
                             font_family,
@@ -767,7 +790,8 @@ impl TypedActionView for ThemeChooser {
             Close => self.close(ctx),
             Enter => self.enter(ctx),
             OpenThemeCreator => self.open_theme_creator_modal(ctx),
-            OpenThemeDeletionModal(kind) => self.open_theme_deletion_modal(kind.clone(), ctx)}
+            OpenThemeDeletionModal(kind) => self.open_theme_deletion_modal(kind.clone(), ctx),
+        }
     }
 }
 
@@ -811,14 +835,16 @@ impl View for ThemeChooser {
 struct ThemeChooserItem {
     pub kind: ThemeKind,
     warp_theme: WarpTheme,
-    mouse_state: MouseStateHandle}
+    mouse_state: MouseStateHandle,
+}
 
 impl ThemeChooserItem {
     pub fn new(kind: ThemeKind, warp_theme: WarpTheme) -> Self {
         Self {
             kind,
             warp_theme,
-            mouse_state: MouseStateHandle::default()}
+            mouse_state: MouseStateHandle::default(),
+        }
     }
 
     fn render_thumbnail(&self, font_family: FamilyId) -> Box<dyn Element> {

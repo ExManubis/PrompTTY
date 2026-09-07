@@ -18,10 +18,12 @@ use warp_errors::report_error;
 use warpui_core::{Entity, ModelContext, ModelHandle};
 
 use super::fragment_metadata::{
-    FragmentMetadata, LeafToFragmentMetadata, LeafToFragmentMetadataUpdates};
+    FragmentMetadata, LeafToFragmentMetadata, LeafToFragmentMetadataUpdates,
+};
 use super::manager::{
     CodebaseIndexFinishedStatus, CodebaseIndexStatus, FragmentMetadataLookupError,
-    RetrieveFileError};
+    RetrieveFileError,
+};
 use super::merkle_tree::{MerkleTree, SerializedCodebaseIndex};
 #[cfg(feature = "local_fs")]
 use super::search_shaping::build_fragments_from_file_contents;
@@ -29,7 +31,8 @@ use super::search_shaping::{ReadFragmentResult, fragments_to_context_locations};
 use super::store_client::StoreClient;
 use super::sync_client::{FlushFragmentResult, SyncOperationError};
 use super::{
-    CodebaseContextConfig, ContentHash, EmbeddingConfig, Error, Fragment, NodeHash, RepoMetadata};
+    CodebaseContextConfig, ContentHash, EmbeddingConfig, Error, Fragment, NodeHash, RepoMetadata,
+};
 use crate::index::locations::CodeContextLocation;
 use crate::telemetry::{AITelemetryEvent, CodebaseContextSyncType};
 use crate::workspace::{WorkspaceMetadata, WorkspaceMetadataEvent};
@@ -40,12 +43,13 @@ cfg_if::cfg_if! {
             changed_files::ChangedFiles,
             merkle_tree::{NodeId, NodeLens, TreeUpdateResult},
             DiffMerkleTreeError::*,
-            sync_client::SyncTask};
+            sync_client::SyncTask,
+        };
         use crate::index::{
             Entry,
             matches_gitignores,
-            full_source_code_embedding::sync_client::CodebaseIndexSyncOperation};
-        use warp_core::send_telemetry_from_ctx;
+            full_source_code_embedding::sync_client::CodebaseIndexSyncOperation,
+        };
         use warp_core::interval_timer::IntervalTimer;
         use warpui_core::r#async::Timer;
         use warpui_core::SingletonEntity;
@@ -84,20 +88,24 @@ pub enum SyncProgress {
     /// We're syncing the nodes to the server.
     Syncing {
         completed_nodes: usize,
-        total_nodes: usize}}
+        total_nodes: usize,
+    },
+}
 
 #[cfg(feature = "local_fs")]
 struct BuildFileTreeResult {
     file_tree: Entry,
     gitignores: Vec<Arc<Gitignore>>,
-    time_tracker: IntervalTimer}
+    time_tracker: IntervalTimer,
+}
 
 #[cfg(feature = "local_fs")]
 struct IndexBuildResult {
     tree: MerkleTree,
     leaf_to_fragment_metadata: LeafToFragmentMetadata,
     server_sync_result: SyncOperationResult,
-    time_tracker: IntervalTimer}
+    time_tracker: IntervalTimer,
+}
 
 /// Successful output of the background snapshot parse + filesystem diff task.
 #[cfg(feature = "local_fs")]
@@ -107,7 +115,8 @@ struct SnapshotLoaded {
     fragment_metadata: LeafToFragmentMetadata,
     changed_files: ChangedFiles,
     gitignores: Vec<Arc<Gitignore>>,
-    diff_duration: Duration}
+    diff_duration: Duration,
+}
 
 /// Error loading a codebase snapshot.
 #[cfg(feature = "local_fs")]
@@ -118,20 +127,23 @@ enum SnapshotLoadError {
     ParseFailed(anyhow::Error),
     /// Filesystem diff against the parsed tree failed.
     #[error("failed to diff filesystem with snapshot: {0}")]
-    DiffFailed(Error)}
+    DiffFailed(Error),
+}
 
 #[derive(Default)]
 pub(crate) struct CodebaseIndexTimeStampMetadata {
     last_edited: Option<DateTime<Utc>>,
     last_snapshot: Option<DateTime<Utc>>,
-    earliest_unsynced_change: Option<DateTime<Utc>>}
+    earliest_unsynced_change: Option<DateTime<Utc>>,
+}
 
 impl CodebaseIndexTimeStampMetadata {
     pub fn from_metadata(metadata: WorkspaceMetadata) -> Self {
         Self {
             last_edited: metadata.modified_ts,
             last_snapshot: None,
-            earliest_unsynced_change: None}
+            earliest_unsynced_change: None,
+        }
     }
 }
 
@@ -151,7 +163,8 @@ pub struct CodebaseIndex {
     embedding_generation_batch_size: usize,
 
     #[cfg(feature = "local_fs")]
-    pending_file_changes: Option<ChangedFiles>}
+    pending_file_changes: Option<ChangedFiles>,
+}
 
 #[derive(Debug)]
 enum TreeSourceSyncState {
@@ -159,7 +172,8 @@ enum TreeSourceSyncState {
     /// and it may or may not be synced to the server.
     Synced {
         tree: MerkleTree,
-        server_sync_result: ServerSyncResult},
+        server_sync_result: ServerSyncResult,
+    },
 
     /// We're in the process of applying updates to the client-side
     /// Merkle tree to match the source state (usually a filesystem).
@@ -168,28 +182,33 @@ enum TreeSourceSyncState {
     Syncing {
         last_server_synced_root_node: Option<NodeHash>,
         abort_handle: Option<AbortHandle>,
-        sync_progress: Option<SyncProgress>},
+        sync_progress: Option<SyncProgress>,
+    },
 
     /// Tree failed to be initialized. Likely due to some file system or tree build
     /// error.
-    InitializeTreeFailure(Error)}
+    InitializeTreeFailure(Error),
+}
 
 impl TreeSourceSyncState {
     fn last_server_synced_root_node(&self) -> Option<NodeHash> {
         match self {
             TreeSourceSyncState::Synced {
                 tree,
-                server_sync_result} => match server_sync_result {
+                server_sync_result,
+            } => match server_sync_result {
                 ServerSyncResult::Success => Some(tree.root_node().hash()),
                 ServerSyncResult::Failed {
                     last_server_synced_root_node,
                     ..
-                } => last_server_synced_root_node.clone()},
+                } => last_server_synced_root_node.clone(),
+            },
             TreeSourceSyncState::Syncing {
                 last_server_synced_root_node,
                 ..
             } => last_server_synced_root_node.clone(),
-            TreeSourceSyncState::InitializeTreeFailure(_) => None}
+            TreeSourceSyncState::InitializeTreeFailure(_) => None,
+        }
     }
 
     /// A brand-new, empty codebase index that still needs to be built from source
@@ -198,7 +217,8 @@ impl TreeSourceSyncState {
         Self::Syncing {
             last_server_synced_root_node: None,
             abort_handle: None,
-            sync_progress: None}
+            sync_progress: None,
+        }
     }
 
     /// Set the sync abort handle. This will return an error if the tree is not in a syncing state.
@@ -210,7 +230,8 @@ impl TreeSourceSyncState {
             }
             Self::Synced { .. } | Self::InitializeTreeFailure(_) => Err(anyhow!(
                 "Trying to set abort handle when tree is not syncing"
-            ))}
+            )),
+        }
     }
 }
 
@@ -219,8 +240,10 @@ enum SyncOperationResult {
         flushed_node_count: usize,
         flushed_fragment_result: FlushFragmentResult,
         updated_codebase_config: Option<CodebaseContextConfig>,
-        cache_population_error: Option<Error>},
-    Error(SyncOperationError)}
+        cache_population_error: Option<Error>,
+    },
+    Error(SyncOperationError),
+}
 
 impl SyncOperationResult {
     fn telemetry_event(
@@ -240,10 +263,13 @@ impl SyncOperationResult {
                 flushed_node_count: *flushed_node_count,
                 flushed_fragment_count: flushed_fragment_result.fragment_count,
                 total_fragment_size_bytes: flushed_fragment_result.total_fragment_size_bytes,
-                cache_population_error: cache_population_error.as_ref().map(|e| e.to_string())},
+                cache_population_error: cache_population_error.as_ref().map(|e| e.to_string()),
+            },
             SyncOperationResult::Error(err) => AITelemetryEvent::SyncCodebaseContextFailed {
                 error: err.to_string(),
-                sync_type}}
+                sync_type,
+            },
+        }
     }
 
     fn server_sync_result(
@@ -254,7 +280,9 @@ impl SyncOperationResult {
             SyncOperationResult::Success { .. } => ServerSyncResult::Success,
             SyncOperationResult::Error(err) => ServerSyncResult::Failed {
                 error: err.into(),
-                last_server_synced_root_node}}
+                last_server_synced_root_node,
+            },
+        }
     }
 }
 
@@ -267,7 +295,9 @@ pub(super) enum ServerSyncResult {
     /// Use the last synced root node hash for context retrieval requests.
     Failed {
         error: Error,
-        last_server_synced_root_node: Option<NodeHash>}}
+        last_server_synced_root_node: Option<NodeHash>,
+    },
+}
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct RetrievalID(usize);
@@ -283,30 +313,39 @@ pub enum CodebaseIndexEvent {
     RetrievalRequestCompleted {
         retrieval_id: RetrievalID,
         fragments: Arc<HashSet<CodeContextLocation>>,
-        out_of_sync_delay: Option<Duration>},
+        out_of_sync_delay: Option<Duration>,
+    },
     RetrievalRequestFailed {
         retrieval_id: RetrievalID,
-        error: Error},
+        error: Error,
+    },
     SyncStateUpdated {
-        root_path: PathBuf},
+        root_path: PathBuf,
+    },
     IndexMetadataUpdated {
         root_path: PathBuf,
-        event: WorkspaceMetadataEvent},
+        event: WorkspaceMetadataEvent,
+    },
     #[cfg(feature = "local_fs")]
     GitignoresUpdated {
         repo_root_path: PathBuf,
-        gitignores: Vec<Arc<Gitignore>>},
+        gitignores: Vec<Arc<Gitignore>>,
+    },
     LocalIndexBuilt {
-        repo_root_path: PathBuf},
+        repo_root_path: PathBuf,
+    },
     /// The index was synced to the server for the first time.
     #[cfg(feature = "local_fs")]
     InitialSyncCompleted {
         repo_path: PathBuf,
-        has_pending_change: bool}}
+        has_pending_change: bool,
+    },
+}
 
 struct IncrementalUpdateResult {
     tree: MerkleTree,
-    build_result: IncrementalUpdateBuildResult}
+    build_result: IncrementalUpdateBuildResult,
+}
 
 impl IncrementalUpdateResult {
     fn telemetry_event(&self, sync_start_time: Instant) -> AITelemetryEvent {
@@ -319,7 +358,8 @@ impl IncrementalUpdateResult {
             ),
             IncrementalUpdateBuildResult::Error { error, .. } => {
                 AITelemetryEvent::BuildTreeFailed {
-                    error: error.to_string()}
+                    error: error.to_string(),
+                }
             }
         }
     }
@@ -328,10 +368,13 @@ impl IncrementalUpdateResult {
 enum IncrementalUpdateBuildResult {
     Success {
         fragment_metadata_updates: LeafToFragmentMetadataUpdates,
-        operation_result: SyncOperationResult},
+        operation_result: SyncOperationResult,
+    },
     Error {
         error: Error,
-        restore_server_sync_status: Option<ServerSyncResult>}}
+        restore_server_sync_status: Option<ServerSyncResult>,
+    },
+}
 
 impl Entity for CodebaseIndex {
     type Event = CodebaseIndexEvent;
@@ -364,7 +407,8 @@ impl CodebaseIndex {
 
         ctx.emit(CodebaseIndexEvent::IndexMetadataUpdated {
             root_path: index.repo_path.clone(),
-            event: WorkspaceMetadataEvent::Created});
+            event: WorkspaceMetadataEvent::Created,
+        });
 
         index
     }
@@ -403,7 +447,8 @@ impl CodebaseIndex {
             sync_progress_tx,
             embedding_generation_batch_size,
             #[cfg(feature = "local_fs")]
-            pending_file_changes: None}
+            pending_file_changes: None,
+        }
     }
 
     #[cfg(feature = "local_fs")]
@@ -470,14 +515,16 @@ impl CodebaseIndex {
             TreeSourceSyncState::Syncing {
                 last_server_synced_root_node,
                 abort_handle: None,
-                sync_progress: None},
+                sync_progress: None,
+            },
             ctx,
         );
 
         let (tree, last_server_sync_state) = match old_state {
             TreeSourceSyncState::Synced {
                 tree,
-                server_sync_result} => (tree, Some(server_sync_result)),
+                server_sync_result,
+            } => (tree, Some(server_sync_result)),
             TreeSourceSyncState::Syncing { .. } | TreeSourceSyncState::InitializeTreeFailure(_) => {
                 self.update_tree_sync_state(old_state, ctx);
                 return;
@@ -559,11 +606,15 @@ impl CodebaseIndex {
                             tree,
                             build_result: IncrementalUpdateBuildResult::Error {
                                 restore_server_sync_status: last_server_sync_status,
-                                error: remove_err}};
+                                error: remove_err,
+                            },
+                        };
                     }
                     Ok(TreeUpdateResult {
                         node_lens,
-                        leaf_to_fragment_meta_updates}) => (node_lens, leaf_to_fragment_meta_updates)};
+                        leaf_to_fragment_meta_updates,
+                    }) => (node_lens, leaf_to_fragment_meta_updates),
+                };
 
             let new_root_node_hash = deleted_nodes.last().unwrap().hash();
 
@@ -621,11 +672,15 @@ impl CodebaseIndex {
                             tree,
                             build_result: IncrementalUpdateBuildResult::Error {
                                 restore_server_sync_status: last_server_sync_status,
-                                error: upsert_err}};
+                                error: upsert_err,
+                            },
+                        };
                     }
                     Ok(TreeUpdateResult {
                         node_lens,
-                        leaf_to_fragment_meta_updates}) => (node_lens, leaf_to_fragment_meta_updates)};
+                        leaf_to_fragment_meta_updates,
+                    }) => (node_lens, leaf_to_fragment_meta_updates),
+                };
 
             let new_root_node_hash = upserted_nodes.last().unwrap().hash();
             match CodebaseIndexSyncOperation::incremental_sync(
@@ -676,8 +731,12 @@ impl CodebaseIndex {
                         flushed_node_count: total_nodes_to_flush,
                         flushed_fragment_result,
                         updated_codebase_config: None,
-                        cache_population_error: None},
-                    Err(e) => SyncOperationResult::Error(e)}}}
+                        cache_population_error: None,
+                    },
+                    Err(e) => SyncOperationResult::Error(e),
+                },
+            },
+        }
     }
 
     #[cfg(feature = "local_fs")]
@@ -691,7 +750,8 @@ impl CodebaseIndex {
         match build_result {
             IncrementalUpdateBuildResult::Success {
                 fragment_metadata_updates,
-                operation_result} => {
+                operation_result,
+            } => {
                 self.leaf_node_to_fragment_metadatas
                     .apply_update(fragment_metadata_updates);
 
@@ -714,7 +774,8 @@ impl CodebaseIndex {
             }
             IncrementalUpdateBuildResult::Error {
                 restore_server_sync_status,
-                error} => {
+                error,
+            } => {
                 self.update_tree_sync_state(
                     TreeSourceSyncState::Synced {
                         tree,
@@ -722,7 +783,10 @@ impl CodebaseIndex {
                             Some(restore_server_sync_status) => restore_server_sync_status,
                             None => ServerSyncResult::Failed {
                                 error,
-                                last_server_synced_root_node: self.last_server_synced_root_node()}}},
+                                last_server_synced_root_node: self.last_server_synced_root_node(),
+                            },
+                        },
+                    },
                     ctx,
                 );
             }
@@ -741,7 +805,8 @@ impl CodebaseIndex {
         let repo_path = self.repo_path.clone();
         let repo_path_clone = self.repo_path.clone();
         let repo_metadata = RepoMetadata {
-            path: Some(repo_path.to_string_lossy().to_string())};
+            path: Some(repo_path.to_string_lossy().to_string()),
+        };
         let store_client = self.store_client.clone();
         let max_num_files_limit = Some(max_files_repo_limit);
 
@@ -800,7 +865,8 @@ impl CodebaseIndex {
             TreeSourceSyncState::Synced {
                 tree,
                 server_sync_result: sync_operation_result
-                    .server_sync_result(self.last_server_synced_root_node())},
+                    .server_sync_result(self.last_server_synced_root_node()),
+            },
             ctx,
         )
     }
@@ -813,7 +879,8 @@ impl CodebaseIndex {
     ) -> TreeSourceSyncState {
         let old_state = std::mem::replace(&mut self.tree_sync_state, new_state);
         ctx.emit(CodebaseIndexEvent::SyncStateUpdated {
-            root_path: self.repo_path.clone()});
+            root_path: self.repo_path.clone(),
+        });
         old_state
     }
 
@@ -823,7 +890,8 @@ impl CodebaseIndex {
             *sync_progress = Some(progress);
 
             ctx.emit(CodebaseIndexEvent::SyncStateUpdated {
-                root_path: self.repo_path.clone()});
+                root_path: self.repo_path.clone(),
+            });
         }
     }
 
@@ -876,7 +944,8 @@ impl CodebaseIndex {
         Ok(BuildFileTreeResult {
             file_tree: entry,
             gitignores,
-            time_tracker})
+            time_tracker,
+        })
     }
 
     /// Save the gitignores so that the CodebaseIndexManager can register the filewatcher,
@@ -893,14 +962,16 @@ impl CodebaseIndex {
         let BuildFileTreeResult {
             file_tree,
             gitignores,
-            mut time_tracker} = build_file_tree_result;
+            mut time_tracker,
+        } = build_file_tree_result;
 
         time_tracker.mark_interval_end(FILE_TRAVERSAL_TIME);
 
         self.gitignores = gitignores;
         ctx.emit(CodebaseIndexEvent::GitignoresUpdated {
             repo_root_path: repo_path.clone(),
-            gitignores: self.gitignores.clone()});
+            gitignores: self.gitignores.clone(),
+        });
 
         let sync_queue = SyncQueue::as_ref(ctx).clone();
 
@@ -967,7 +1038,8 @@ impl CodebaseIndex {
             tree,
             leaf_to_fragment_metadata,
             server_sync_result,
-            time_tracker})
+            time_tracker,
+        })
     }
 
     /// Fully sync the input merkle tree state with the server and returns the result of the sync operation.
@@ -1023,11 +1095,14 @@ impl CodebaseIndex {
                             flushed_node_count: total_nodes_to_sync,
                             flushed_fragment_result: flush_result,
                             updated_codebase_config: Some(updated_config),
-                            cache_population_error}
+                            cache_population_error,
+                        }
                     }
-                    Err(err) => SyncOperationResult::Error(err)}
+                    Err(err) => SyncOperationResult::Error(err),
+                }
             }
-            Err(err) => SyncOperationResult::Error(err)}
+            Err(err) => SyncOperationResult::Error(err),
+        }
     }
 
     pub(super) fn update_timestamps_from_metadata(&mut self, ts_metadata: WorkspaceMetadata) {
@@ -1057,7 +1132,8 @@ impl CodebaseIndex {
             TreeSourceSyncState::Syncing {
                 last_server_synced_root_node,
                 abort_handle: None,
-                sync_progress: None},
+                sync_progress: None,
+            },
             ctx,
         );
 
@@ -1161,7 +1237,8 @@ impl CodebaseIndex {
                 tree,
                 leaf_to_fragment_metadata,
                 server_sync_result,
-                time_tracker}) => {
+                time_tracker,
+            }) => {
                 // Emit telemetries for the initial sync result.
                 if let Some(sync_time) = time_tracker.compute_duration_for_interval(SYNC_TIME) {
                 }
@@ -1185,7 +1262,8 @@ impl CodebaseIndex {
 
                 ctx.emit(CodebaseIndexEvent::InitialSyncCompleted {
                     repo_path: self.repo_path.clone(),
-                    has_pending_change: self.pending_file_changes.is_some()});
+                    has_pending_change: self.pending_file_changes.is_some(),
+                });
 
                 self.leaf_node_to_fragment_metadatas = leaf_to_fragment_metadata;
 
@@ -1236,7 +1314,8 @@ impl CodebaseIndex {
         if &current_root_hash != root_hash {
             return Err(FragmentMetadataLookupError::RootHashMismatch {
                 requested: root_hash.clone(),
-                current: current_root_hash});
+                current: current_root_hash,
+            });
         }
 
         Ok(content_hashes
@@ -1250,7 +1329,8 @@ impl CodebaseIndex {
 
     fn repo_metadata(&self) -> RepoMetadata {
         RepoMetadata {
-            path: Some(self.repo_path.to_string_lossy().to_string())}
+            path: Some(self.repo_path.to_string_lossy().to_string()),
+        }
     }
 
     fn embedding_config(&self) -> EmbeddingConfig {
@@ -1293,19 +1373,23 @@ impl CodebaseIndex {
                     }
                 }),
                 sync_progress: None,
-                root_hash: root_hash.clone()},
+                root_hash: root_hash.clone(),
+            },
             TreeSourceSyncState::InitializeTreeFailure(e) => CodebaseIndexStatus {
                 has_pending: false,
                 has_synced_version,
                 last_sync_successful: Some(CodebaseIndexFinishedStatus::Failed(e.into())),
                 sync_progress: None,
-                root_hash: root_hash.clone()},
+                root_hash: root_hash.clone(),
+            },
             TreeSourceSyncState::Syncing { sync_progress, .. } => CodebaseIndexStatus {
                 has_pending: true,
                 has_synced_version,
                 last_sync_successful: None,
                 sync_progress: *sync_progress,
-                root_hash: root_hash.clone()}}
+                root_hash: root_hash.clone(),
+            },
+        }
     }
 
     fn last_server_synced_root_node(&self) -> Option<NodeHash> {
@@ -1322,7 +1406,8 @@ impl CodebaseIndex {
             Some(root_node_hash) => {
                 ctx.emit(CodebaseIndexEvent::IndexMetadataUpdated {
                     root_path: self.repo_path.clone(),
-                    event: WorkspaceMetadataEvent::Queried});
+                    event: WorkspaceMetadataEvent::Queried,
+                });
 
                 let request_id = RetrievalID::new();
 
@@ -1372,7 +1457,8 @@ impl CodebaseIndex {
                 _ => {
                     panic!("Impossible state: successfully synced tree must have a valid root node")
                 }
-            }}
+            },
+        }
     }
 
     /// Given content hashes, fetch their associated metadata. Then, build and rerank the fragments
@@ -1393,7 +1479,8 @@ impl CodebaseIndex {
                 );
                 ctx.emit(CodebaseIndexEvent::RetrievalRequestFailed {
                     retrieval_id,
-                    error: err});
+                    error: err,
+                });
             }
             Ok(hashes) => {
                 let fragment_metadatas = self.hashes_to_fragment_metadata(&hashes);
@@ -1458,12 +1545,14 @@ impl CodebaseIndex {
                 ctx.emit(CodebaseIndexEvent::RetrievalRequestCompleted {
                     retrieval_id,
                     fragments: Arc::new(code_fragments),
-                    out_of_sync_delay: self.out_of_sync_delay()});
+                    out_of_sync_delay: self.out_of_sync_delay(),
+                });
             }
             Err(err) => {
                 ctx.emit(CodebaseIndexEvent::RetrievalRequestFailed {
                     retrieval_id,
-                    error: err});
+                    error: err,
+                });
             }
         };
     }
@@ -1601,7 +1690,8 @@ impl CodebaseIndex {
         ctx: &mut ModelContext<'_, Self>,
     ) {
         let repo_metadata = RepoMetadata {
-            path: Some(self.repo_path.to_string_lossy().to_string())};
+            path: Some(self.repo_path.to_string_lossy().to_string()),
+        };
         let store_client = self.store_client.clone();
         let embedding_generation_batch_size = self.embedding_generation_batch_size;
 
@@ -1638,7 +1728,8 @@ impl CodebaseIndex {
                         fragment_metadata,
                         changed_files,
                         gitignores,
-                        diff_duration: diff_start_time.elapsed()})
+                        diff_duration: diff_start_time.elapsed(),
+                    })
                 },
                 move |me, load_result, ctx| match load_result {
                     Ok(SnapshotLoaded {
@@ -1647,7 +1738,8 @@ impl CodebaseIndex {
                         fragment_metadata,
                         changed_files,
                         gitignores,
-                        diff_duration}) => {
+                        diff_duration,
+                    }) => {
                         let tree = *boxed_tree;
 
                         log::info!(
@@ -1727,14 +1819,16 @@ impl CodebaseIndex {
                                     me.gitignores = gitignores;
                                     ctx.emit(CodebaseIndexEvent::GitignoresUpdated {
                                         repo_root_path: me.repo_path.clone(),
-                                        gitignores: me.gitignores.clone()});
+                                        gitignores: me.gitignores.clone(),
+                                    });
                                     me.handle_sync_operation_result(
                                         tree,
                                         sync_operation_result,
                                         ctx,
                                     );
                                     ctx.emit(CodebaseIndexEvent::LocalIndexBuilt {
-                                        repo_root_path: me.repo_path.clone()});
+                                        repo_root_path: me.repo_path.clone(),
+                                    });
                                     me.leaf_node_to_fragment_metadatas = fragment_metadata;
                                     me.pending_file_changes
                                         .get_or_insert_default()
@@ -2160,7 +2254,8 @@ impl CodebaseIndex {
 
         ctx.emit(CodebaseIndexEvent::IndexMetadataUpdated {
             root_path: self.repo_path.clone(),
-            event: WorkspaceMetadataEvent::Modified});
+            event: WorkspaceMetadataEvent::Modified,
+        });
     }
 
     /// Calculate the duration between the earliest unsynced change and now.

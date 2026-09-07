@@ -31,7 +31,9 @@ pub enum RequestStatus {
         /// The request itself (i.e. the prompt).
         request: FormattedTranscriptMessage,
         /// A handle to abort the request if desired.
-        abort_handle: AbortHandle}}
+        abort_handle: AbortHandle,
+    },
+}
 
 fn cache_request_limit_info(request_limit_info: RequestLimitInfo, app_mut: &mut AppContext) {
     if let Ok(serialized) = serde_json::to_string(&request_limit_info) {
@@ -55,9 +57,12 @@ pub enum GenerateDialogueResult {
         answer: String,
         truncated: bool,
         request_limit_info: RequestLimitInfo,
-        transcript_summarized: bool},
+        transcript_summarized: bool,
+    },
     Failure {
-        request_limit_info: RequestLimitInfo}}
+        request_limit_info: RequestLimitInfo,
+    },
+}
 
 pub struct Requests {
     server_api: Arc<ServerApi>,
@@ -76,14 +81,16 @@ pub struct Requests {
     /// This list is mutually exclusive from current_transcript.
     old_transcript_parts: Vec<TranscriptPart>,
 
-    ai_execution_context: Option<WarpAiExecutionContext>}
+    ai_execution_context: Option<WarpAiExecutionContext>,
+}
 
 impl Entity for Requests {
     type Event = Event;
 }
 
 pub enum Event {
-    RequestFinished { succeeded: bool }}
+    RequestFinished { succeeded: bool },
+}
 
 /// Private interface.
 impl Requests {
@@ -117,7 +124,8 @@ impl Requests {
             old_transcript_parts: Vec::new(),
             request_status: RequestStatus::NotInFlight,
             request_limit_info,
-            ai_execution_context: None};
+            ai_execution_context: None,
+        };
 
         if cached_request_limit_info.is_none()
             && AuthStateProvider::as_ref(ctx).get().is_logged_in()
@@ -188,7 +196,8 @@ impl Requests {
                             mut answer,
                             truncated,
                             request_limit_info,
-                            transcript_summarized}) => {
+                            transcript_summarized,
+                        }) => {
                             if truncated {
                                 answer.push_str("...");
                             }
@@ -206,7 +215,10 @@ impl Requests {
                                     copy_all_tooltip_and_button_mouse_handles: Some((Default::default(), Default::default())),
                                     formatted_message: FormattedTranscriptMessage {
                                         markdown: response_in_markdown,
-                                        raw: trimmed_response.to_string()}}});
+                                        raw: trimmed_response.to_string(),
+                                    },
+                                },
+                            });
 
                             cache_request_limit_info(request_limit_info, ctx);
                             model.request_limit_info = request_limit_info;
@@ -241,7 +253,10 @@ impl Requests {
                                     copy_all_tooltip_and_button_mouse_handles: None,
                                     formatted_message: FormattedTranscriptMessage {
                                         markdown: response_in_markdown,
-                                        raw: response}}});
+                                        raw: response,
+                                    },
+                                },
+                            });
 
                         }
                         _ => {
@@ -258,7 +273,10 @@ impl Requests {
                                     copy_all_tooltip_and_button_mouse_handles: None,
                                     formatted_message: FormattedTranscriptMessage {
                                         markdown: response_in_markdown,
-                                        raw: response}}});
+                                        raw: response,
+                                    },
+                                },
+                            });
 
                         }
                     }
@@ -272,8 +290,10 @@ impl Requests {
         self.request_status = RequestStatus::InFlight {
             request: FormattedTranscriptMessage {
                 markdown: request_in_markdown,
-                raw: raw_request.to_string()},
-            abort_handle: future_handle.abort_handle()};
+                raw: raw_request.to_string(),
+            },
+            abort_handle: future_handle.abort_handle(),
+        };
 
         ctx.notify();
     }
@@ -374,6 +394,7 @@ impl Requests {
             old_transcript_parts: Vec::new(),
             request_status: RequestStatus::NotInFlight,
             request_limit_info: RequestLimitInfo::default(),
-            ai_execution_context: None}
+            ai_execution_context: None,
+        }
     }
 }

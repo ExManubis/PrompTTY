@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 use ai::index::full_source_code_embedding::SyncProgress;
 use ai::index::full_source_code_embedding::manager::{
     CodebaseIndexFinishedStatus, CodebaseIndexManager, CodebaseIndexManagerEvent,
-    CodebaseIndexStatus, CodebaseIndexingError};
+    CodebaseIndexStatus, CodebaseIndexingError,
+};
 use ai::project_context::model::{ProjectContextModel, ProjectContextModelEvent};
 use ai::workspace::WorkspaceMetadata;
 use lsp::supported_servers::LSPServerType;
@@ -22,7 +23,8 @@ use warp_util::remote_path::RemotePath;
 use warpui::elements::{
     ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Element, Empty,
     Expanded, Fill, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius,
-    Shrinkable};
+    Shrinkable,
+};
 use warpui::fonts::Weight;
 use warpui::keymap::ContextPredicate;
 use warpui::platform::{Cursor, FilePickerConfiguration};
@@ -31,22 +33,27 @@ use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::{SwitchStateHandle, TooltipConfig};
 use warpui::{
     Action, AppContext, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WindowId, id};
+    ViewHandle, WindowId, id,
+};
 
 use super::settings_page::{
     MatchData, PageType, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
-    TOGGLE_BUTTON_RIGHT_PADDING, render_body_item, render_separator};
+    TOGGLE_BUTTON_RIGHT_PADDING, render_body_item, render_separator,
+};
 use super::{
     LocalOnlyIconState, SettingsAction, SettingsSection, ToggleSettingActionPair, ToggleState,
-    flags};
+    flags,
+};
 use crate::ai::persisted_workspace::{
-    EnablementState, LspRepoStatus, PersistedWorkspace, PersistedWorkspaceEvent};
+    EnablementState, LspRepoStatus, PersistedWorkspace, PersistedWorkspaceEvent,
+};
 use crate::appearance::Appearance;
 use crate::code::buffer_location::LocalOrRemotePath;
 use crate::code::lsp_telemetry::{LspControlActionType, LspEnablementSource, LspTelemetryEvent};
 #[cfg(not(target_family = "wasm"))]
 use crate::remote_server::codebase_index_model::{
-    RemoteCodebaseIndexModel, RemoteCodebaseIndexModelEvent, RemoteCodebaseIndexSettingsEntry};
+    RemoteCodebaseIndexModel, RemoteCodebaseIndexModelEvent, RemoteCodebaseIndexSettingsEntry,
+};
 use crate::settings::{AISettings, CodeSettings};
 use crate::ui_components::avatar::{Avatar, AvatarContent, StatusElementTypes};
 use crate::ui_components::buttons::icon_button;
@@ -127,7 +134,8 @@ fn codebase_indexing_tooltip_text(
         AdminEnablementSetting::RespectUserSetting if !global_ai_enabled => {
             Some(INDEXING_DISABLED_GLOBAL_AI_TEXT.to_string())
         }
-        AdminEnablementSetting::RespectUserSetting => None}
+        AdminEnablementSetting::RespectUserSetting => None,
+    }
 }
 
 #[cfg(all(test, not(target_family = "wasm")))]
@@ -140,7 +148,8 @@ struct LspServerRowMouseStates {
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     view_logs: MouseStateHandle,
     toggle: SwitchStateHandle,
-    install: MouseStateHandle}
+    install: MouseStateHandle,
+}
 
 #[derive(Clone)]
 struct InitializedFoldersMouseStates {
@@ -151,7 +160,8 @@ struct InitializedFoldersMouseStates {
     #[cfg(not(target_family = "wasm"))]
     remote_codebase_delete: Vec<MouseStateHandle>,
     lsp_rows: Vec<LspServerRowMouseStates>,
-    open_project_rules: Vec<MouseStateHandle>}
+    open_project_rules: Vec<MouseStateHandle>,
+}
 
 #[derive(Clone)]
 struct IndexingStatusPresentation {
@@ -159,7 +169,8 @@ struct IndexingStatusPresentation {
     color: ColorU,
     icon: Option<Icon>,
     refresh_action: Option<IndexingRefreshAction>,
-    show_delete: bool}
+    show_delete: bool,
+}
 
 #[derive(Clone)]
 enum IndexingRefreshAction {
@@ -168,7 +179,8 @@ enum IndexingRefreshAction {
     /// because resync only applies once the daemon already has index state for that path.
     #[cfg_attr(target_family = "wasm", allow(dead_code))]
     RequestRemote,
-    Resync}
+    Resync,
+}
 pub struct CodeIndexingPageView {
     page: PageType<Self>,
     window_id: WindowId,
@@ -188,7 +200,8 @@ pub struct CodeIndexingPageView {
     /// Tracks installation status for suggested LSP servers so the UI can decide
     /// whether to show "Available for download" vs "Installed" and whether the
     /// "+" button should trigger install or just enable.
-    suggested_server_statuses: HashMap<(PathBuf, LSPServerType), LspRepoStatus>}
+    suggested_server_statuses: HashMap<(PathBuf, LSPServerType), LspRepoStatus>,
+}
 
 impl CodeIndexingPageView {
     pub fn new(ctx: &mut ViewContext<CodeIndexingPageView>) -> Self {
@@ -275,7 +288,8 @@ impl CodeIndexingPageView {
         ctx.subscribe_to_model(&persisted, move |me, _model, event, ctx| match event {
             PersistedWorkspaceEvent::AvailableServersDetected {
                 workspace_path,
-                servers} => {
+                servers,
+            } => {
                 // New suggested servers detected — kick off install detection
                 // and resize mouse states.
                 for &server_type in servers {
@@ -298,7 +312,8 @@ impl CodeIndexingPageView {
             }
             PersistedWorkspaceEvent::InstallStatusUpdate {
                 server_type,
-                status} => {
+                status,
+            } => {
                 let new_status = LspRepoStatus::from_installation_status(status, *server_type);
                 for ((_, st), repo_status) in &mut me.suggested_server_statuses {
                     if *st == *server_type {
@@ -343,7 +358,8 @@ impl CodeIndexingPageView {
             open_project_rules_mouse_states: (0..workspace_count)
                 .map(|_| Default::default())
                 .collect(),
-            suggested_server_statuses: HashMap::new()}
+            suggested_server_statuses: HashMap::new(),
+        }
     }
 
     fn build_page(ctx: &mut ViewContext<Self>) -> PageType<Self> {
@@ -358,7 +374,9 @@ impl CodeIndexingPageView {
             inner: CodePageWidget {
                 switch_state: Default::default(),
                 auto_index_switch_state: Default::default(),
-                manual_add_directory_button}};
+                manual_add_directory_button,
+            },
+        };
         PageType::new_monolith(widget, Some(PAGE_TITLE), true)
     }
 
@@ -419,7 +437,8 @@ impl View for CodeIndexingPageView {
 pub enum CodeIndexingPageEvent {
     SignupAnonymousUser,
     OpenLspLogs { log_path: PathBuf },
-    OpenProjectRules { rule_paths: Vec<PathBuf> }}
+    OpenProjectRules { rule_paths: Vec<PathBuf> },
+}
 
 // Define the code page actions.
 #[derive(Debug, Clone)]
@@ -440,21 +459,28 @@ pub enum CodeIndexingPageAction {
     ToggleLspServer {
         workspace_path: PathBuf,
         server_type: LSPServerType,
-        currently_enabled: bool},
+        currently_enabled: bool,
+    },
     RestartLspServer {
-        server: ModelHandle<LspServerModel>},
+        server: ModelHandle<LspServerModel>,
+    },
     OpenLspLogs {
-        log_path: PathBuf},
+        log_path: PathBuf,
+    },
     OpenProjectRules {
-        rule_paths: Vec<PathBuf>},
+        rule_paths: Vec<PathBuf>,
+    },
     /// Install (if needed) and enable a suggested LSP server.
     InstallAndEnableLspServer {
         workspace_path: PathBuf,
-        server_type: LSPServerType},
+        server_type: LSPServerType,
+    },
     /// Enable a suggested LSP server that is already installed.
     EnableSuggestedLspServer {
         workspace_path: PathBuf,
-        server_type: LSPServerType}}
+        server_type: LSPServerType,
+    },
+}
 
 impl TypedActionView for CodeIndexingPageView {
     type Action = CodeIndexingPageAction;
@@ -535,7 +561,8 @@ impl TypedActionView for CodeIndexingPageView {
             CodeIndexingPageAction::ToggleLspServer {
                 workspace_path,
                 server_type,
-                currently_enabled} => {
+                currently_enabled,
+            } => {
                 if *currently_enabled {
                     // Toggling OFF: stop and disable
                     LspManagerModel::handle(ctx).update(ctx, |manager, ctx| {
@@ -552,7 +579,8 @@ impl TypedActionView for CodeIndexingPageView {
                         #[cfg(feature = "local_fs")]
                         workspace.execute_lsp_task(
                             crate::ai::persisted_workspace::LspTask::Spawn {
-                                file_path: workspace_path},
+                                file_path: workspace_path,
+                            },
                             _ctx,
                         );
                     });
@@ -567,15 +595,18 @@ impl TypedActionView for CodeIndexingPageView {
             }
             CodeIndexingPageAction::OpenLspLogs { log_path } => {
                 ctx.emit(CodeIndexingPageEvent::OpenLspLogs {
-                    log_path: log_path.clone()});
+                    log_path: log_path.clone(),
+                });
             }
             CodeIndexingPageAction::OpenProjectRules { rule_paths } => {
                 ctx.emit(CodeIndexingPageEvent::OpenProjectRules {
-                    rule_paths: rule_paths.clone()});
+                    rule_paths: rule_paths.clone(),
+                });
             }
             CodeIndexingPageAction::InstallAndEnableLspServer {
                 workspace_path,
-                server_type} => {
+                server_type,
+            } => {
                 #[cfg(feature = "local_fs")]
                 {
                     let workspace_path = workspace_path.clone();
@@ -585,7 +616,8 @@ impl TypedActionView for CodeIndexingPageView {
                             crate::ai::persisted_workspace::LspTask::Install {
                                 file_path: workspace_path.clone(),
                                 repo_root: workspace_path,
-                                server_type},
+                                server_type,
+                            },
                             _ctx,
                         );
                     });
@@ -596,7 +628,8 @@ impl TypedActionView for CodeIndexingPageView {
             }
             CodeIndexingPageAction::EnableSuggestedLspServer {
                 workspace_path,
-                server_type} => {
+                server_type,
+            } => {
                 let workspace_path = workspace_path.clone();
                 let server_type = *server_type;
                 PersistedWorkspace::handle(ctx).update(ctx, |workspace, _ctx| {
@@ -604,7 +637,8 @@ impl TypedActionView for CodeIndexingPageView {
                     #[cfg(feature = "local_fs")]
                     workspace.execute_lsp_task(
                         crate::ai::persisted_workspace::LspTask::Spawn {
-                            file_path: workspace_path},
+                            file_path: workspace_path,
+                        },
                         _ctx,
                     );
                 });
@@ -649,7 +683,8 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
 struct CodePageWidget {
     switch_state: SwitchStateHandle,
     auto_index_switch_state: SwitchStateHandle,
-    manual_add_directory_button: ViewHandle<ActionButton>}
+    manual_add_directory_button: ViewHandle<ActionButton>,
+}
 
 impl SettingsWidget for CodePageWidget {
     type View = CodeIndexingPageView;
@@ -706,7 +741,8 @@ impl SettingsWidget for CodePageWidget {
             #[cfg(not(target_family = "wasm"))]
             remote_codebase_delete: view.remote_codebase_delete_mouse_states.clone(),
             lsp_rows: view.lsp_row_mouse_states.clone(),
-            open_project_rules: view.open_project_rules_mouse_states.clone()};
+            open_project_rules: view.open_project_rules_mouse_states.clone(),
+        };
 
         content.add_child(self.render_initialized_folders(
             mouse_states,
@@ -909,7 +945,8 @@ impl CodePageWidget {
             switch
                 .with_tooltip(TooltipConfig {
                     text: tooltip_text,
-                    styles: ui_builder.default_tool_tip_styles()})
+                    styles: ui_builder.default_tool_tip_styles(),
+                })
                 .disable()
                 .build()
                 .finish()
@@ -958,7 +995,8 @@ impl CodePageWidget {
             #[cfg(not(target_family = "wasm"))]
                 remote_codebase_delete: remote_codebase_delete_mouse_states,
             lsp_rows: lsp_row_mouse_states,
-            open_project_rules: open_project_rules_mouse_states} = mouse_states;
+            open_project_rules: open_project_rules_mouse_states,
+        } = mouse_states;
 
         let mut content = Flex::column();
 
@@ -1151,7 +1189,8 @@ impl CodePageWidget {
                         top: 4.,
                         bottom: 4.,
                         left: 8.,
-                        right: 8.}),
+                        right: 8.,
+                    }),
                     ..Default::default()
                 })
                 .with_hovered_styles(UiComponentStyles {
@@ -1176,7 +1215,8 @@ impl CodePageWidget {
                 .with_cursor(Cursor::PointingHand)
                 .on_click(move |ctx, _, _| {
                     ctx.dispatch_typed_action(CodeIndexingPageAction::OpenProjectRules {
-                        rule_paths: workspace_rule_paths.clone()});
+                        rule_paths: workspace_rule_paths.clone(),
+                    });
                 })
                 .finish();
             Some(open_rules_button)
@@ -1367,7 +1407,8 @@ impl CodePageWidget {
                 color: theme.disabled_ui_text_color().into_solid(),
                 icon: Some(Icon::SlashCircle),
                 refresh_action: None,
-                show_delete: false};
+                show_delete: false,
+            };
         };
 
         if index_state.has_pending() {
@@ -1377,15 +1418,18 @@ impl CodePageWidget {
                 }
                 Some(SyncProgress::Syncing {
                     completed_nodes,
-                    total_nodes}) => Cow::from(format!("Syncing - {completed_nodes} / {total_nodes}")),
-                None => Cow::from("Syncing...")};
+                    total_nodes,
+                }) => Cow::from(format!("Syncing - {completed_nodes} / {total_nodes}")),
+                None => Cow::from("Syncing..."),
+            };
 
             return IndexingStatusPresentation {
                 text,
                 color: theme.disabled_ui_text_color().into_solid(),
                 icon: None,
                 refresh_action: None,
-                show_delete: true};
+                show_delete: true,
+            };
         }
 
         if let Some(completed_successfully) = index_state.last_sync_successful() {
@@ -1416,7 +1460,8 @@ impl CodePageWidget {
                 color,
                 icon: Some(icon),
                 refresh_action: Some(IndexingRefreshAction::Resync),
-                show_delete: true};
+                show_delete: true,
+            };
         }
 
         log::warn!("No index state for codebase");
@@ -1425,7 +1470,8 @@ impl CodePageWidget {
             color: theme.nonactive_ui_text_color().into_solid(),
             icon: None,
             refresh_action: None,
-            show_delete: true}
+            show_delete: true,
+        }
     }
 
     #[cfg(not(target_family = "wasm"))]
@@ -1442,7 +1488,8 @@ impl CodePageWidget {
                 color: theme.disabled_ui_text_color().into_solid(),
                 icon: Some(Icon::SlashCircle),
                 refresh_action: Some(IndexingRefreshAction::RequestRemote),
-                show_delete: true},
+                show_delete: true,
+            },
             RemoteCodebaseIndexState::Unavailable => {
                 let limit_reached = remote_codebase_index_limit_reached(status);
                 IndexingStatusPresentation {
@@ -1462,20 +1509,23 @@ impl CodePageWidget {
                         Icon::SlashCircle
                     }),
                     refresh_action: Some(IndexingRefreshAction::RequestRemote),
-                    show_delete: true}
+                    show_delete: true,
+                }
             }
             RemoteCodebaseIndexState::Disabled => IndexingStatusPresentation {
                 text: Cow::from("Disabled"),
                 color: theme.disabled_ui_text_color().into_solid(),
                 icon: Some(Icon::SlashCircle),
                 refresh_action: Some(IndexingRefreshAction::RequestRemote),
-                show_delete: true},
+                show_delete: true,
+            },
             RemoteCodebaseIndexState::Queued => IndexingStatusPresentation {
                 text: Cow::from("Queued"),
                 color: theme.disabled_ui_text_color().into_solid(),
                 icon: None,
                 refresh_action: None,
-                show_delete: true},
+                show_delete: true,
+            },
             RemoteCodebaseIndexState::Indexing => {
                 let text = match (status.progress_completed, status.progress_total) {
                     (Some(completed), Some(total)) => {
@@ -1483,33 +1533,39 @@ impl CodePageWidget {
                     }
                     (Some(completed), None) => Cow::from(format!("Indexing - {completed}")),
                     (None, Some(total)) => Cow::from(format!("Indexing - 0 / {total}")),
-                    (None, None) => Cow::from("Indexing...")};
+                    (None, None) => Cow::from("Indexing..."),
+                };
 
                 IndexingStatusPresentation {
                     text,
                     color: theme.disabled_ui_text_color().into_solid(),
                     icon: None,
                     refresh_action: None,
-                    show_delete: true}
+                    show_delete: true,
+                }
             }
             RemoteCodebaseIndexState::Ready => IndexingStatusPresentation {
                 text: Cow::from("Synced"),
                 color: theme.ansi_fg_green(),
                 icon: Some(Icon::Check),
                 refresh_action: Some(IndexingRefreshAction::Resync),
-                show_delete: true},
+                show_delete: true,
+            },
             RemoteCodebaseIndexState::Stale => IndexingStatusPresentation {
                 text: Cow::from("Stale"),
                 color: theme.nonactive_ui_detail().into_solid(),
                 icon: Some(Icon::ClockRefresh),
                 refresh_action: Some(IndexingRefreshAction::Resync),
-                show_delete: true},
+                show_delete: true,
+            },
             RemoteCodebaseIndexState::Failed => IndexingStatusPresentation {
                 text: Cow::from("Failed"),
                 color: theme.ui_error_color(),
                 icon: Some(Icon::AlertTriangle),
                 refresh_action: Some(IndexingRefreshAction::Resync),
-                show_delete: true}}
+                show_delete: true,
+            },
+        }
     }
 
     /// Returns (status_label, action_buttons) as separate elements for the indexing row.
@@ -1770,7 +1826,8 @@ impl CodePageWidget {
             Some(LspRepoStatus::DisabledAndInstalled { .. }) => ("Installed", false),
             Some(LspRepoStatus::Installing { .. }) => ("Installing...", true),
             Some(LspRepoStatus::CheckingForInstallation) => ("Checking...", true),
-            _ => ("Available for download", false)};
+            _ => ("Available for download", false),
+        };
 
         name_desc_column.add_child(
             ui_builder
@@ -1807,13 +1864,15 @@ impl CodePageWidget {
                         ctx.dispatch_typed_action(
                             CodeIndexingPageAction::InstallAndEnableLspServer {
                                 workspace_path: workspace_path_clone.clone(),
-                                server_type},
+                                server_type,
+                            },
                         );
                     } else {
                         ctx.dispatch_typed_action(
                             CodeIndexingPageAction::EnableSuggestedLspServer {
                                 workspace_path: workspace_path_clone.clone(),
-                                server_type},
+                                server_type,
+                            },
                         );
                     }
                 })
@@ -1953,7 +2012,8 @@ impl CodePageWidget {
                 .with_cursor(Cursor::PointingHand)
                 .on_click(move |ctx, _, _| {
                     ctx.dispatch_typed_action(CodeIndexingPageAction::RestartLspServer {
-                        server: server_for_action.clone()});
+                        server: server_for_action.clone(),
+                    });
                 })
                 .finish();
 
@@ -1982,7 +2042,8 @@ impl CodePageWidget {
                     .with_cursor(Cursor::PointingHand)
                     .on_click(move |ctx, _, _| {
                         ctx.dispatch_typed_action(CodeIndexingPageAction::OpenLspLogs {
-                            log_path: log_path.clone()});
+                            log_path: log_path.clone(),
+                        });
                     })
                     .finish();
 
@@ -2002,7 +2063,8 @@ impl CodePageWidget {
                     ctx.dispatch_typed_action(CodeIndexingPageAction::ToggleLspServer {
                         workspace_path: workspace_path_clone.clone(),
                         server_type: server_type_clone,
-                        currently_enabled: is_enabled});
+                        currently_enabled: is_enabled,
+                    });
                 })
                 .finish(),
         );
@@ -2050,12 +2112,14 @@ impl CodePageWidget {
                     }
                 }
             }
-            None => (theme.disabled_ui_text_color().into_solid(), "Not running")}
+            None => (theme.disabled_ui_text_color().into_solid(), "Not running"),
+        }
     }
 }
 
 struct CodeIndexingPageWidget {
-    inner: CodePageWidget}
+    inner: CodePageWidget,
+}
 
 impl SettingsWidget for CodeIndexingPageWidget {
     type View = CodeIndexingPageView;
@@ -2087,7 +2151,8 @@ impl SettingsWidget for CodeIndexingPageWidget {
             switch
                 .with_tooltip(TooltipConfig {
                     text: tooltip_text,
-                    styles: ui_builder.default_tool_tip_styles()})
+                    styles: ui_builder.default_tool_tip_styles(),
+                })
                 .disable()
                 .build()
                 .finish()
@@ -2155,7 +2220,8 @@ impl SettingsWidget for CodeIndexingPageWidget {
             #[cfg(not(target_family = "wasm"))]
             remote_codebase_delete: view.remote_codebase_delete_mouse_states.clone(),
             lsp_rows: view.lsp_row_mouse_states.clone(),
-            open_project_rules: view.open_project_rules_mouse_states.clone()};
+            open_project_rules: view.open_project_rules_mouse_states.clone(),
+        };
         content.add_child(self.inner.render_initialized_folders(
             mouse_states,
             &view.suggested_server_statuses,

@@ -20,7 +20,8 @@ use warpui::elements::{
     CornerRadius, CrossAxisAlignment, DEFAULT_UI_LINE_HEIGHT_RATIO, DragAxis, Draggable,
     DraggableState, Empty, Expanded, Fill, Flex, Hoverable, MinSize, MouseStateHandle,
     OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, SavePosition,
-    ScrollbarWidth, Shrinkable, Stack, Text};
+    ScrollbarWidth, Shrinkable, Stack, Text,
+};
 use warpui::fonts::{Properties, Style, Weight};
 use warpui::keymap::Keystroke;
 use warpui::platform::Cursor;
@@ -28,18 +29,21 @@ use warpui::text_layout::ClipConfig;
 use warpui::ui_components::components::UiComponent;
 use warpui::{
     AppContext, BlurContext, Element, Entity, EntityId, FocusContext, ModelHandle, SingletonEntity,
-    TypedActionView, View, ViewContext, ViewHandle};
+    TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::agent_view::shortcuts::render_keystroke_with_color_overrides;
 use crate::ai::blocklist::block::cli_controller::{CLISubagentController, CLISubagentEvent};
 use crate::ai::blocklist::{
     BlocklistAIHistoryEvent, BlocklistAIHistoryModel, QueuedQueryEvent, QueuedQueryId,
-    QueuedQueryModel, QueuedQueryOrigin};
+    QueuedQueryModel, QueuedQueryOrigin,
+};
 use crate::appearance::Appearance;
 use crate::editor::{
     EditorOptions, EditorView, Event as EditorEvent, PropagateAndNoOpEscapeKey,
-    PropagateAndNoOpNavigationKeys, PropagateHorizontalNavigationKeys, TextOptions};
+    PropagateAndNoOpNavigationKeys, PropagateHorizontalNavigationKeys, TextOptions,
+};
 use crate::server::telemetry::TelemetryEvent;
 use crate::terminal::cli_agent_sessions::{CLIAgentSessionsModel, CLIAgentSessionsModelEvent};
 use crate::terminal::input::suggestions_mode_model::InputSuggestionsModeModel;
@@ -140,7 +144,8 @@ fn build_row_state(
         edit_button,
         delete_button,
         copy_button,
-        draggable_state: DraggableState::default()}
+        draggable_state: DraggableState::default(),
+    }
 }
 
 #[derive(Clone)]
@@ -153,7 +158,8 @@ struct QueuedPromptRowState {
     edit_button: ViewHandle<ActionButton>,
     delete_button: ViewHandle<ActionButton>,
     copy_button: Option<ViewHandle<ActionButton>>,
-    draggable_state: DraggableState}
+    draggable_state: DraggableState,
+}
 
 /// View for the multi-prompt queue panel.
 pub struct QueuedPromptsPanelView {
@@ -190,7 +196,8 @@ pub struct QueuedPromptsPanelView {
     drag_start_index: Option<usize>,
     /// Controller for the active long-running-command subagent (the "full terminal use agent").
     /// Used to retarget the send-now tooltip while that subagent is in control.
-    cli_subagent_controller: ModelHandle<CLISubagentController>}
+    cli_subagent_controller: ModelHandle<CLISubagentController>,
+}
 
 #[derive(Clone, Debug)]
 pub enum QueuedPromptsPanelAction {
@@ -201,7 +208,8 @@ pub enum QueuedPromptsPanelAction {
     CopyRow(QueuedQueryId),
     StartDrag(QueuedQueryId),
     DragMoved { rect: RectF },
-    DropEnd}
+    DropEnd,
+}
 
 /// Events emitted to the host input view.
 #[derive(Clone, Debug)]
@@ -212,11 +220,13 @@ pub enum QueuedPromptsPanelEvent {
         conversation_id: AIConversationId,
         query_id: QueuedQueryId,
         text: String,
-        is_command: bool},
+        is_command: bool,
+    },
     /// A row was deleted via the trash button. The host should refocus the input.
     RowDeleted,
     /// An inline edit was committed or cancelled. The host should refocus the input.
-    EditEnded}
+    EditEnded,
+}
 
 impl Entity for QueuedPromptsPanelView {
     type Event = QueuedPromptsPanelEvent;
@@ -287,7 +297,8 @@ impl QueuedPromptsPanelView {
             row_states: HashMap::new(),
             dragging_query_id: None,
             drag_start_index: None,
-            cli_subagent_controller};
+            cli_subagent_controller,
+        };
         if let Some(conv_id) = active_conversation_id {
             me.seed_row_states_for(conv_id, ctx);
         }
@@ -515,7 +526,8 @@ impl QueuedPromptsPanelView {
             | QueuedQueryEvent::QueueNextPromptToggled { conversation_id } => *conversation_id,
             // The queue panel doesn't display the auto-queue toggle state, so a
             // change to the cached default doesn't affect what it renders.
-            QueuedQueryEvent::DefaultModeChanged => return};
+            QueuedQueryEvent::DefaultModeChanged => return,
+        };
         if event_conv_id != active_conv_id {
             return;
         }
@@ -745,7 +757,8 @@ impl TypedActionView for QueuedPromptsPanelView {
                         conversation_id: conv_id,
                         query_id,
                         text,
-                        is_command});
+                        is_command,
+                    });
                 }
             }
             QueuedPromptsPanelAction::StartEditingRow(query_id) => {
@@ -903,7 +916,8 @@ impl View for QueuedPromptsPanelView {
                         edit_editor: &self.edit_editor,
                         edit_editor_is_single_logical_line: self.edit_editor_is_single_logical_line,
                         edit_editor_scroll_state: &self.edit_editor_scroll_state,
-                        row_state},
+                        row_state,
+                    },
                     app,
                 );
                 body.add_child(row);
@@ -1013,7 +1027,8 @@ fn render_header(
         let label = Text::new(label_text.clone(), ui_font_family, ui_font_size)
             .with_style(Properties {
                 style: Style::Normal,
-                weight: Weight::Normal})
+                weight: Weight::Normal,
+            })
             .with_color(sub_text_color)
             .with_selectable(false)
             .finish();
@@ -1040,7 +1055,8 @@ fn render_header(
                 Text::new("to send", ui_font_family, ui_font_size)
                     .with_style(Properties {
                         style: Style::Normal,
-                        weight: Weight::Normal})
+                        weight: Weight::Normal,
+                    })
                     .with_color(sub_text_color)
                     .with_selectable(false)
                     .finish(),
@@ -1074,7 +1090,8 @@ struct RenderRowProps<'a> {
     edit_editor: &'a ViewHandle<EditorView>,
     edit_editor_is_single_logical_line: bool,
     edit_editor_scroll_state: &'a ClippedScrollStateHandle,
-    row_state: QueuedPromptRowState}
+    row_state: QueuedPromptRowState,
+}
 
 fn render_row(props: RenderRowProps<'_>, app: &AppContext) -> Box<dyn Element> {
     let RenderRowProps {
@@ -1089,7 +1106,8 @@ fn render_row(props: RenderRowProps<'_>, app: &AppContext) -> Box<dyn Element> {
         edit_editor,
         edit_editor_is_single_logical_line,
         edit_editor_scroll_state,
-        row_state} = props;
+        row_state,
+    } = props;
 
     let appearance = Appearance::as_ref(app);
     let theme = appearance.theme();
@@ -1110,14 +1128,16 @@ fn render_row(props: RenderRowProps<'_>, app: &AppContext) -> Box<dyn Element> {
         edit_button,
         delete_button,
         copy_button,
-        draggable_state} = row_state;
+        draggable_state,
+    } = row_state;
 
     let row_inner = Hoverable::new(mouse_state, move |state| {
         let prompt_text_or_editor: Box<dyn Element> = if is_in_edit_mode {
             let editor_scrollable = NewScrollable::vertical(
                 SingleAxisConfig::Clipped {
                     handle: editor_scroll_state.clone(),
-                    child: ChildView::new(&editor_handle).finish()},
+                    child: ChildView::new(&editor_handle).finish(),
+                },
                 theme.nonactive_ui_detail().into(),
                 theme.active_ui_detail().into(),
                 Fill::None,
@@ -1182,7 +1202,8 @@ fn render_row(props: RenderRowProps<'_>, app: &AppContext) -> Box<dyn Element> {
                 .with_color(suffix_color)
                 .with_style(Properties {
                     style: Style::Italic,
-                    weight: Weight::Normal})
+                    weight: Weight::Normal,
+                })
                 .with_selectable(false)
                 .soft_wrap(false)
                 .finish();

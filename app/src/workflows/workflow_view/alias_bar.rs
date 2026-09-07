@@ -9,18 +9,21 @@ use warp_core::ui::theme::Fill;
 use warp_core::ui::theme::color::internal_colors::neutral_4;
 use warpui::elements::{
     ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Dismiss, Flex, Hoverable,
-    MainAxisAlignment, MainAxisSize, MouseState, MouseStateHandle, ParentElement, Radius};
+    MainAxisAlignment, MainAxisSize, MouseState, MouseStateHandle, ParentElement, Radius,
+};
 use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, SingletonEntity as _, TypedActionView, View, ViewContext,
-    ViewHandle};
+    ViewHandle,
+};
 
 use crate::cloud_object::CloudObject;
 use crate::cloud_object::model::persistence::CloudModel;
 use crate::editor::{
     EditOrigin, EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys,
-    SingleLineEditorOptions, TextOptions, ValidInputType};
+    SingleLineEditorOptions, TextOptions, ValidInputType,
+};
 use crate::server::ids::SyncId;
 use crate::server::telemetry::TelemetrySpace;
 use crate::ui_components::buttons::icon_button;
@@ -55,7 +58,8 @@ pub struct AliasBar {
     is_dirty: bool,
 
     workflow_id: SyncId,
-    deleted_aliases: Vec<String>}
+    deleted_aliases: Vec<String>,
+}
 
 #[derive(Debug, Clone)]
 pub enum AliasBarAction {
@@ -64,12 +68,14 @@ pub enum AliasBarAction {
     Deselect,
     Remove(usize),
     Rename(usize),
-    StopRenaming}
+    StopRenaming,
+}
 
 #[derive(Debug, Clone)]
 pub enum AliasBarEvent {
     SelectedAliasChanged,
-    AliasesUpdated}
+    AliasesUpdated,
+}
 
 impl Entity for AliasBar {
     type Event = AliasBarEvent;
@@ -115,7 +121,8 @@ impl AliasBar {
             add_button_mouse_state: Default::default(),
             is_dirty: false,
             workflow_id,
-            deleted_aliases: Default::default()}
+            deleted_aliases: Default::default(),
+        }
     }
 
     /// The current workflow's space for telemetry events.
@@ -226,7 +233,8 @@ impl AliasBar {
                     alias: alias.alias_name.clone(),
                     workflow_id: self.workflow_id,
                     arguments: Some(alias.argument_values.clone()),
-                    env_vars: alias.env_vars})
+                    env_vars: alias.env_vars,
+                })
                 .collect::<Vec<_>>();
 
             aliases.set_aliases(aliases_to_add, ctx)
@@ -333,7 +341,8 @@ impl AliasBar {
                             top: ALIAS_PILL_VERTICAL_PADDING,
                             bottom: ALIAS_PILL_VERTICAL_PADDING,
                             left: ALIAS_PILL_HORIZONTAL_PADDING,
-                            right: ALIAS_PILL_HORIZONTAL_PADDING}),
+                            right: ALIAS_PILL_HORIZONTAL_PADDING,
+                        }),
                         ..Default::default()
                     })
                     .build()
@@ -365,7 +374,8 @@ impl AliasBar {
                     ctx.emit(AliasBarEvent::AliasesUpdated);
                 }
             }
-            _ => ()}
+            _ => (),
+        }
     }
 }
 
@@ -443,7 +453,8 @@ impl View for AliasBar {
                     top: ALIAS_PILL_VERTICAL_PADDING,
                     bottom: ALIAS_PILL_VERTICAL_PADDING,
                     left: ALIAS_PILL_HORIZONTAL_PADDING,
-                    right: ALIAS_PILL_HORIZONTAL_PADDING}),
+                    right: ALIAS_PILL_HORIZONTAL_PADDING,
+                }),
                 ..Default::default()
             })
             .build()
@@ -480,7 +491,8 @@ struct AliasState {
     argument_values: HashMap<String, String>,
     env_vars: Option<SyncId>,
     pill_mouse_state_handle: MouseStateHandle,
-    delete_mouse_state_handle: MouseStateHandle}
+    delete_mouse_state_handle: MouseStateHandle,
+}
 
 impl From<&WorkflowAlias> for AliasState {
     fn from(alias: &WorkflowAlias) -> Self {
@@ -489,7 +501,8 @@ impl From<&WorkflowAlias> for AliasState {
             argument_values: alias.arguments.clone().unwrap_or_default(),
             pill_mouse_state_handle: Default::default(),
             delete_mouse_state_handle: Default::default(),
-            env_vars: alias.env_vars}
+            env_vars: alias.env_vars,
+        }
     }
 }
 
@@ -500,7 +513,8 @@ impl AliasState {
             argument_values: Default::default(),
             env_vars: None,
             pill_mouse_state_handle: Default::default(),
-            delete_mouse_state_handle: Default::default()}
+            delete_mouse_state_handle: Default::default(),
+        }
     }
 
     fn render(

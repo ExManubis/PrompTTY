@@ -16,13 +16,15 @@ use warpui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, DispatchEventResult, Element,
     EventHandler, Fill, Flex, Highlight, Hoverable, LEFT_PADDING as SCROLLABLE_LEFT_PADDING,
     MainAxisSize, MouseStateHandle, ParentElement, ScrollStateHandle, Scrollable,
-    ScrollableElement, ScrollbarWidth, Shrinkable, Text, UniformList, UniformListState};
+    ScrollableElement, ScrollbarWidth, Shrinkable, Text, UniformList, UniformListState,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::keymap::FixedBinding;
 use warpui::text_layout::TextStyle;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
-    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, WeakViewHandle};
+    AppContext, Entity, SingletonEntity, TypedActionView, View, ViewContext, WeakViewHandle,
+};
 
 use super::WorkflowSource;
 use super::workflow::Workflow;
@@ -74,7 +76,8 @@ pub enum WorkflowsViewAction {
     SetFocusedWorkflowType(WorkflowViewType),
     Up,
     Down,
-    FocusEditor}
+    FocusEditor,
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum WorkflowViewType {
@@ -82,19 +85,22 @@ pub enum WorkflowViewType {
     LocalPersonal, // represents both local + personal cloud
     Project,
     Category { category_index: usize },
-    Team}
+    Team,
+}
 
 /// A Workflow's tag, or `Untagged` if the Workflow is not tagged at all.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 enum WorkflowTag {
     Tagged { tag_name: String },
-    Untagged}
+    Untagged,
+}
 
 impl WorkflowTag {
     fn tag_name(&self) -> Option<&str> {
         match self {
             WorkflowTag::Tagged { tag_name } => Some(tag_name.as_str()),
-            WorkflowTag::Untagged => None}
+            WorkflowTag::Untagged => None,
+        }
     }
 }
 
@@ -146,7 +152,8 @@ impl WorkflowViewType {
             WorkflowViewType::LocalPersonal => "My Workflows",
             WorkflowViewType::Project => "Repository Workflows",
             WorkflowViewType::Team => "Team Workflows",
-            WorkflowViewType::Category { category_index, .. } => &category_names[*category_index]}
+            WorkflowViewType::Category { category_index, .. } => &category_names[*category_index],
+        }
     }
 
     fn as_accessibility_contents(&self, category_names: &[String]) -> AccessibilityContent {
@@ -160,7 +167,8 @@ impl WorkflowViewType {
             WorkflowViewType::All => "Showing all workflows".into(),
             WorkflowViewType::LocalPersonal => "Showing my workflows".into(),
             WorkflowViewType::Project => "Showing project workflows".into(),
-            WorkflowViewType::Team => "Showing team workflows".into()};
+            WorkflowViewType::Team => "Showing team workflows".into(),
+        };
 
         AccessibilityContent::new_without_help(a11y_content, WarpA11yRole::UserAction)
     }
@@ -245,18 +253,22 @@ pub enum CategoriesViewEvent {
     WorkflowSelected {
         // use pointer to box to fix clippy error on size difference between variants
         workflow: Box<WorkflowType>,
-        workflow_source: WorkflowSource}}
+        workflow_source: WorkflowSource,
+    },
+}
 
 #[derive(Default)]
 struct ScrollableListState {
     scroll_state: ScrollStateHandle,
-    list_state: UniformListState}
+    list_state: UniformListState,
+}
 
 type CategorizedWorkflows = HashMap<WorkflowTag, Vec<Arc<WorkflowType>>>;
 
 #[derive(Default)]
 struct LinkMouseStateHandles {
-    documentation_link_handle: MouseStateHandle}
+    documentation_link_handle: MouseStateHandle,
+}
 
 pub struct CategoriesView {
     handle: WeakViewHandle<Self>,
@@ -271,25 +283,29 @@ pub struct CategoriesView {
     link_mouse_state_handles: LinkMouseStateHandles,
     selected_workflow_type: WorkflowViewType,
     focus_state: WorkflowsFocusState,
-    search_term: String}
+    search_term: String,
+}
 
 #[allow(dead_code)]
 enum WorkflowsFocusState {
     Editor,
-    WorkflowTypesSidebar}
+    WorkflowTypesSidebar,
+}
 
 #[derive(Copy, Clone)]
 enum SelectionState {
     Unselected,
     Selected,
-    SelectedAndFocused}
+    SelectedAndFocused,
+}
 
 #[derive(Debug, PartialEq, Eq)]
 enum WorkflowMatchType {
     Name { match_result: FuzzyMatchResult },
     Command { match_result: FuzzyMatchResult },
     Tag,
-    Unmatched}
+    Unmatched,
+}
 
 impl WorkflowMatchType {
     fn match_score(&self) -> i64 {
@@ -297,7 +313,8 @@ impl WorkflowMatchType {
             WorkflowMatchType::Name { match_result } => match_result.score,
             WorkflowMatchType::Command { match_result } => match_result.score,
             // For now a set of score of 0 for matches that aren't fuzzy matches.
-            _ => 0}
+            _ => 0,
+        }
     }
 }
 
@@ -306,7 +323,8 @@ impl SelectionState {
         match (is_selected, is_focused) {
             (true, true) => SelectionState::SelectedAndFocused,
             (true, false) => SelectionState::Selected,
-            _ => SelectionState::Unselected}
+            _ => SelectionState::Unselected,
+        }
     }
 
     fn font_weight(&self) -> Weight {
@@ -321,13 +339,15 @@ impl SelectionState {
         match self {
             SelectionState::Unselected => theme.surface_2(),
             SelectionState::Selected => theme.surface_2().blend(&theme.accent_overlay()),
-            SelectionState::SelectedAndFocused => theme.accent()}
+            SelectionState::SelectedAndFocused => theme.accent(),
+        }
     }
 
     fn is_selected(&self) -> bool {
         match self {
             SelectionState::Unselected => false,
-            SelectionState::Selected | SelectionState::SelectedAndFocused => true}
+            SelectionState::Selected | SelectionState::SelectedAndFocused => true,
+        }
     }
 }
 
@@ -336,7 +356,8 @@ struct WorkflowForRender<'a> {
     workflow_type: &'a WorkflowType,
     workflow_source: WorkflowSource,
     mouse_state_handle: &'a MouseStateHandle,
-    workflow_match: WorkflowMatchType}
+    workflow_match: WorkflowMatchType,
+}
 
 impl CategoriesView {
     pub fn new(
@@ -399,7 +420,8 @@ impl CategoriesView {
             selected_workflow_type: WorkflowViewType::All,
             focus_state: WorkflowsFocusState::Editor,
             category_names: Default::default(),
-            search_term: String::new()};
+            search_term: String::new(),
+        };
         workflows_view.compute_active_workflows(ctx);
         workflows_view.compute_category_names();
 
@@ -595,7 +617,8 @@ impl CategoriesView {
                 .get(*category_index)
                 .map_or(Default::default(), |category_name| {
                     let workflow_tag = WorkflowTag::Tagged {
-                        tag_name: category_name.to_owned()};
+                        tag_name: category_name.to_owned(),
+                    };
 
                     self.workflows_by_source
                         .iter()
@@ -606,7 +629,8 @@ impl CategoriesView {
                         })
                         .flatten()
                         .collect()
-                })};
+                }),
+        };
 
         // Keep the workflows as a `Vec` so we only have to order and dedupe we have recompute the
         // active workflows.
@@ -674,7 +698,8 @@ impl CategoriesView {
                 tags.iter().for_each(|tag| {
                     categories_map
                         .entry(WorkflowTag::Tagged {
-                            tag_name: tag.to_owned()})
+                            tag_name: tag.to_owned(),
+                        })
                         .or_insert_with(Vec::new)
                         .push(workflow.clone())
                 })
@@ -770,7 +795,8 @@ impl CategoriesView {
         if let Some((workflow, workflow_type)) = self.workflow_by_filtered_index(index) {
             ctx.emit(CategoriesViewEvent::WorkflowSelected {
                 workflow: Box::new(workflow.clone()),
-                workflow_source: workflow_type});
+                workflow_source: workflow_type,
+            });
 
             self.close(ctx);
         }
@@ -795,10 +821,12 @@ impl CategoriesView {
             (Some(name_match_result), Some(content_match_result)) => {
                 if name_match_result.score >= content_match_result.score {
                     WorkflowMatchType::Name {
-                        match_result: name_match_result}
+                        match_result: name_match_result,
+                    }
                 } else {
                     WorkflowMatchType::Command {
-                        match_result: content_match_result}
+                        match_result: content_match_result,
+                    }
                 }
             }
             (Some(match_result), _) => WorkflowMatchType::Name { match_result },
@@ -834,7 +862,8 @@ impl CategoriesView {
                 } else {
                     match Self::matches_workflow(workflow, &self.search_term) {
                         WorkflowMatchType::Unmatched => None,
-                        other => Some((other, workflow, workflow_type, mouse_state_handle))}
+                        other => Some((other, workflow, workflow_type, mouse_state_handle)),
+                    }
                 }
             })
             .sorted_by(|(match_type_1, _, _, _), (match_type_2, _, _, _)| {
@@ -845,7 +874,8 @@ impl CategoriesView {
                     workflow_type: workflow,
                     workflow_source: *workflow_type,
                     mouse_state_handle,
-                    workflow_match: match_type},
+                    workflow_match: match_type,
+                },
             )
     }
 
@@ -937,7 +967,8 @@ impl CategoriesView {
                     .take(range.end - range.start)
                     .map(|(index, _)| {
                         let workflow_type = WorkflowViewType::Category {
-                            category_index: index};
+                            category_index: index,
+                        };
 
                         let selection_state = SelectionState::new(
                             workflow_type == view.selected_workflow_type,
@@ -1091,7 +1122,9 @@ impl CategoriesView {
             }
             WorkflowViewType::Project => WorkflowViewType::Category { category_index: 0 },
             WorkflowViewType::Category { category_index } => WorkflowViewType::Category {
-                category_index: (category_index + 1).min(self.category_names.len() - 1)}};
+                category_index: (category_index + 1).min(self.category_names.len() - 1),
+            },
+        };
         self.set_focused_workflow_type(&next, ctx);
     }
 
@@ -1112,7 +1145,9 @@ impl CategoriesView {
                     WorkflowViewType::Project
                 }
                 WorkflowViewType::Category { category_index } => WorkflowViewType::Category {
-                    category_index: *category_index - 1}};
+                    category_index: *category_index - 1,
+                },
+            };
             self.set_focused_workflow_type(&previous, ctx);
         }
     }

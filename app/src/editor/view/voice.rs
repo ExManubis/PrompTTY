@@ -1,7 +1,8 @@
 use settings::Setting as _;
 use voice_input::{
     StartListeningError, VoiceInput, VoiceInputLifecycle, VoiceInputLifecycleState,
-    VoiceSessionResult};
+    VoiceSessionResult,
+};
 use warp_core::ui::theme::AnsiColorIdentifier;
 use warp_core::ui::theme::color::internal_colors;
 use warp_errors::report_error;
@@ -34,7 +35,8 @@ const NUM_TIMES_TO_SHOW_VOICE_NEW_FEATURE_POPUP: usize = 4;
 pub(super) struct VoiceInputState {
     lifecycle: VoiceInputLifecycle,
     recording_handle: Option<SpawnedFutureHandle>,
-    transcription_handle: Option<SpawnedFutureHandle>}
+    transcription_handle: Option<SpawnedFutureHandle>,
+}
 
 impl VoiceInputState {
     pub(super) fn is_active(&self) -> bool {
@@ -45,7 +47,8 @@ impl VoiceInputState {
         match self.lifecycle.state() {
             VoiceInputLifecycleState::Listening => Some(icons::Icon::Microphone),
             VoiceInputLifecycleState::Transcribing => Some(icons::Icon::DotsHorizontal),
-            VoiceInputLifecycleState::Idle => None}
+            VoiceInputLifecycleState::Idle => None,
+        }
     }
 }
 
@@ -396,7 +399,8 @@ impl EditorView {
 
         ctx.emit(super::Event::VoiceStateUpdated {
             is_listening,
-            is_transcribing});
+            is_transcribing,
+        });
     }
 
     /// Handles the result of a voice recording session.
@@ -427,7 +431,8 @@ impl EditorView {
         match result {
             VoiceSessionResult::Audio {
                 wav_base64,
-                session_duration_ms} => {
+                session_duration_ms,
+            } => {
 
                 // Start transcription
                 let voice_transcriber = VoiceTranscriber::handle(ctx).as_ref(ctx);
@@ -461,7 +466,8 @@ impl EditorView {
                 }
             }
             VoiceSessionResult::Aborted {
-                session_duration_ms} => {
+                session_duration_ms,
+            } => {
                 log::info!("Aborted listening for voice input");
 
                 if state.lifecycle.fail() {
@@ -504,7 +510,8 @@ impl EditorView {
                     );
                     self.voice_error_toast(super::VOICE_ERROR_TOAST_TEXT, ctx)
                 }
-            }}
+            },
+        }
         ctx.notify();
     }
 

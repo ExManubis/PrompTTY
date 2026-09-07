@@ -8,7 +8,8 @@ use warp_core::ui::appearance::Appearance;
 use warp_errors::report_error;
 use warpui::elements::{
     ChildView, ClippedScrollStateHandle, Container, CornerRadius, CrossAxisAlignment, Element,
-    Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text};
+    Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
+};
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::SwitchStateHandle;
 use warpui::{AppContext, SingletonEntity, ViewContext, ViewHandle};
@@ -17,12 +18,15 @@ use crate::code_review::diff_state::CommitChainMode;
 use crate::code_review::git_dialog::pr::show_pr_created_toast;
 use crate::code_review::git_dialog::{
     GitDialog, GitDialogAction, GitDialogEvent, GitDialogMode, render_branch_section,
-    render_file_changes_box, should_send_git_ops_ai_request, show_toast, user_facing_git_error};
+    render_file_changes_box, should_send_git_ops_ai_request, show_toast, user_facing_git_error,
+};
 use crate::code_review::telemetry_event::{
-    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind};
+    CodeReviewTelemetryEvent, GitDialogStatus, GitOperationKind,
+};
 use crate::editor::{
     EditorOptions, EditorView, Event as EditorEvent, InteractionState,
-    PropagateAndNoOpNavigationKeys, TextOptions};
+    PropagateAndNoOpNavigationKeys, TextOptions,
+};
 use crate::ui_components::icons::Icon;
 use crate::util::git::{FileChangeEntry, PrInfo, get_file_change_entries};
 use crate::view_components::action_button::{ActionButton, ButtonSize, SecondaryTheme};
@@ -32,7 +36,8 @@ use crate::view_components::action_button::{ActionButton, ButtonSize, SecondaryT
 pub enum CommitSubAction {
     SetIntent(CommitChainMode),
     ToggleIncludeUnstaged,
-    ToggleChangesExpanded}
+    ToggleChangesExpanded,
+}
 
 const EDITOR_FONT_SIZE: f32 = 12.;
 const EDITOR_MIN_HEIGHT: f32 = 72.;
@@ -63,7 +68,8 @@ pub struct CommitState {
     /// either a PR already exists or we're on the repo's main branch.
     /// The intent is hidden entirely in either case; an existing PR is
     /// still reachable via the git operations menu in the header.
-    commit_and_create_pr_button: Option<ViewHandle<ActionButton>>}
+    commit_and_create_pr_button: Option<ViewHandle<ActionButton>>,
+}
 
 pub(super) fn new_state(
     local_repo_path: Option<&Path>,
@@ -168,7 +174,8 @@ pub(super) fn new_state(
                 };
                 match result {
                     Ok(entries) => state.file_changes = entries,
-                    Err(err) => log::warn!("Failed to load file changes: {err}")}
+                    Err(err) => log::warn!("Failed to load file changes: {err}"),
+                }
                 me.refresh_confirm_enabled(ctx);
                 ctx.notify();
             },
@@ -186,7 +193,8 @@ pub(super) fn new_state(
         message_editor,
         commit_button,
         commit_and_push_button,
-        commit_and_create_pr_button};
+        commit_and_create_pr_button,
+    };
     apply_intent_selector(&state, ctx);
     state
 }
@@ -240,7 +248,8 @@ pub(super) fn apply_generated_commit_message(
 ) {
     let editor_handle = match me.mode() {
         GitDialogMode::Commit(state) => state.message_editor.clone(),
-        _ => return};
+        _ => return,
+    };
     match result {
         Ok(generated) => {
             let user_typed = !editor_handle.as_ref(ctx).buffer_text(ctx).trim().is_empty();
@@ -279,7 +288,8 @@ pub(super) fn maybe_start_commit_message_autogen(me: &GitDialog, ctx: &mut ViewC
     // rather than always assuming the full working set.
     let include_unstaged = match me.mode() {
         GitDialogMode::Commit(state) => state.include_unstaged,
-        _ => return};
+        _ => return,
+    };
     let branch_name = me.branch_name().to_string();
     me.diff_state_model().update(ctx, |m, ctx| {
         m.generate_commit_message(include_unstaged, branch_name, ctx);
@@ -397,10 +407,12 @@ pub(super) fn finish_commit_chain(
     let operation = match intent {
         CommitChainMode::CommitOnly => GitOperationKind::CommitOnly,
         CommitChainMode::CommitAndPush => GitOperationKind::CommitAndPush,
-        CommitChainMode::CommitAndCreatePr => GitOperationKind::CommitAndCreatePr};
+        CommitChainMode::CommitAndCreatePr => GitOperationKind::CommitAndCreatePr,
+    };
     let (status, error) = match &result {
         Ok(_) => (GitDialogStatus::Succeeded, None),
-        Err(err) => (GitDialogStatus::Failed, Some(err.clone()))};
+        Err(err) => (GitDialogStatus::Failed, Some(err.clone())),
+    };
     match &result {
         Ok(Some(pr)) => show_pr_created_toast(pr, ctx),
         Ok(None) => {
@@ -454,7 +466,8 @@ fn reload_file_changes(me: &mut GitDialog, ctx: &mut ViewContext<GitDialog>) {
     };
     let include_unstaged = match me.mode() {
         GitDialogMode::Commit(state) => state.include_unstaged,
-        _ => return};
+        _ => return,
+    };
     ctx.spawn(
         async move { get_file_change_entries(&repo_path, include_unstaged).await },
         |me, result, ctx| {
@@ -465,7 +478,8 @@ fn reload_file_changes(me: &mut GitDialog, ctx: &mut ViewContext<GitDialog>) {
                         me.refresh_confirm_enabled(ctx);
                         ctx.notify();
                     }
-                    Err(err) => log::warn!("Failed to reload file changes: {err}")}
+                    Err(err) => log::warn!("Failed to reload file changes: {err}"),
+                }
             }
         },
     );

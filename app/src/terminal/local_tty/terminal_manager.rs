@@ -36,6 +36,7 @@ use crate::context_chips::ContextChipKind;
 use crate::context_chips::prompt::Prompt;
 use crate::features::FeatureFlag;
 use crate::persistence::ModelEvent;
+use crate::server::telemetry::{PtySpawnMode as TelemetryPtySpawnMode, TelemetryEvent};
 use crate::settings::{DebugSettings, PrivacySettings, SshSettings};
 use crate::terminal::available_shells::{AvailableShell, AvailableShells};
 use crate::terminal::color::List as ColorList;
@@ -87,7 +88,13 @@ impl PtySpawnHooks for AppPtySpawnHooks {
         }
     }
 
-    fn spawned(&self, _mode: PtySpawnMode, _ctx: &mut AppContext) {}
+    fn spawned(&self, mode: PtySpawnMode, ctx: &mut AppContext) {
+        let mode = match mode {
+            PtySpawnMode::TerminalServer => TelemetryPtySpawnMode::TerminalServer,
+            PtySpawnMode::FallbackToDirect => TelemetryPtySpawnMode::FallbackToDirect,
+            PtySpawnMode::Direct => TelemetryPtySpawnMode::Direct,
+        };
+        crate::    }
 }
 
 /// Owns a local terminal session: the terminal model, PTY event loop, PTY
@@ -395,13 +402,6 @@ impl<S> TerminalManager<S> {
                         && model.is_active_block_bootstrapped()
                 },
                 move |max_bytes_per_second| {
-                    send_telemetry_on_executor!(
-                        auth_state,
-                        TelemetryEvent::PtyThroughput {
-                            max_bytes_per_second,
-                        },
-                        telemetry_executor
-                    );
                 },
                 ctx.background_executor().to_owned(),
             );
@@ -1037,13 +1037,6 @@ fn get_shell_starter_internal(
             starter,
         } => {
             if let Some(unsupported_shell) = unsupported_shell {
-                send_telemetry_on_executor!(
-                    auth_state,
-                    TelemetryEvent::UnsupportedShell {
-                        shell: unsupported_shell
-                    },
-                    background_executor
-                );
             }
 
             ShellStarter::Direct(starter)

@@ -11,11 +11,13 @@ use warpui_core::windowing::state::{ApplicationStage, StateEvent};
 use crate::components::feature_optout_dialog::{FeatureOptOutDialog, render_feature_optout_dialog};
 use crate::model::{
     OnboardingAuthState, OnboardingStateEvent, OnboardingStateModel, OnboardingStep,
-    SelectedSettings};
+    SelectedSettings,
+};
 use crate::slides::{
     AgentSlide, AiAccessSlide, AiAccessSlideEvent, AiSetupSlide, CustomizeUISlide, IntentionSlide,
     IntroSlide, IntroSlideEvent, OfferSlide, OfferSlideEvent, OfferVariant, OnboardingModelInfo,
-    OnboardingSlide, ThemePickerSlide, ThemePickerSlideEvent, ThirdPartySlide};
+    OnboardingSlide, ThemePickerSlide, ThemePickerSlideEvent, ThirdPartySlide,
+};
 use crate::telemetry::OnboardingEvent;
 
 const APP_BECAME_ACTIVE_DEBOUNCE: Duration = Duration::from_secs(15);
@@ -31,7 +33,8 @@ use warp_core::ui::theme::{Fill, WarpTheme};
 use warpui_core::elements::{
     Align, CacheOption, ChildAnchor, ConstrainedBox, Container, CrossAxisAlignment, Dismiss, Empty,
     Flex, Image, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
-    ParentAnchor, ParentElement, ParentOffsetBounds, Rect, Shrinkable, Stack};
+    ParentAnchor, ParentElement, ParentOffsetBounds, Rect, Shrinkable, Stack,
+};
 use warpui_core::fonts::Weight;
 use warpui_core::keymap::macros::*;
 use warpui_core::keymap::{FixedBinding, Keystroke};
@@ -39,14 +42,17 @@ use warpui_core::presenter::ChildView;
 use warpui_core::ui_components::components::{UiComponent as _, UiComponentStyles};
 use warpui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 #[derive(Clone, Debug)]
 pub enum AgentOnboardingEvent {
     ThemeSelected {
-        theme_name: String},
+        theme_name: String,
+    },
     SyncWithOsToggled {
-        enabled: bool},
+        enabled: bool,
+    },
     OnboardingCompleted(SelectedSettings),
     OnboardingSkipped,
     LoginFromWelcomeRequested,
@@ -60,13 +66,16 @@ pub enum AgentOnboardingEvent {
     UpgradeCopyUrlRequested,
     UpgradePasteTokenFromClipboardRequested,
     OfferSetUpLaterSelected {
-        variant: OfferVariant},
+        variant: OfferVariant,
+    },
     /// The user can now use AI, so onboarding is done for this user.
     OfferAiSellSatisfied {
-        variant: OfferVariant},
+        variant: OfferVariant,
+    },
     /// Emitted when the app regains focus (e.g. user returns from the browser).
     /// The parent should refresh any stale data: available models, workspace/billing metadata, etc.
-    AppBecameActive}
+    AppBecameActive,
+}
 
 pub struct AgentOnboardingView {
     onboarding_state: ModelHandle<OnboardingStateModel>,
@@ -87,7 +96,8 @@ pub struct AgentOnboardingView {
     last_model_refresh: Option<Instant>,
     show_plan_activated_toast: bool,
     last_auth_state: OnboardingAuthState,
-    plan_activated_close_mouse_state: MouseStateHandle}
+    plan_activated_close_mouse_state: MouseStateHandle,
+}
 
 #[derive(Clone, Copy, Debug)]
 pub enum AgentOnboardingAction {
@@ -102,7 +112,8 @@ pub enum AgentOnboardingAction {
     NoAiConfirm,
     NoAiCancel,
     NoAiDismiss,
-    DismissPlanActivatedToast}
+    DismissPlanActivatedToast,
+}
 
 fn dispatch_onboarding_action_to_slide<V: OnboardingSlide>(
     slide: &mut V,
@@ -305,7 +316,8 @@ impl AgentOnboardingView {
             last_model_refresh: None,
             show_plan_activated_toast: false,
             last_auth_state: auth_state,
-            plan_activated_close_mouse_state: MouseStateHandle::default()}
+            plan_activated_close_mouse_state: MouseStateHandle::default(),
+        }
     }
 
     /// Updates the list of available models.
@@ -409,7 +421,8 @@ impl AgentOnboardingView {
         let asset_cache = warpui_core::assets::asset_cache::AssetCache::as_ref(ctx);
         // Preload the shared background image used on all right panels.
         asset_cache.load_asset::<ImageType>(AssetSource::Bundled {
-            path: crate::slides::layout::ONBOARDING_BG_PATH});
+            path: crate::slides::layout::ONBOARDING_BG_PATH,
+        });
         if FeatureFlag::AccountFirstOnboarding.is_enabled() {
             for path in CustomizeUISlide::VISUAL_IMAGE_PATHS {
                 asset_cache.load_asset::<ImageType>(AssetSource::Bundled { path });
@@ -457,7 +470,8 @@ impl AgentOnboardingView {
                         ctx.dispatch_typed_action(AgentOnboardingAction::NoAiDismiss);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         let cancel_button = self.no_ai_cancel_button.render(
@@ -470,7 +484,8 @@ impl AgentOnboardingView {
                         ctx.dispatch_typed_action(AgentOnboardingAction::NoAiCancel);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         let enter = Keystroke::parse("enter").unwrap_or_default();
@@ -485,7 +500,8 @@ impl AgentOnboardingView {
                         ctx.dispatch_typed_action(AgentOnboardingAction::NoAiConfirm);
                     })),
                     ..button::Options::default(appearance)
-                }},
+                },
+            },
         );
 
         render_feature_optout_dialog(
@@ -497,7 +513,8 @@ impl AgentOnboardingView {
                 features: &[],
                 close_button,
                 cancel_button,
-                confirm_button},
+                confirm_button,
+            },
         )
     }
 
@@ -618,7 +635,8 @@ impl AgentOnboardingView {
         match event {
             ThemePickerSlideEvent::ThemeSelected { theme_name } => {
                 ctx.emit(AgentOnboardingEvent::ThemeSelected {
-                    theme_name: theme_name.clone()});
+                    theme_name: theme_name.clone(),
+                });
             }
             ThemePickerSlideEvent::SyncWithOsToggled { enabled } => {
                 ctx.emit(AgentOnboardingEvent::SyncWithOsToggled { enabled: *enabled });
@@ -724,7 +742,8 @@ impl View for AgentOnboardingView {
                             ctx.dispatch_typed_action(AgentOnboardingAction::Escape);
                         })),
                         ..button::Options::default(appearance)
-                    }},
+                    },
+                },
             );
 
             stack.add_positioned_child(
@@ -863,7 +882,8 @@ impl TypedActionView for AgentOnboardingView {
                 .expect("offer slide exists")
                 .update(ctx, |slide, ctx| {
                     dispatch_onboarding_action_to_slide(slide, *action, ctx)
-                })}
+                }),
+        }
     }
 }
 

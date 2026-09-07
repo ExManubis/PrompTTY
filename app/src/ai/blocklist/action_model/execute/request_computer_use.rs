@@ -18,14 +18,16 @@ pub struct RequestComputerUseExecutor {
     ambient_agent_task_id: Option<AmbientAgentTaskId>,
     /// Actions that were determined to be auto-executed in should_autoexecute().
     /// Used to determine is_autoexecuted when emitting telemetry in execute().
-    autoexecuted_actions: HashSet<AIAgentActionId>}
+    autoexecuted_actions: HashSet<AIAgentActionId>,
+}
 
 impl RequestComputerUseExecutor {
     pub fn new(terminal_view_id: EntityId) -> Self {
         Self {
             terminal_view_id,
             ambient_agent_task_id: None,
-            autoexecuted_actions: HashSet::new()}
+            autoexecuted_actions: HashSet::new(),
+        }
     }
 
     pub fn set_ambient_agent_task_id(&mut self, id: Option<AmbientAgentTaskId>) {
@@ -63,7 +65,8 @@ impl RequestComputerUseExecutor {
     ) -> impl Into<AnyActionExecution> + use<> {
         let ExecuteActionInput {
             action,
-            conversation_id} = input;
+            conversation_id,
+        } = input;
         let AIAgentActionType::RequestComputerUse(request) = &action.action else {
             return ActionExecution::InvalidAction;
         };
@@ -95,7 +98,8 @@ impl RequestComputerUseExecutor {
                         computer_use::Options {
                             screenshot_params,
                             background_enabled,
-                            pointer_sink: None},
+                            pointer_sink: None,
+                        },
                     )
                     .await;
                 (result, platform)
@@ -112,7 +116,8 @@ impl RequestComputerUseExecutor {
                     RequestComputerUseResult::Approved {
                         screenshot,
                         platform,
-                        windows},
+                        windows,
+                    },
                 ),
                 (
                     Ok(computer_use::ActionResult {
@@ -130,7 +135,9 @@ impl RequestComputerUseExecutor {
                 }
                 (Err(err), _) => AIAgentActionResultType::RequestComputerUse(
                     RequestComputerUseResult::Error(err),
-                )})}
+                ),
+            }),
+        }
     }
 
     pub(super) fn preprocess_action(

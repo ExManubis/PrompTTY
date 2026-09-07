@@ -8,14 +8,16 @@ use warp_util::path::LineAndColumnArg;
 use warpui::elements::{
     Align, Border, ChildView, Clipped, ClippedScrollStateHandle, ClippedScrollable, ConstrainedBox,
     Container, CornerRadius, Dismiss, DispatchEventResult, Empty, EventHandler, Fill, Flex,
-    ParentElement, Radius, SavePosition, Shrinkable};
+    ParentElement, Radius, SavePosition, Shrinkable,
+};
 use warpui::event::KeyState;
 use warpui::keymap::BindingId;
 use warpui::platform::keyboard::KeyCode;
 use warpui::units::{IntoPixels, Pixels};
 use warpui::{
     AppContext, Element, Entity, EntityId, FocusContext, ModelHandle, SingletonEntity,
-    TypedActionView, ViewContext, ViewHandle, WindowId};
+    TypedActionView, ViewContext, ViewHandle, WindowId,
+};
 
 use super::super::palette_styles as styles;
 use super::CommandPaletteMixer;
@@ -34,7 +36,8 @@ use crate::search::command_palette::zero_state::{self, Event as ZeroStateEvent, 
 use crate::search::data_source::QueryResult;
 use crate::search::result_renderer::QueryResultRenderer;
 use crate::search::search_bar::{
-    SearchBar, SearchBarEvent, SearchBarState, SearchResultOrdering, SelectionUpdate};
+    SearchBar, SearchBarEvent, SearchBarState, SearchResultOrdering, SelectionUpdate,
+};
 use crate::server::ids::SyncId;
 use crate::server::telemetry::{LaunchConfigUiLocation, TelemetryEvent};
 use crate::session_management::SessionSource;
@@ -69,18 +72,21 @@ const MAX_SEARCH_RESULTS: usize = 250;
 const NUM_RECENT_ITEMS_IN_ZERO_STATE: usize = 3;
 
 struct ViewState {
-    clipped_scroll_state: ClippedScrollStateHandle}
+    clipped_scroll_state: ClippedScrollStateHandle,
+}
 
 #[derive(Debug)]
 pub enum Action {
     ResultClicked { action: CommandPaletteItemAction },
     Close,
-    CtrlPressed(bool)}
+    CtrlPressed(bool),
+}
 
 #[derive(Debug)]
 pub enum Event {
     Close {
-        accepted_action_type: Option<&'static str>},
+        accepted_action_type: Option<&'static str>,
+    },
     /// Execute the workflow identified by `id`.
     ExecuteWorkflow { id: SyncId },
     /// Invoke the env vars identified by `id`.
@@ -92,9 +98,11 @@ pub enum Event {
     /// Open a file at the given path.
     OpenFile {
         path: String,
-        line_and_column_arg: Option<LineAndColumnArg>},
+        line_and_column_arg: Option<LineAndColumnArg>,
+    },
     /// Open a directory at the given path.
-    OpenDirectory { path: String }}
+    OpenDirectory { path: String },
+}
 
 #[derive(Debug, Clone, Default)]
 pub enum NavigationMode {
@@ -102,7 +110,8 @@ pub enum NavigationMode {
     Normal,
 
     // Palette was entered via ctrl-tab for quick session switching.
-    CtrlTab}
+    CtrlTab,
+}
 
 /// A view that renders the command palette and allows users to optionally apply a [`QueryFilter`]
 /// to filter results.
@@ -127,7 +136,8 @@ pub struct View {
 
     /// Whether the active session is a shared session viewer.
     /// This is set by the workspace when opening the palette.
-    is_shared_session_viewer: bool}
+    is_shared_session_viewer: bool,
+}
 
 impl Entity for View {
     type Event = Event;
@@ -297,7 +307,8 @@ impl View {
             search_bar,
             search_bar_state,
             state: ViewState {
-                clipped_scroll_state: Default::default()},
+                clipped_scroll_state: Default::default(),
+            },
             binding_source,
             session_source,
             data_source_store,
@@ -305,7 +316,8 @@ impl View {
             placeholder_query_renderer: placeholder_element,
             suggested_binding_ids,
             zero_state_items,
-            is_shared_session_viewer: false}
+            is_shared_session_viewer: false,
+        }
     }
 
     #[cfg(feature = "integration_tests")]
@@ -470,7 +482,8 @@ impl View {
             *binding_source = BindingSource::View {
                 window_id,
                 view_id,
-                binding_filter_fn};
+                binding_filter_fn,
+            };
             ctx.notify();
         });
     }
@@ -600,11 +613,13 @@ impl View {
             TelemetryEvent::PaletteSearchResultAccepted {
                 result_type,
                 filter,
-                buffer_length}
+                buffer_length,
+            }
         } else {
             TelemetryEvent::PaletteSearchExited {
                 filter,
-                buffer_length}
+                buffer_length,
+            }
         };
 
         self.state.clipped_scroll_state = Default::default();
@@ -615,7 +630,8 @@ impl View {
         // to update the view.
         if ctx.root_view_id(ctx.window_id()).is_some() {
             ctx.emit(Event::Close {
-                accepted_action_type});
+                accepted_action_type,
+            });
         }
     }
 
@@ -731,35 +747,40 @@ impl View {
             match action.as_any().downcast_ref::<WorkspaceAction>() {
                 Some(WorkspaceAction::TogglePalette {
                     mode: PaletteMode::LaunchConfig,
-                    source: _}) => {
+                    source: _,
+                }) => {
                     self.reset(ctx);
                     self.set_active_query_filter(QueryFilter::LaunchConfigurations, ctx);
                     return;
                 }
                 Some(WorkspaceAction::TogglePalette {
                     mode: PaletteMode::Navigation,
-                    source: _}) => {
+                    source: _,
+                }) => {
                     self.reset(ctx);
                     self.set_active_query_filter(QueryFilter::Sessions, ctx);
                     return;
                 }
                 Some(WorkspaceAction::TogglePalette {
                     mode: PaletteMode::Files,
-                    source: _}) => {
+                    source: _,
+                }) => {
                     self.reset(ctx);
                     self.set_active_query_filter(QueryFilter::Files, ctx);
                     return;
                 }
                 Some(WorkspaceAction::TogglePalette {
                     mode: PaletteMode::Conversations,
-                    source: _}) => {
+                    source: _,
+                }) => {
                     self.reset(ctx);
                     self.set_active_query_filter(QueryFilter::Conversations, ctx);
                     return;
                 }
                 Some(WorkspaceAction::TogglePalette {
                     mode: PaletteMode::Command,
-                    source: _}) => {
+                    source: _,
+                }) => {
                     self.close(ctx, Some(result_action.result_type()));
                     return;
                 }
@@ -775,7 +796,8 @@ impl View {
             }
             CommandPaletteItemAction::NavigateToSession {
                 pane_view_locator,
-                window_id} => {
+                window_id,
+            } => {
                 if let Some(root_view_id) = ctx.root_view_id(window_id) {
                     ctx.dispatch_action_for_view(
                         window_id,
@@ -788,7 +810,8 @@ impl View {
             }
             CommandPaletteItemAction::NavigateToTab {
                 pane_group_id,
-                window_id} => {
+                window_id,
+            } => {
                 if let Some(root_view_id) = ctx.root_view_id(window_id) {
                     ctx.dispatch_action_for_view(
                         window_id,
@@ -802,7 +825,8 @@ impl View {
                 pane_view_locator,
                 window_id,
                 conversation_id,
-                terminal_view_id} => {
+                terminal_view_id,
+            } => {
                 let should_block = {
                     window_id
                         .and_then(|window_id| {
@@ -837,7 +861,8 @@ impl View {
                     window_id,
                     conversation_id,
                     terminal_view_id,
-                    restore_layout: None});
+                    restore_layout: None,
+                });
             }
             CommandPaletteItemAction::ForkConversation { conversation_id } => {
                 ctx.dispatch_typed_action(&WorkspaceAction::ForkAIConversation {
@@ -847,17 +872,20 @@ impl View {
                     summarization_prompt: None,
                     initial_prompt: None,
                     initial_attachments: vec![],
-                    destination: ForkedConversationDestination::SplitPane});
+                    destination: ForkedConversationDestination::SplitPane,
+                });
             }
             CommandPaletteItemAction::OpenLaunchConfiguration {
                 open_in_active_window,
-                config} => {
+                config,
+            } => {
                 ctx.dispatch_global_action(
                     "root_view:open_launch_config",
                     OpenLaunchConfigArg {
                         open_in_active_window,
                         launch_config: config.deref().clone(),
-                        ui_location: LaunchConfigUiLocation::CommandPalette},
+                        ui_location: LaunchConfigUiLocation::CommandPalette,
+                    },
                 );
             }
             CommandPaletteItemAction::ExecuteWorkflow { id } => {
@@ -876,7 +904,8 @@ impl View {
             CommandPaletteItemAction::OpenFile {
                 path,
                 project_directory,
-                line_and_column_arg} => {
+                line_and_column_arg,
+            } => {
                 let absolute_path = std::path::Path::new(&project_directory)
                     .join(&path)
                     .to_string_lossy()
@@ -884,22 +913,26 @@ impl View {
 
                 ctx.emit(Event::OpenFile {
                     path: absolute_path,
-                    line_and_column_arg});
+                    line_and_column_arg,
+                });
             }
             CommandPaletteItemAction::OpenDirectory {
                 path,
-                project_directory} => {
+                project_directory,
+            } => {
                 let absolute_path = std::path::Path::new(&project_directory)
                     .join(&path)
                     .to_string_lossy()
                     .to_string();
 
                 ctx.emit(Event::OpenDirectory {
-                    path: absolute_path});
+                    path: absolute_path,
+                });
             }
             CommandPaletteItemAction::CreateFile {
                 file_name,
-                current_directory} => {
+                current_directory,
+            } => {
                 let file_path = std::path::Path::new(&current_directory).join(&file_name);
 
                 if let Err(e) = std::fs::File::create_new(&file_path)
@@ -911,11 +944,13 @@ impl View {
 
                 ctx.emit(Event::OpenFile {
                     path: file_path.to_string_lossy().to_string(),
-                    line_and_column_arg: None});
+                    line_and_column_arg: None,
+                });
             }
             CommandPaletteItemAction::NewConversationInProject {
                 path: _,
-                project_name} => {
+                project_name,
+            } => {
                 // AcceptProject is handled by the welcome palette, not the regular command palette.
                 // This case should not normally be reached in the command palette context, but we
                 // include it for completeness. If this somehow gets executed, we'll just log it.
@@ -926,7 +961,8 @@ impl View {
             CommandPaletteItemAction::NewConversation => {
                 let window_id = match self.binding_source.as_ref(ctx) {
                     BindingSource::View { window_id, .. } => *window_id,
-                    BindingSource::None => return};
+                    BindingSource::None => return,
+                };
 
                 let (terminal_view_id, can_start_new_conversation) = {
                     let terminal_view_id =
@@ -961,7 +997,8 @@ impl View {
 
                 if let Some(terminal_view_id) = terminal_view_id {
                     ctx.dispatch_typed_action(&WorkspaceAction::StartNewConversation {
-                        terminal_view_id});
+                        terminal_view_id,
+                    });
                 }
             }
             CommandPaletteItemAction::NoOp => {
@@ -984,7 +1021,8 @@ impl View {
             BindingSource::View {
                 window_id, view_id, ..
             } => (*window_id, *view_id),
-            BindingSource::None => return};
+            BindingSource::None => return,
+        };
 
         ctx.dispatch_typed_action_for_view(window_id, view_id, action);
     }

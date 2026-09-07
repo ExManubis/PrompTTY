@@ -9,14 +9,16 @@ use std::sync::Arc;
 
 use ai::diff_validation::{
     AIRequestedCodeDiff, DiffDelta, DiffMatchFailure, DiffMatchFailures, DiffType, ParsedDiff,
-    SearchAndReplace, V4AHunk, fuzzy_match_diffs, fuzzy_match_v4a_diffs};
+    SearchAndReplace, V4AHunk, fuzzy_match_diffs, fuzzy_match_v4a_diffs,
+};
 use itertools::Itertools;
 use vec1::Vec1;
 use warpui::r#async::executor::Background;
 
 use super::telemetry::{
     DiffInvalidFileEvent, DiffMatchFailedEvent, MissingLineNumbersEvent,
-    RequestFileEditsTelemetryEvent};
+    RequestFileEditsTelemetryEvent,
+};
 use crate::ai::agent::{AIIdentifiers, FileEdit};
 use crate::ai::blocklist::SessionContext;
 use crate::ai::paths::host_native_absolute_path;
@@ -34,14 +36,16 @@ pub(crate) enum FileReadResult {
     /// The file does not exist.
     NotFound,
     /// The file could not be read for a reason other than "not found".
-    ReadError(String)}
+    ReadError(String),
+}
 
 impl From<std::io::Result<String>> for FileReadResult {
     fn from(result: std::io::Result<String>) -> Self {
         match result {
             Ok(content) => FileReadResult::Found(content),
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => FileReadResult::NotFound,
-            Err(err) => FileReadResult::ReadError(format!("{err:#}"))}
+            Err(err) => FileReadResult::ReadError(format!("{err:#}")),
+        }
     }
 }
 
@@ -51,31 +55,39 @@ pub(crate) enum DiffApplicationError {
     /// Some diffs could not be matched against the file content.
     UnmatchedDiffs {
         file: String,
-        match_failures: DiffMatchFailures},
+        match_failures: DiffMatchFailures,
+    },
     /// The file that a diff should be applied to did not exist.
     MissingFile {
-        file: String},
+        file: String,
+    },
     /// The file could not be read (I/O error, permissions, remote connectivity, etc.).
     ReadFailed {
         file: String,
         // TODO(CODE-353): Display I/O errors to the user, since they may be able to fix them.
         #[expect(dead_code)]
-        message: String},
+        message: String,
+    },
     /// A file that was supposed to be new already exists.
     AlreadyExists {
-        file: String},
+        file: String,
+    },
     /// The diff contained multiple attempts to create the same file.
     MultipleFileCreation {
-        file: String},
+        file: String,
+    },
     /// No diffs could be applied.
     EmptyDiff,
     MutatedDeletedFile {
-        file: String},
+        file: String,
+    },
     MultipleFileRenames {
-        file: String},
+        file: String,
+    },
     /// File read/write operations are not available on this remote session.
     /// This covers both connection-dropped and unsupported SSH session types.
-    RemoteFileOperationsUnsupported}
+    RemoteFileOperationsUnsupported,
+}
 
 impl DiffApplicationError {
     /// Format this error for inclusion in the agent conversation. The error should help the LLM
@@ -84,7 +96,8 @@ impl DiffApplicationError {
         match self {
             DiffApplicationError::UnmatchedDiffs {
                 file,
-                match_failures} => {
+                match_failures,
+            } => {
                 let mut message = String::new();
                 if match_failures.fuzzy_match_failures > 0 {
                     let _ = write!(message, "Could not apply all diffs to {file}.");
@@ -213,7 +226,8 @@ where
         .warnings
         .iter()
         .map(|warning| match warning {
-            DiffWarning::MissingLineNumbers { count, .. } => *count})
+            DiffWarning::MissingLineNumbers { count, .. } => *count,
+        })
         .sum();
 
     if total_missing_line_numbers > 0 {
@@ -221,7 +235,8 @@ where
 
     match Vec1::try_from_vec(result.errors) {
         Ok(errors) => Err(errors),
-        Err(vec1::Size0Error) => Ok(result.diffs)}
+        Err(vec1::Size0Error) => Ok(result.diffs),
+    }
 }
 
 /// Warnings are issues that don't necessarily prevent diff application, but indicate an unexpected
@@ -232,7 +247,8 @@ where
 #[derive(Debug, Clone)]
 pub enum DiffWarning {
     /// Search blocks that are missing line numbers.
-    MissingLineNumbers { count: u8 }}
+    MissingLineNumbers { count: u8 },
+}
 
 #[derive(Default)]
 struct DiffResult {
@@ -241,13 +257,15 @@ struct DiffResult {
     /// All errors that occurred while applying diffs.
     errors: Vec<DiffApplicationError>,
     /// All warnings that occurred while applying diffs.
-    warnings: Vec<DiffWarning>}
+    warnings: Vec<DiffWarning>,
+}
 
 /// A pending file-creation request. Allow content replacement on existing file when
 /// `allow_overwrite` is set to true
 struct NewFileRequest {
     content: String,
-    allow_overwrite: bool}
+    allow_overwrite: bool,
+}
 
 /// You generally want to use `apply_edits`, however, if you don't want to report telemetry or be as
 /// strict, this is available.  For example, we use this when debug importing conversations.
@@ -292,7 +310,8 @@ where
                                 result
                                     .errors
                                     .push(DiffApplicationError::MultipleFileRenames {
-                                        file: file_path.clone()});
+                                        file: file_path.clone(),
+                                    });
                                 continue;
                             }
                             file_renames.insert(file_path, move_to);
@@ -303,7 +322,8 @@ where
             FileEdit::Create {
                 file,
                 content,
-                allow_overwrite} => {
+                allow_overwrite,
+            } => {
                 let Some(file_path) = file else { continue };
 
                 match new_files.entry(file_path) {
@@ -311,7 +331,8 @@ where
                         result
                             .errors
                             .push(DiffApplicationError::MultipleFileCreation {
-                                file: entry.key().clone()});
+                                file: entry.key().clone(),
+                            });
                         continue;
                     }
                     Entry::Vacant(entry) => {
@@ -320,7 +341,8 @@ where
                         };
                         entry.insert(NewFileRequest {
                             content,
-                            allow_overwrite});
+                            allow_overwrite,
+                        });
                     }
                 }
             }
@@ -439,11 +461,13 @@ fn push_full_replace_diff(
         diff_type: DiffType::update(
             vec![DiffDelta {
                 replacement_line_range,
-                insertion: new_content}],
+                insertion: new_content,
+            }],
             None,
         ),
         failures: None,
-        original_content});
+        original_content,
+    });
 }
 
 async fn apply_replace_file<F, Fut>(
@@ -478,7 +502,8 @@ async fn apply_replace_file<F, Fut>(
             );
             result.errors.push(DiffApplicationError::ReadFailed {
                 file: file_path,
-                message: err});
+                message: err,
+            });
         }
     }
 }
@@ -521,7 +546,8 @@ async fn apply_create_file<F, Fut>(
                 file_name: file_path,
                 diff_type: DiffType::creation(content),
                 failures: None,
-                original_content: String::new()});
+                original_content: String::new(),
+            });
         }
         FileReadResult::ReadError(err) => {
             safe_warn!(
@@ -530,7 +556,8 @@ async fn apply_create_file<F, Fut>(
             );
             result.errors.push(DiffApplicationError::ReadFailed {
                 file: file_path,
-                message: err});
+                message: err,
+            });
         }
     }
 }
@@ -557,7 +584,8 @@ async fn apply_delete_file<F, Fut>(
                 file_name: file_path,
                 diff_type: DiffType::deletion(num_lines),
                 failures: None,
-                original_content: file_content})
+                original_content: file_content,
+            })
         }
         FileReadResult::NotFound => {
             result
@@ -571,7 +599,8 @@ async fn apply_delete_file<F, Fut>(
             );
             result.errors.push(DiffApplicationError::ReadFailed {
                 file: file_path,
-                message: err});
+                message: err,
+            });
         }
     }
 }
@@ -602,7 +631,8 @@ async fn apply_search_replace<F, Fut>(
                             file_name: file_path,
                             diff_type: DiffType::creation(replace),
                             failures: None,
-                            original_content: String::new()})
+                            original_content: String::new(),
+                        })
                     } else {
                         safe_warn!(
                             safe: ("Suggested non-empty diff on non-existent file"),
@@ -635,7 +665,8 @@ async fn apply_search_replace<F, Fut>(
             );
             result.errors.push(DiffApplicationError::ReadFailed {
                 file: file_path,
-                message: err});
+                message: err,
+            });
         }
         FileReadResult::Found(file_content) => {
             safe_debug!(
@@ -650,7 +681,8 @@ async fn apply_search_replace<F, Fut>(
                 && failures.missing_line_numbers > 0
             {
                 result.warnings.push(DiffWarning::MissingLineNumbers {
-                    count: failures.missing_line_numbers});
+                    count: failures.missing_line_numbers,
+                });
             }
 
             if fuzzy_match_diffs.warrants_failure()
@@ -667,7 +699,8 @@ async fn apply_search_replace<F, Fut>(
                 );
                 result.errors.push(DiffApplicationError::UnmatchedDiffs {
                     file: file_path.clone(),
-                    match_failures: failures.clone()});
+                    match_failures: failures.clone(),
+                });
             }
             result.diffs.push(fuzzy_match_diffs);
         }
@@ -709,10 +742,12 @@ async fn apply_v4a_update<F, Fut>(
             );
             result.errors.push(DiffApplicationError::ReadFailed {
                 file: file_path,
-                message: err});
+                message: err,
+            });
             return;
         }
-        FileReadResult::Found(content) => content};
+        FileReadResult::Found(content) => content,
+    };
 
     safe_debug!(
         safe: ("Matching V4A diffs"),
@@ -736,7 +771,8 @@ async fn apply_v4a_update<F, Fut>(
                 );
                 result.errors.push(DiffApplicationError::ReadFailed {
                     file: target.clone(),
-                    message: err});
+                    message: err,
+                });
                 return;
             }
         }
@@ -766,7 +802,8 @@ async fn apply_v4a_update<F, Fut>(
                 );
                 result.errors.push(DiffApplicationError::UnmatchedDiffs {
                     file: file_path.clone(),
-                    match_failures: failures.clone()});
+                    match_failures: failures.clone(),
+                });
             }
             return;
         }
@@ -789,7 +826,8 @@ async fn apply_v4a_update<F, Fut>(
         };
         new_deltas.push(DiffDelta {
             replacement_line_range: replacement_range,
-            insertion: file_content});
+            insertion: file_content,
+        });
 
         // Apply the original diff to A.
         if let DiffType::Update {
@@ -805,13 +843,15 @@ async fn apply_v4a_update<F, Fut>(
             file_name: file_path.clone(),
             diff_type: DiffType::deletion(source_num_lines),
             failures: None,
-            original_content: deletion_original_content});
+            original_content: deletion_original_content,
+        });
 
         result.diffs.push(AIRequestedCodeDiff {
             file_name: rename_target,
             diff_type: DiffType::update(new_deltas, None),
             failures: None,
-            original_content: target_content});
+            original_content: target_content,
+        });
     } else {
         // Normal case: no rename or rename to non-existent file
         let diffs = fuzzy_match_v4a_diffs(&file_path, &deltas, rename_to, file_content);
@@ -829,7 +869,8 @@ async fn apply_v4a_update<F, Fut>(
             );
             result.errors.push(DiffApplicationError::UnmatchedDiffs {
                 file: file_path.clone(),
-                match_failures: failures.clone()});
+                match_failures: failures.clone(),
+            });
         }
         result.diffs.push(diffs);
     }

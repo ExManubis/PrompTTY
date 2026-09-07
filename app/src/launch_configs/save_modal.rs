@@ -1,5 +1,6 @@
 use markdown_parser::{
-    FormattedText, FormattedTextFragment, FormattedTextInline, FormattedTextLine};
+    FormattedText, FormattedTextFragment, FormattedTextInline, FormattedTextLine,
+};
 use pathfinder_geometry::vector::vec2f;
 use serde::{Deserialize, Serialize};
 use warp_core::paths::home_relative_path;
@@ -8,18 +9,21 @@ use warpui::accessibility::{AccessibilityContent, WarpA11yRole};
 use warpui::elements::{
     Align, Border, ChildAnchor, ChildView, Clipped, ConstrainedBox, Container, CornerRadius,
     Element, Empty, Flex, FormattedTextElement, MouseStateHandle, OffsetPositioning, ParentAnchor,
-    ParentElement, ParentOffsetBounds, Radius, SavePosition, Shrinkable, Stack, Text};
+    ParentElement, ParentOffsetBounds, Radius, SavePosition, Shrinkable, Stack, Text,
+};
 use warpui::keymap::FixedBinding;
 use warpui::ui_components::button::{Button, ButtonVariant};
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Entity, FocusContext, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 use crate::app_state::{AppState, get_app_state};
 use crate::appearance::Appearance;
 use crate::editor::{
-    EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions};
+    EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
+};
 use crate::launch_configs::launch_config::LaunchConfig;
 use crate::server::telemetry::TelemetryEvent;
 use crate::user_config::launch_configs_dir;
@@ -72,7 +76,8 @@ pub fn init(app: &mut AppContext) {
 #[derive(PartialEq)]
 enum SnapshotTrigger {
     None,
-    StartSnapshot}
+    StartSnapshot,
+}
 
 impl Entity for SnapshotTrigger {
     type Event = ();
@@ -83,7 +88,8 @@ struct SaveModalMouseStates {
     close_button_state: MouseStateHandle,
     documentation_link_state: MouseStateHandle,
     save_button_state: MouseStateHandle,
-    open_file_button_state: MouseStateHandle}
+    open_file_button_state: MouseStateHandle,
+}
 
 /// View that shows up when a user expresses the intent to save their current
 /// app state as a launch config.
@@ -94,7 +100,8 @@ pub struct LaunchConfigSaveModal {
     snapshot_source: ModelHandle<SnapshotTrigger>,
     save_state: SaveState,
     file_name: Option<String>,
-    open_modal_keybinding_str: String}
+    open_modal_keybinding_str: String,
+}
 
 /// Keeps track of the current lifecycle state of the modal
 /// NotSaved => Success(file_name)
@@ -106,30 +113,35 @@ pub enum SaveState {
     /// Fails to save
     Failure(FailureType),
     /// Not yet saved
-    NotSaved}
+    NotSaved,
+}
 
 #[derive(PartialEq, Eq, Clone, Serialize, Deserialize, Copy)]
 pub enum FailureType {
     FileAlreadyExists,
-    Other}
+    Other,
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum ActionRequest {
     Action(LaunchConfigSaveAction),
-    Enter}
+    Enter,
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum LaunchConfigSaveAction {
     Close,
     Save,
-    OpenFile}
+    OpenFile,
+}
 
 impl LaunchConfigSaveAction {
     pub fn from_state(save_state: &SaveState) -> Self {
         match save_state {
             SaveState::Success => Self::OpenFile,
             SaveState::NotSaved => Self::Save,
-            SaveState::Failure(_) => Self::Close}
+            SaveState::Failure(_) => Self::Close,
+        }
     }
 }
 
@@ -148,8 +160,10 @@ pub enum LaunchConfigModalEvent {
     OpenFileWithTarget {
         path: std::path::PathBuf,
         target: FileTarget,
-        line_col: Option<warp_util::path::LineAndColumnArg>},
-    Close}
+        line_col: Option<warp_util::path::LineAndColumnArg>,
+    },
+    Close,
+}
 
 impl Entity for LaunchConfigSaveModal {
     type Event = LaunchConfigModalEvent;
@@ -186,7 +200,8 @@ impl LaunchConfigSaveModal {
                 "workspace:toggle_launch_config_palette",
                 ctx,
             )
-            .unwrap_or_default()}
+            .unwrap_or_default(),
+        }
     }
 
     pub fn set_snapshot_source(&mut self, ctx: &mut ViewContext<Self>) {
@@ -216,7 +231,8 @@ impl LaunchConfigSaveModal {
             EditorEvent::Escape => {
                 self.handle_action(&ActionRequest::Action(LaunchConfigSaveAction::Close), ctx)
             }
-            _ => ctx.notify()}
+            _ => ctx.notify(),
+        }
     }
 
     /// Open the saved file if the modal is in the correct state
@@ -235,7 +251,8 @@ impl LaunchConfigSaveModal {
             ctx.emit(LaunchConfigModalEvent::OpenFileWithTarget {
                 path: file_path,
                 target,
-                line_col: None});
+                line_col: None,
+            });
         }
     }
 
@@ -305,7 +322,8 @@ impl LaunchConfigSaveModal {
                     top: 10.,
                     bottom: 10.,
                     left: 20.,
-                    right: 20.}),
+                    right: 20.,
+                }),
                 ..Default::default()
             });
 
@@ -368,7 +386,8 @@ impl LaunchConfigSaveModal {
                 self.render_save_config_button(appearance, save_config_disabled),
             ))
             .finish(),
-            LaunchConfigSaveAction::Close => Empty::new().finish()}
+            LaunchConfigSaveAction::Close => Empty::new().finish(),
+        }
     }
 
     /// Renders a generic text block in a span
@@ -529,7 +548,8 @@ impl LaunchConfigSaveModal {
                         FailureType::FileAlreadyExists => {
                             "Failed to save. A launch configuration with the same name already exists.".to_string()
                         }
-                        FailureType::Other => "An issue was encountered while saving.".to_string()},
+                        FailureType::Other => "An issue was encountered while saving.".to_string(),
+                    },
                 )
                 .with_padding_bottom(24.)
                 .finish(),
@@ -639,7 +659,8 @@ impl TypedActionView for LaunchConfigSaveModal {
         // this will become moot when we put launch configs in Warp Drive.
         let action = match action {
             ActionRequest::Action(action) => action.clone(),
-            ActionRequest::Enter => LaunchConfigSaveAction::from_state(&self.save_state)};
+            ActionRequest::Enter => LaunchConfigSaveAction::from_state(&self.save_state),
+        };
         match action {
             LaunchConfigSaveAction::Close => self.close(ctx),
             LaunchConfigSaveAction::Save =>

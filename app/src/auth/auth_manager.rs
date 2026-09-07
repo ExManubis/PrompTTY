@@ -13,7 +13,8 @@ use warp_core::channel::ChannelState;
 use warp_core::features::FeatureFlag;
 use warp_errors::{report_error, report_if_error};
 use warp_graphql::mutations::create_anonymous_user::{
-    AnonymousUserType, CreateAnonymousUserResult};
+    AnonymousUserType, CreateAnonymousUserResult,
+};
 use warp_server_auth::API_KEY_PREFIX;
 use warp_server_auth::user::persistence::PersistedUser;
 use warpui::r#async::Timer;
@@ -35,7 +36,8 @@ use crate::server::cloud_objects::update_manager::UpdateManager;
 use crate::server::graphql::get_user_facing_error_message;
 use crate::server::server_api::auth::{
     AnonymousUserCreationError, AuthClient, FetchUserResult, MintCustomTokenError,
-    UserAuthenticationError};
+    UserAuthenticationError,
+};
 use crate::server::server_api::{ServerApi, ServerApiProvider};
 use crate::server::telemetry::AnonymousUserSignupEntrypoint;
 use crate::settings::PrivacySettings;
@@ -47,7 +49,8 @@ use crate::terminal::shared_session::manager::Manager as SharedSessionManager;
 use crate::uri::browser_url_handler::{parse_current_url, update_browser_url};
 use crate::workspaces::team_tester::TeamTesterStatus;
 use crate::{
-    GlobalResourceHandlesProvider, TelemetryEvent, persistence};
+    GlobalResourceHandlesProvider, persistence,
+};
 
 #[derive(Debug)]
 pub enum AuthManagerEvent {
@@ -65,7 +68,8 @@ pub enum AuthManagerEvent {
     NeedsReauth,
     /// The user is anonymous and has attempted to access a login-gated feature or link.
     AttemptedLoginGatedFeature {
-        auth_view_variant: AuthViewVariant},
+        auth_view_variant: AuthViewVariant,
+    },
     // The current user is anonymous and the client has received a browser intent to sign in with a different Warp account.
     // Holds an auth payload from the received browser intent.
     LoginOverrideDetected(AuthRedirectPayload),
@@ -78,7 +82,9 @@ pub enum AuthManagerEvent {
         #[cfg_attr(target_family = "wasm", allow(unused))]
         verification_url_complete: Option<String>,
         #[cfg_attr(target_family = "wasm", allow(unused))]
-        user_code: String}}
+        user_code: String,
+    },
+}
 
 pub type LoginGatedFeature = &'static str;
 
@@ -131,7 +137,8 @@ pub struct AuthManager {
     server_api: Arc<ServerApi>,
     auth_client: Arc<dyn AuthClient>,
     /// A generated state token that the web app must provide back to the client.
-    pending_auth_state: Option<String>}
+    pending_auth_state: Option<String>,
+}
 
 impl AuthManager {
     /// Creates a new instance of the AuthManager. The auth state must already be initialized through
@@ -147,7 +154,8 @@ impl AuthManager {
             auth_state,
             server_api,
             auth_client,
-            pending_auth_state: None}
+            pending_auth_state: None,
+        }
     }
 
     #[cfg(any(test, all(feature = "tui", feature = "test-util")))]
@@ -163,7 +171,8 @@ impl AuthManager {
             auth_state,
             server_api,
             auth_client,
-            pending_auth_state: None}
+            pending_auth_state: None,
+        }
     }
 
     /// Fetches and ultimately sets the user's auth state from an auth payload.
@@ -179,7 +188,8 @@ impl AuthManager {
             refresh_token,
             user_uid,
             deleted_anonymous_user,
-            state} = auth_payload.clone();
+            state,
+        } = auth_payload.clone();
 
         if let Some(received_state) = &state {
             if !self.consume_auth_state(received_state) {
@@ -214,7 +224,8 @@ impl AuthManager {
                     .auth_state
                     .user_id()
                     .map(|current_user_uid| current_user_uid == incoming_user_uid)
-                    .unwrap_or_default()};
+                    .unwrap_or_default(),
+            };
             if !incoming_user_matches_current_user && !deleted_anonymous_user.unwrap_or_default() {
                 ctx.emit(AuthManagerEvent::LoginOverrideDetected(auth_payload));
                 return;
@@ -243,7 +254,8 @@ impl AuthManager {
             refresh_token,
             user_uid: _,
             deleted_anonymous_user: _,
-            state: _} = auth_payload;
+            state: _,
+        } = auth_payload;
 
         let auth_client = self.auth_client.clone();
 
@@ -352,7 +364,8 @@ impl AuthManager {
                     verification_url_complete: details
                         .verification_uri_complete()
                         .map(|complete| complete.secret().to_string()),
-                    user_code: details.user_code().secret().to_string()});
+                    user_code: details.user_code().secret().to_string(),
+                });
 
                 let auth_client = self.auth_client.clone();
                 ctx.spawn(
@@ -370,7 +383,8 @@ impl AuthManager {
                     Self::on_user_fetched,
                 );
             }
-            Err(err) => ctx.emit(AuthManagerEvent::AuthFailed(err))}
+            Err(err) => ctx.emit(AuthManagerEvent::AuthFailed(err)),
+        }
     }
 
     /// Callback for handling a successful fetch of a user from warp-server and Firebase.
@@ -387,11 +401,13 @@ impl AuthManager {
                 let FetchUserResult {
                     user_output,
                     credentials,
-                    from_refresh} = fetch_user_result;
+                    from_refresh,
+                } = fetch_user_result;
                 let UserProperties {
                     user,
                     server_experiments,
-                    llms} = user_output.into();
+                    llms,
+                } = user_output.into();
 
                 self.complete_authentication(user.clone(), credentials, ctx);
 
@@ -474,7 +490,9 @@ impl AuthManager {
                     && let Err(e) =
                         model_event_sender.send(ModelEvent::UpsertCurrentUserInformation {
                             user_information: PersistedCurrentUserInformation {
-                                email: self.auth_state.user_email().unwrap_or_default()}})
+                                email: self.auth_state.user_email().unwrap_or_default(),
+                            },
+                        })
                 {
                     report_error!(
                         anyhow::Error::new(e)
@@ -498,33 +516,8 @@ impl AuthManager {
                 }
 
                 let server_api = self.server_api.clone();
-                let user_id = self.auth_state.user_id().unwrap_or_default();
-                let anonymous_id = self.auth_state.anonymous_id();
                 let _ = ctx.spawn(
-                    // Synchronously add the identify and login event to the telemetry event queue and
-                    // then flush the queue to ensure the events get to Rudderstack. We need to do this
-                    // one-off because the login event happens only once for the user and we don't want
-                    // to drop the event if the user quits the app before the next flush of the queue.
-                    // TODO(alokedesai): Investigate a more robust way of handling events
-                    // that don't get flushed to Rudderstack outside of this event specifically.
                     async move {
-                        warpui::telemetry::record_identify_user_event(
-                            user_id.as_string(),
-                            anonymous_id.clone(),
-                            warpui::time::get_current_time(),
-                        );
-                        warpui::telemetry::record_event(
-                            Some(user_id.as_string()),
-                            anonymous_id,
-                            TelemetryEvent::Login.name().into(),
-                            TelemetryEvent::Login.payload(),
-                            TelemetryEvent::Login.contains_ugc(),
-                            warpui::time::get_current_time(),
-                        );
-
-                        // Note that this snapshot might get overwritten to disabled after the server fetch.
-                        // However, it is still fine to flush to Rudderstack here as the login event is low-risk
-                        // and it is better to err on the side of over-reporting than under-reporting.
                         if let Err(e) = server_api
                             .flush_telemetry_events(privacy_settings_snapshot)
                             .await
@@ -660,8 +653,10 @@ impl AuthManager {
                         get_user_facing_error_message(user_facing_error),
                     ))
                 }
-                CreateAnonymousUserResult::Unknown => Err(AnonymousUserCreationError::Unknown)},
-            Err(_) => Err(AnonymousUserCreationError::CreationFailed)};
+                CreateAnonymousUserResult::Unknown => Err(AnonymousUserCreationError::Unknown),
+            },
+            Err(_) => Err(AnonymousUserCreationError::CreationFailed),
+        };
 
         match custom_token {
             Ok(custom_token) => {
@@ -703,7 +698,8 @@ impl AuthManager {
     pub fn anonymous_user_hit_drive_object_limit(&self, ctx: &mut ModelContext<Self>) {
         if self.auth_state.is_anonymous_or_logged_out() {
             ctx.emit(AuthManagerEvent::AttemptedLoginGatedFeature {
-                auth_view_variant: AuthViewVariant::HitDriveObjectLimitCloseable});
+                auth_view_variant: AuthViewVariant::HitDriveObjectLimitCloseable,
+            });
         };
     }
 
@@ -884,7 +880,8 @@ impl AuthManager {
         }
         match (self.auth_state.user_id(), incoming_user_uid) {
             (Some(current_uid), Some(incoming_uid)) => current_uid == *incoming_uid,
-            _ => false}
+            _ => false,
+        }
     }
 
     /// Sets the user as onboarded both on the server and locally.
@@ -908,7 +905,8 @@ impl AuthManager {
 
 #[derive(Clone, Debug)]
 pub struct PersistedCurrentUserInformation {
-    pub email: String}
+    pub email: String,
+}
 
 impl Entity for AuthManager {
     type Event = AuthManagerEvent;

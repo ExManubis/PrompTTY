@@ -6,7 +6,8 @@ use warp_core::ui::theme::Fill;
 use warpui::elements::{
     Align, CacheOption, ChildAnchor, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     DropShadow, Expanded, Flex, FormattedTextElement, Image, MainAxisSize, MouseStateHandle,
-    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack};
+    OffsetPositioning, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack,
+};
 use warpui::fonts::Weight;
 use warpui::keymap::FixedBinding;
 use warpui::ui_components::components::UiComponent;
@@ -24,7 +25,8 @@ const BUTTON_DIAMETER: f32 = 20.;
 pub enum CloudAgentCapacityModalVariant {
     #[default]
     ConcurrentLimit,
-    OutOfCredits}
+    OutOfCredits,
+}
 
 pub fn init(app: &mut AppContext) {
     use warpui::keymap::macros::*;
@@ -38,17 +40,20 @@ pub fn init(app: &mut AppContext) {
 
 #[derive(Default)]
 struct StateHandles {
-    close_button: MouseStateHandle}
+    close_button: MouseStateHandle,
+}
 
 pub struct CloudAgentCapacityModal {
     state_handles: StateHandles,
-    variant: CloudAgentCapacityModalVariant}
+    variant: CloudAgentCapacityModalVariant,
+}
 
 impl CloudAgentCapacityModal {
     pub fn new() -> Self {
         CloudAgentCapacityModal {
             state_handles: Default::default(),
-            variant: CloudAgentCapacityModalVariant::default()}
+            variant: CloudAgentCapacityModalVariant::default(),
+        }
     }
 
     pub fn set_variant(&mut self, variant: CloudAgentCapacityModalVariant) {
@@ -67,7 +72,8 @@ impl CloudAgentCapacityModal {
             CloudAgentCapacityModalVariant::OutOfCredits => (
                 "You're out of AI credits",
                 "This cloud run stopped because your team has used all available AI credits for the current billing period.".to_string(),
-            )};
+            ),
+        };
 
         let title = FormattedTextElement::from_str(title_text, appearance.ui_font_family(), 24.)
             .with_color(blended_colors::text_main(theme, neutral_bg))
@@ -192,8 +198,10 @@ impl TypedActionView for CloudAgentCapacityModal {
 
 #[derive(Copy, Clone, Debug)]
 pub enum CloudAgentCapacityModalEvent {
-    Close}
+    Close,
+}
 
 #[derive(Clone, Debug)]
 pub enum CloudAgentCapacityModalAction {
-    Close}
+    Close,
+}

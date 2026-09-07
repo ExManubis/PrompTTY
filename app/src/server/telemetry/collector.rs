@@ -3,14 +3,12 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Context;
-use chrono::{LocalResult, TimeZone, Utc};
 use warp_core::execution_mode::AppExecutionMode;
 use warp_errors::{report_error, report_if_error};
 use warpui::r#async::{FutureExt as _, Timer};
-use warpui::{App, Entity, ModelContext, SingletonEntity};
+use warpui::{Entity, ModelContext, SingletonEntity};
 
 use super::{RUDDER_TELEMETRY_EVENTS_FILE_NAME, clear_event_queue, rudder_event_file_path};
-use crate::auth::AuthStateProvider;
 use crate::channel::ChannelState;
 use crate::features::FeatureFlag;
 use crate::server::server_api::ServerApi;
@@ -170,24 +168,8 @@ impl TelemetryCollector {
     /// telemetry is enabled. The scheduled task once again schedules itself after
     /// `ACTIVE_USAGE_DURATION`.
     fn schedule_send_active_usage_event(&self, ctx: &mut ModelContext<TelemetryCollector>) {
-        let auth_state = AuthStateProvider::as_ref(ctx).get().clone();
-        let is_telemetry_enabled = PrivacySettings::as_ref(ctx).is_telemetry_enabled;
         let _ = ctx.spawn(
             async move {
-                // Record app active if there was any activity now or right after the previous check
-                let last_active_timestamp = App::last_active_timestamp();
-                if is_telemetry_enabled
-                    && last_active_timestamp + ACTIVE_USAGE_DURATION.as_secs() as i64
-                        > Utc::now().timestamp()
-                    && let LocalResult::Single(timestamp) =
-                        Utc.timestamp_opt(last_active_timestamp, 0)
-                {
-                    warpui::telemetry::record_app_active_event(
-                        auth_state.user_id().map(|uid| uid.as_string()),
-                        auth_state.anonymous_id(),
-                        timestamp,
-                    );
-                }
                 Timer::after(ACTIVE_USAGE_DURATION).await;
             },
             |me, _, ctx| me.schedule_send_active_usage_event(ctx),

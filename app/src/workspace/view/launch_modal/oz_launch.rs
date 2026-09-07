@@ -4,8 +4,7 @@ use warpui::assets::asset_cache::AssetSource;
 use warpui::{AppContext, SingletonEntity};
 
 use super::{CTAButton, CheckboxConfig, LaunchModalEvent, Slide};
-use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
-use crate::ai::ambient_agents::handoff_types::CloudModeEntryPoint;
+use crate::ai::ambient_agents::telemetry::{CloudAgentTelemetryEvent, CloudModeEntryPoint};
 use crate::terminal::view::OnboardingIntention;
 use crate::ui_components::icons::Icon;
 use crate::workspace::action::WorkspaceAction;
@@ -18,7 +17,8 @@ pub enum OzLaunchSlide {
     CloudAgents,
     AgentAutomations,
     AgentManagement,
-    LaunchCredits}
+    LaunchCredits,
+}
 
 impl Slide for OzLaunchSlide {
     fn modal_title(&self) -> String {
@@ -42,7 +42,8 @@ impl Slide for OzLaunchSlide {
             OzLaunchSlide::CloudAgents => Some(OzLaunchSlide::AgentAutomations),
             OzLaunchSlide::AgentAutomations => Some(OzLaunchSlide::AgentManagement),
             OzLaunchSlide::AgentManagement => Some(OzLaunchSlide::LaunchCredits),
-            OzLaunchSlide::LaunchCredits => None}
+            OzLaunchSlide::LaunchCredits => None,
+        }
     }
 
     fn prev(&self) -> Option<Self> {
@@ -50,7 +51,8 @@ impl Slide for OzLaunchSlide {
             OzLaunchSlide::CloudAgents => None,
             OzLaunchSlide::AgentAutomations => Some(OzLaunchSlide::CloudAgents),
             OzLaunchSlide::AgentManagement => Some(OzLaunchSlide::AgentAutomations),
-            OzLaunchSlide::LaunchCredits => Some(OzLaunchSlide::AgentManagement)}
+            OzLaunchSlide::LaunchCredits => Some(OzLaunchSlide::AgentManagement),
+        }
     }
 
     fn display_text(&self) -> Option<&'static str> {
@@ -58,7 +60,8 @@ impl Slide for OzLaunchSlide {
             OzLaunchSlide::CloudAgents => "Cloud agents",
             OzLaunchSlide::AgentAutomations => "Agent automations",
             OzLaunchSlide::AgentManagement => "Agent management",
-            OzLaunchSlide::LaunchCredits => "A little gift"})
+            OzLaunchSlide::LaunchCredits => "A little gift",
+        })
     }
 
     fn short_label(&self) -> &'static str {
@@ -66,7 +69,8 @@ impl Slide for OzLaunchSlide {
             OzLaunchSlide::CloudAgents => "Cloud agents",
             OzLaunchSlide::AgentAutomations => "Agent automations",
             OzLaunchSlide::AgentManagement => "Agent management",
-            OzLaunchSlide::LaunchCredits => "Launch credits"}
+            OzLaunchSlide::LaunchCredits => "Launch credits",
+        }
     }
 
     fn title(&self) -> &'static str {
@@ -142,10 +146,12 @@ impl Slide for OzLaunchSlide {
                 ctx.emit(LaunchModalEvent::Close);
                 ctx.dispatch_typed_action(&WorkspaceAction::StartAgentOnboardingTutorial(
                     OnboardingTutorial::NoProject {
-                        intention: OnboardingIntention::AgentDrivenDevelopment},
+                        intention: OnboardingIntention::AgentDrivenDevelopment,
+                    },
                 ));
                 ctx.dispatch_typed_action(&WorkspaceAction::AddAmbientAgentTab);
-            })}
+            }),
+        }
     }
 
     fn secondary_cta_button(&self) -> Option<CTAButton<Self>> {
@@ -153,13 +159,15 @@ impl Slide for OzLaunchSlide {
             OzLaunchSlide::LaunchCredits => Some(CTAButton::close("Skip for now")),
             OzLaunchSlide::CloudAgents
             | OzLaunchSlide::AgentAutomations
-            | OzLaunchSlide::AgentManagement => None}
+            | OzLaunchSlide::AgentManagement => None,
+        }
     }
 
     fn checkbox_config(&self) -> Option<CheckboxConfig> {
         Some(CheckboxConfig {
             label: "Sync conversations to cloud",
-            description: "Agent conversations stored in the cloud can be shared with anyone with one click, and allow conversations to be continued across devices and on logout."})
+            description: "Agent conversations stored in the cloud can be shared with anyone with one click, and allow conversations to be continued across devices and on logout.",
+        })
     }
 
     fn should_show_checkbox(&self, app: &AppContext) -> bool {
@@ -177,7 +185,8 @@ impl Slide for OzLaunchSlide {
     fn on_close(&self, ctx: &mut warpui::ViewContext<super::LaunchModal<Self>>) {
         ctx.dispatch_typed_action(&WorkspaceAction::StartAgentOnboardingTutorial(
             OnboardingTutorial::NoProject {
-                intention: OnboardingIntention::AgentDrivenDevelopment},
+                intention: OnboardingIntention::AgentDrivenDevelopment,
+            },
         ));
     }
 }

@@ -4,7 +4,8 @@ use std::path::{Path, PathBuf};
 use lsp::supported_servers::LSPServerType;
 use lsp::{
     LanguageId, LanguageServerId, LspManagerModel, LspManagerModelEvent, LspServerModel,
-    LspState as LspModelState};
+    LspState as LspModelState,
+};
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 #[cfg(feature = "local_fs")]
@@ -19,24 +20,28 @@ use warpui::elements::{
     Border, ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment,
     Dismiss, Empty, Fill, Flex, Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle,
     OffsetPositioning, Padding, ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Rect,
-    Shrinkable, Stack};
+    Shrinkable, Stack,
+};
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext,
-    ViewHandle, WeakModelHandle};
+    ViewHandle, WeakModelHandle,
+};
 
 #[cfg(feature = "local_fs")]
 use crate::ai::persisted_workspace::PersistedWorkspaceEvent;
 use crate::ai::persisted_workspace::{
-    LSPEnablementResultForFile, LspRepoStatus, PersistedWorkspace};
+    LSPEnablementResultForFile, LspRepoStatus, PersistedWorkspace,
+};
 use crate::code::lsp_telemetry::{LspControlActionType, LspEnablementSource, LspTelemetryEvent};
 use crate::settings::AISettings;
 use crate::ui_components::blended_colors;
 #[cfg(feature = "local_fs")]
 use crate::user_config::is_tab_config_toml;
 use crate::view_components::action_button::{
-    ActionButton, ButtonSize, NakedTheme, PaneHeaderTheme};
+    ActionButton, ButtonSize, NakedTheme, PaneHeaderTheme,
+};
 
 const FOOTER_HEIGHT: f32 = 24.;
 /// Margin around the LSP icon container
@@ -49,14 +54,16 @@ struct SingleFileMouseStates {
     restart_server: MouseStateHandle,
     stop_server: MouseStateHandle,
     start_server: MouseStateHandle,
-    remove_server: MouseStateHandle}
+    remove_server: MouseStateHandle,
+}
 
 #[derive(Default)]
 struct WorkspaceMouseStates {
     restart_all: MouseStateHandle,
     stop_all: MouseStateHandle,
     start_all: MouseStateHandle,
-    manage_servers: MouseStateHandle}
+    manage_servers: MouseStateHandle,
+}
 
 /// Determines the operating mode of the footer.
 enum FooterMode {
@@ -67,20 +74,24 @@ enum FooterMode {
         path: PathBuf,
         mouse_states: SingleFileMouseStates,
         /// Status of LSP server relevance and installation for the file's repo.
-        lsp_repo_status: LspRepoStatus},
+        lsp_repo_status: LspRepoStatus,
+    },
     /// Workspace-level — tracks all servers for a repo root.
     Workspace {
         root_path: PathBuf,
         mouse_states: WorkspaceMouseStates,
         /// Per-server-type status of LSP relevance and installation.
-        lsp_repo_statuses: LspRepoStatuses}}
+        lsp_repo_statuses: LspRepoStatuses,
+    },
+}
 
 impl FooterMode {
     fn path(&self) -> &Path {
         match self {
             FooterMode::TabConfig { path } => path,
             FooterMode::SingleFile { path, .. } => path,
-            FooterMode::Workspace { root_path, .. } => root_path}
+            FooterMode::Workspace { root_path, .. } => root_path,
+        }
     }
 
     /// Returns all CTA-worthy `LspRepoStatus` entries (i.e. those that need user action).
@@ -113,7 +124,8 @@ impl FooterMode {
                             | LspRepoStatus::DisabledAndNotInstalled { .. }
                     )
                 })
-                .collect()}
+                .collect(),
+        }
     }
 }
 
@@ -141,13 +153,15 @@ pub enum CodeFooterViewAction {
     #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
     StartAllServers,
     #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
-    ManageServers}
+    ManageServers,
+}
 
 enum LSPServerRenderStatus {
     Available,
     Stopped,
     Busy,
-    Failed}
+    Failed,
+}
 
 impl LSPServerRenderStatus {
     fn to_icon_color(&self, theme: &WarpTheme) -> ColorU {
@@ -161,7 +175,8 @@ impl LSPServerRenderStatus {
             LSPServerRenderStatus::Failed => AnsiColorIdentifier::Red
                 .to_ansi_color(&theme.terminal_colors().normal)
                 .into(),
-            LSPServerRenderStatus::Stopped => internal_colors::neutral_5(theme)}
+            LSPServerRenderStatus::Stopped => internal_colors::neutral_5(theme),
+        }
     }
 
     fn render_status(server: Option<&LspServerModel>) -> Self {
@@ -178,7 +193,8 @@ impl LSPServerRenderStatus {
                     LSPServerRenderStatus::Stopped
                 }
             },
-            None => LSPServerRenderStatus::Stopped}
+            None => LSPServerRenderStatus::Stopped,
+        }
     }
 }
 
@@ -192,7 +208,8 @@ pub struct CodeFooterView {
     tab_config_skill_button: Option<ViewHandle<ActionButton>>,
     is_lsp_menu_open: bool,
     /// Whether to render the top border. Disabled for code review footer.
-    show_border: bool}
+    show_border: bool,
+}
 
 /// Wraps the per-server-type status map and enforces a single invariant on
 /// every mutation: **a running server always wins**. All status updates must
@@ -201,7 +218,8 @@ pub struct CodeFooterView {
 /// already started) can never clobber a live server's `Ready` status.
 #[derive(Debug, Default)]
 struct LspRepoStatuses {
-    inner: HashMap<LSPServerType, LspRepoStatus>}
+    inner: HashMap<LSPServerType, LspRepoStatus>,
+}
 
 impl LspRepoStatuses {
     /// The single mutation point for workspace repo statuses.
@@ -333,7 +351,8 @@ impl CodeFooterView {
                 enable_lsp_button: None,
                 tab_config_skill_button: Some(tab_config_skill_button),
                 is_lsp_menu_open: false,
-                show_border: true};
+                show_border: true,
+            };
             footer.sync_tab_config_skill_button(ctx);
             ctx.subscribe_to_model(&AISettings::handle(ctx), |me, _, _, ctx| {
                 me.sync_tab_config_skill_button(ctx);
@@ -376,7 +395,8 @@ impl CodeFooterView {
                 // Only handle InstallStatusUpdate events for our server type
                 let PersistedWorkspaceEvent::InstallStatusUpdate {
                     server_type: event_server_type,
-                    status} = event
+                    status,
+                } = event
                 else {
                     return;
                 };
@@ -419,14 +439,16 @@ impl CodeFooterView {
             mode: FooterMode::SingleFile {
                 path,
                 mouse_states: SingleFileMouseStates::default(),
-                lsp_repo_status: initial_status},
+                lsp_repo_status: initial_status,
+            },
             lsp_servers: Vec::new(),
             subscribed_server_ids: Vec::new(),
             is_lsp_menu_open: false,
             lsp_status_button,
             enable_lsp_button,
             tab_config_skill_button: None,
-            show_border: true}
+            show_border: true,
+        }
     }
 
     /// Creates a footer in workspace mode that tracks all LSP servers for a repo root.
@@ -470,7 +492,8 @@ impl CodeFooterView {
                 match event {
                     PersistedWorkspaceEvent::AvailableServersDetected {
                         workspace_path,
-                        servers} if *workspace_path == workspace_root_for_detect => {
+                        servers,
+                    } if *workspace_path == workspace_root_for_detect => {
                         let FooterMode::Workspace {
                             root_path,
                             lsp_repo_statuses,
@@ -515,7 +538,8 @@ impl CodeFooterView {
                     }
                     PersistedWorkspaceEvent::InstallStatusUpdate {
                         server_type,
-                        status} => {
+                        status,
+                    } => {
                         let FooterMode::Workspace {
                             lsp_repo_statuses, ..
                         } = &mut me.mode
@@ -549,14 +573,16 @@ impl CodeFooterView {
             mode: FooterMode::Workspace {
                 root_path,
                 mouse_states: WorkspaceMouseStates::default(),
-                lsp_repo_statuses: LspRepoStatuses::default()},
+                lsp_repo_statuses: LspRepoStatuses::default(),
+            },
             lsp_servers: Vec::new(),
             subscribed_server_ids: Vec::new(),
             is_lsp_menu_open: false,
             lsp_status_button,
             enable_lsp_button: None,
             tab_config_skill_button: None,
-            show_border: false};
+            show_border: false,
+        };
 
         // Populate initial servers from the manager
         view.refresh_workspace_servers(ctx);
@@ -631,7 +657,8 @@ impl CodeFooterView {
             LspRepoStatus::DisabledAndInstalled { server_type } => {
                 Some(format!("Enable {}", server_type.binary_name()))
             }
-            _ => None}
+            _ => None,
+        }
     }
 
     /// Returns the appropriate button label for a set of CTA-worthy statuses.
@@ -826,7 +853,8 @@ impl CodeFooterView {
         let render_status = LSPServerRenderStatus::render_status(Some(server));
         let failed_error = match server.state() {
             LspModelState::Failed { error } => Some(error.clone()),
-            _ => None};
+            _ => None,
+        };
 
         let background = appearance.theme().surface_2();
         let mut text_col = Flex::column()
@@ -1364,7 +1392,8 @@ impl CodeFooterView {
                 (LSPServerRenderStatus::Busy, _) => LSPServerRenderStatus::Busy,
                 (_, LSPServerRenderStatus::Stopped) => LSPServerRenderStatus::Stopped,
                 (LSPServerRenderStatus::Stopped, _) => LSPServerRenderStatus::Stopped,
-                _ => LSPServerRenderStatus::Available};
+                _ => LSPServerRenderStatus::Available,
+            };
         }
         worst.to_icon_color(theme)
     }
@@ -1452,7 +1481,8 @@ impl CodeFooterView {
             LspModelState::Stopped { .. } | LspModelState::Stopping { .. } => {
                 Some(format!("{}: stopped", server.server_name()))
             }
-            LspModelState::Failed { .. } => Some(format!("{}: error", server.server_name()))}
+            LspModelState::Failed { .. } => Some(format!("{}: error", server.server_name())),
+        }
     }
 
     /// Returns the CTA message and button flag for workspace mode if any servers
@@ -1582,8 +1612,10 @@ impl CodeFooterView {
                     LspRepoStatus::Installing { server_type } => (
                         Some(format!("Installing {}...", server_type.binary_name())),
                         false,
-                    )},
-                LSPEnablementResultForFile::Enabled => (None, false)},
+                    ),
+                },
+                LSPEnablementResultForFile::Enabled => (None, false),
+            },
             FooterMode::Workspace {
                 root_path,
                 lsp_repo_statuses,
@@ -1636,28 +1668,39 @@ impl CodeFooterView {
 #[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
 pub enum CodeFooterViewEvent {
     RunTabConfigSkill {
-        path: PathBuf},
+        path: PathBuf,
+    },
     EnableLSP {
         path: PathBuf,
-        server_type: Option<LSPServerType>},
+        server_type: Option<LSPServerType>,
+    },
     InstallAndEnableLSP {
         path: PathBuf,
-        server_type: Option<LSPServerType>},
+        server_type: Option<LSPServerType>,
+    },
     OpenLogs {
-        path: PathBuf},
+        path: PathBuf,
+    },
     RestartServer {
-        server: ModelHandle<LspServerModel>},
+        server: ModelHandle<LspServerModel>,
+    },
     StopServer {
-        server: ModelHandle<LspServerModel>},
+        server: ModelHandle<LspServerModel>,
+    },
     StartServer {
-        server: ModelHandle<LspServerModel>},
+        server: ModelHandle<LspServerModel>,
+    },
     RestartAllServers {
-        servers: Vec<ModelHandle<LspServerModel>>},
+        servers: Vec<ModelHandle<LspServerModel>>,
+    },
     StopAllServers {
-        servers: Vec<ModelHandle<LspServerModel>>},
+        servers: Vec<ModelHandle<LspServerModel>>,
+    },
     StartAllServers {
-        servers: Vec<ModelHandle<LspServerModel>>},
-    ManageServers}
+        servers: Vec<ModelHandle<LspServerModel>>,
+    },
+    ManageServers,
+}
 
 impl Entity for CodeFooterView {
     type Event = CodeFooterViewEvent;
@@ -1780,7 +1823,8 @@ impl TypedActionView for CodeFooterView {
                         | LspRepoStatus::DisabledAndNotInstalled { server_type } => {
                             Some(*server_type)
                         }
-                        _ => None};
+                        _ => None,
+                    };
 
                     if let Some(st) = server_type {
                     }
@@ -1788,11 +1832,13 @@ impl TypedActionView for CodeFooterView {
                     if needed_install {
                         ctx.emit(CodeFooterViewEvent::InstallAndEnableLSP {
                             path: path.clone(),
-                            server_type});
+                            server_type,
+                        });
                     } else {
                         ctx.emit(CodeFooterViewEvent::EnableLSP {
                             path: path.clone(),
-                            server_type});
+                            server_type,
+                        });
                     }
                 }
             }
@@ -1804,14 +1850,16 @@ impl TypedActionView for CodeFooterView {
                     .and_then(|w| w.upgrade(ctx))
                     .map(|s| s.as_ref(ctx).server_name());
                 ctx.emit(CodeFooterViewEvent::OpenLogs {
-                    path: self.mode.path().to_path_buf()});
+                    path: self.mode.path().to_path_buf(),
+                });
                 ctx.notify();
             }
             CodeFooterViewAction::RestartServer => {
                 self.is_lsp_menu_open = false;
                 if let Some(server) = self.lsp_servers.first().and_then(|w| w.upgrade(ctx)) {
                     ctx.emit(CodeFooterViewEvent::RestartServer {
-                        server: server.clone()});
+                        server: server.clone(),
+                    });
                 }
                 ctx.notify();
             }
@@ -1819,7 +1867,8 @@ impl TypedActionView for CodeFooterView {
                 self.is_lsp_menu_open = false;
                 if let Some(server) = self.lsp_servers.first().and_then(|w| w.upgrade(ctx)) {
                     ctx.emit(CodeFooterViewEvent::StopServer {
-                        server: server.clone()});
+                        server: server.clone(),
+                    });
                 }
                 ctx.notify();
             }
@@ -1827,7 +1876,8 @@ impl TypedActionView for CodeFooterView {
                 self.is_lsp_menu_open = false;
                 if let Some(server) = self.lsp_servers.first().and_then(|w| w.upgrade(ctx)) {
                     ctx.emit(CodeFooterViewEvent::StartServer {
-                        server: server.clone()});
+                        server: server.clone(),
+                    });
                 }
                 ctx.notify();
             }

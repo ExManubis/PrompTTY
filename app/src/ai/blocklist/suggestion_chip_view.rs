@@ -3,7 +3,8 @@ use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::Fill;
 use warpui::elements::{Align, ChildView, Container, ParentElement, SavePosition, Stack};
 use warpui::{
-    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle};
+    AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
+};
 
 use super::suggested_agent_mode_workflow_modal::SuggestedAgentModeWorkflowAndId;
 use super::suggested_rule_modal::SuggestedRuleAndId;
@@ -14,7 +15,8 @@ use crate::cloud_object::model::generic_string_model::GenericStringObjectId;
 use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::drive::CloudObjectTypeAndId;
 use crate::server::cloud_objects::update_manager::{
-    ObjectOperation, OperationSuccessType, UpdateManager, UpdateManagerEvent};
+    ObjectOperation, OperationSuccessType, UpdateManager, UpdateManagerEvent,
+};
 use crate::server::ids::{ClientId, SyncId};
 use crate::ui_components::blended_colors;
 use crate::ui_components::icons::Icon;
@@ -103,30 +105,40 @@ impl ActionButtonTheme for SuggestionDismissButtonTheme {
 #[derive(Debug, Clone)]
 pub enum SuggestedChipViewEvent {
     ShowSuggestedRuleDialog {
-        rule_and_id: SuggestedRuleAndId},
+        rule_and_id: SuggestedRuleAndId,
+    },
     OpenAIFactCollection {
-        sync_id: Option<SyncId>},
+        sync_id: Option<SyncId>,
+    },
     OpenWorkflow {
-        sync_id: SyncId},
+        sync_id: SyncId,
+    },
     ShowSuggestedAgentModeWorkflowModal {
-        workflow_and_id: SuggestedAgentModeWorkflowAndId}}
+        workflow_and_id: SuggestedAgentModeWorkflowAndId,
+    },
+}
 
 #[derive(Debug, Clone)]
 pub enum SuggestedViewAction {
-    ChipClicked}
+    ChipClicked,
+}
 
 #[derive(Debug, Clone)]
 enum Suggestion {
     Rule {
-        rule: SuggestedRule},
+        rule: SuggestedRule,
+    },
     AgentModeWorkflow {
-        workflow: SuggestedAgentModeWorkflow}}
+        workflow: SuggestedAgentModeWorkflow,
+    },
+}
 
 impl Suggestion {
     pub fn icon(&self) -> Icon {
         match self {
             Suggestion::Rule { .. } => Icon::BookOpen,
-            Suggestion::AgentModeWorkflow { .. } => Icon::Prompt}
+            Suggestion::AgentModeWorkflow { .. } => Icon::Prompt,
+        }
     }
 
     pub fn tooltip(&self) -> String {
@@ -162,7 +174,8 @@ impl Suggestion {
     fn chip_label(&self) -> String {
         match self {
             Suggestion::Rule { rule, .. } => rule.content.clone(),
-            Suggestion::AgentModeWorkflow { workflow, .. } => workflow.name.clone()}
+            Suggestion::AgentModeWorkflow { workflow, .. } => workflow.name.clone(),
+        }
     }
 }
 
@@ -172,7 +185,8 @@ pub struct SuggestionChipView {
     suggestion: Suggestion,
     chip: ViewHandle<ActionButton>,
     sync_id: SyncId,
-    is_saved: bool}
+    is_saved: bool,
+}
 
 impl SuggestionChipView {
     pub fn new_rule_chip(rule: SuggestedRule, ctx: &mut ViewContext<Self>) -> Self {
@@ -191,7 +205,8 @@ impl SuggestionChipView {
             suggestion,
             sync_id: SyncId::ClientId(ClientId::default()),
             chip,
-            is_saved: false};
+            is_saved: false,
+        };
         me.reset_suggestion(ctx);
         me
     }
@@ -217,7 +232,8 @@ impl SuggestionChipView {
             suggestion,
             sync_id,
             chip,
-            is_saved: false};
+            is_saved: false,
+        };
         me.reset_suggestion(ctx);
         me
     }
@@ -225,7 +241,8 @@ impl SuggestionChipView {
     pub fn logging_id(&self) -> SuggestedLoggingId {
         match &self.suggestion {
             Suggestion::Rule { rule, .. } => rule.logging_id.clone(),
-            Suggestion::AgentModeWorkflow { workflow, .. } => workflow.logging_id.clone()}
+            Suggestion::AgentModeWorkflow { workflow, .. } => workflow.logging_id.clone(),
+        }
     }
 
     fn listen_for_warp_drive_events(ctx: &mut ViewContext<Self>) {
@@ -395,12 +412,15 @@ impl TypedActionView for SuggestionChipView {
                         .is_some()
                     {
                         ctx.emit(SuggestedChipViewEvent::OpenAIFactCollection {
-                            sync_id: Some(self.sync_id)});
+                            sync_id: Some(self.sync_id),
+                        });
                     } else {
                         ctx.emit(SuggestedChipViewEvent::ShowSuggestedRuleDialog {
                             rule_and_id: SuggestedRuleAndId {
                                 rule: rule.clone(),
-                                sync_id: self.sync_id}});
+                                sync_id: self.sync_id,
+                            },
+                        });
                         self.chip.update(ctx, |chip, ctx| {
                             chip.set_active(true, ctx);
                         });
@@ -412,20 +432,24 @@ impl TypedActionView for SuggestionChipView {
                         .is_some()
                     {
                         ctx.emit(SuggestedChipViewEvent::OpenWorkflow {
-                            sync_id: self.sync_id});
+                            sync_id: self.sync_id,
+                        });
                     } else {
 
                         ctx.emit(
                             SuggestedChipViewEvent::ShowSuggestedAgentModeWorkflowModal {
                                 workflow_and_id: SuggestedAgentModeWorkflowAndId {
                                     workflow: workflow.clone(),
-                                    sync_id: self.sync_id}},
+                                    sync_id: self.sync_id,
+                                },
+                            },
                         );
                         self.chip.update(ctx, |chip, ctx| {
                             chip.set_active(true, ctx);
                         });
                     }
                 }
-            }}
+            },
+        }
     }
 }

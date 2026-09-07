@@ -28,7 +28,8 @@ use mime_guess::from_path;
 use model::{
     Anchor, AnchorBias, Bias, DisplayMap, DrawableSelection, EditorModel, EditorModelEvent, Edits,
     LocalPendingSelection, LocalSelection, MarkedTextState, MovementResult, SelectionMode,
-    SubwordBoundaries, ToBufferOffset, ToCharOffset, ToDisplayPoint, ToPoint};
+    SubwordBoundaries, ToBufferOffset, ToCharOffset, ToDisplayPoint, ToPoint,
+};
 use num_traits::SaturatingSub;
 use parking_lot::Mutex;
 use pathfinder_color::ColorU;
@@ -41,10 +42,12 @@ use vim::vim::{
     BracketChar, CharacterMotion, Direction, FindCharMotion, FirstNonWhitespaceMotion,
     InsertPosition, LineMotion, ModeTransition, MotionType, TextObjectInclusion, TextObjectType,
     VimHandler, VimMode, VimModel, VimMotion, VimOperand, VimOperator, VimState, VimSubscriber,
-    VimTextObject, WordBound, WordMotion, WordType};
+    VimTextObject, WordBound, WordMotion, WordType,
+};
 use vim::{
     vim_a_block, vim_a_paragraph, vim_a_quote, vim_a_word, vim_inner_block, vim_inner_paragraph,
-    vim_inner_quote, vim_inner_word, vim_word_iterator_from_offset};
+    vim_inner_quote, vim_inner_word, vim_word_iterator_from_offset,
+};
 use warp_completer::completer::Description;
 use warp_core::semantic_selection::SemanticSelection;
 use warp_core::{safe_error};
@@ -57,7 +60,8 @@ use warpui::r#async::{SpawnedFutureHandle, Timer};
 use warpui::clipboard::ClipboardContent;
 use warpui::elements::{
     ChildView, Container, CornerRadius, CrossAxisAlignment, DEFAULT_UI_LINE_HEIGHT_RATIO, Flex,
-    Hoverable, MainAxisSize, MouseStateHandle, ParentElement, Radius, Shrinkable};
+    Hoverable, MainAxisSize, MouseStateHandle, ParentElement, Radius, Shrinkable,
+};
 use warpui::fonts::{Cache as FontCache, FamilyId, Properties, Weight};
 use warpui::keymap::{EditableBinding, FixedBinding, Keystroke, PerPlatformKeystroke};
 use warpui::platform::keyboard::KeyCode;
@@ -71,7 +75,8 @@ use warpui::windowing::WindowManager;
 use warpui::{
     AppContext, BlurContext, CursorInfo, Element, Entity, EntityId, FocusContext, ModelAsRef,
     ModelContext, ModelHandle, SingletonEntity, TypedActionView, View, ViewContext, ViewHandle,
-    WindowId, elements, windowing};
+    WindowId, elements, windowing,
+};
 /// The editor interfaces that we publicly expose to consumers.
 /// This should be a very limited set; if you need to add something here,
 /// you should carefully consider if it leaks the internal details of the editor.
@@ -80,7 +85,9 @@ pub use {
     model::{
         Chars, CrdtOperation, DisplayPoint, EditOrigin, EditorSnapshot, InteractionState,
         LocalDrawableSelectionData, PeerSelectionData, RemoteDrawableSelectionData, ReplicaId,
-        SelectAction, TextRun, TextStyleOperation}};
+        SelectAction, TextRun, TextStyleOperation,
+    },
+};
 
 use self::model::{LocalSelections, Selection, UpdateBufferOption};
 use super::Point;
@@ -97,13 +104,15 @@ use crate::editor::autosuggestion_ignore_view::{AutosuggestionIgnore, Autosugges
 use crate::features::FeatureFlag;
 use crate::search::ai_context_menu::mixer::AIContextMenuSearchableAction;
 use crate::search::ai_context_menu::view::{
-    AIContextMenu, AIContextMenuCategory, AIContextMenuEvent};
+    AIContextMenu, AIContextMenuCategory, AIContextMenuEvent,
+};
 use crate::server::telemetry::TelemetryEvent;
 #[cfg(feature = "voice_input")]
 use crate::settings::AISettingsChangedEvent;
 use crate::settings::{
     AISettings, AppEditorSettings, AppEditorSettingsChangedEvent, CursorBlink, CursorDisplayType,
-    InputSettings, SelectionSettings};
+    InputSettings, SelectionSettings,
+};
 use crate::settings_view::flags;
 use crate::suggestions::ignored_suggestions_model::{IgnoredSuggestionsModel, SuggestionType};
 use crate::terminal::grid_size_util::grid_cell_dimensions;
@@ -137,15 +146,19 @@ use warpui::clipboard_utils::CLIPBOARD_IMAGE_MIME_TYPES;
 #[derive(Clone, Copy)]
 pub enum AutosuggestionLocation {
     EndOfBuffer,
-    Inline(usize)}
+    Inline(usize),
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AutosuggestionType {
     Command {
-        was_intelligent_autosuggestion: bool},
+        was_intelligent_autosuggestion: bool,
+    },
     AgentModeQuery {
         context_block_ids: Vec<BlockId>,
-        was_intelligent_autosuggestion: bool}}
+        was_intelligent_autosuggestion: bool,
+    },
+}
 
 impl AutosuggestionType {
     pub fn matches_input_type(&self, input_type: InputType) -> bool {
@@ -161,7 +174,8 @@ impl fmt::Display for AutosuggestionLocation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AutosuggestionLocation::EndOfBuffer => write!(f, "EndOfBuffer"),
-            AutosuggestionLocation::Inline(_) => write!(f, "Inline")}
+            AutosuggestionLocation::Inline(_) => write!(f, "Inline"),
+        }
     }
 }
 
@@ -198,7 +212,8 @@ pub fn init(ctx: &mut AppContext) {
         FixedBinding::new_per_platform(
             PerPlatformKeystroke {
                 mac: "cmd-enter",
-                linux_and_windows: "ctrl-shift-enter"},
+                linux_and_windows: "ctrl-shift-enter",
+            },
             EditorAction::CmdEnter,
             id!("EditorView") & !id!("IMEOpen"),
         ),
@@ -308,7 +323,8 @@ pub fn init(ctx: &mut AppContext) {
         FixedBinding::new_per_platform(
             PerPlatformKeystroke {
                 mac: "shift-alt-left",
-                linux_and_windows: "shift-ctrl-left"},
+                linux_and_windows: "shift-ctrl-left",
+            },
             EditorAction::SelectLeftByWord,
             id!("EditorView") & !id!("IMEOpen"),
         ),
@@ -320,7 +336,8 @@ pub fn init(ctx: &mut AppContext) {
         FixedBinding::new_per_platform(
             PerPlatformKeystroke {
                 mac: "shift-alt-right",
-                linux_and_windows: "shift-ctrl-right"},
+                linux_and_windows: "shift-ctrl-right",
+            },
             EditorAction::SelectRightByWord,
             id!("EditorView") & !id!("IMEOpen"),
         ),
@@ -983,7 +1000,8 @@ pub enum EditorAction {
     DragAndDropFiles(Vec<UserInput<String>>),
     SetMarkedText {
         marked_text: UserInput<String>,
-        selected_range: Range<usize>},
+        selected_range: Range<usize>,
+    },
     ClearMarkedText,
     ImeCommit(UserInput<String>),
     Tab,
@@ -1079,10 +1097,13 @@ pub enum EditorAction {
     SetAIContextMenuOpen(bool),
     ReadAndProcessImagesAsync {
         num_images_user_attached: usize,
-        file_paths: Vec<String>},
+        file_paths: Vec<String>,
+    },
     /// Stores non-image file paths picked via the attach-file button into the pending files state.
     ProcessNonImageFiles {
-        file_paths: Vec<String>}}
+        file_paths: Vec<String>,
+    },
+}
 
 impl EditorAction {
     fn should_report_active_cursor_position_updated(&self) -> bool {
@@ -1124,12 +1145,14 @@ impl EditorAction {
 /// Whether we want the inserted text to be placed in a selection.
 pub enum SelectionInsertion {
     Yes,
-    No}
+    No,
+}
 
 #[derive(Debug)]
 enum CutDirection {
     Right,
-    Left}
+    Left,
+}
 
 /// This type is used specifically used to add a cursor above or below.
 /// For that reason, when we move the cursor above or below the behavior is
@@ -1138,17 +1161,20 @@ enum CutDirection {
 /// in the bottom row will return None instead of the max point.
 enum NewCursorDirection {
     Up,
-    Down}
+    Down,
+}
 
 struct NewCursorUpOrDownResult {
     point_and_clamp_direction: DisplayPointAndClampDirection,
-    goal_column: u32}
+    goal_column: u32,
+}
 
 impl From<MovementResult> for NewCursorUpOrDownResult {
     fn from(result: MovementResult) -> Self {
         NewCursorUpOrDownResult {
             point_and_clamp_direction: result.point_and_clamp_direction,
-            goal_column: result.goal_column}
+            goal_column: result.goal_column,
+        }
     }
 }
 
@@ -1186,7 +1212,8 @@ impl NewCursorDirection {
                     report_error!(err.context("Error calling map#down"));
                     None
                 }
-            }}
+            },
+        }
     }
 }
 
@@ -1223,7 +1250,8 @@ pub enum PlainTextEditorViewAction {
     Paste,
     ExpandAlias,
     CycleCompletionSuggestion,
-    UpdateMarkedText}
+    UpdateMarkedText,
+}
 
 impl PlainTextEditorViewAction {
     fn from_inserted_str(c: &str) -> Self {
@@ -1252,7 +1280,8 @@ pub enum ValidInputType {
     All,
     /// Attempts to parse input as a `u16`.
     PositiveInteger,
-    NoSpaces}
+    NoSpaces,
+}
 
 /// Possible action that could be triggered by enter (including modified enter).
 #[derive(Clone)]
@@ -1260,7 +1289,8 @@ pub enum EnterAction {
     /// Emit the event to the parent level.
     Emit,
     /// Insert a new line for this enter action.
-    InsertNewLineIfMultiLine}
+    InsertNewLineIfMultiLine,
+}
 
 /// Settings for different enter keystrokes.
 #[derive(Clone)]
@@ -1268,7 +1298,8 @@ pub struct EnterSettings {
     pub shift_enter: EnterAction,
     pub enter: EnterAction,
     pub alt_enter: EnterAction,
-    pub ctrl_enter: EnterAction}
+    pub ctrl_enter: EnterAction,
+}
 
 impl Default for EnterSettings {
     fn default() -> Self {
@@ -1276,7 +1307,8 @@ impl Default for EnterSettings {
             shift_enter: EnterAction::InsertNewLineIfMultiLine,
             enter: EnterAction::Emit,
             alt_enter: EnterAction::InsertNewLineIfMultiLine,
-            ctrl_enter: EnterAction::InsertNewLineIfMultiLine}
+            ctrl_enter: EnterAction::InsertNewLineIfMultiLine,
+        }
     }
 }
 
@@ -1287,7 +1319,8 @@ pub enum PropagateAndNoOpNavigationKeys {
     /// so we will emit EditorEvent::Navigate(Up) when the cursor is at the first row and
     /// emit EditorEvent::Navigate(Down) when the cursor is at the last row.
     AtBoundary,
-    Never}
+    Never,
+}
 
 #[derive(Clone, Copy, Default)]
 pub enum PropagateHorizontalNavigationKeys {
@@ -1297,7 +1330,8 @@ pub enum PropagateHorizontalNavigationKeys {
     AtBoundary,
     /// Never propagate - always handle within editor
     #[default]
-    Never}
+    Never,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PropagateAndNoOpEscapeKey {
@@ -1308,7 +1342,8 @@ pub enum PropagateAndNoOpEscapeKey {
     /// This view gets precedence for handling `esc`, which means it will exit Vim mode
     /// before the parent gets to handle an `esc` keypress.
     /// (Example: exiting Vim mode before closing a modal.)
-    HandleFirst}
+    HandleFirst,
+}
 
 /// Options for how the editor displays text.
 ///
@@ -1323,7 +1358,8 @@ pub struct TextOptions {
     /// Default font properties for editor text.
     pub font_properties_override: Option<Properties>,
     /// Colors to use when rendering editor text. If `None`, the theme's text colors are used.
-    pub text_colors_override: Option<TextColors>}
+    pub text_colors_override: Option<TextColors>,
+}
 
 impl TextOptions {
     /// Create `TextOptions` that use the UI font size. All other overrides have their default values.
@@ -1353,7 +1389,8 @@ pub struct CursorColors {
     /// The color to use for the cursor.
     pub cursor: Fill,
     /// The color to use as the background of selections.
-    pub selection: Fill}
+    pub selection: Fill,
+}
 
 /// Type alias for the function that returns the Editor Decorator Elements. The first `String` parameter is for the editor buffer contents.
 type RenderDecoratorElementsFn = Box<dyn Fn(&AppContext) -> EditorDecoratorElements>;
@@ -1370,7 +1407,8 @@ pub enum BaselinePositionComputationMethod {
     Grid,
     /// The default computation method, which is calculated "line-style", where we use the standard baseline offset
     /// computation for a Line (ultimately uses TOP_BOTTOM_RATIO).
-    Default}
+    Default,
+}
 
 // Re-export voice transcription types for backwards compatibility
 use warp_errors::report_error;
@@ -1382,7 +1420,8 @@ pub use crate::voice::transcriber::{Transcriber, VoiceTranscriber};
 pub struct AttachedImage {
     pub data: Vec<u8>,
     pub mime_type: String,
-    pub file_name: String}
+    pub file_name: String,
+}
 
 impl fmt::Debug for AttachedImage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -1441,7 +1480,8 @@ pub struct EditorOptions {
     pub is_password: bool,
     /// Optional closure that allows parent views to add flags to the EditorView's keymap context.
     /// This is called during `keymap_context()` and can insert additional flags into the context.
-    pub keymap_context_modifier: Option<KeymapContextModifierFn>}
+    pub keymap_context_modifier: Option<KeymapContextModifierFn>,
+}
 
 impl Default for EditorOptions {
     fn default() -> Self {
@@ -1472,7 +1512,8 @@ impl Default for EditorOptions {
             delegate_paste_handling: false,
             drag_drop_path_transformer: None,
             is_password: false,
-            keymap_context_modifier: None}
+            keymap_context_modifier: None,
+        }
     }
 }
 
@@ -1506,7 +1547,8 @@ impl From<SingleLineEditorOptions> for EditorOptions {
             delegate_paste_handling: false,
             drag_drop_path_transformer: None,
             is_password: options.is_password,
-            keymap_context_modifier: None}
+            keymap_context_modifier: None,
+        }
     }
 }
 
@@ -1537,7 +1579,8 @@ pub struct SingleLineEditorOptions {
     /// If true, the user's [`CursorDisplayType`] will be respected.
     pub allow_user_cursor_preference: bool,
     pub convert_newline_to_space: bool,
-    pub is_password: bool}
+    pub is_password: bool,
+}
 
 impl Default for SingleLineEditorOptions {
     fn default() -> Self {
@@ -1559,7 +1602,8 @@ impl Default for SingleLineEditorOptions {
             middle_click_paste: true,
             allow_user_cursor_preference: false,
             convert_newline_to_space: true,
-            is_password: false}
+            is_password: false,
+        }
     }
 }
 
@@ -1574,7 +1618,8 @@ pub fn default_cursor_colors(ctx: &AppContext) -> CursorColors {
         cursor: theme
             .cursor()
             .on_background(theme.background(), MinimumAllowedContrast::Text),
-        selection: theme.text_selection_color()}
+        selection: theme.text_selection_color(),
+    }
 }
 
 #[derive(Debug)]
@@ -1583,7 +1628,8 @@ pub enum VoiceTranscriptionOptions {
     Enabled { show_button: bool },
 
     /// Voice transcription is disabled.
-    Disabled}
+    Disabled,
+}
 
 impl VoiceTranscriptionOptions {
     pub fn is_enabled(&self) -> bool {
@@ -1605,10 +1651,12 @@ pub enum ImageContextOptions {
         unsupported_model: bool,
         is_processing_attached_images: bool,
         num_images_attached: usize,
-        num_images_in_conversation: usize},
+        num_images_in_conversation: usize,
+    },
 
     /// Attaching image context is disabled.
-    Disabled}
+    Disabled,
+}
 
 impl ImageContextOptions {
     pub fn is_enabled(&self) -> bool {
@@ -1617,7 +1665,8 @@ impl ImageContextOptions {
                 unsupported_model,
                 is_processing_attached_images,
                 num_images_attached,
-                num_images_in_conversation} => {
+                num_images_in_conversation,
+            } => {
                 if *unsupported_model {
                     return false;
                 }
@@ -1637,7 +1686,8 @@ impl ImageContextOptions {
 
                 true
             }
-            ImageContextOptions::Disabled => false}
+            ImageContextOptions::Disabled => false,
+        }
     }
 
     pub fn should_show_button(&self) -> bool {
@@ -1649,7 +1699,8 @@ impl ImageContextOptions {
             unsupported_model,
             is_processing_attached_images,
             num_images_attached,
-            num_images_in_conversation} = self
+            num_images_in_conversation,
+        } = self
         {
             if *unsupported_model {
                 return "Image attachment isn't supported by this model".into();
@@ -1682,7 +1733,8 @@ impl ImageContextOptions {
                 num_images_attached,
                 ..
             } => *num_images_attached,
-            _ => 0}
+            _ => 0,
+        }
     }
 
     pub fn num_images_in_conversation(&self) -> usize {
@@ -1691,7 +1743,8 @@ impl ImageContextOptions {
                 num_images_in_conversation,
                 ..
             } => *num_images_in_conversation,
-            _ => 0}
+            _ => 0,
+        }
     }
 
     pub fn is_unsupported_model(&self) -> bool {
@@ -1709,7 +1762,8 @@ pub struct AIContextMenuState {
     ai_context_menu: ViewHandle<AIContextMenu>,
 
     /// The mouse handle for the at context menu icon.
-    at_context_menu_button_mouse_handle: MouseStateHandle}
+    at_context_menu_button_mouse_handle: MouseStateHandle,
+}
 
 pub struct EditorView {
     view_id: EntityId,
@@ -1869,11 +1923,13 @@ pub struct EditorView {
     is_password: bool,
 
     /// Optional closure that allows parent views to add flags to this editor's keymap context.
-    keymap_context_modifier: Option<KeymapContextModifierFn>}
+    keymap_context_modifier: Option<KeymapContextModifierFn>,
+}
 
 pub(super) struct ScrollState {
     pub scroll_position: Arc<Mutex<Vector2F>>,
-    pub autoscroll_requested: Arc<Mutex<bool>>}
+    pub autoscroll_requested: Arc<Mutex<bool>>,
+}
 
 impl ScrollState {
     pub(super) fn scroll_position(&self) -> Vector2F {
@@ -1885,7 +1941,8 @@ impl From<&EditorView> for ScrollState {
     fn from(view: &EditorView) -> Self {
         ScrollState {
             scroll_position: view.scroll_position.clone(),
-            autoscroll_requested: view.autoscroll_requested.clone()}
+            autoscroll_requested: view.autoscroll_requested.clone(),
+        }
     }
 }
 
@@ -1908,7 +1965,8 @@ pub struct AutosuggestionState {
 
     /// Type of autosuggestion - whether it's a command or AI prompt.
     /// Note we cannot use `type` since that's a reserved Rust keyword.
-    pub autosuggestion_type: AutosuggestionType}
+    pub autosuggestion_type: AutosuggestionType,
+}
 
 impl AutosuggestionState {
     pub fn is_active(&self) -> bool {
@@ -1949,7 +2007,8 @@ impl VimHandler for EditorView {
                         let text_to_repeat = match position {
                             I::LineAbove => text.to_owned() + "\n",
                             I::LineBelow => String::from("\n") + text,
-                            _ => text.to_owned()};
+                            _ => text.to_owned(),
+                        };
                         editor_model.insert(
                             text_to_repeat.repeat(count as usize).as_str(),
                             None,
@@ -2059,7 +2118,8 @@ impl VimHandler for EditorView {
                     )
                 }
                 CharacterMotion::Up => editor_model.move_up_by_offset(character_count, ctx),
-                CharacterMotion::Down => editor_model.move_down_by_offset(character_count, ctx)}
+                CharacterMotion::Down => editor_model.move_down_by_offset(character_count, ctx),
+            }
         });
     }
 
@@ -2067,7 +2127,8 @@ impl VimHandler for EditorView {
         let WordMotion {
             direction,
             bound,
-            word_type} = motion;
+            word_type,
+        } = motion;
         match direction {
             Direction::Forward => self.vim_cursor_forward_word(*bound, *word_type, word_count, ctx),
             Direction::Backward => {
@@ -2200,7 +2261,8 @@ impl VimHandler for EditorView {
                 match operand {
                     VimOperand::Motion {
                         motion,
-                        motion_type} => {
+                        motion_type,
+                    } => {
                         match motion {
                             VimMotion::Character(motion) => {
                                 editor_model.vim_select_for_char_motion(
@@ -2297,7 +2359,8 @@ impl VimHandler for EditorView {
                     }
                     VimOperand::TextObject(VimTextObject {
                         inclusion,
-                        object_type}) => {
+                        object_type,
+                    }) => {
                         editor_model.vim_select_text_object(object_type, *inclusion, operator, ctx);
                     }
                 }
@@ -2310,8 +2373,10 @@ impl VimHandler for EditorView {
                     object_type: TextObjectType::Paragraph,
                     ..
                 } => MotionType::Linewise,
-                _ => MotionType::Charwise},
-            VimOperand::Line => MotionType::Linewise};
+                _ => MotionType::Charwise,
+            },
+            VimOperand::Line => MotionType::Linewise,
+        };
 
         // Depending on the operator, we may or may not want a new Edit on the UndoStack.
         match operator {
@@ -2408,7 +2473,8 @@ impl VimHandler for EditorView {
     fn search(&mut self, direction: &Direction, ctx: &mut ViewContext<Self>) {
         ctx.emit(Event::Search {
             direction: *direction,
-            term: None});
+            term: None,
+        });
     }
 
     fn cycle_search(&mut self, _direction: &Direction, _ctx: &mut ViewContext<Self>) {
@@ -2428,7 +2494,8 @@ impl VimHandler for EditorView {
 
         ctx.emit(Event::Search {
             direction: *direction,
-            term});
+            term,
+        });
     }
 
     fn ex_command(&mut self, ctx: &mut ViewContext<Self>) {
@@ -2618,10 +2685,12 @@ impl VimHandler for EditorView {
                                     selection: Selection {
                                         start: start_anchor,
                                         end: end_anchor,
-                                        reversed: false},
+                                        reversed: false,
+                                    },
                                     clamp_direction: Default::default(),
                                     goal_start_column: None,
-                                    goal_end_column: None})
+                                    goal_end_column: None,
+                                })
                             });
                     }
                     if let Ok(new_selections) = Vec1::try_from_vec(new_selections) {
@@ -2730,7 +2799,8 @@ impl VimHandler for EditorView {
     ) {
         let Some(RegisterContent {
             text,
-            motion_type: yanked_motion_type}) = VimRegisters::handle(ctx).update(ctx, |registers, ctx| {
+            motion_type: yanked_motion_type,
+        }) = VimRegisters::handle(ctx).update(ctx, |registers, ctx| {
             registers.read_from_register(read_register_name, ctx)
         })
         else {
@@ -2776,7 +2846,8 @@ impl VimHandler for EditorView {
             let mut visual_tails = vec![];
             let VimTextObject {
                 inclusion,
-                object_type} = text_object;
+                object_type,
+            } = text_object;
 
             let mut new_selections = editor_model.selections(ctx).clone();
             for selection in new_selections.iter_mut() {
@@ -2888,7 +2959,8 @@ impl EditorView {
             #[cfg(feature = "voice_input")]
             voice_input_state: self.voice_input_state.clone(),
 
-            editor_height_shrink_delay: self.editor_height_shrink_delay.clone()}
+            editor_height_shrink_delay: self.editor_height_shrink_delay.clone(),
+        }
     }
 
     pub fn set_shell_family(&mut self, shell_family: ShellFamily) {
@@ -3037,7 +3109,8 @@ impl EditorView {
             |_me, _, event, ctx| match event {
                 AutosuggestionIgnoreEvent::IgnoreAutosuggestion { suggestion } => {
                     ctx.emit(Event::IgnoreAutosuggestion {
-                        suggestion: suggestion.clone()});
+                        suggestion: suggestion.clone(),
+                    });
                 }
             },
         );
@@ -3057,7 +3130,8 @@ impl EditorView {
                     match event {
                         AIContextMenuEvent::Close {
                             item_count,
-                            query_length} => {
+                            query_length,
+                        } => {
 
                             ctx.emit(Event::SetAIContextMenuOpen(false));
                             ctx.focus_self();
@@ -3066,7 +3140,8 @@ impl EditorView {
                         AIContextMenuEvent::ResultAccepted {
                             action,
                             item_count,
-                            query_length} => {
+                            query_length,
+                        } => {
 
                             ctx.emit(Event::AcceptAIContextMenuItem(action.clone()));
                             ctx.focus_self();
@@ -3083,7 +3158,8 @@ impl EditorView {
 
             Some(AIContextMenuState {
                 at_context_menu_button_mouse_handle: Default::default(),
-                ai_context_menu})
+                ai_context_menu,
+            })
         } else {
             None
         };
@@ -3114,7 +3190,8 @@ impl EditorView {
             next_command_model: None,
             editor_height_shrink_delay: Arc::new(Mutex::new(EditorHeightShrinkDelay {
                 editor_height_before_shrink: 0.,
-                editor_height_shrink_start: None})),
+                editor_height_shrink_start: None,
+            })),
             placeholder_texts: Arc::new(HashMap::new()),
             hover_handle: Default::default(),
             command_x_ray_mouse_handle: Default::default(),
@@ -3161,7 +3238,8 @@ impl EditorView {
             drag_drop_path_transformer: options.drag_drop_path_transformer,
             process_attached_images_future_handle: None,
             is_password: options.is_password,
-            keymap_context_modifier: options.keymap_context_modifier}
+            keymap_context_modifier: options.keymap_context_modifier,
+        }
     }
 
     pub fn set_is_ai_input(&mut self, is_ai_input: bool, ctx: &mut ViewContext<Self>) {
@@ -3435,7 +3513,8 @@ impl EditorView {
                 original_autosuggestion_text: text.clone(),
                 current_autosuggestion_text: Some(text),
                 autosuggestion_type,
-                location}));
+                location,
+            }));
 
             self.autosuggestion_ignore_view.update(ctx, |view, _ctx| {
                 view.set_current_autosuggestion(Some(full_suggestion));
@@ -3485,7 +3564,8 @@ impl EditorView {
                     autosuggestion,
                     AutosuggestionLocation::EndOfBuffer,
                     AutosuggestionType::Command {
-                        was_intelligent_autosuggestion: true},
+                        was_intelligent_autosuggestion: true,
+                    },
                     ctx,
                 );
             }
@@ -3733,11 +3813,14 @@ impl EditorView {
                 }
                 SelectAction::Update {
                     position,
-                    scroll_position} => self.update_selection(*position, *scroll_position, ctx),
+                    scroll_position,
+                } => self.update_selection(*position, *scroll_position, ctx),
                 SelectAction::Extend {
                     position,
-                    scroll_position} => self.extend_selection(*position, *scroll_position, ctx),
-                SelectAction::End => self.end_selection(ctx)}
+                    scroll_position,
+                } => self.extend_selection(*position, *scroll_position, ctx),
+                SelectAction::End => self.end_selection(ctx),
+            }
         }
     }
 
@@ -3764,16 +3847,19 @@ impl EditorView {
                 selection: Selection {
                     start: cursor.clone(),
                     end: cursor,
-                    reversed: false},
+                    reversed: false,
+                },
                 clamp_direction,
                 goal_start_column: None,
-                goal_end_column: None};
+                goal_end_column: None,
+            };
 
             let pending = Some(LocalPendingSelection {
                 selection: selection.clone(),
                 selection_mode: SelectionMode::Chars,
                 starting_selection: selection.clone(),
-                is_single_selection: !add});
+                is_single_selection: !add,
+            });
 
             let selections = if !add {
                 vec1![selection]
@@ -3785,7 +3871,8 @@ impl EditorView {
                 LocalSelections {
                     pending,
                     selections,
-                    marked_text_state: Default::default()},
+                    marked_text_state: Default::default(),
+                },
                 ctx,
             );
         });
@@ -3840,7 +3927,8 @@ impl EditorView {
                                     }
                                     Err(_) => report_error!(
                                         "Update selection is called with invalid position"
-                                    )}
+                                    ),
+                                }
                             } else if is_cursor_in_range || ordering == Ordering::Equal {
                                 selection = starting_selection.clone();
                             } else {
@@ -3888,13 +3976,16 @@ impl EditorView {
                             selection,
                             selection_mode,
                             starting_selection,
-                            is_single_selection: true}),
-                        marked_text_state: Default::default()}
+                            is_single_selection: true,
+                        }),
+                        marked_text_state: Default::default(),
+                    }
                 } else {
                     LocalSelections {
                         pending: Some(pending_selection.clone()),
                         selections: editor_model.selections(ctx).clone(),
-                        marked_text_state: Default::default()}
+                        marked_text_state: Default::default(),
+                    }
                 };
 
                 editor_model.change_selections(new_selections, ctx);
@@ -3975,10 +4066,12 @@ impl EditorView {
                             end: buffer
                                 .anchor_before(Point::new(row, end_col))
                                 .expect("Anchor should exist"),
-                            reversed: false},
+                            reversed: false,
+                        },
                         clamp_direction: Default::default(),
                         goal_start_column: None,
-                        goal_end_column: None};
+                        goal_end_column: None,
+                    };
 
                     // Continue expecting selection
                     editor_model.change_selections(
@@ -3987,9 +4080,11 @@ impl EditorView {
                                 selection: selection.clone(),
                                 selection_mode: SelectionMode::Lines,
                                 starting_selection: selection.clone(),
-                                is_single_selection: true}),
+                                is_single_selection: true,
+                            }),
                             selections: vec1![selection],
-                            marked_text_state: Default::default()},
+                            marked_text_state: Default::default(),
+                        },
                         ctx,
                     );
                 }
@@ -4084,10 +4179,12 @@ impl EditorView {
                 selection: Selection {
                     start,
                     end,
-                    reversed: false},
+                    reversed: false,
+                },
                 clamp_direction: Default::default(),
                 goal_start_column: None,
-                goal_end_column: None};
+                goal_end_column: None,
+            };
 
             // Update selections to select word
             editor_model.change_selections(
@@ -4096,9 +4193,11 @@ impl EditorView {
                         selection: selection.clone(),
                         selection_mode: SelectionMode::Words,
                         starting_selection: selection.clone(),
-                        is_single_selection: true}),
+                        is_single_selection: true,
+                    }),
                     selections: vec1![selection],
-                    marked_text_state: Default::default()},
+                    marked_text_state: Default::default(),
+                },
                 ctx,
             );
         });
@@ -4614,7 +4713,8 @@ impl EditorView {
                 PropagateAndNoOpNavigationKeys::Always => {
                     ctx.emit(Event::Navigate(NavigationKey::Tab))
                 }
-                _ => self.handle_tab(ctx)};
+                _ => self.handle_tab(ctx),
+            };
         }
     }
 
@@ -4655,7 +4755,8 @@ impl EditorView {
                     EditOrigin::UserInitiated,
                     |editor_model, ctx| editor_model.insert("    ", None, ctx),
                 ),
-            )}
+            ),
+        }
     }
 
     fn indent(&mut self, ctx: &mut ViewContext<Self>) {
@@ -4677,7 +4778,8 @@ impl EditorView {
                 PropagateAndNoOpNavigationKeys::Always => {
                     ctx.emit(Event::Navigate(NavigationKey::ShiftTab))
                 }
-                _ => self.unindent(ctx)};
+                _ => self.unindent(ctx),
+            };
         }
     }
 
@@ -4855,13 +4957,15 @@ impl EditorView {
                 Some(last_range_end_to_curr_range_start) => {
                     final_styles.push((last_range_end_to_curr_range_start, TextStyle::new()));
                 }
-                None => log::warn!("last_range_end_to_curr_range_start is not a valid range")}
+                None => log::warn!("last_range_end_to_curr_range_start is not a valid range"),
+            }
 
             match text.get(range.start.as_usize()..range.end.as_usize()) {
                 Some(curr_range_start_to_end) => {
                     final_styles.push((curr_range_start_to_end, *style));
                 }
-                None => log::warn!("curr_range_start_to_end is not a valid range")}
+                None => log::warn!("curr_range_start_to_end is not a valid range"),
+            }
 
             last_range_end = range.end;
         }
@@ -4870,7 +4974,8 @@ impl EditorView {
             Some(remaining_text) => {
                 final_styles.push((remaining_text, TextStyle::new()));
             }
-            None => log::warn!("remaining_text is not a valid range")}
+            None => log::warn!("remaining_text is not a valid range"),
+        }
 
         self.edit(
             ctx,
@@ -5005,7 +5110,8 @@ impl EditorView {
                                 view_id,
                                 &EditorAction::ReadAndProcessImagesAsync {
                                     num_images_user_attached,
-                                    file_paths: image_paths_to_process},
+                                    file_paths: image_paths_to_process,
+                                },
                             );
                         }
 
@@ -5015,7 +5121,8 @@ impl EditorView {
                                 window_id,
                                 view_id,
                                 &EditorAction::ProcessNonImageFiles {
-                                    file_paths: non_image_paths},
+                                    file_paths: non_image_paths,
+                                },
                             );
                         }
                     }
@@ -5092,7 +5199,8 @@ impl EditorView {
                             images.push(AttachedImage {
                                 data: bytes,
                                 mime_type,
-                                file_name});
+                                file_name,
+                            });
                         }
                         Err(e) => {
                             safe_error!(
@@ -5207,7 +5315,8 @@ impl EditorView {
                         data: base64_str,
                         mime_type: image.mime_type,
                         file_name: image.file_name,
-                        is_figma});
+                        is_figma,
+                    });
                 }
 
                 (
@@ -5291,7 +5400,8 @@ impl EditorView {
                 Some(PendingAttachment::File(PendingFile {
                     file_name,
                     file_path: path.to_path_buf(),
-                    mime_type}))
+                    mime_type,
+                }))
             })
             .collect();
 
@@ -5392,7 +5502,8 @@ impl EditorView {
                 EnterAction::InsertNewLineIfMultiLine if !self.single_line => {
                     self.newline_internal(ctx)
                 }
-                _ => ctx.emit(Event::ShiftEnter)}
+                _ => ctx.emit(Event::ShiftEnter),
+            }
         }
     }
 
@@ -5402,7 +5513,8 @@ impl EditorView {
                 EnterAction::InsertNewLineIfMultiLine if !self.single_line => {
                     self.newline_internal(ctx)
                 }
-                _ => ctx.emit(Event::AltEnter)}
+                _ => ctx.emit(Event::AltEnter),
+            }
         }
     }
 
@@ -5435,7 +5547,8 @@ impl EditorView {
                 EnterAction::InsertNewLineIfMultiLine if !self.single_line => {
                     self.newline_internal(ctx)
                 }
-                _ => ()}
+                _ => (),
+            }
             ctx.emit(Event::CtrlEnter)
         }
     }
@@ -5701,7 +5814,8 @@ impl EditorView {
                     Some(limit) => {
                         chars.take(limit).take_while(|c| c.is_whitespace()).count() as u32
                     }
-                    None => chars.take_while(|c| c.is_whitespace()).count() as u32};
+                    None => chars.take_while(|c| c.is_whitespace()).count() as u32,
+                };
                 let first_non_whitespace = row_start + leading_whitespace;
                 let cursor_start = if first_non_whitespace == start.column() {
                     row_start
@@ -5718,7 +5832,8 @@ impl EditorView {
                 selection.set_selection(Selection {
                     start: cursor.clone(),
                     end: cursor,
-                    reversed: false});
+                    reversed: false,
+                });
                 selection.goal_start_column = None;
                 selection.goal_end_column = None;
                 // The caret now sits at the start of a visual row; clamp downward
@@ -5901,7 +6016,8 @@ impl EditorView {
                     .clone(),
                 current_autosuggestion_text: Some(remaining_autosuggestion.to_owned()),
                 location: current_autosuggestion_state.location,
-                autosuggestion_type: current_autosuggestion_state.autosuggestion_type.clone()};
+                autosuggestion_type: current_autosuggestion_state.autosuggestion_type.clone(),
+            };
             self.autosuggestion_state = Some(Arc::new(new_autosuggestion_state));
         }
 
@@ -5909,7 +6025,8 @@ impl EditorView {
         ctx.emit(Event::AutosuggestionAccepted {
             insertion_length: insertion_text.len(),
             buffer_char_length,
-            autosuggestion_type: current_autosuggestion_state.autosuggestion_type.clone()});
+            autosuggestion_type: current_autosuggestion_state.autosuggestion_type.clone(),
+        });
 
         self.edit(
             ctx,
@@ -6450,7 +6567,8 @@ impl EditorView {
         match self.propagate_vertical_navigation_keys {
             PropagateAndNoOpNavigationKeys::Always => true,
             PropagateAndNoOpNavigationKeys::Never => false,
-            PropagateAndNoOpNavigationKeys::AtBoundary => self.single_cursor_on_first_row(ctx)}
+            PropagateAndNoOpNavigationKeys::AtBoundary => self.single_cursor_on_first_row(ctx),
+        }
     }
 
     /// Determine if a downward navigation command (i.e. `Down` or `PageDown`) should be propagated
@@ -6459,7 +6577,8 @@ impl EditorView {
         match self.propagate_vertical_navigation_keys {
             PropagateAndNoOpNavigationKeys::Always => true,
             PropagateAndNoOpNavigationKeys::Never => false,
-            PropagateAndNoOpNavigationKeys::AtBoundary => self.single_cursor_on_last_row(ctx)}
+            PropagateAndNoOpNavigationKeys::AtBoundary => self.single_cursor_on_last_row(ctx),
+        }
     }
 
     /// Determine if a rightward navigation command (i.e. `Right`) should be propagated
@@ -6950,10 +7069,12 @@ impl EditorView {
                         selection: Selection {
                             start: buffer.anchor_before(start).unwrap(),
                             end: buffer.anchor_before(end).unwrap(),
-                            reversed: false},
+                            reversed: false,
+                        },
                         clamp_direction: selection.clamp_direction,
                         goal_start_column: None,
-                        goal_end_column: None});
+                        goal_end_column: None,
+                    });
                 }
             }
 
@@ -7013,10 +7134,12 @@ impl EditorView {
                         selection: Selection {
                             start: anchor_before_start,
                             end: anchor_before_end,
-                            reversed: false},
+                            reversed: false,
+                        },
                         clamp_direction: Default::default(),
                         goal_start_column: None,
-                        goal_end_column: None};
+                        goal_end_column: None,
+                    };
 
                     let ix = editor_model.selection_insertion_index(selection.start(), ctx);
                     let mut new_selections = editor_model.selections(ctx).clone();
@@ -7103,7 +7226,8 @@ impl EditorView {
                     selection.clamp_direction,
                 ) {
                     Some(values) => values,
-                    None => continue};
+                    None => continue,
+                };
                 let end_result = match direction.move_cursor(
                     map,
                     end,
@@ -7111,7 +7235,8 @@ impl EditorView {
                     selection.clamp_direction,
                 ) {
                     Some(values) => values,
-                    None => continue};
+                    None => continue,
+                };
 
                 let new_start_cursor = map
                     .anchor_before(
@@ -7129,10 +7254,12 @@ impl EditorView {
                     selection: Selection {
                         start: new_start_cursor,
                         end: new_end_cursor,
-                        reversed: selection.reversed()},
+                        reversed: selection.reversed(),
+                    },
                     clamp_direction: end_result.point_and_clamp_direction.clamp_direction,
                     goal_start_column: Some(start_result.goal_column),
-                    goal_end_column: Some(end_result.goal_column)});
+                    goal_end_column: Some(end_result.goal_column),
+                });
             }
 
             // Add all the new selections to the existing selections.
@@ -7354,7 +7481,8 @@ impl EditorView {
             BaselinePositionComputationMethod::Default => font_cache.line_height(
                 self.font_size(appearance),
                 self.line_height_ratio(appearance),
-            )}
+            ),
+        }
     }
 
     pub fn em_width(&self, font_cache: &FontCache, appearance: &Appearance) -> f32 {
@@ -7487,7 +7615,8 @@ impl EditorView {
             }
             EditorModelEvent::UpdatePeers { operations } => {
                 ctx.emit(Event::UpdatePeers {
-                    operations: operations.clone()});
+                    operations: operations.clone(),
+                });
                 // This event is sent in conjunction with the main event reflecting
                 // the change (e.g. `Edited`) so no need to do anything else here.
                 return;
@@ -7596,7 +7725,8 @@ impl EditorView {
                             .clone(),
                         current_autosuggestion_text: Some(new_autosuggestion_text.to_owned()),
                         location: autosuggestion_state.location,
-                        autosuggestion_type: autosuggestion_state.autosuggestion_type.clone()};
+                        autosuggestion_type: autosuggestion_state.autosuggestion_type.clone(),
+                    };
                     self.autosuggestion_state = Some(Arc::new(new_autosuggestion_state));
                     return;
                 }
@@ -7609,7 +7739,8 @@ impl EditorView {
                     .clone(),
                 current_autosuggestion_text: None,
                 location: autosuggestion_state.location,
-                autosuggestion_type: autosuggestion_state.autosuggestion_type.clone()}))
+                autosuggestion_type: autosuggestion_state.autosuggestion_type.clone(),
+            }))
         }
     }
 
@@ -7661,7 +7792,8 @@ impl EditorView {
             }
             InsertPosition::LineEnd => self.move_to_line_end_no_autosuggestions(ctx),
             InsertPosition::LineAbove => self.newline_before(ctx),
-            InsertPosition::LineBelow => self.newline_after(ctx)}
+            InsertPosition::LineBelow => self.newline_after(ctx),
+        }
     }
 
     fn vim_set_visual_tail(&mut self, ctx: &mut ViewContext<Self>) {
@@ -7832,7 +7964,8 @@ impl EditorView {
     ) {
         let local_selection_data = LocalDrawableSelectionData {
             colors: (self.get_cursor_colors_fn)(ctx),
-            should_draw_cursors: self.should_draw_cursors(ctx)};
+            should_draw_cursors: self.should_draw_cursors(ctx),
+        };
 
         // Convert a remote peer's selection data into an avatar component
         let appearance = Appearance::as_ref(ctx);
@@ -7861,7 +7994,8 @@ impl EditorView {
                         .clone()
                         .map(|url| AvatarContent::Image {
                             url,
-                            display_name: peer.selection_data.display_name.clone()})
+                            display_name: peer.selection_data.display_name.clone(),
+                        })
                         .unwrap_or(AvatarContent::DisplayName(
                             peer.selection_data.display_name.clone(),
                         )),
@@ -7875,7 +8009,8 @@ impl EditorView {
                 let drawable_selections_data = RemoteDrawableSelectionData {
                     colors: peer.selection_data.colors,
                     should_draw_cursors: peer.selection_data.should_draw_cursors,
-                    avatar};
+                    avatar,
+                };
 
                 (replica_id.clone(), drawable_selections_data)
             })
@@ -7904,7 +8039,8 @@ impl EditorView {
 
         let transformed_paths: Vec<String> = match &self.drag_drop_path_transformer {
             Some(transformer) => paths_as_strings.iter().map(|p| transformer(p)).collect(),
-            None => paths_as_strings};
+            None => paths_as_strings,
+        };
 
         let input =
             warpui::clipboard_utils::escaped_paths_str(&transformed_paths, self.shell_family);
@@ -8246,7 +8382,8 @@ pub enum CommandXRayAnchor {
     Cursor,
 
     /// Show x-ray info based on a hover at the given display point
-    Hover(DisplayPoint)}
+    Hover(DisplayPoint),
+}
 
 #[derive(Debug)]
 pub enum Event {
@@ -8258,7 +8395,8 @@ pub enum Event {
     AutosuggestionAccepted {
         insertion_length: usize,
         buffer_char_length: usize,
-        autosuggestion_type: AutosuggestionType},
+        autosuggestion_type: AutosuggestionType,
+    },
     Navigate(NavigationKey),
     Enter,
     ShiftEnter,
@@ -8269,7 +8407,8 @@ pub enum Event {
     BackspaceAtBeginningOfBuffer,
     BackspaceOnEmptyBuffer,
     CtrlC {
-        cleared_buffer_len: usize},
+        cleared_buffer_len: usize,
+    },
     BufferReplaced,
     BufferReinitialized,
     CmdUpOnFirstRow,
@@ -8293,7 +8432,8 @@ pub enum Event {
         direction: Direction,
         /// Sometimes there is no initial search time, as in "/" or "?", and sometimes there is, as
         /// in "*" or "#".
-        term: Option<String>},
+        term: Option<String>,
+    },
     /// Open a menu (command-line mode) to accept an ex-command. See ":help :" in Vim.
     ExCommand,
     /// Notify subscribers that the VimFSA state may have changed. The EditorView itself doesn't
@@ -8309,18 +8449,22 @@ pub enum Event {
     /// Notify the user that they're using a MacOS-style binding that conflicts with a non-MacOS-style binding.
     EmacsBindingUsed,
     UpdatePeers {
-        operations: Rc<Vec<CrdtOperation>>},
+        operations: Rc<Vec<CrdtOperation>>,
+    },
     SetAIContextMenuOpen(bool),
     AcceptAIContextMenuItem(AIContextMenuSearchableAction),
     SelectAIContextMenuCategory(AIContextMenuCategory),
     ProcessingAttachedImages(bool),
     VoiceStateUpdated {
         is_listening: bool,
-        is_transcribing: bool},
+        is_transcribing: bool,
+    },
     /// Request parent to process image file paths from drag-and-drop
     DroppedImageFiles(Vec<String>),
     IgnoreAutosuggestion {
-        suggestion: String}}
+        suggestion: String,
+    },
+}
 
 impl Entity for EditorView {
     type Event = Event;
@@ -8374,7 +8518,8 @@ impl TypedActionView for EditorView {
                     WarpA11yRole::UserAction,
                 ))
             }
-            _ => ActionAccessibilityContent::from_debug()}
+            _ => ActionAccessibilityContent::from_debug(),
+        }
     }
 
     fn handle_action(&mut self, action: &EditorAction, ctx: &mut ViewContext<Self>) {
@@ -8390,7 +8535,8 @@ impl TypedActionView for EditorView {
             AttachFiles => self.attach_files(ctx),
             ReadAndProcessImagesAsync {
                 num_images_user_attached,
-                file_paths} => self.read_and_process_images_async(
+                file_paths,
+            } => self.read_and_process_images_async(
                 *num_images_user_attached,
                 file_paths.clone(),
                 ctx,
@@ -8543,8 +8689,10 @@ impl TypedActionView for EditorView {
             ImeCommit(text) => self.ime_commit(text, ctx),
             SetMarkedText {
                 marked_text,
-                selected_range} => self.set_marked_text(marked_text, selected_range, ctx),
-            ClearMarkedText => self.clear_marked_text(ctx)}
+                selected_range,
+            } => self.set_marked_text(marked_text, selected_range, ctx),
+            ClearMarkedText => self.clear_marked_text(ctx),
+        }
 
         if self.is_focused() {
             if action.should_report_active_cursor_position_updated() {
@@ -8628,7 +8776,8 @@ impl View for EditorView {
                 row.add_child(controls);
                 row.finish()
             }
-            _ => hoverable}
+            _ => hoverable,
+        }
     }
 
     fn keymap_context(&self, ctx: &AppContext) -> warpui::keymap::Context {
@@ -8708,7 +8857,8 @@ impl View for EditorView {
         ctx.element_position_by_id(cursor_id)
             .map(|position| CursorInfo {
                 position,
-                font_size})
+                font_size,
+            })
     }
 }
 

@@ -1,21 +1,25 @@
 use warpui::elements::{
     Align, ConstrainedBox, Container, CrossAxisAlignment, Element, Flex, Hoverable, Icon,
-    MouseState, MouseStateHandle, ParentElement, Shrinkable};
+    MouseState, MouseStateHandle, ParentElement, Shrinkable,
+};
 use warpui::fonts::Weight;
 use warpui::platform::Cursor;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     Action, AppContext, Entity, EntityId, ModelHandle, SingletonEntity, TypedActionView, View,
-    ViewContext, WindowId};
+    ViewContext, WindowId,
+};
 
 use super::{
     CHEVRON_ICON_SIZE, DESCRIPTION_FONT_SIZE, ELLIPSE_ICON_SIZE, ELLIPSE_SVG_PATH, ICON_PADDING,
-    ITEM_PADDING_BOTTOM, SCROLLBAR_OFFSET, SECTION_SPACING, SectionAction, SectionView};
+    ITEM_PADDING_BOTTOM, SCROLLBAR_OFFSET, SECTION_SPACING, SectionAction, SectionView,
+};
 use crate::appearance::Appearance;
 use crate::resource_center::main_page::ActionTarget;
 use crate::resource_center::{
     FeatureItem, FeatureSectionData, Tip, TipsCompleted, complete_tips_and_write_to_user_defaults,
-    skip_tips_and_write_to_user_defaults};
+    skip_tips_and_write_to_user_defaults,
+};
 use crate::server::telemetry::TelemetryEvent;
 use crate::settings_view::keybindings::{KeybindingChangedEvent, KeybindingChangedNotifier};
 use crate::themes::theme::Fill;
@@ -25,7 +29,8 @@ pub enum FeatureSection {
     WhatsNew,
     GettingStarted,
     MaximizeWarp,
-    AdvancedSetup}
+    AdvancedSetup,
+}
 
 impl FeatureSection {
     pub fn section_name_string(&self) -> &'static str {
@@ -33,19 +38,22 @@ impl FeatureSection {
             FeatureSection::WhatsNew => "What's New?",
             FeatureSection::GettingStarted => "Getting Started",
             FeatureSection::MaximizeWarp => "Maximize Warp",
-            FeatureSection::AdvancedSetup => "Advanced Setup"}
+            FeatureSection::AdvancedSetup => "Advanced Setup",
+        }
     }
 }
 
 #[derive(Default)]
 struct FeatureMouseStateHandles {
     item_handles: Vec<MouseStateHandle>,
-    top_bar_mouse_state: MouseStateHandle}
+    top_bar_mouse_state: MouseStateHandle,
+}
 
 pub enum FeatureSectionEvent {
     /// Event fired when the tips dialog should close.
     CloseResourceCenter,
-    ExpandSection(FeatureSection)}
+    ExpandSection(FeatureSection),
+}
 
 pub struct FeatureSectionView {
     pub feature_section_data: FeatureSectionData,
@@ -53,7 +61,8 @@ pub struct FeatureSectionView {
     feature_button_mouse_states: FeatureMouseStateHandles,
     tips_completed: ModelHandle<TipsCompleted>,
     show_tips_progress: bool,
-    is_expanded: bool}
+    is_expanded: bool,
+}
 
 impl FeatureSectionView {
     fn on_tips_model_changed(
@@ -94,7 +103,8 @@ impl FeatureSectionView {
             feature_button_mouse_states,
             tips_completed,
             show_tips_progress,
-            is_expanded}
+            is_expanded,
+        }
     }
 
     fn handle_keybinding_changed(
@@ -105,7 +115,8 @@ impl FeatureSectionView {
         match event {
             KeybindingChangedEvent::BindingChanged {
                 binding_name,
-                new_trigger} => {
+                new_trigger,
+            } => {
                 if let Some(binding) = self
                     .feature_section_data
                     .items
@@ -156,7 +167,8 @@ impl FeatureSectionView {
         self.action_target.update(ctx, |action_target, ctx| {
             *action_target = ActionTarget::View {
                 window_id,
-                input_id};
+                input_id,
+            };
             ctx.notify();
         });
     }
@@ -165,8 +177,10 @@ impl FeatureSectionView {
         let (window_id, input_id) = match self.action_target.as_ref(ctx) {
             ActionTarget::View {
                 window_id,
-                input_id} => (*window_id, *input_id),
-            ActionTarget::None => return};
+                input_id,
+            } => (*window_id, *input_id),
+            ActionTarget::None => return,
+        };
 
         if let Some(input_id) = input_id {
             ctx.dispatch_typed_action_for_view(window_id, input_id, action);

@@ -6,18 +6,7 @@ use warp_core::telemetry::{EnablementState, TelemetryEvent, TelemetryEventDesc};
 
 use crate::features::FeatureFlag;
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
-#[serde(rename_all = "snake_case")]
-pub enum SkillOpenOrigin {
-    // 'Open skill' button on ReadSkill tool call result
-    ReadSkill,
-    // 'Open skill' button on ReadFiles tool call result
-    ReadFiles,
-    // 'Open skill' button on CodeDiffView
-    EditFiles,
-    // /open-skill command
-    OpenSkillCommand,
-}
+pub use super::skill_open_origin::SkillOpenOrigin;
 
 /// Telemetry events for skills
 #[derive(Serialize, Debug, EnumDiscriminants)]

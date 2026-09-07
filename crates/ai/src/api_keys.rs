@@ -21,10 +21,12 @@ pub use crate::aws_credentials::{AwsCredentials, AwsCredentialsState};
 pub use crate::geap_credentials::GeapRefreshOutcome;
 pub use crate::geap_credentials::{
     GEAP_MINT_FAILURE_COOLDOWN, GEAP_REFRESH_LEAD_TIME, GeapCredentials, GeapCredentialsState,
-    GeapFederation, GeapMintBinding, LoadGeapCredentialsError};
+    GeapFederation, GeapMintBinding, LoadGeapCredentialsError,
+};
 use crate::telemetry::{
     AITelemetryEvent, ProviderCredentialTelemetryAction, ProviderCredentialTelemetryKind,
-    ProviderCredentialTelemetryProvider};
+    ProviderCredentialTelemetryProvider,
+};
 
 const SECURE_STORAGE_KEY: &str = "AiApiKeys";
 const CUSTOM_ENDPOINT_KEYS_SECURE_STORAGE_KEY: &str = "AiCustomEndpointKeys";
@@ -39,7 +41,8 @@ const GROK_SECURE_STORAGE_KEY: &str = "GrokOAuthTokens";
 /// Emitted when user-provided API keys are updated in-memory.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ApiKeyManagerEvent {
-    KeysUpdated}
+    KeysUpdated,
+}
 
 /// User-provided API keys for AI providers.
 ///
@@ -52,7 +55,8 @@ pub struct ApiKeys {
     pub anthropic: Option<String>,
     pub openai: Option<String>,
     pub open_router: Option<String>,
-    pub custom_endpoints: Vec<CustomEndpoint>}
+    pub custom_endpoints: Vec<CustomEndpoint>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -61,7 +65,8 @@ pub struct CustomEndpoint {
     pub url: String,
     pub api_key: String,
     pub models: Vec<CustomEndpointModel>,
-    pub schema: CustomEndpointSchema}
+    pub schema: CustomEndpointSchema,
+}
 
 /// The request/response protocol used by a custom inference endpoint.
 #[derive(
@@ -75,14 +80,16 @@ pub enum CustomEndpointSchema {
     /// OpenAI Responses.
     OpenaiResponses,
     /// Anthropic Messages.
-    AnthropicMessages}
+    AnthropicMessages,
+}
 
 impl CustomEndpointSchema {
     pub fn display_name(self) -> &'static str {
         match self {
             Self::OpenaiChatCompletions => "OpenAI Chat Completions",
             Self::OpenaiResponses => "OpenAI Responses",
-            Self::AnthropicMessages => "Anthropic Messages"}
+            Self::AnthropicMessages => "Anthropic Messages",
+        }
     }
 
     pub fn from_display_name(name: &str) -> Option<Self> {
@@ -90,7 +97,8 @@ impl CustomEndpointSchema {
             "OpenAI Chat Completions" => Some(Self::OpenaiChatCompletions),
             "OpenAI Responses" => Some(Self::OpenaiResponses),
             "Anthropic Messages" => Some(Self::AnthropicMessages),
-            _ => None}
+            _ => None,
+        }
     }
     fn to_proto(self) -> api::request::settings::custom_model_providers::CustomEndpointSchema {
         match self {
@@ -169,7 +177,8 @@ pub struct CustomEndpointDefinition {
     pub base_url: String,
     #[serde(default)]
     pub schema: CustomEndpointSchema,
-    pub models: Vec<CustomEndpointModel>}
+    pub models: Vec<CustomEndpointModel>,
+}
 
 impl CustomEndpointDefinition {
     pub fn from_legacy(endpoint: &CustomEndpoint) -> Self {
@@ -177,7 +186,8 @@ impl CustomEndpointDefinition {
             name: endpoint.name.clone(),
             base_url: endpoint.url.clone(),
             schema: endpoint.schema,
-            models: endpoint.models.clone()}
+            models: endpoint.models.clone(),
+        }
     }
 
     pub fn into_endpoint(self, api_key: String) -> CustomEndpoint {
@@ -186,7 +196,8 @@ impl CustomEndpointDefinition {
             url: self.base_url,
             api_key,
             models: self.models,
-            schema: self.schema}
+            schema: self.schema,
+        }
     }
 
     fn is_valid(&self) -> bool {
@@ -346,7 +357,8 @@ fn is_restricted_host(host: &str) -> bool {
 fn is_restricted_ip(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(ip) => is_restricted_ipv4(ip),
-        IpAddr::V6(ip) => is_restricted_ipv6(ip)}
+        IpAddr::V6(ip) => is_restricted_ipv6(ip),
+    }
 }
 
 fn is_restricted_ipv4(ip: Ipv4Addr) -> bool {
@@ -369,7 +381,8 @@ pub struct CustomEndpointModel {
     /// Stable identifier used as `ModelConfig.{base,coding,cli_agent,computer_use_agent}` and
     /// as the `CustomModelProviders.providers[*].models[*].config_key` on the request wire.
     /// Generated as a UUIDv4 at model creation.
-    pub config_key: String}
+    pub config_key: String,
+}
 
 impl CustomEndpointModel {
     /// Picker label: prefer the user-provided alias; fall back to the raw model name
@@ -377,7 +390,8 @@ impl CustomEndpointModel {
     pub fn display_label(&self) -> &str {
         match self.alias.as_deref() {
             Some(alias) if !alias.trim().is_empty() => alias,
-            _ => &self.name}
+            _ => &self.name,
+        }
     }
 }
 
@@ -430,7 +444,8 @@ pub struct GrokTokens {
     /// surfaced in the settings UI as "Connected on ...". `None` for tokens
     /// stored before this field existed.
     #[serde(default)]
-    pub connected_at: Option<SystemTime>}
+    pub connected_at: Option<SystemTime>,
+}
 
 impl GrokTokens {
     /// Returns the access token whenever it is non-empty, regardless of
@@ -448,7 +463,8 @@ impl GrokTokens {
     pub fn needs_refresh(&self, lead_time: Duration) -> bool {
         match self.expires_at {
             Some(expires_at) => expires_at <= SystemTime::now() + lead_time,
-            None => false}
+            None => false,
+        }
     }
 
     /// Returns `true` when the token is known to be at or past its hard expiry.
@@ -468,7 +484,8 @@ pub enum GrokRefreshOutcome {
     /// The token was refreshed and the new value stored.
     Refreshed,
     /// The refresh failed; the stored token is unchanged (still expired).
-    Failed}
+    Failed,
+}
 
 /// Controls how AWS credentials are refreshed by [`ApiKeyManager`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -482,13 +499,16 @@ pub enum AwsCredentialsRefreshStrategy {
     OidcManaged {
         task_id: Option<String>,
         role_arn: String,
-        region: String}}
+        region: String,
+    },
+}
 
 struct CustomEndpointState {
     definitions: Option<CustomEndpointDefinitions>,
     settings_valid: bool,
     keys: HashMap<CustomEndpointId, String>,
-    resolved: Vec<CustomEndpoint>}
+    resolved: Vec<CustomEndpoint>,
+}
 
 /// A structure that manages API keys for AI providers.
 pub struct ApiKeyManager {
@@ -528,7 +548,8 @@ pub struct ApiKeyManager {
     /// In-memory Gemini Enterprise (GEAP) credential state.
     pub(crate) geap_credentials_state: GeapCredentialsState,
     secure_storage_write_version: u64,
-    grok_secure_storage_write_version: u64}
+    grok_secure_storage_write_version: u64,
+}
 
 #[derive(Clone)]
 pub struct CustomEndpointParams {
@@ -536,7 +557,8 @@ pub struct CustomEndpointParams {
     pub url: String,
     pub api_key: String,
     pub models: Vec<(String, Option<String>, Option<String>)>,
-    pub schema: CustomEndpointSchema}
+    pub schema: CustomEndpointSchema,
+}
 fn provider_credential_action(is_present: bool) -> ProviderCredentialTelemetryAction {
     if is_present {
         ProviderCredentialTelemetryAction::Added
@@ -553,7 +575,8 @@ fn provider_telemetry_provider(
         LLMProvider::Anthropic => Some(ProviderCredentialTelemetryProvider::Anthropic),
         LLMProvider::Google => Some(ProviderCredentialTelemetryProvider::Google),
         LLMProvider::Xai => Some(ProviderCredentialTelemetryProvider::Xai),
-        LLMProvider::Unknown => None}
+        LLMProvider::Unknown => None,
+    }
 }
 
 fn send_provider_credential_telemetry(
@@ -579,7 +602,8 @@ impl ApiKeyManager {
                 definitions: None,
                 settings_valid: true,
                 keys: custom_endpoint_keys,
-                resolved: resolved_custom_endpoints},
+                resolved: resolved_custom_endpoints,
+            },
             grok_tokens,
             #[cfg(not(target_family = "wasm"))]
             grok_refresh_allowed: false,
@@ -593,7 +617,8 @@ impl ApiKeyManager {
             aws_credentials_refresh_strategy: AwsCredentialsRefreshStrategy::default(),
             geap_credentials_state: GeapCredentialsState::Missing,
             secure_storage_write_version: 0,
-            grok_secure_storage_write_version: 0}
+            grok_secure_storage_write_version: 0,
+        }
     }
 
     pub fn keys(&self) -> &ApiKeys {
@@ -823,7 +848,8 @@ impl ApiKeyManager {
             url,
             api_key,
             models,
-            schema} = params;
+            schema,
+        } = params;
         self.keys.custom_endpoints.push(CustomEndpoint {
             name,
             url,
@@ -836,8 +862,10 @@ impl ApiKeyManager {
                     alias,
                     config_key: config_key
                         .filter(|k| !k.is_empty())
-                        .unwrap_or_else(|| Uuid::new_v4().to_string())})
-                .collect()});
+                        .unwrap_or_else(|| Uuid::new_v4().to_string()),
+                })
+                .collect(),
+        });
         if self.custom_endpoints.definitions.is_none() {
             self.custom_endpoints.resolved = self.keys.custom_endpoints.clone();
         }
@@ -859,7 +887,8 @@ impl ApiKeyManager {
             url,
             api_key,
             models,
-            schema} = params;
+            schema,
+        } = params;
         self.keys.custom_endpoints[index] = CustomEndpoint {
             name,
             url,
@@ -872,8 +901,10 @@ impl ApiKeyManager {
                     alias,
                     config_key: config_key
                         .filter(|k| !k.is_empty())
-                        .unwrap_or_else(|| Uuid::new_v4().to_string())})
-                .collect()};
+                        .unwrap_or_else(|| Uuid::new_v4().to_string()),
+                })
+                .collect(),
+        };
         if self.custom_endpoints.definitions.is_none() {
             self.custom_endpoints.resolved = self.keys.custom_endpoints.clone();
         }
@@ -964,9 +995,11 @@ impl ApiKeyManager {
                             |m| api::request::settings::custom_model_providers::CustomModel {
                                 slug: m.name.clone(),
                                 config_key: m.config_key.clone(),
-                                reasoning_effort: String::new()},
+                                reasoning_effort: String::new(),
+                            },
                         )
-                        .collect()},
+                        .collect(),
+                },
             )
             .filter(|provider| !provider.models.is_empty())
             .collect();
@@ -1028,7 +1061,8 @@ impl ApiKeyManager {
                 AwsCredentialsState::Loaded {
                     ref credentials, ..
                 } => Some(credentials.clone().into()),
-                _ => None})
+                _ => None,
+            })
             .flatten();
 
         // Gemini Enterprise (GEAP) credentials attach only when the caller's
@@ -1057,7 +1091,8 @@ impl ApiKeyManager {
                 grok_oauth_access_token,
                 allow_use_of_warp_credits: false,
                 aws_credentials,
-                google_cloud_credentials})
+                google_cloud_credentials,
+            })
         }
     }
 
@@ -1194,7 +1229,8 @@ impl ApiKeyManager {
                 report_error!(anyhow::Error::new(e).context("Failed to serialize Grok tokens"));
                 return;
             }
-            None => None};
+            None => None,
+        };
         self.grok_secure_storage_write_version += 1;
         let write_version = self.grok_secure_storage_write_version;
 
@@ -1208,7 +1244,8 @@ impl ApiKeyManager {
                 Some(ref json) => ctx
                     .secure_storage()
                     .write_value(GROK_SECURE_STORAGE_KEY, json),
-                None => ctx.secure_storage().remove_value(GROK_SECURE_STORAGE_KEY)};
+                None => ctx.secure_storage().remove_value(GROK_SECURE_STORAGE_KEY),
+            };
             if let Err(e) = result
                 && !matches!(e, secure_storage::Error::NotFound)
             {

@@ -4,14 +4,16 @@ use warp_core::ui::color::blend::Blend as _;
 use warp_core::ui::{self};
 use warpui::elements::{
     Align, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Flex, Icon,
-    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement as _, Radius};
+    MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement as _, Radius,
+};
 use warpui::keymap::EditableBinding;
 use warpui::platform::Cursor;
 use warpui::ui_components::button::{ButtonVariant, TextAndIcon, TextAndIconAlignment};
 use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 use crate::coding_entrypoints::clone_repo_view::{CloneRepoEvent, CloneRepoView};
 use crate::coding_entrypoints::create_project_view::{CreateProjectEvent, CreateProjectView};
@@ -43,7 +45,8 @@ enum ActivePage {
     #[default]
     Main,
     CreateProject,
-    CloneRepo}
+    CloneRepo,
+}
 
 pub struct GetStartedView {
     pane_configuration: ModelHandle<PaneConfiguration>,
@@ -52,7 +55,8 @@ pub struct GetStartedView {
     create_project_view: ViewHandle<CreateProjectView>,
     clone_repo_view: ViewHandle<CloneRepoView>,
     active_page: ActivePage,
-    terminal_session_button: MouseStateHandle}
+    terminal_session_button: MouseStateHandle,
+}
 
 impl GetStartedView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -74,7 +78,8 @@ impl GetStartedView {
             create_project_view,
             clone_repo_view,
             active_page: Default::default(),
-            terminal_session_button: Default::default()}
+            terminal_session_button: Default::default(),
+        }
     }
 
     fn handle_project_buttons_event(
@@ -87,7 +92,8 @@ impl GetStartedView {
             ProjectButtonsEvent::OpenRepository(path_result) => match path_result {
                 Ok(path) => {
                     ctx.dispatch_typed_action(&WorkspaceAction::OpenRepository {
-                        path: Some(path.clone())});
+                        path: Some(path.clone()),
+                    });
                     self.close(ctx);
                 }
                 Err(err) => {
@@ -154,7 +160,8 @@ impl GetStartedView {
 
     fn start_create_new_project(&mut self, prompt: String, ctx: &mut ViewContext<Self>) {
         ctx.dispatch_typed_action(&WorkspaceAction::AddTerminalTab {
-            hide_homepage: true});
+            hide_homepage: true,
+        });
         update_active_terminal(ctx, |terminal, ctx| {
             terminal.create_new_project(prompt, ctx);
         });
@@ -164,7 +171,8 @@ impl GetStartedView {
 
     fn start_clone_repo(&mut self, url: String, ctx: &mut ViewContext<Self>) {
         ctx.dispatch_typed_action(&WorkspaceAction::AddTerminalTab {
-            hide_homepage: true});
+            hide_homepage: true,
+        });
         update_active_terminal(ctx, |terminal, ctx| {
             terminal.agent_clone_repository(url, ctx);
         });
@@ -290,7 +298,8 @@ impl Entity for GetStartedView {
 
 #[derive(Debug)]
 pub enum GetStartedAction {
-    TerminalSession}
+    TerminalSession,
+}
 
 impl TypedActionView for GetStartedView {
     type Action = GetStartedAction;
@@ -299,7 +308,8 @@ impl TypedActionView for GetStartedView {
         match action {
             GetStartedAction::TerminalSession => {
                 ctx.dispatch_typed_action(&WorkspaceAction::AddTerminalTab {
-                    hide_homepage: true});
+                    hide_homepage: true,
+                });
                 self.close(ctx);
             }
         }
@@ -337,7 +347,8 @@ impl BackingView for GetStartedView {
         match self.active_page {
             ActivePage::CreateProject => ctx.focus(&self.create_project_view),
             ActivePage::CloneRepo => ctx.focus(&self.clone_repo_view),
-            ActivePage::Main => ctx.focus(&self.project_buttons)}
+            ActivePage::Main => ctx.focus(&self.project_buttons),
+        }
     }
 
     fn render_header_content(

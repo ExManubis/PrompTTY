@@ -9,7 +9,8 @@ use warpui::clipboard::ClipboardContent;
 use warpui::elements::{
     ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, DispatchEventResult,
     Element, EventHandler, Flex, MainAxisAlignment, MainAxisSize, ParentElement, Radius, Rect,
-    Shrinkable};
+    Shrinkable,
+};
 use warpui::fonts::Weight;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{View, ViewContext, ViewHandle};
@@ -19,7 +20,8 @@ use crate::ai::agent_management::notifications::item::NotificationSourceAgent;
 use crate::ai::agent_management::notifications::{NotificationCategory, NotificationItem};
 use crate::ai::agent_management::telemetry::{AgentManagementTelemetryEvent, ArtifactType};
 use crate::ai::artifacts::{
-    Artifact, ArtifactButtonsRow, ArtifactButtonsRowEvent, open_screenshot_lightbox};
+    Artifact, ArtifactButtonsRow, ArtifactButtonsRowEvent, open_screenshot_lightbox,
+};
 use crate::appearance::Appearance;
 use crate::ui_components::icon_with_status::{IconWithStatusVariant, render_icon_with_status};
 use crate::util::time_format::format_elapsed_since;
@@ -48,7 +50,8 @@ fn content_is_truncated(title: &str, message: &str) -> bool {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum NotificationRenderContext {
     Toast,
-    Mailbox}
+    Mailbox,
+}
 
 /// Button theme for artifact chips in notifications.
 /// Uses `outline` for the border so it's visible against `surface_2`.
@@ -152,7 +155,8 @@ fn render_rich_text_column(
             // No chevron when content fits.
             Flex::row().finish()
         }
-        NotificationRenderContext::Mailbox => render_timestamp_with_dot(item, appearance)};
+        NotificationRenderContext::Mailbox => render_timestamp_with_dot(item, appearance),
+    };
 
     let branch_row = Flex::row()
         .with_cross_axis_alignment(CrossAxisAlignment::Center)
@@ -403,11 +407,14 @@ fn render_agent_avatar(
     let variant = match agent {
         NotificationSourceAgent::Oz { is_ambient } => IconWithStatusVariant::OzAgent {
             status: Some(status),
-            is_ambient},
+            is_ambient,
+        },
         NotificationSourceAgent::CLI { agent, is_ambient } => IconWithStatusVariant::CLIAgent {
             agent,
             status: Some(status),
-            is_ambient}};
+            is_ambient,
+        },
+    };
     render_icon_with_status(
         variant,
         NOTIFICATION_AVATAR_SIZE,
@@ -423,8 +430,10 @@ fn notification_category_to_conversation_status(
     match category {
         NotificationCategory::Complete => ConversationStatus::Success,
         NotificationCategory::Request => ConversationStatus::Blocked {
-            blocked_action: String::new()},
-        NotificationCategory::Error => ConversationStatus::Error}
+            blocked_action: String::new(),
+        },
+        NotificationCategory::Error => ConversationStatus::Error,
+    }
 }
 
 /// Creates an `ArtifactButtonsRow` view with the notification-specific theme.
@@ -448,7 +457,8 @@ pub(crate) fn handle_notification_artifact_buttons_event(
     match event {
         ArtifactButtonsRowEvent::OpenPlan { notebook_uid } => {
             ctx.dispatch_typed_action(&WorkspaceAction::OpenNotebook {
-                id: (*notebook_uid).into()});
+                id: (*notebook_uid).into(),
+            });
         }
         ArtifactButtonsRowEvent::CopyBranch { branch } => {
             ctx.clipboard()

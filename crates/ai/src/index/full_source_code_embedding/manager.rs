@@ -17,7 +17,6 @@ cfg_if::cfg_if! {
         use warp_core::features::FeatureFlag;
         use watcher::{BulkFilesystemWatcher, BulkFilesystemWatcherEvent};
         use warpui_core::r#async::Timer;
-        use warp_core::send_telemetry_from_ctx;
         use warp_errors::report_if_error;
         use crate::telemetry::AITelemetryEvent;
         use instant::Instant;
@@ -51,7 +50,8 @@ const REPO_SNAPSHOT_PERSISTENCE_INTERVAL: Duration =
 /// User-facing indexing completion status.
 pub enum CodebaseIndexFinishedStatus {
     Completed,
-    Failed(CodebaseIndexingError)}
+    Failed(CodebaseIndexingError),
+}
 
 #[derive(Error, Debug)]
 pub enum RetrieveFileError {
@@ -60,7 +60,8 @@ pub enum RetrieveFileError {
     #[error("Codebase index failed: {0:#}")]
     IndexFailed(CodebaseIndexingError),
     #[error("Codebase index not found")]
-    IndexNotFound}
+    IndexNotFound,
+}
 
 #[derive(Error, Debug)]
 pub enum FragmentMetadataLookupError {
@@ -71,25 +72,34 @@ pub enum FragmentMetadataLookupError {
     #[error("Codebase index root hash mismatch: requested {requested}, current {current}")]
     RootHashMismatch {
         requested: NodeHash,
-        current: NodeHash}}
+        current: NodeHash,
+    },
+}
 
 pub enum CodebaseIndexManagerEvent {
     RetrievalRequestCompleted {
         retrieval_id: RetrievalID,
         fragments: Arc<HashSet<CodeContextLocation>>,
-        out_of_sync_delay: Option<Duration>},
+        out_of_sync_delay: Option<Duration>,
+    },
     RetrievalRequestFailed {
         retrieval_id: RetrievalID,
-        error_message: String},
+        error_message: String,
+    },
     SyncStateUpdated {
-        root_path: PathBuf},
+        root_path: PathBuf,
+    },
     IndexMetadataUpdated {
         root_path: PathBuf,
-        event: WorkspaceMetadataEvent},
+        event: WorkspaceMetadataEvent,
+    },
     RemoveExpiredIndexMetadata {
-        expired_metadata: Arc<Vec<PathBuf>>},
+        expired_metadata: Arc<Vec<PathBuf>>,
+    },
     NewIndexCreated {
-        root_path: PathBuf}}
+        root_path: PathBuf,
+    },
+}
 
 /// User-facing indexing errors.
 #[derive(Error, Debug)]
@@ -105,7 +115,8 @@ pub enum CodebaseIndexingError {
     #[error("Failed to sync intermediate nodes:\n{0:#?}")]
     FailedToSyncIntermediateNodes(Vec<NodeHash>),
     #[error(transparent)]
-    Other(#[from] anyhow::Error)}
+    Other(#[from] anyhow::Error),
+}
 
 impl From<&CodebaseIndexError> for CodebaseIndexingError {
     fn from(value: &CodebaseIndexError) -> Self {
@@ -113,14 +124,16 @@ impl From<&CodebaseIndexError> for CodebaseIndexingError {
             CodebaseIndexError::BuildTreeError(build_tree_error) => match build_tree_error {
                 BuildTreeError::ExceededMaxFileLimit => Self::ExceededMaxFileLimit,
                 BuildTreeError::MaxDepthExceeded => Self::MaxDepthExceeded,
-                _ => Self::BuildTreeError},
+                _ => Self::BuildTreeError,
+            },
             CodebaseIndexError::FailedToGenerateEmbeddings(failed_fragments) => {
                 Self::FailedToGenerateEmbeddings(failed_fragments.clone())
             }
             CodebaseIndexError::FailedToSyncIntermediateNodes(failed_hashes) => {
                 Self::FailedToSyncIntermediateNodes(failed_hashes.clone())
             }
-            _ => Self::Other(anyhow::anyhow!(value.to_string()))}
+            _ => Self::Other(anyhow::anyhow!(value.to_string())),
+        }
     }
 }
 
@@ -130,7 +143,8 @@ pub struct CodebaseIndexStatus {
     pub(super) has_synced_version: bool,
     pub(super) last_sync_successful: Option<CodebaseIndexFinishedStatus>,
     pub(super) sync_progress: Option<SyncProgress>,
-    pub(super) root_hash: Option<NodeHash>}
+    pub(super) root_hash: Option<NodeHash>,
+}
 
 impl CodebaseIndexStatus {
     pub fn has_pending(&self) -> bool {
@@ -166,7 +180,8 @@ struct CodebaseIndexStatusEventKey {
     has_synced_version: bool,
     last_sync_status: Option<CodebaseIndexFinishedStatusEventKey>,
     sync_progress: Option<SyncProgressEventKey>,
-    root_hash: Option<String>}
+    root_hash: Option<String>,
+}
 
 impl From<&CodebaseIndexStatus> for CodebaseIndexStatusEventKey {
     fn from(status: &CodebaseIndexStatus) -> Self {
@@ -181,46 +196,57 @@ impl From<&CodebaseIndexStatus> for CodebaseIndexStatusEventKey {
                 .sync_progress
                 .as_ref()
                 .map(SyncProgressEventKey::from),
-            root_hash: status.root_hash.as_ref().map(ToString::to_string)}
+            root_hash: status.root_hash.as_ref().map(ToString::to_string),
+        }
     }
 }
 
 #[derive(Debug, Eq, PartialEq)]
 enum CodebaseIndexFinishedStatusEventKey {
     Completed,
-    Failed(String)}
+    Failed(String),
+}
 
 impl From<&CodebaseIndexFinishedStatus> for CodebaseIndexFinishedStatusEventKey {
     fn from(status: &CodebaseIndexFinishedStatus) -> Self {
         match status {
             CodebaseIndexFinishedStatus::Completed => Self::Completed,
-            CodebaseIndexFinishedStatus::Failed(error) => Self::Failed(error.to_string())}
+            CodebaseIndexFinishedStatus::Failed(error) => Self::Failed(error.to_string()),
+        }
     }
 }
 
 #[derive(Debug, Eq, PartialEq)]
 enum SyncProgressEventKey {
     Discovering {
-        total_nodes: usize},
+        total_nodes: usize,
+    },
     Syncing {
         completed_nodes: usize,
-        total_nodes: usize}}
+        total_nodes: usize,
+    },
+}
 
 impl From<&SyncProgress> for SyncProgressEventKey {
     fn from(progress: &SyncProgress) -> Self {
         match progress {
             SyncProgress::Discovering { total_nodes } => Self::Discovering {
-                total_nodes: *total_nodes},
+                total_nodes: *total_nodes,
+            },
             SyncProgress::Syncing {
                 completed_nodes,
-                total_nodes} => Self::Syncing {
+                total_nodes,
+            } => Self::Syncing {
                 completed_nodes: *completed_nodes,
-                total_nodes: *total_nodes}}
+                total_nodes: *total_nodes,
+            },
+        }
     }
 }
 pub enum BuildSource<'a> {
     FromPath(&'a Path),
-    FromPersistedMetadata(WorkspaceMetadata)}
+    FromPersistedMetadata(WorkspaceMetadata),
+}
 pub struct CodebaseIndexManagerConfig {
     persisted_index_metadata: Vec<WorkspaceMetadata>,
     max_index_count: Option<usize>,
@@ -228,7 +254,8 @@ pub struct CodebaseIndexManagerConfig {
     embedding_generation_batch_size: usize,
     store_client: Arc<dyn StoreClient>,
     indexing_enabled: bool,
-    restore_persisted_indices_on_startup: bool}
+    restore_persisted_indices_on_startup: bool,
+}
 
 impl CodebaseIndexManagerConfig {
     pub fn new(
@@ -246,7 +273,8 @@ impl CodebaseIndexManagerConfig {
             embedding_generation_batch_size,
             store_client,
             indexing_enabled,
-            restore_persisted_indices_on_startup: true}
+            restore_persisted_indices_on_startup: true,
+        }
     }
 
     pub fn defer_persisted_index_restore(mut self) -> Self {
@@ -277,7 +305,8 @@ pub struct CodebaseIndexManager {
     indexing_enabled: bool,
 
     #[cfg(feature = "local_fs")]
-    snapshot_storage: Option<SnapshotStorage>}
+    snapshot_storage: Option<SnapshotStorage>,
+}
 
 impl CodebaseIndexManager {
     #[cfg_attr(not(feature = "local_fs"), allow(unused_variables))]
@@ -340,7 +369,8 @@ impl CodebaseIndexManager {
             embedding_generation_batch_size,
             store_client,
             indexing_enabled,
-            restore_persisted_indices_on_startup} = config;
+            restore_persisted_indices_on_startup,
+        } = config;
         cfg_if::cfg_if! {
             if #[cfg(feature = "local_fs")] {
                 let file_watcher = ctx.add_model(|ctx| BulkFilesystemWatcher::new(REPO_WATCHER_DEBOUNCE_DURATION, ctx));
@@ -365,7 +395,8 @@ impl CodebaseIndexManager {
                 embedding_generation_batch_size,
                 indexing_enabled,
                 #[cfg(feature = "local_fs")]
-                snapshot_storage};
+                snapshot_storage,
+            };
         }
 
         log::debug!(
@@ -386,7 +417,8 @@ impl CodebaseIndexManager {
                     .into_iter()
                     .map(|metadata| metadata.path)
                     .collect(),
-            )});
+            ),
+        });
         #[cfg(feature = "local_fs")]
         if let Some(snapshot_storage) = snapshot_storage.as_ref() {
             clean_up_snapshot_files(snapshot_storage.path(), &valid_metadata);
@@ -408,7 +440,8 @@ impl CodebaseIndexManager {
             embedding_generation_batch_size,
             indexing_enabled,
             #[cfg(feature = "local_fs")]
-            snapshot_storage};
+            snapshot_storage,
+        };
 
         me.start_next_queued_index(ctx);
 
@@ -431,7 +464,8 @@ impl CodebaseIndexManager {
             embedding_generation_batch_size: 100,
             indexing_enabled: true,
             #[cfg(feature = "local_fs")]
-            snapshot_storage: SnapshotStorage::app_default()}
+            snapshot_storage: SnapshotStorage::app_default(),
+        }
     }
 
     /// Check whether any of the codebases' root path was deleted and clean up its persisted
@@ -494,7 +528,8 @@ impl CodebaseIndexManager {
 
         // Remove metadata from SQLite.
         ctx.emit(CodebaseIndexManagerEvent::RemoveExpiredIndexMetadata {
-            expired_metadata: Arc::new(to_drop)});
+            expired_metadata: Arc::new(to_drop),
+        });
     }
 
     /// Remove the given index snapshots from disk.
@@ -560,7 +595,8 @@ impl CodebaseIndexManager {
 
         // Remove metadata from SQLite.
         ctx.emit(CodebaseIndexManagerEvent::RemoveExpiredIndexMetadata {
-            expired_metadata: Arc::new(vec![root_path])});
+            expired_metadata: Arc::new(vec![root_path]),
+        });
     }
 
     #[cfg(feature = "local_fs")]
@@ -803,7 +839,8 @@ impl CodebaseIndexManager {
             self.record_codebase_index_status(&indexed_directory, ctx);
             // Starting a new codebase index should be considered into sync state updates.
             ctx.emit(CodebaseIndexManagerEvent::NewIndexCreated {
-                root_path: indexed_directory});
+                root_path: indexed_directory,
+            });
         }
         true
     }
@@ -867,7 +904,8 @@ impl CodebaseIndexManager {
 
         let repo_path = match build_source {
             BuildSource::FromPath(path) => path,
-            BuildSource::FromPersistedMetadata(ref metadata) => metadata.path.as_path()};
+            BuildSource::FromPersistedMetadata(ref metadata) => metadata.path.as_path(),
+        };
 
         let standardized_path =
             match warp_util::standardized_path::StandardizedPath::from_local_canonicalized(
@@ -991,28 +1029,34 @@ impl CodebaseIndexManager {
         match event {
             CodebaseIndexEvent::RetrievalRequestFailed {
                 retrieval_id,
-                error} => ctx.emit(CodebaseIndexManagerEvent::RetrievalRequestFailed {
+                error,
+            } => ctx.emit(CodebaseIndexManagerEvent::RetrievalRequestFailed {
                 retrieval_id: retrieval_id.clone(),
-                error_message: error.to_string()}),
+                error_message: error.to_string(),
+            }),
             CodebaseIndexEvent::RetrievalRequestCompleted {
                 retrieval_id,
                 fragments,
-                out_of_sync_delay} => ctx.emit(CodebaseIndexManagerEvent::RetrievalRequestCompleted {
+                out_of_sync_delay,
+            } => ctx.emit(CodebaseIndexManagerEvent::RetrievalRequestCompleted {
                 retrieval_id: retrieval_id.clone(),
                 fragments: fragments.clone(),
-                out_of_sync_delay: *out_of_sync_delay}),
+                out_of_sync_delay: *out_of_sync_delay,
+            }),
             CodebaseIndexEvent::SyncStateUpdated { root_path } => {
                 self.maybe_emit_sync_state_updated(root_path, ctx);
             }
             CodebaseIndexEvent::IndexMetadataUpdated { root_path, event } => {
                 ctx.emit(CodebaseIndexManagerEvent::IndexMetadataUpdated {
                     root_path: root_path.to_path_buf(),
-                    event: *event})
+                    event: *event,
+                })
             }
             #[cfg(feature = "local_fs")]
             CodebaseIndexEvent::GitignoresUpdated {
                 repo_root_path,
-                gitignores} => {
+                gitignores,
+            } => {
                 self.unwatch_path(repo_root_path, ctx);
                 self.watch_path(repo_root_path, gitignores.clone(), ctx);
             }
@@ -1022,7 +1066,8 @@ impl CodebaseIndexManager {
             #[cfg(feature = "local_fs")]
             CodebaseIndexEvent::InitialSyncCompleted {
                 repo_path,
-                has_pending_change} => {
+                has_pending_change,
+            } => {
                 if !has_pending_change {
                     self.write_snapshot(repo_path, ctx);
                 }
@@ -1033,7 +1078,8 @@ impl CodebaseIndexManager {
     fn maybe_emit_sync_state_updated(&mut self, root_path: &Path, ctx: &mut ModelContext<Self>) {
         if self.record_codebase_index_status(root_path, ctx) {
             ctx.emit(CodebaseIndexManagerEvent::SyncStateUpdated {
-                root_path: root_path.to_path_buf()});
+                root_path: root_path.to_path_buf(),
+            });
         }
     }
 

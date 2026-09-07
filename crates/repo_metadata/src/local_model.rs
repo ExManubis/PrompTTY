@@ -23,7 +23,8 @@ use warpui_core::r#async::{FutureId, SpawnedFutureHandle};
 #[derive(Debug, Clone)]
 pub enum RepoContent<'a> {
     File(&'a FileTreeFileMetadata),
-    Directory(&'a FileTreeDirectoryEntryState)}
+    Directory(&'a FileTreeDirectoryEntryState),
+}
 
 /// The result of [`LocalRepoMetadataModel::get_repo_contents`].
 ///
@@ -36,7 +37,8 @@ pub struct RepoContents<'a> {
     pub contents: Vec<RepoContent<'a>>,
     /// `true` if traversal stopped early because the maximum result size was
     /// reached, meaning more matching entries exist than were returned.
-    pub truncated: bool}
+    pub truncated: bool,
+}
 
 use warp_util::standardized_path::StandardizedPath;
 
@@ -44,10 +46,12 @@ use warp_util::standardized_path::StandardizedPath;
 use crate::entry::LAZY_LOAD_FILE_LIMIT;
 use crate::entry::{
     BudgetExceededBehavior, BuildTreeError, BuildTreeOptions, Entry, FileId, IgnoredPathStrategy,
-    matches_force_included_path};
+    matches_force_included_path,
+};
 use crate::repository::Repository;
 use crate::standing_queries::{
-    StandingQueryDefinitions, StandingQueryResults, StandingQueryResultsDelta};
+    StandingQueryDefinitions, StandingQueryResults, StandingQueryResultsDelta,
+};
 use crate::telemetry::RepoMetadataTelemetryEvent;
 use crate::{RepoMetadataError, gitignores_for_directory, matches_gitignores};
 cfg_if::cfg_if! {
@@ -69,10 +73,12 @@ use warpui_core::ModelContext;
 
 use crate::file_tree_store::{
     FileTreeDirectoryEntryState, FileTreeEntry, FileTreeEntryState, FileTreeFileMetadata,
-    FileTreeState};
+    FileTreeState,
+};
 use crate::file_tree_update::{
     DirectoryNodeMetadata, FileNodeMetadata, FileTreeEntryUpdate, MetadataUpdateType,
-    RepoMetadataUpdate, RepoNodeMetadata, flatten_entry_metadata};
+    RepoMetadataUpdate, RepoNodeMetadata, flatten_entry_metadata,
+};
 
 /// Maximum depth to traverse when building file trees
 const MAX_TREE_DEPTH: usize = 200;
@@ -96,30 +102,38 @@ const MAX_REPO_CONTENTS_RESULTS: usize = 100;
 pub enum RepositoryMetadataEvent {
     /// A repository was added or updated.
     RepositoryUpdated {
-        path: StandardizedPath},
+        path: StandardizedPath,
+    },
     /// A repository was removed.
     RepositoryRemoved {
-        path: StandardizedPath},
+        path: StandardizedPath,
+    },
     /// The file tree for the repositories were updated.
     FileTreeUpdated {
-        paths: Vec<StandardizedPath>},
+        paths: Vec<StandardizedPath>,
+    },
     /// The file tree's [`Entry`] was updated.
     FileTreeEntryUpdated {
         path: StandardizedPath,
         /// Specifies whether this event contains a precise delta or requires a conservative
         /// refresh because the entry was replaced without one.
-        update_type: MetadataUpdateType},
+        update_type: MetadataUpdateType,
+    },
     /// The paths retained for standing queries changed.
     StandingQueryResultsUpdated {
         path: StandardizedPath,
-        delta: StandingQueryResultsDelta},
+        delta: StandingQueryResultsDelta,
+    },
     UpdatingRepositoryFailed {
-        path: StandardizedPath},
+        path: StandardizedPath,
+    },
     /// Emitted after watcher mutations are applied when
     /// `emit_incremental_updates` is enabled, containing a serializable
     /// update suitable for sending to the remote client.
     IncrementalUpdateReady {
-        update: RepoMetadataUpdate}}
+        update: RepoMetadataUpdate,
+    },
+}
 
 /// Represents the state of a repository in the metadata model.
 #[derive(Debug)]
@@ -130,7 +144,8 @@ pub enum IndexedRepoState {
     Indexed(FileTreeState),
 
     /// Repository indexing failed with the given error.
-    Failed(RepoMetadataError)}
+    Failed(RepoMetadataError),
+}
 
 impl IndexedRepoState {
     pub fn pending() -> Self {
@@ -180,7 +195,8 @@ enum RootWatchMode {
     /// expands rather than the whole subtree. Used for lazy (non-git) roots on
     /// Linux, where per-directory inotify watches are otherwise prohibitively
     /// expensive.
-    NonRecursive}
+    NonRecursive,
+}
 
 /// Tracks how a repository is registered with the filesystem watcher.
 ///
@@ -196,30 +212,35 @@ enum RootWatchMode {
 #[derive(Debug)]
 struct RepoWatch {
     root_mode: RootWatchMode,
-    extra_dirs: HashSet<StandardizedPath>}
+    extra_dirs: HashSet<StandardizedPath>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct BuildTaskKey {
     owner_repo_path: StandardizedPath,
-    target_path: StandardizedPath}
+    target_path: StandardizedPath,
+}
 
 impl BuildTaskKey {
     fn new(owner_repo_path: StandardizedPath, target_path: StandardizedPath) -> Self {
         Self {
             owner_repo_path,
-            target_path}
+            target_path,
+        }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum BuildTaskKind {
     Index,
-    DirectoryLoad}
+    DirectoryLoad,
+}
 
 struct BuildTask {
     kind: BuildTaskKind,
     handle: SpawnedFutureHandle,
-    completion_waiters: Vec<oneshot::Sender<Result<(), String>>>}
+    completion_waiters: Vec<oneshot::Sender<Result<(), String>>>,
+}
 
 /// Singleton model for managing local repository metadata.
 ///
@@ -264,18 +285,21 @@ pub struct LocalRepoMetadataModel {
     /// including any on-demand per-directory watches recorded for teardown. See
     /// [`RepoWatch`].
     #[cfg(feature = "local_fs")]
-    repo_watches: HashMap<StandardizedPath, RepoWatch>}
+    repo_watches: HashMap<StandardizedPath, RepoWatch>,
+}
 
 #[derive(Debug, Clone, Default)]
 struct RepoUpdate {
     added: Vec<PathBuf>,
     deleted: Vec<PathBuf>,
-    moved: HashMap<PathBuf, PathBuf>}
+    moved: HashMap<PathBuf, PathBuf>,
+}
 #[cfg(feature = "local_fs")]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct SymlinkTarget {
     repo_path: StandardizedPath,
-    current_path: PathBuf}
+    current_path: PathBuf,
+}
 
 /// Describes a single file-tree mutation computed on a background thread.
 /// These are produced by `compute_file_tree_mutations` (filesystem I/O) and
@@ -288,13 +312,15 @@ pub(crate) enum FileTreeMutation {
     AddFile {
         path: PathBuf,
         is_ignored: bool,
-        extension: Option<String>},
+        extension: Option<String>,
+    },
     /// Add a directory with its fully-built subtree.
     AddDirectorySubtree { dir_path: PathBuf, subtree: Entry },
     /// Add a bare (unloaded) directory placeholder, materialized on demand when
     /// the user expands it. Used for newly created directories under lazy roots
     /// and as a fallback when `build_tree` fails.
-    AddUnloadedDirectory { path: PathBuf, is_ignored: bool }}
+    AddUnloadedDirectory { path: PathBuf, is_ignored: bool },
+}
 
 /// A filter function for filtering repo contents during traversal.
 type RepoContentFilter = dyn for<'a> Fn(&RepoContent<'a>) -> bool + Send + Sync;
@@ -304,14 +330,16 @@ pub struct GetContentsArgs {
     pub include_ignored: bool,
     /// Optional filter applied during traversal to skip entries early.
     /// Return `true` to include the entry, `false` to skip it.
-    pub filter: Option<Arc<RepoContentFilter>>}
+    pub filter: Option<Arc<RepoContentFilter>>,
+}
 
 impl Default for GetContentsArgs {
     fn default() -> Self {
         Self {
             include_folders: true,
             include_ignored: false,
-            filter: None}
+            filter: None,
+        }
     }
 }
 
@@ -335,7 +363,8 @@ impl GetContentsArgs {
         Self {
             include_folders: self.include_folders,
             include_ignored: self.include_ignored,
-            filter: Some(Arc::new(filter))}
+            filter: Some(Arc::new(filter)),
+        }
     }
 }
 
@@ -358,7 +387,8 @@ impl LocalRepoMetadataModel {
             #[cfg(feature = "local_fs")]
             symlink_targets: HashMap::new(),
             #[cfg(feature = "local_fs")]
-            repo_watches: HashMap::new()};
+            repo_watches: HashMap::new(),
+        };
         cfg_if::cfg_if! {
             if #[cfg(feature = "local_fs")] {
                 let watcher = ctx.add_model(|ctx| {
@@ -495,7 +525,8 @@ impl LocalRepoMetadataModel {
                     .or_default()
                     .insert(SymlinkTarget {
                         repo_path: repo_path.clone(),
-                        current_path});
+                        current_path,
+                    });
             }
         }
         self.sync_symlink_target_watches(previously_watched, ctx);
@@ -589,7 +620,8 @@ impl LocalRepoMetadataModel {
 
         // Collect all paths that have been updated and emit an event.
         ctx.emit(RepositoryMetadataEvent::FileTreeUpdated {
-            paths: repo_updates.keys().cloned().collect()});
+            paths: repo_updates.keys().cloned().collect(),
+        });
         // Apply updates to each affected repository asynchronously.
         // Phase 1 (background thread): compute lightweight mutations via filesystem I/O.
         // Phase 2 (main thread callback): apply mutations directly to the tree — no clone needed.
@@ -654,15 +686,18 @@ impl LocalRepoMetadataModel {
                             update.standing_results_delta = standing_delta.clone();
                             ctx.emit(RepositoryMetadataEvent::FileTreeEntryUpdated {
                                 path: repo_path.clone(),
-                                update_type: MetadataUpdateType::IncrementalUpdate(update.clone())});
+                                update_type: MetadataUpdateType::IncrementalUpdate(update.clone()),
+                            });
                             if !standing_delta.is_empty() {
                                 ctx.emit(RepositoryMetadataEvent::StandingQueryResultsUpdated {
                                     path: repo_path.clone(),
-                                    delta: standing_delta});
+                                    delta: standing_delta,
+                                });
                             }
                             if model.emit_incremental_updates {
                                 ctx.emit(RepositoryMetadataEvent::IncrementalUpdateReady {
-                                    update});
+                                    update,
+                                });
                             }
                         }
 
@@ -720,7 +755,8 @@ impl LocalRepoMetadataModel {
     pub fn find_repository_for_path(&self, path: &Path) -> Option<StandardizedPath> {
         match StandardizedPath::from_local_canonicalized(path) {
             Ok(std_path) => self.find_repository_for_standardized_path(&std_path),
-            Err(_) => None}
+            Err(_) => None,
+        }
     }
 
     fn track_build_task(
@@ -738,7 +774,8 @@ impl LocalRepoMetadataModel {
             BuildTask {
                 kind,
                 handle,
-                completion_waiters: Vec::new()},
+                completion_waiters: Vec::new(),
+            },
         ) {
             existing_task.handle.abort();
             Self::notify_completion_waiters(
@@ -757,7 +794,8 @@ impl LocalRepoMetadataModel {
             (Some(future_id), Some(task)) if task.handle.future_id() == future_id => {
                 self.build_tasks.remove(key)
             }
-            _ => None}
+            _ => None,
+        }
     }
 
     fn subscribe_to_build_task(
@@ -894,7 +932,8 @@ impl LocalRepoMetadataModel {
         {
             let recursive_mode = match root_mode {
                 RootWatchMode::Recursive => RecursiveMode::Recursive,
-                RootWatchMode::NonRecursive => RecursiveMode::NonRecursive};
+                RootWatchMode::NonRecursive => RecursiveMode::NonRecursive,
+            };
             // Replace any prior registration, dropping its root watch and stale
             // per-directory watches before re-registering (e.g. a lazy
             // non-recursive root upgraded to a recursive git repo, whose old
@@ -903,7 +942,8 @@ impl LocalRepoMetadataModel {
                 repo_path.clone(),
                 RepoWatch {
                     root_mode,
-                    extra_dirs: HashSet::new()},
+                    extra_dirs: HashSet::new(),
+                },
             );
             if let Some(ref watcher) = self.watcher {
                 let watch_path = local_path.clone();
@@ -945,7 +985,8 @@ impl LocalRepoMetadataModel {
         self.refresh_symlink_targets(&repo_path_for_event, ctx);
 
         ctx.emit(RepositoryMetadataEvent::RepositoryUpdated {
-            path: repo_path_for_event});
+            path: repo_path_for_event,
+        });
 
         Ok(())
     }
@@ -989,7 +1030,8 @@ impl LocalRepoMetadataModel {
             }
 
             ctx.emit(RepositoryMetadataEvent::RepositoryRemoved {
-                path: repo_path.clone()});
+                path: repo_path.clone(),
+            });
 
             Ok(())
         } else {
@@ -1001,7 +1043,8 @@ impl LocalRepoMetadataModel {
         match self.repositories.get(repo_path)? {
             IndexedRepoState::Indexed(state) => Some(state),
             IndexedRepoState::Pending(_) => None,
-            IndexedRepoState::Failed(_) => None}
+            IndexedRepoState::Failed(_) => None,
+        }
     }
 
     pub fn standing_query_results(
@@ -1094,7 +1137,8 @@ impl LocalRepoMetadataModel {
                         current_depth: 0,
                         ignored_path_strategy: &IgnoredPathStrategy::Include,
                         force_included_paths: &force_included_paths,
-                        budget_exceeded_behavior: BudgetExceededBehavior::StopAndLazyLoad},
+                        budget_exceeded_behavior: BudgetExceededBehavior::StopAndLazyLoad,
+                    },
                     false,
                     &mut standing_results,
                     &standing_query_definitions,
@@ -1191,7 +1235,8 @@ impl LocalRepoMetadataModel {
                 Ok(())
             }
             Err(RepoMetadataError::RepositoryIndexingPending) => Ok(()),
-            Err(error) => Err(error)}
+            Err(error) => Err(error),
+        }
     }
 
     /// Loads a specific directory and resolves once the async load has been applied or rejected.
@@ -1220,7 +1265,8 @@ impl LocalRepoMetadataModel {
             Some(FileTreeEntryState::Directory(directory)) if !directory.loaded => {
                 Some(directory.path.clone())
             }
-            _ => None};
+            _ => None,
+        };
         // Tree building mutates the gitignore stack as it descends, so this needs an owned Vec.
         let mut gitignores = state.gitignores.as_ref().clone();
         let dir_path_for_build = dir_path.to_local_path_lossy();
@@ -1287,7 +1333,8 @@ impl LocalRepoMetadataModel {
 
                                     ctx.emit(RepositoryMetadataEvent::FileTreeEntryUpdated {
                                         path: repo_root,
-                                        update_type: MetadataUpdateType::FullReplace});
+                                        update_type: MetadataUpdateType::FullReplace,
+                                    });
                                     Ok(())
                                 }
                             } else {
@@ -1499,14 +1546,16 @@ impl LocalRepoMetadataModel {
                     // `load_directory`).
                     mutations.push(FileTreeMutation::AddUnloadedDirectory {
                         path: path_to_add.clone(),
-                        is_ignored});
+                        is_ignored,
+                    });
                     continue;
                 }
 
                 if is_ignored && !matches_force_included_path(path_to_add, force_included_paths) {
                     mutations.push(FileTreeMutation::AddUnloadedDirectory {
                         path: path_to_add.clone(),
-                        is_ignored});
+                        is_ignored,
+                    });
                     continue;
                 }
 
@@ -1523,7 +1572,8 @@ impl LocalRepoMetadataModel {
                         current_depth: 0,
                         ignored_path_strategy: &IgnoredPathStrategy::IncludeLazy,
                         force_included_paths,
-                        budget_exceeded_behavior: BudgetExceededBehavior::StopAndLazyLoad},
+                        budget_exceeded_behavior: BudgetExceededBehavior::StopAndLazyLoad,
+                    },
                     is_ignored,
                     &mut standing_results,
                     standing_query_definitions,
@@ -1533,7 +1583,8 @@ impl LocalRepoMetadataModel {
                     Ok(subtree) => {
                         mutations.push(FileTreeMutation::AddDirectorySubtree {
                             dir_path: path_to_add.clone(),
-                            subtree});
+                            subtree,
+                        });
                     }
                     Err(BuildTreeError::Symlink) => {
                         // Directory symlinks are intentionally absent from the canonical tree.
@@ -1552,7 +1603,8 @@ impl LocalRepoMetadataModel {
                         log::warn!("Failed to build subtree for directory {path_to_add:?}: {e:?}");
                         mutations.push(FileTreeMutation::AddUnloadedDirectory {
                             path: path_to_add.clone(),
-                            is_ignored});
+                            is_ignored,
+                        });
                     }
                 }
             } else {
@@ -1563,7 +1615,8 @@ impl LocalRepoMetadataModel {
                 mutations.push(FileTreeMutation::AddFile {
                     path: path_to_add.clone(),
                     is_ignored,
-                    extension});
+                    extension,
+                });
             }
         }
 
@@ -1603,7 +1656,8 @@ impl LocalRepoMetadataModel {
                 FileTreeMutation::AddFile {
                     ref path,
                     is_ignored,
-                    ref extension} => {
+                    ref extension,
+                } => {
                     let Some(std_path) = StandardizedPath::try_from_local(path).ok() else {
                         continue;
                     };
@@ -1630,7 +1684,8 @@ impl LocalRepoMetadataModel {
                             path: Arc::new(std_path.clone()),
                             file_id: FileId::new(),
                             extension: extension.clone(),
-                            ignored: is_ignored});
+                            ignored: is_ignored,
+                        });
                         root_entry.insert_child_state(&parent_dir, file_state);
                     }
                     if emit {
@@ -1639,12 +1694,15 @@ impl LocalRepoMetadataModel {
                             subtree_metadata: vec![RepoNodeMetadata::File(FileNodeMetadata {
                                 path: std_path,
                                 extension: extension.clone(),
-                                ignored: is_ignored})]});
+                                ignored: is_ignored,
+                            })],
+                        });
                     }
                 }
                 FileTreeMutation::AddDirectorySubtree {
                     ref dir_path,
-                    ref subtree} => {
+                    ref subtree,
+                } => {
                     let Some(std_dir) = StandardizedPath::try_from_local(dir_path).ok() else {
                         continue;
                     };
@@ -1670,13 +1728,15 @@ impl LocalRepoMetadataModel {
                             let metadata = flatten_entry_metadata(subtree);
                             update_entries.push(FileTreeEntryUpdate {
                                 parent_path_to_replace: parent_std,
-                                subtree_metadata: metadata});
+                                subtree_metadata: metadata,
+                            });
                         }
                     }
                 }
                 FileTreeMutation::AddUnloadedDirectory {
                     ref path,
-                    is_ignored} => {
+                    is_ignored,
+                } => {
                     let Some(std_path) = StandardizedPath::try_from_local(path).ok() else {
                         continue;
                     };
@@ -1705,7 +1765,8 @@ impl LocalRepoMetadataModel {
                     let dir_state = FileTreeEntryState::Directory(FileTreeDirectoryEntryState {
                         path: Arc::new(std_path.clone()),
                         ignored: is_ignored,
-                        loaded: false});
+                        loaded: false,
+                    });
                     root_entry.insert_child_state(&parent_dir, dir_state);
                     if emit {
                         update_entries.push(FileTreeEntryUpdate {
@@ -1714,8 +1775,10 @@ impl LocalRepoMetadataModel {
                                 DirectoryNodeMetadata {
                                     path: std_path,
                                     ignored: is_ignored,
-                                    loaded: false},
-                            )]});
+                                    loaded: false,
+                                },
+                            )],
+                        });
                     }
                 }
             }
@@ -1729,7 +1792,8 @@ impl LocalRepoMetadataModel {
             repo_path: root_entry.root_directory().as_ref().clone(),
             remove_entries,
             update_entries,
-            standing_results_delta: StandingQueryResultsDelta::default()})
+            standing_results_delta: StandingQueryResultsDelta::default(),
+        })
     }
 
     /// Delegates to [`FileTreeEntry::ensure_parent_directories_exist`].
@@ -1889,7 +1953,8 @@ impl LocalRepoMetadataModel {
                         current_depth: 0,
                         ignored_path_strategy: &IgnoredPathStrategy::IncludeLazy,
                         force_included_paths: &force_included_paths,
-                        budget_exceeded_behavior: BudgetExceededBehavior::StopAndLazyLoad},
+                        budget_exceeded_behavior: BudgetExceededBehavior::StopAndLazyLoad,
+                    },
                     false,
                     &mut standing_results,
                     &standing_query_definitions,
@@ -2016,7 +2081,8 @@ impl LocalRepoMetadataModel {
         );
         Ok(RepoContents {
             contents,
-            truncated})
+            truncated,
+        })
     }
 
     /// Change the indexing state of `repo_path` to `state`.
@@ -2068,7 +2134,8 @@ impl LocalRepoMetadataModel {
     pub fn repository_indexed(&self, repo_path: &StandardizedPath) -> BoxFuture<'static, ()> {
         match self.repositories.get(repo_path) {
             Some(state) => state.wait_until_indexed(),
-            None => future::ready(()).boxed()}
+            None => future::ready(()).boxed(),
+        }
     }
 }
 

@@ -12,7 +12,8 @@ use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonE
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{
     AIAgentAction, AIAgentActionResultType, AIAgentActionType, FileGlobResult, FileGlobV2Match,
-    FileGlobV2Result};
+    FileGlobV2Result,
+};
 use crate::ai::blocklist::BlocklistAIPermissions;
 use crate::ai::paths::{host_native_absolute_path, join_paths, shell_native_absolute_path};
 use crate::terminal::ShellLaunchData;
@@ -29,11 +30,13 @@ use warp_errors::report_error;
 
 use super::{
     ActionExecution, AnyActionExecution, ExecuteActionInput, PreprocessActionInput,
-    get_server_output_id, is_git_repository};
+    get_server_output_id, is_git_repository,
+};
 
 pub struct FileGlobExecutor {
     active_session: ModelHandle<ActiveSession>,
-    terminal_view_id: EntityId}
+    terminal_view_id: EntityId,
+}
 
 fn log_file_glob_error(conversation_id: AIConversationId, ctx: &mut AppContext) {
     let server_output_id = get_server_output_id(conversation_id, ctx);
@@ -43,7 +46,8 @@ impl FileGlobExecutor {
     pub fn new(active_session: ModelHandle<ActiveSession>, terminal_view_id: EntityId) -> Self {
         Self {
             active_session,
-            terminal_view_id}
+            terminal_view_id,
+        }
     }
 
     pub(super) fn should_autoexecute(
@@ -62,7 +66,8 @@ impl FileGlobExecutor {
                         },
                     ..
                 },
-            conversation_id} = input
+            conversation_id,
+        } = input
         else {
             return false;
         };
@@ -100,7 +105,8 @@ impl FileGlobExecutor {
                 AIAgentActionType::FileGlob { patterns, path }
                 | AIAgentActionType::FileGlobV2 {
                     patterns,
-                    search_dir: path},
+                    search_dir: path,
+                },
             ..
         } = input.action
         else {
@@ -134,7 +140,8 @@ impl FileGlobExecutor {
                     .await
                 {
                     Ok(result) => result,
-                    Err(_) => Err(anyhow::anyhow!("File glob operation timed out"))}
+                    Err(_) => Err(anyhow::anyhow!("File glob operation timed out")),
+                }
             },
             move |result, ctx| match result {
                 Ok(file_glob_result) => {
@@ -260,7 +267,8 @@ async fn run_git_ls_files_command(
 
         Ok(FileGlobV2Result::Success {
             matched_files: absolute_paths.collect(),
-            warnings: None})
+            warnings: None,
+        })
     } else {
         Err(anyhow::anyhow!(output))
     }
@@ -289,7 +297,8 @@ async fn run_find_command(
     let has_results = FeatureFlag::FileGlobV2Warnings.is_enabled() && !stdout.trim().is_empty();
     if command_output.success() || has_results {
         let files = non_empty_lines(&stdout).map(|line| FileGlobV2Match {
-            file_path: line.to_string()});
+            file_path: line.to_string(),
+        });
         let warnings = if FeatureFlag::FileGlobV2Warnings.is_enabled() && !stderr.trim().is_empty()
         {
             Some(stderr)
@@ -298,7 +307,8 @@ async fn run_find_command(
         };
         Ok(FileGlobV2Result::Success {
             matched_files: files.collect(),
-            warnings})
+            warnings,
+        })
     } else {
         Err(anyhow::anyhow!(stderr))
     }
@@ -324,10 +334,12 @@ async fn run_powershell_get_childitem_command(
 
     if command_output.success() {
         let files = non_empty_lines(&output).map(|line| FileGlobV2Match {
-            file_path: line.to_string()});
+            file_path: line.to_string(),
+        });
         Ok(FileGlobV2Result::Success {
             matched_files: files.collect(),
-            warnings: None})
+            warnings: None,
+        })
     } else {
         Err(anyhow::anyhow!(output))
     }

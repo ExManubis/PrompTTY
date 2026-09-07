@@ -81,8 +81,6 @@ mod writeable_pty;
 pub use writeable_pty::{PtyIntent, PtyIntentEvent, TerminalSurface};
 pub mod cli_agent;
 pub use cli_agent::CLIAgent;
-pub mod cli_agent_type;
-pub use cli_agent_type::{CLIAgentType, NotificationAgentVariant};
 pub(crate) mod cli_agent_sessions;
 
 pub use block_list_settings::*;

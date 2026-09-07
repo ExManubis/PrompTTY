@@ -9,7 +9,8 @@ use crate::ai::skills::{SkillManager, SkillTelemetryEvent};
 use crate::terminal::model::session::active_session::ActiveSession;
 
 pub struct ReadSkillExecutor {
-    active_session: ModelHandle<ActiveSession>}
+    active_session: ModelHandle<ActiveSession>,
+}
 
 impl ReadSkillExecutor {
     pub fn new(active_session: ModelHandle<ActiveSession>) -> Self {

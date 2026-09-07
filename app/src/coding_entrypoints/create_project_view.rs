@@ -1,12 +1,14 @@
 use warp_core::ui::icons::Icon;
 use warpui::elements::{
     ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Expanded, Fill, Flex,
-    Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement as _, Radius, Text};
+    Hoverable, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement as _, Radius, Text,
+};
 use warpui::fonts::{Properties, Weight};
 use warpui::platform::Cursor;
 use warpui::{
     AppContext, Element, Entity, FocusContext, SingletonEntity as _, TypedActionView, View,
-    ViewContext, ViewHandle};
+    ViewContext, ViewHandle,
+};
 
 use crate::TelemetryEvent;
 use crate::ai::blocklist::telemetry_banner::should_collect_ai_ugc_telemetry;
@@ -21,11 +23,13 @@ const SUGGESTION_ITEM_PADDING: f32 = 12.;
 pub struct CreateProjectView {
     editor: ViewHandle<GlowingEditor>,
     suggestions: Vec<BuildSuggestion>,
-    is_ftux: bool}
+    is_ftux: bool,
+}
 
 struct BuildSuggestion {
     prompt: &'static str,
-    mouse_state: MouseStateHandle}
+    mouse_state: MouseStateHandle,
+}
 
 impl CreateProjectView {
     pub fn new(is_ftux: bool, ctx: &mut ViewContext<Self>) -> Self {
@@ -39,25 +43,31 @@ impl CreateProjectView {
         let suggestions = vec![
             BuildSuggestion {
                 prompt: "Build a Minesweeper clone in React",
-                mouse_state: Default::default()},
+                mouse_state: Default::default(),
+            },
             BuildSuggestion {
                 prompt: "Code a Node.js server that returns random quotes from a JSON file",
-                mouse_state: Default::default()},
+                mouse_state: Default::default(),
+            },
             BuildSuggestion {
                 prompt: "Write a CSV to JSON converter CLI",
-                mouse_state: Default::default()},
+                mouse_state: Default::default(),
+            },
             BuildSuggestion {
                 prompt: "Create a starter template for a résumé web page",
-                mouse_state: Default::default()},
+                mouse_state: Default::default(),
+            },
             BuildSuggestion {
                 prompt: "Make a Conway's Game of Life simulation",
-                mouse_state: Default::default()},
+                mouse_state: Default::default(),
+            },
         ];
 
         Self {
             editor,
             suggestions,
-            is_ftux}
+            is_ftux,
+        }
     }
 
     fn handle_editor_event(&mut self, event: &GlowingEditorEvent, ctx: &mut ViewContext<Self>) {
@@ -138,7 +148,8 @@ impl CreateProjectView {
         .with_cursor(Cursor::PointingHand)
         .on_click(move |ctx, _, _| {
             ctx.dispatch_typed_action(CreateProjectAction::SuggestionSelected {
-                prompt: prompt.to_string()});
+                prompt: prompt.to_string(),
+            });
         })
         .finish()
     }
@@ -146,7 +157,8 @@ impl CreateProjectView {
 
 pub enum CreateProjectEvent {
     SubmitPrompt(String),
-    Cancel}
+    Cancel,
+}
 
 impl Entity for CreateProjectView {
     type Event = CreateProjectEvent;
@@ -154,7 +166,8 @@ impl Entity for CreateProjectView {
 
 #[derive(Clone, Debug)]
 pub enum CreateProjectAction {
-    SuggestionSelected { prompt: String }}
+    SuggestionSelected { prompt: String },
+}
 
 impl TypedActionView for CreateProjectView {
     type Action = CreateProjectAction;

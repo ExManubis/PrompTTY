@@ -9,13 +9,15 @@ use warp::editor::{CodeEditorModel, CodeEditorModelEvent};
 use warp::tui_export::{
     AgentConversationEntryId, AgentConversationListEntryState, AgentConversationsModel,
     AgentConversationsModelEvent, AgentManagementFilters, ConversationSelectionHandle, Harness,
-    HarnessFilter, agent_conversations_cloud_metadata_load_failed, query_conversation_entries};
+    HarnessFilter, agent_conversations_cloud_metadata_load_failed, query_conversation_entries,
+};
 use warp_editor::model::CoreEditorModel;
 use warpui_core::{AppContext, Entity, ModelContext, ModelHandle, SingletonEntity, WindowId};
 
 use crate::inline_menu::{
     MAX_INLINE_MENU_ROWS, TuiInlineMenuHeader, TuiInlineMenuListState, TuiInlineMenuRow,
-    TuiInlineMenuRowStyle, TuiInlineMenuSnapshot, TuiInlineMenuStatus, result_row_capacity};
+    TuiInlineMenuRowStyle, TuiInlineMenuSnapshot, TuiInlineMenuStatus, result_row_capacity,
+};
 use crate::input_suggestions_mode::{TuiInputSuggestionsMode, TuiInputSuggestionsModeModel};
 use crate::telemetry::TuiConversationMenuTelemetryEvent;
 
@@ -24,20 +26,24 @@ const MAX_VISIBLE_ROWS: usize = result_row_capacity(MAX_INLINE_MENU_ROWS, true, 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct TuiConversationMenuRow {
     id: AgentConversationEntryId,
-    title: String}
+    title: String,
+}
 
 #[derive(Debug, Clone, Default)]
 enum TuiConversationMenuState {
     #[default]
     Closed,
     Open {
-        list: TuiInlineMenuListState<TuiConversationMenuRow>}}
+        list: TuiInlineMenuListState<TuiConversationMenuRow>,
+    },
+}
 
 /// Events emitted by the TUI conversation menu.
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum TuiConversationMenuEvent {
     Updated,
-    CloudMetadataUnavailable}
+    CloudMetadataUnavailable,
+}
 
 /// Query, selection, and model-subscription state for `/conversations`.
 pub(crate) struct TuiConversationMenuModel {
@@ -46,7 +52,8 @@ pub(crate) struct TuiConversationMenuModel {
     conversation_selection: ConversationSelectionHandle,
     window_id: WindowId,
     state: TuiConversationMenuState,
-    cloud_warning_shown: bool}
+    cloud_warning_shown: bool,
+}
 
 impl TuiConversationMenuModel {
     /// Creates a closed conversation menu and subscribes it to input/model changes.
@@ -76,7 +83,8 @@ impl TuiConversationMenuModel {
             conversation_selection,
             window_id,
             state: TuiConversationMenuState::Closed,
-            cloud_warning_shown: false}
+            cloud_warning_shown: false,
+        }
     }
 
     /// Returns whether the conversation menu is currently open.
@@ -178,7 +186,8 @@ impl TuiConversationMenuModel {
 
         match &self.state {
             TuiConversationMenuState::Open { list } => list.selected_row().map(|row| row.id),
-            TuiConversationMenuState::Closed => None}
+            TuiConversationMenuState::Closed => None,
+        }
     }
 
     /// Returns the render snapshot for the open menu.
@@ -201,7 +210,8 @@ impl TuiConversationMenuModel {
         Some(TuiInlineMenuSnapshot {
             header: Some(TuiInlineMenuHeader {
                 title: Some("Conversations".to_owned()),
-                tabs: Vec::new()}),
+                tabs: Vec::new(),
+            }),
             rows: list
                 .rows()
                 .iter()
@@ -212,13 +222,15 @@ impl TuiConversationMenuModel {
                     state_suffix: None,
                     promotional_suffix: None,
                     is_selectable: true,
-                    style: TuiInlineMenuRowStyle::Default})
+                    style: TuiInlineMenuRowStyle::Default,
+                })
                 .collect(),
             selected_index: list.selected_index(),
             scroll_offset: list.scroll_offset(),
             scroll_anchor: list.scroll_anchor(),
             max_visible_rows: MAX_VISIBLE_ROWS,
-            status})
+            status,
+        })
     }
 
     /// Closes the menu and unregisters its conversation-list consumer.
@@ -243,7 +255,8 @@ impl TuiConversationMenuModel {
             TuiConversationMenuState::Open { list } => {
                 (list.selected_row().map(|row| row.id), list.selected_index())
             }
-            TuiConversationMenuState::Closed => return};
+            TuiConversationMenuState::Closed => return,
+        };
         let conversations_model = AgentConversationsModel::as_ref(ctx);
         let is_loading = conversations_model.is_loading();
         let cloud_metadata_load_failed = agent_conversations_cloud_metadata_load_failed(ctx);
@@ -266,7 +279,8 @@ impl TuiConversationMenuModel {
                 .into_iter()
                 .map(|result| TuiConversationMenuRow {
                     id: result.entry.id,
-                    title: result.entry.display.title})
+                    title: result.entry.display.title,
+                })
                 .collect()
         };
 

@@ -59,7 +59,8 @@ async fn check_download_source() -> DownloadSource {
 
     match result {
         Ok(status) if status.success() => DownloadSource::Homebrew,
-        _ => DownloadSource::Website}
+        _ => DownloadSource::Website,
+    }
 }
 
 #[cfg(not(target_os = "macos"))]

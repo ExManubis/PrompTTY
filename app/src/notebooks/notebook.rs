@@ -18,21 +18,25 @@ use warpui::clipboard::ClipboardContent;
 use warpui::elements::{
     Align, Clipped, ConstrainedBox, Container, CrossAxisAlignment, DispatchEventResult, Empty,
     EventHandler, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement,
-    SavePosition, Shrinkable, Stack};
+    SavePosition, Shrinkable, Stack,
+};
 use warpui::keymap::{EditableBinding, FixedBinding};
 use warpui::presenter::ChildView;
 use warpui::ui_components::button::ButtonVariant;
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::{
     AppContext, BlurContext, Element, Entity, FocusContext, ModelAsRef, ModelHandle,
-    SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, WindowId};
+    SingletonEntity, TypedActionView, View, ViewContext, ViewHandle, WindowId,
+};
 
 use self::details_bar::DetailsBar;
 use super::active_notebook_data::{
-    ActiveNotebook, ActiveNotebookData, ActiveNotebookDataEvent, Mode, SavingStatus, TrashStatus};
+    ActiveNotebook, ActiveNotebookData, ActiveNotebookDataEvent, Mode, SavingStatus, TrashStatus,
+};
 use super::context_menu::{
     ContextMenuAction, ContextMenuState, show_rich_editor_context_menu,
-    show_text_editor_context_menu};
+    show_text_editor_context_menu,
+};
 use super::editor::NotebookWorkflow;
 use super::editor::view::{EditorViewEvent, RichTextEditorConfig, RichTextEditorView};
 use super::link::{NotebookLinks, SessionSource};
@@ -53,7 +57,8 @@ use crate::drive::sharing::ShareableObject;
 use crate::drive::{CloudObjectTypeAndId, OpenWarpDriveObjectSettings};
 use crate::editor::{
     EditOrigin, EditorView, Event as EditorEvent, InteractionState, PropagateAndNoOpNavigationKeys,
-    SingleLineEditorOptions, TextColors, TextOptions};
+    SingleLineEditorOptions, TextColors, TextOptions,
+};
 use crate::features::FeatureFlag;
 use crate::menu::{MenuItem, MenuItemFields};
 use crate::network::{NetworkStatus, NetworkStatusEvent};
@@ -67,12 +72,15 @@ use crate::server::cloud_objects::update_manager::{FetchSingleObjectOption, Upda
 use crate::server::ids::{ClientId, ServerId, SyncId};
 use crate::server::telemetry::{
     CloudObjectTelemetryMetadata, NotebookActionEvent, NotebookTelemetryMetadata,
-    SharingDialogSource, TelemetryCloudObjectType, TelemetryEvent};
+    SharingDialogSource, TelemetryCloudObjectType, TelemetryEvent,
+};
 use crate::settings::app_installation_detection::{
-    UserAppInstallDetectionSettings, UserAppInstallStatus};
+    UserAppInstallDetectionSettings, UserAppInstallStatus,
+};
 use crate::settings::{
     FontSettings, FontSettingsChangedEvent, NotebookFontSize, decrease_notebook_font_size,
-    increase_notebook_font_size};
+    increase_notebook_font_size,
+};
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::throttle::throttle;
 use crate::ui_components::icons::{self, Icon};
@@ -189,12 +197,14 @@ struct ButtonMouseStates {
     conflict_resolution_refresh_button: MouseStateHandle,
     conflict_resolution_copy_all_button: MouseStateHandle,
     restore_from_trash_button: MouseStateHandle,
-    copy_to_personal_drive_button: MouseStateHandle}
+    copy_to_personal_drive_button: MouseStateHandle,
+}
 
 #[derive(Clone, Copy)]
 enum NotebookSyncError {
     InConflict,
-    FeatureNotAvailable}
+    FeatureNotAvailable,
+}
 
 /// A view that allows viewing/execution and editing of a Warp notebook.
 /// We don't currently persist any data.
@@ -228,24 +238,29 @@ pub struct NotebookView {
     save_tx: Sender<NotebookUpdateRequestDebounceArg>,
 
     /// Save position for the bounds of this view.
-    view_position_id: String}
+    view_position_id: String,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum NotebookEvent {
     RunWorkflow {
         workflow: Arc<WorkflowType>,
-        source: WorkflowSource},
+        source: WorkflowSource,
+    },
     EditWorkflow(SyncId),
     ViewInWarpDrive(WarpDriveItemId),
     Pane(PaneEvent),
     MoveToSpace {
         cloud_object_type_and_id: CloudObjectTypeAndId,
-        new_space: Space},
+        new_space: Space,
+    },
     OpenDriveObjectShareDialog {
         cloud_object_type_and_id: CloudObjectTypeAndId,
         invitee_email: Option<String>,
-        source: SharingDialogSource},
-    AttachPlanAsContext(AIDocumentId)}
+        source: SharingDialogSource,
+    },
+    AttachPlanAsContext(AIDocumentId),
+}
 
 impl From<PaneEvent> for NotebookEvent {
     fn from(event: PaneEvent) -> Self {
@@ -267,7 +282,8 @@ pub enum NotebookAction {
     ContextMenu(ContextMenuAction), // right click context menu
     MoveToSpace {
         cloud_object_type_and_id: CloudObjectTypeAndId,
-        new_space: Space},
+        new_space: Space,
+    },
     Duplicate,
     Trash,
     Untrash,
@@ -276,7 +292,8 @@ pub enum NotebookAction {
     CopyLink(String),
     OpenLinkOnDesktop(Url),
     Export,
-    AttachPlanAsContext(AIDocumentId)}
+    AttachPlanAsContext(AIDocumentId),
+}
 
 impl From<ContextMenuAction> for NotebookAction {
     fn from(action: ContextMenuAction) -> Self {
@@ -291,7 +308,8 @@ enum FocusedComponent {
     /// The title editor.
     Title,
     /// The body/input editor.
-    Input}
+    Input,
+}
 
 impl NotebookView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
@@ -330,7 +348,8 @@ impl NotebookView {
                     font_family_override: Some(appearance.ui_font_family()),
                     font_size_override: Some(styles::title_font_size(font_settings)),
                     font_properties_override: Some(styles::TITLE_FONT_PROPERTIES),
-                    text_colors_override: Some(title_text_colors(appearance))},
+                    text_colors_override: Some(title_text_colors(appearance)),
+                },
                 propagate_and_no_op_vertical_navigation_keys:
                     PropagateAndNoOpNavigationKeys::Always,
                 ..Default::default()
@@ -406,7 +425,8 @@ impl NotebookView {
             content_is_dirty: false,
             title_is_dirty: false,
             save_tx,
-            view_position_id}
+            view_position_id,
+        }
     }
 
     /// Restore focus to the notebook view, by focusing its editor.
@@ -417,7 +437,8 @@ impl NotebookView {
         }
         match self.last_focused_component {
             FocusedComponent::Title => self.focus_title(ctx),
-            FocusedComponent::Input => self.focus_input(ctx)}
+            FocusedComponent::Input => self.focus_input(ctx),
+        }
     }
 
     /// Focus the title view.
@@ -641,7 +662,8 @@ impl NotebookView {
                     ctx.notify();
                 });
             }
-            _ => ()}
+            _ => (),
+        }
     }
 
     /// Handle an event from the [`GrabEditAccessModal`]. This lets users steal edit access from
@@ -703,7 +725,8 @@ impl NotebookView {
         match event {
             CloudModelEvent::ObjectUpdated {
                 type_and_id,
-                source: UpdateSource::Server} => {
+                source: UpdateSource::Server,
+            } => {
                 if let Some(updated_notebook) = self
                     .as_active_notebook_id(type_and_id, ctx)
                     .and_then(|notebook_id| CloudModel::as_ref(ctx).get_notebook(&notebook_id))
@@ -750,7 +773,8 @@ impl NotebookView {
                     ctx.notify();
                 }
             }
-            _ => ()}
+            _ => (),
+        }
     }
 
     /// The current Markdown content of this notebook.
@@ -807,7 +831,8 @@ impl NotebookView {
                                 title: notebook.model().title.clone(),
                                 data: content.to_string(),
                                 ai_document_id: notebook.model().ai_document_id,
-                                conversation_id: notebook.model().conversation_id.clone()},
+                                conversation_id: notebook.model().conversation_id.clone(),
+                            },
                             CloudObjectEventEntrypoint::Unknown,
                             true,
                             ctx,
@@ -952,7 +977,8 @@ impl NotebookView {
             EditorViewEvent::CopiedBlock { block, entrypoint } => self.send_telemetry_action(
                 NotebookTelemetryAction::CopyBlock {
                     block: *block,
-                    entrypoint: *entrypoint},
+                    entrypoint: *entrypoint,
+                },
                 ctx,
             ),
             EditorViewEvent::NavigatedCommands => {
@@ -968,7 +994,8 @@ impl NotebookView {
             }
             EditorViewEvent::CmdEnter
             | EditorViewEvent::EscapePressed
-            | EditorViewEvent::TextSelectionChanged => ()}
+            | EditorViewEvent::TextSelectionChanged => (),
+        }
     }
 
     fn switch_to_view(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1038,7 +1065,8 @@ impl NotebookView {
             object_type: TelemetryCloudObjectType::Notebook,
             object_uid: notebook_data.id().and_then(SyncId::into_server),
             space: notebook_data.space(ctx).map(Into::into),
-            team_uid: notebook_data.owner(ctx).and_then(Into::into)}
+            team_uid: notebook_data.owner(ctx).and_then(Into::into),
+        }
     }
 
     /// Send a [`NotebookTelemetryAction`] telemetry event.
@@ -1165,7 +1193,8 @@ impl NotebookView {
     ) {
         ctx.emit(NotebookEvent::MoveToSpace {
             cloud_object_type_and_id,
-            new_space});
+            new_space,
+        });
     }
 
     fn duplicate_object(&mut self, ctx: &mut ViewContext<Self>) {
@@ -1245,7 +1274,8 @@ impl NotebookView {
                 .get_notebook(&id)
                 .and_then(|n| n.model().ai_document_id),
             ActiveNotebook::NewNotebook(notebook) => notebook.model().ai_document_id,
-            ActiveNotebook::None => None};
+            ActiveNotebook::None => None,
+        };
 
         let copy_client_id = ClientId::new();
         let copy_sync_id = SyncId::ClientId(copy_client_id);
@@ -1264,7 +1294,8 @@ impl NotebookView {
                     title: title.clone(),
                     data: content,
                     ai_document_id,
-                    conversation_id: None},
+                    conversation_id: None,
+                },
                 CloudObjectEventEntrypoint::Unknown,
                 true,
                 ctx,
@@ -1349,7 +1380,8 @@ impl NotebookView {
                             MenuItemFields::new(format!("Move to {}", space.name(ctx)))
                                 .with_on_select_action(NotebookAction::MoveToSpace {
                                     cloud_object_type_and_id: cloud_object_type,
-                                    new_space: *space})
+                                    new_space: *space,
+                                })
                                 .with_icon(Icon::Move)
                                 .into_item()
                         }));
@@ -1620,7 +1652,8 @@ impl NotebookView {
             ctx.emit(NotebookEvent::OpenDriveObjectShareDialog {
                 cloud_object_type_and_id: object_id_to_share,
                 invitee_email: Some(invitee_email),
-                source: SharingDialogSource::InviteeRequest});
+                source: SharingDialogSource::InviteeRequest,
+            });
         } else if let Some(focused_folder_id) = settings.focused_folder_id.map(SyncId::ServerId) {
             self.view_in_warp_drive(
                 WarpDriveItemId::Object(CloudObjectTypeAndId::Folder(focused_folder_id)),
@@ -1711,7 +1744,8 @@ impl NotebookView {
                                 title: title.to_string(),
                                 data: notebook.model().data.to_owned(),
                                 ai_document_id: notebook.model().ai_document_id,
-                                conversation_id: notebook.model().conversation_id.clone()},
+                                conversation_id: notebook.model().conversation_id.clone(),
+                            },
                             CloudObjectEventEntrypoint::Unknown,
                             true,
                             ctx,
@@ -1751,7 +1785,8 @@ impl NotebookView {
             Mode::Editing => {
                 self.give_up_edit_access_and_start_viewing(ctx);
             }
-            Mode::View => self.grab_edit_access_or_display_access_dialog(ctx)}
+            Mode::View => self.grab_edit_access_or_display_access_dialog(ctx),
+        }
     }
 
     fn run_notebook_workflow(&self, workflow: &NotebookWorkflow, ctx: &mut ViewContext<Self>) {
@@ -1764,18 +1799,21 @@ impl NotebookView {
             let owner = self.active_notebook_data.as_ref(ctx).owner(ctx);
             let team_uid = match owner {
                 Some(Owner::Team { team_uid }) => Some(team_uid),
-                _ => None};
+                _ => None,
+            };
             WorkflowSource::Notebook {
                 notebook_id,
                 team_uid,
                 location: owner
                     .map(Into::into)
-                    .unwrap_or(NotebookLocation::PersonalCloud)}
+                    .unwrap_or(NotebookLocation::PersonalCloud),
+            }
         });
 
         ctx.emit(NotebookEvent::RunWorkflow {
             workflow: workflow_type,
-            source});
+            source,
+        });
         ctx.notify();
     }
 
@@ -1851,7 +1889,8 @@ impl NotebookView {
         let deleted = match self.active_notebook_data.as_ref(app).trash_status(app) {
             TrashStatus::Active => return None,
             TrashStatus::Trashed => false,
-            TrashStatus::Deleted => true};
+            TrashStatus::Deleted => true,
+        };
         let appearance = Appearance::as_ref(app);
 
         let mut stack = Stack::new();
@@ -1995,7 +2034,8 @@ impl NotebookView {
                 .wrappable_text(
                     match sync_error {
                         NotebookSyncError::FeatureNotAvailable => FEATURE_NOT_AVAILABLE_MESSAGE,
-                        NotebookSyncError::InConflict => CONFLICT_RESOLUTION_MESSAGE},
+                        NotebookSyncError::InConflict => CONFLICT_RESOLUTION_MESSAGE,
+                    },
                     true,
                 )
                 .with_style(UiComponentStyles {
@@ -2148,7 +2188,8 @@ impl View for NotebookView {
                         DispatchEventResult::StopPropagation
                     })
                     .finish(),
-            )};
+            ),
+        };
 
         if self
             .active_notebook_data
@@ -2183,7 +2224,8 @@ impl View for NotebookView {
 
         match self.mode_app_ctx(app) {
             Mode::Editing => context.set.insert("NotebookEditing"),
-            Mode::View => context.set.insert("NotebookViewing")};
+            Mode::View => context.set.insert("NotebookViewing"),
+        };
 
         if !FeatureFlag::SharedWithMe.is_enabled()
             || self
@@ -2258,7 +2300,8 @@ impl TypedActionView for NotebookView {
             }
             NotebookAction::MoveToSpace {
                 cloud_object_type_and_id,
-                new_space} => self.move_to_team_owner(*cloud_object_type_and_id, *new_space, ctx),
+                new_space,
+            } => self.move_to_team_owner(*cloud_object_type_and_id, *new_space, ctx),
             #[cfg(target_family = "wasm")]
             NotebookAction::OpenLinkOnDesktop(url) => {
                 open_url_on_desktop(url);
