@@ -432,15 +432,6 @@ impl LoginSlideView {
         ctx.notify();
     }
 
-    fn send_account_first_action(
-        &self,
-        _slide_name: &str,
-        _action: &str,
-        _ctx: &mut ViewContext<Self>,
-    ) {
-        if matches!(self.source, LoginSlideSource::AccountFirstOnboarding) {}
-    }
-
     fn handle_pasted_auth_url(&mut self, pasted_url: String, ctx: &mut ViewContext<Self>) {
         match AuthRedirectPayload::from_raw_url(pasted_url) {
             Ok(redirect_payload) => {
@@ -461,7 +452,6 @@ impl LoginSlideView {
     }
 
     fn handle_login_later(&mut self, ctx: &mut ViewContext<Self>) {
-        self.send_account_first_action("create_account", "skip_account", ctx);
         // Send synchronously since this is an important event in the sign up funnel and we
         // don't want to lose events if the user quits before the event queue is flushed.
         if FeatureFlag::SkipFirebaseAnonymousUser.is_enabled() {
@@ -479,10 +469,8 @@ impl LoginSlideView {
     /// Starts the browser sign-up flow. Shared by the Continue button and the
     /// skip dialog's cancel button.
     fn start_login(&mut self, ctx: &mut ViewContext<Self>) {
-        self.send_account_first_action("create_account", "continue_signup", ctx);
         self.last_login_failure_reason = None;
         self.step = LoginStep::BrowserOpen;
-        if matches!(self.source, LoginSlideSource::AccountFirstOnboarding) {}
         AuthManager::handle(ctx).update(ctx, |auth_manager, ctx| {
             let sign_up_url = auth_manager.sign_up_url();
             ctx.open_url(&sign_up_url);
@@ -1304,19 +1292,16 @@ impl TypedActionView for LoginSlideView {
                         }
                         LoginSlideSource::OnboardingFlow
                         | LoginSlideSource::AccountFirstOnboarding => {
-                            self.send_account_first_action("browser_auth", "back", ctx);
                             self.step = LoginStep::SelectAuthPathway;
                             ctx.focus_self();
                             ctx.notify();
                         }
                     }
                 } else {
-                    self.send_account_first_action("create_account", "back", ctx);
                     ctx.emit(LoginSlideEvent::BackToOnboarding);
                 }
             }
             LoginSlideAction::Back => {
-                self.send_account_first_action("create_account", "back", ctx);
                 ctx.emit(LoginSlideEvent::BackToOnboarding);
             }
             LoginSlideAction::BackToSelectAuthPathway => match self.source {
@@ -1329,7 +1314,6 @@ impl TypedActionView for LoginSlideView {
                     ctx.emit(LoginSlideEvent::BackToOnboarding);
                 }
                 LoginSlideSource::OnboardingFlow | LoginSlideSource::AccountFirstOnboarding => {
-                    self.send_account_first_action("browser_auth", "back", ctx);
                     self.step = LoginStep::SelectAuthPathway;
                     ctx.focus_self();
                     ctx.notify();

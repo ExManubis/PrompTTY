@@ -11864,16 +11864,13 @@ impl Workspace {
         // Figure out what indices we want to delete for the "other tabs" case.
         let indices_to_remove = (0..self.tabs.len()).filter(|i| *i != index);
 
-        let tabs_closed = self.close_tabs(
+        self.close_tabs(
             indices_to_remove,
             OpenDialogSource::CloseOtherTabs { tab_index: index },
             skip_confirmation,
             true,
             ctx,
         );
-
-        // Telemetry whenever tabs actually closed, not when confirmation dialog comes up.
-        if tabs_closed {}
     }
 
     /// Opens a confirmation dialog if necessary, or closes immediately if not.
@@ -11889,7 +11886,7 @@ impl Workspace {
             TabMovement::Left => 0..index,
             TabMovement::Right => (index + 1)..self.tabs.len(),
         };
-        let tabs_closed = self.close_tabs(
+        self.close_tabs(
             indices_to_remove,
             OpenDialogSource::CloseTabsDirection {
                 tab_index: index,
@@ -11899,14 +11896,6 @@ impl Workspace {
             true,
             ctx,
         );
-
-        // Telemetry whenever tabs actually closed, not when confirmation dialog comes up.
-        if tabs_closed {
-            match direction {
-                TabMovement::Right if self.active_tab_index > index => {}
-                _ => (),
-            }
-        }
     }
 
     /// Closes all tabs that have code panes with the specified file path open.
@@ -13750,12 +13739,7 @@ impl Workspace {
             TabMovement::Left | TabMovement::Right => return,
         };
 
-        // `hop_tab_to_index` keeps the same tab active across the move, so we
-        // only capture whether the moved tab was the active one for telemetry.
-        let moving_active_tab = index == self.active_tab_index;
         self.hop_tab_to_index(index, target, ctx);
-
-        if moving_active_tab {}
     }
 
     /// How to render the tab bar.
@@ -16452,7 +16436,7 @@ impl Workspace {
                             LeftPanelTargetView::FileTree => LeftPanelAction::ProjectExplorer,
                             LeftPanelTargetView::WarpDrive => LeftPanelAction::WarpDrive,
                         };
-                        left_panel.handle_action_with_force_open(&action, *force_open, ctx);
+                        left_panel.handle_action(&action, ctx);
                     });
                 }
             }
@@ -22796,7 +22780,7 @@ impl Workspace {
 
         if self.active_tab_pane_group().as_ref(ctx).left_panel_open {
             self.left_panel_view.update(ctx, |left_panel, ctx| {
-                left_panel.handle_action_with_force_open(action, false, ctx);
+                left_panel.handle_action(action, ctx);
                 left_panel.focus_active_view_on_entry(ctx);
             });
         }
@@ -23944,7 +23928,6 @@ impl TypedActionView for Workspace {
             ClickedAIAssistantIcon => {
                 if !FeatureFlag::AgentMode.is_enabled() {
                     self.toggle_ai_assistant_panel(ctx);
-                    if self.current_workspace_state.is_ai_assistant_panel_open {}
                 }
             }
             ShowAIAssistantWarmWelcome => {

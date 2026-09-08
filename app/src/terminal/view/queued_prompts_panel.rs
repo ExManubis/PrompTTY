@@ -641,24 +641,15 @@ impl QueuedPromptsPanelView {
         let Some(conv_id) = self.active_conversation_id else {
             return;
         };
-        let Some(query_id) = self.editing_row_id(ctx) else {
+        if self.editing_row_id(ctx).is_none() {
             return;
-        };
-        let origin = QueuedQueryModel::as_ref(ctx)
-            .queue(conv_id)
-            .iter()
-            .find(|row| row.id() == query_id)
-            .map(|row| row.origin());
+        }
         let new_text = self
             .edit_editor
             .read(ctx, |editor, ctx| editor.buffer_text(ctx).trim().to_owned());
-        let was_empty = new_text.is_empty();
         QueuedQueryModel::handle(ctx).update(ctx, |model, ctx| {
             model.commit_edit(conv_id, new_text, ctx);
         });
-        if let Some(_origin) = origin
-            && !was_empty
-        {}
         ctx.emit(QueuedPromptsPanelEvent::EditEnded);
     }
 

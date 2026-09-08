@@ -378,8 +378,7 @@ use crate::terminal::alt_screen::alt_screen_element::AltScreenElement;
 use crate::terminal::alt_screen::should_intercept_scroll;
 use crate::terminal::alt_screen_reporting::{AltScreenReporting, AltScreenReportingChangedEvent};
 use crate::terminal::block_filter::{
-    BlockFilterEditor, BlockFilterEditorEvent, BlockFilterQuery, OpenedFromClick,
-    filter_button_position_id,
+    BlockFilterEditor, BlockFilterEditorEvent, BlockFilterQuery, filter_button_position_id,
 };
 use crate::terminal::block_list_element::{
     BlockListElement, BlockListMenuSource, BlockListMouseStates, BlockSelectAction,
@@ -4619,24 +4618,7 @@ impl TerminalView {
                             );
                         }
                     }
-                    RemoteServerManagerEvent::SessionDisconnected {
-                        session_id,
-                        exit_status: _,
-                        was_reconnect_attempt,
-                        ..
-                    } => {
-                        let (_remote_os, _remote_arch) = RemoteServerManager::handle(ctx)
-                            .as_ref(ctx)
-                            .platform_for_session(*session_id)
-                            .map(|p| {
-                                (
-                                    Some(p.os.as_str().to_owned()),
-                                    Some(p.arch.as_str().to_owned()),
-                                )
-                            })
-                            .unwrap_or((None, None));
-                        if *was_reconnect_attempt {}
-                    }
+                    RemoteServerManagerEvent::SessionDisconnected { .. } => {}
                     RemoteServerManagerEvent::SessionDeregistered { session_id } => {
                         // Clean up any stale SSH remote-server choice block if the
                         // session disappears (e.g. network drop, Ctrl-C, `exit`)
@@ -10480,7 +10462,7 @@ impl TerminalView {
 
     fn enable_vim_keybindings(&mut self, ctx: &mut ViewContext<Self>) {
         AppEditorSettings::handle(ctx).update(ctx, |editor_settings, ctx| {
-            if editor_settings.vim_mode.set_value(true, ctx).is_ok() {}
+            let _ = editor_settings.vim_mode.set_value(true, ctx);
         });
     }
 
@@ -12118,10 +12100,6 @@ impl TerminalView {
                                 let model = self.model.lock();
                                 compute(model.block_list())
                             });
-
-                        // On debug builds, we're interested in the block commands, durations,
-                        // and exit codes to trial Warp Analytics.
-                        if cfg!(debug_assertions) {}
                     }
                 }
                 let active_session_id = self.active_block_session_id();
@@ -17555,12 +17533,7 @@ impl TerminalView {
         );
     }
 
-    fn open_block_filter_editor(
-        &mut self,
-        block_index: BlockIndex,
-        opened_from_click: OpenedFromClick,
-        ctx: &mut ViewContext<Self>,
-    ) {
+    fn open_block_filter_editor(&mut self, block_index: BlockIndex, ctx: &mut ViewContext<Self>) {
         self.active_filter_editor_block_index = Some(block_index);
         {
             let model = self.model.lock();
@@ -17583,7 +17556,6 @@ impl TerminalView {
                 });
         }
         self.focus_block_filter_editor(ctx);
-        if matches!(opened_from_click, OpenedFromClick::Yes) {}
     }
 
     fn close_block_filter_editor(&mut self, ctx: &mut ViewContext<Self>) {
@@ -25345,17 +25317,13 @@ impl TerminalView {
                 ctx,
             );
             if new_block_filter_query.is_active {
-                self.open_block_filter_editor(
-                    selected_or_last_block_index,
-                    OpenedFromClick::No,
-                    ctx,
-                );
+                self.open_block_filter_editor(selected_or_last_block_index, ctx);
             } else {
                 self.close_block_filter_editor(ctx);
                 self.redetermine_global_focus(ctx);
             }
         } else {
-            self.open_block_filter_editor(selected_or_last_block_index, OpenedFromClick::No, ctx);
+            self.open_block_filter_editor(selected_or_last_block_index, ctx);
         }
     }
 
@@ -26634,7 +26602,6 @@ impl TypedActionView for TerminalView {
             FocusInputAndClearSelection => self.focus_input_and_clear_selections(ctx),
             ShowFindBar => self.show_find_bar(ctx),
             SelectPriorBlock => {
-                let is_first_selection = self.selected_blocks.is_empty();
                 match input_mode {
                     InputMode::PinnedToBottom | InputMode::Waterfall => {
                         self.select_less_recent_block(false /* is_shift_down */, ctx)
@@ -26647,8 +26614,6 @@ impl TypedActionView for TerminalView {
                         )
                     }
                 }
-
-                if is_first_selection && self.ai_input_model.as_ref(ctx).is_ai_input_enabled() {}
             }
             SelectNextBlock => {
                 match input_mode {
@@ -26819,14 +26784,11 @@ impl TypedActionView for TerminalView {
             }
             DismissWarpifyBanner(remember) => {
                 self.dismiss_warpify_banner(remember, ctx);
-                if !remember.is_ssh() {}
             }
             InsertMostRecentCommandCorrection => self.insert_most_recent_command_correction(ctx),
             AliasExpansionBanner(action) => self.alias_expansion_banner_action(*action, ctx),
             OpenInWarpBanner(action) => self.handle_open_in_warp_banner_action(*action, ctx),
-            OpenBlockFilterEditor(block_index) => {
-                self.open_block_filter_editor(*block_index, OpenedFromClick::Yes, ctx)
-            }
+            OpenBlockFilterEditor(block_index) => self.open_block_filter_editor(*block_index, ctx),
             VimModeBanner(action) => self.handle_vim_banner_action(*action, ctx),
             OnboardingFlow(version) => {
                 // Don't show onboarding if it's already active or if this is a shared session or if user is anonymous

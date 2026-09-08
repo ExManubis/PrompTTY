@@ -1981,8 +1981,6 @@ impl CodeDiffView {
                 .diff_view
                 .update(ctx, |v, ctx| v.navigate_previous_diff_hunk(ctx)),
         };
-
-        if let Some(_output_id) = self.server_output_id() {}
     }
 
     fn select_file(&mut self, direction: Direction, ctx: &mut ViewContext<Self>) {
@@ -2009,8 +2007,6 @@ impl CodeDiffView {
             mode: ScrollToPositionMode::FullyIntoView,
         });
         ctx.notify();
-
-        if let Some(_output_id) = self.server_output_id() {}
     }
 
     fn set_display_mode(&mut self, display_mode: DisplayMode, ctx: &mut ViewContext<Self>) {
@@ -2456,8 +2452,6 @@ impl TypedActionView for CodeDiffView {
                 if *idx < self.pending_diffs.len() {
                     self.selected_tab = *idx;
                     ctx.notify();
-
-                    if let Some(_output_id) = self.server_output_id() {}
                 }
             }
             CodeDiffViewAction::Edit => {
@@ -2478,14 +2472,12 @@ impl TypedActionView for CodeDiffView {
                 self.expand_inline_banner(ctx);
             }
             CodeDiffViewAction::ToggleCodeSuggestions => {
-                let checked = AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                let _ = AISettings::handle(ctx).update(ctx, |settings, ctx| {
                     settings
                         .code_suggestions_enabled_internal
                         .toggle_and_save_value(ctx)
                 });
                 ctx.notify();
-
-                if let Ok(_checked) = checked {}
             }
             CodeDiffViewAction::OpenSettings => {
                 ctx.emit(CodeDiffViewEvent::OpenSettings);

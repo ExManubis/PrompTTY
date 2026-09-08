@@ -607,10 +607,6 @@ impl View {
     }
 
     fn close(&mut self, ctx: &mut ViewContext<Self>, accepted_action_type: Option<&'static str>) {
-        let _buffer_length = self.search_bar.as_ref(ctx).query(ctx).len();
-        let _filter = self.active_query_filter(ctx);
-        if let Some(_result_type) = accepted_action_type {};
-
         self.state.clipped_scroll_state = Default::default();
         self.reset(ctx);
 

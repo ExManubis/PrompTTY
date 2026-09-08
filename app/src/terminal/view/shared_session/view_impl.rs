@@ -626,7 +626,6 @@ impl TerminalView {
             scrollback_type,
             source,
         });
-        if let Some(_action_source) = action_source {}
     }
 
     pub(crate) fn notify_shared_session_link_changed(&mut self, ctx: &mut ViewContext<Self>) {

@@ -1519,7 +1519,6 @@ impl EventLoop {
         let approve_terminate_result = self
             .callbacks
             .should_terminate_app(TerminationRequestSource::User);
-        if let ApproveTerminateResult::Terminate = approve_terminate_result {}
         approve_terminate_result
     }
 

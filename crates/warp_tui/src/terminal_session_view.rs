@@ -3846,7 +3846,6 @@ impl TuiTerminalSessionView {
                 controller.set_latest_instruction(block_id, prompt, ctx);
             });
         }
-        if dispatched {}
     }
 
     /// Wraps the rendered session tree in the hold-to-talk modifier handler.

@@ -18,7 +18,7 @@ use warp_editor::editor::NavigationKey;
 #[cfg(feature = "local_fs")]
 use warp_files::FileModel;
 use warpui::platform::WindowStyle;
-use warpui::{AddSingletonModel, App, ViewHandle};
+use warpui::{AddSingletonModel, App, TypedActionView, ViewHandle};
 use watcher::HomeDirectoryWatcher;
 
 use super::*;
@@ -4887,7 +4887,7 @@ fn test_tools_panel_warp_drive_toggle_updates_available_views() {
                 "Warp Drive should be an available tools-panel tab by default"
             );
             workspace.left_panel_view.update(ctx, |lp, ctx| {
-                lp.handle_action_with_force_open(&LeftPanelAction::WarpDrive, false, ctx);
+                lp.handle_action(&LeftPanelAction::WarpDrive, ctx);
             });
             assert_eq!(
                 workspace.left_panel_view.as_ref(ctx).active_view(),
@@ -4940,7 +4940,7 @@ fn test_tools_panel_warp_drive_toggle_updates_available_views() {
                 "Re-enabling the setting should restore Warp Drive to the tools panel"
             );
             workspace.left_panel_view.update(ctx, |lp, ctx| {
-                lp.handle_action_with_force_open(&LeftPanelAction::WarpDrive, false, ctx);
+                lp.handle_action(&LeftPanelAction::WarpDrive, ctx);
             });
             assert_eq!(
                 workspace.left_panel_view.as_ref(ctx).active_view(),

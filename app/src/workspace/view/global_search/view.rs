@@ -979,7 +979,7 @@ impl GlobalSearchView {
                 self.total_match_count = *total_match_count;
                 self.capped_matches |= capped;
 
-                if let Some(_started_at) = self.search_started_at.take() {}
+                self.search_started_at = None;
                 ctx.notify();
             }
             GlobalSearchEvent::Failed { search_id, error } => {

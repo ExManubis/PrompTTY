@@ -1226,8 +1226,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
-        if let Some(_model_id) = &llm_id {}
     }
 
     pub fn set_coding_model(
@@ -1247,8 +1245,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
-        if let Some(_model_id) = &model_id {}
     }
 
     pub fn set_cli_agent_model(
@@ -1268,8 +1264,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
-        if let Some(_model_id) = &model_id {}
     }
 
     pub fn set_computer_use_model(
@@ -1289,8 +1283,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
-        if let Some(_model_id) = &model_id {}
     }
 
     pub fn set_context_window_limit(
@@ -1438,10 +1430,6 @@ impl AIExecutionProfilesModel {
         permission: &super::ComputerUsePermission,
         ctx: &mut ModelContext<Self>,
     ) {
-        let current_value = self
-            .get_profile_by_id(profile_id, ctx)
-            .map(|p| p.data().computer_use);
-
         self.edit_profile_internal(
             profile_id,
             |profile| {
@@ -1453,8 +1441,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
-        if current_value != Some(*permission) {}
     }
 
     pub fn set_ask_user_question(
@@ -1463,10 +1449,6 @@ impl AIExecutionProfilesModel {
         permission: super::AskUserQuestionPermission,
         ctx: &mut ModelContext<Self>,
     ) {
-        let current_value = self
-            .get_profile_by_id(profile_id, ctx)
-            .map(|p| p.data().ask_user_question);
-
         self.edit_profile_internal(
             profile_id,
             |profile| {
@@ -1478,8 +1460,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
-        if current_value != Some(permission) {}
     }
 
     pub fn set_run_agents(
@@ -1488,10 +1468,6 @@ impl AIExecutionProfilesModel {
         permission: super::RunAgentsPermission,
         ctx: &mut ModelContext<Self>,
     ) {
-        let current_value = self
-            .get_profile_by_id(&profile_id.clone(), ctx)
-            .map(|p| p.data().run_agents);
-
         self.edit_profile_internal(
             profile_id,
             |profile| {
@@ -1503,8 +1479,6 @@ impl AIExecutionProfilesModel {
             },
             ctx,
         );
-
-        if current_value != Some(permission) {}
     }
 
     pub fn set_web_search_enabled(
