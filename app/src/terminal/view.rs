@@ -2812,6 +2812,12 @@ pub struct TerminalView {
     /// require reading the position ID directly from `Input` and cause a circular ref panic.
     input_position_id: String,
 
+    /// The last-observed height (px) of the overlaid input card, used to detect
+    /// when the floating input grows or shrinks (e.g. the inline history menu
+    /// opening) so we can schedule a follow-up frame that reconverges the
+    /// reserved overlay inset. See `after_terminal_view_layout`.
+    last_overlay_input_height_px: Option<f32>,
+
     /// A handle for the [`Hoverable`] that we render the [`Input`] view in.
     ///
     /// While the [`Input`] itself might internally render with a [`Hoverable`]
@@ -4473,6 +4479,7 @@ impl TerminalView {
             window_id,
             content_element_position_id: terminal_content_element_position_id,
             input_position_id,
+            last_overlay_input_height_px: None,
             input_hoverable_handle: Default::default(),
             find_model,
             warpify_state: Default::default(),
@@ -16097,6 +16104,42 @@ impl TerminalView {
 
         let size_update = SizeUpdateBuilder::after_layout(*self.size_info, size).build(self, ctx);
         self.resize_internal(size_update, ctx);
+
+        // Reconverge the reserved overlay-input inset after the floating input's
+        // height changes.
+        //
+        // The input card is rendered as an absolutely-positioned overlay (it floats
+        // over the block list instead of sitting in the flex column). The block list
+        // reserves space for it via an inset computed from the input's height as
+        // measured on the *previous* frame (`input_size_at_last_frame`). Because the
+        // input is absolute, growing it - e.g. opening the inline history menu with
+        // Up, which makes the input element taller - does NOT change the measured
+        // size of the terminal content, so nothing schedules a follow-up frame. The
+        // single frame the menu-open notify triggers is built while the cached input
+        // height is still the old, shorter value, so the inset is too small and
+        // content isn't pushed up; the taller height only lands in the position cache
+        // *after* that frame, and nothing repaints until an unrelated event (a mouse
+        // move) forces one - which is why the content only jumps once the cursor
+        // enters the window.
+        //
+        // So: when the overlaid input's measured height differs from what it was on
+        // the frame the current inset was built from, request one more frame. This is
+        // self-terminating - once the height is stable across frames the two values
+        // agree and no further frame is requested.
+        if self.should_apply_overlay_input_inset(ctx) {
+            let input_height_px = self.input_size_at_last_frame(ctx).map(|size| size.y());
+            let changed = match (input_height_px, self.last_overlay_input_height_px) {
+                (Some(current), Some(previous)) => (current - previous).abs() > 0.5,
+                (Some(_), None) => true,
+                (None, _) => false,
+            };
+            if changed {
+                self.last_overlay_input_height_px = input_height_px;
+                ctx.notify();
+            }
+        } else if self.last_overlay_input_height_px.is_some() {
+            self.last_overlay_input_height_px = None;
+        }
 
         // Update the height of the "gap" - the space we would need to clear
         // in the terminal to accommodate a clear or ctrl-L.
