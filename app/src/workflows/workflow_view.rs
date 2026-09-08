@@ -36,6 +36,7 @@ use warpui::{
 use super::aliases::WorkflowAliases;
 use super::command_parser::WorkflowCommandDisplayData;
 use super::{CloudWorkflowModel, WorkflowSource, WorkflowType, WorkflowViewMode};
+use crate::FeatureFlag;
 use crate::ai::AIRequestUsageModel;
 use crate::ai::blocklist::secret_redaction::find_secrets_in_text;
 use crate::appearance::Appearance;
@@ -76,13 +77,11 @@ use crate::server::cloud_objects::update_manager::{
 use crate::server::ids::{ClientId, ServerId, SyncId};
 use crate::server::server_api::ServerApiProvider;
 use crate::server::server_api::ai::AIClient;
-use crate::server::telemetry::{
-    CloudObjectTelemetryMetadata, SharingDialogSource, TelemetryCloudObjectType, TelemetryEvent,
-};
 use crate::settings::AISettings;
 use crate::settings::app_installation_detection::{
     UserAppInstallDetectionSettings, UserAppInstallStatus,
 };
+use crate::shared_enums::SharingDialogSource;
 use crate::terminal::safe_mode_settings::get_secret_obfuscation_mode;
 use crate::ui_components::breadcrumb::{BreadcrumbState, render_breadcrumbs};
 use crate::ui_components::buttons::{accent_icon_button, icon_button};
@@ -95,7 +94,6 @@ use crate::view_components::{DismissibleToast, ToastType};
 use crate::workflows::CloudWorkflow;
 use crate::workflows::workflow::{Argument, Workflow};
 use crate::workspace::ToastStack;
-use crate::{FeatureFlag, send_telemetry_from_ctx};
 
 mod alias_argument_selector;
 mod alias_bar;
@@ -879,24 +877,6 @@ impl WorkflowView {
         }
 
         None
-    }
-
-    /// Generic object telemetry metadata for the currently-open object.
-    #[cfg_attr(not(target_family = "wasm"), allow(dead_code))]
-    fn telemetry_metadata(&self, ctx: &mut ViewContext<Self>) -> CloudObjectTelemetryMetadata {
-        let space = CloudModel::as_ref(ctx)
-            .get_workflow(&self.workflow_id)
-            .map(|workflow| workflow.space(ctx));
-
-        CloudObjectTelemetryMetadata {
-            object_type: TelemetryCloudObjectType::Workflow,
-            object_uid: self.workflow_id.into_server(),
-            space: space.map(Into::into),
-            team_uid: match self.owner {
-                Some(Owner::Team { team_uid, .. }) => Some(team_uid),
-                _ => None,
-            },
-        }
     }
 
     pub fn is_team_workflow(&self) -> bool {
@@ -2625,8 +2605,6 @@ impl WorkflowView {
                             environment_variables: None,
                         };
 
-                        send_telemetry_from_ctx!(TelemetryEvent::AutoGenerateMetadataSuccess, ctx);
-
                         pane.populate_missing_field_with_suggestion(workflow, ctx);
                         ctx.notify();
                     }
@@ -2640,13 +2618,6 @@ impl WorkflowView {
                         } else {
                             pane.display_error_toast(message.clone(), ctx);
                         }
-
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::AutoGenerateMetadataError {
-                                error_payload: serde_json::json!(err)
-                            },
-                            ctx
-                        );
 
                         pane.ai_metadata_assist_state = AiAssistState::PreRequest;
                         pane.enable_editors(ctx);
@@ -3077,21 +3048,11 @@ impl TypedActionView for WorkflowView {
             WorkflowAction::AiAssist => self.issue_request(ctx),
             WorkflowAction::Duplicate => self.duplicate_object(ctx),
             WorkflowAction::CopyLink(link) => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::ObjectLinkCopied { link: link.clone() },
-                    ctx
-                );
                 ctx.clipboard()
                     .write(ClipboardContent::plain_text(link.to_owned()));
             }
             #[cfg(target_family = "wasm")]
             WorkflowAction::OpenLinkOnDesktop(url) => {
-                send_telemetry_from_ctx!(
-                    TelemetryEvent::WebCloudObjectOpenedOnDesktop {
-                        object_metadata: self.telemetry_metadata(ctx)
-                    },
-                    ctx
-                );
                 open_url_on_desktop(url);
             }
             #[cfg(not(target_family = "wasm"))]

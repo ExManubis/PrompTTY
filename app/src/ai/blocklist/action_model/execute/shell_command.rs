@@ -38,7 +38,6 @@ use crate::terminal::model::session::active_session::ActiveSession;
 use crate::terminal::model_events::{ModelEvent, ModelEventDispatcher};
 use crate::terminal::shell::ShellType;
 use crate::workspaces::user_workspaces::TeamContext;
-use crate::{TelemetryEvent, send_telemetry_from_ctx};
 
 pub struct ShellCommandExecutor {
     active_session: ModelHandle<ActiveSession>,
@@ -58,9 +57,9 @@ pub struct ShellCommandExecutor {
 
 impl ShellCommandExecutor {
     pub const MAX_WAIT_DURATION: Duration = Duration::from_secs(2);
-    /// Maximum delay we will honor for any agent-requested wait. Applies both  
-    /// to finite `ShellCommandDelay::Duration` requests and to  
-    /// `ShellCommandDelay::OnCompletion`, which would otherwise wait indefinitely.  
+    /// Maximum delay we will honor for any agent-requested wait. Applies both
+    /// to finite `ShellCommandDelay::Duration` requests and to
+    /// `ShellCommandDelay::OnCompletion`, which would otherwise wait indefinitely.
     pub const MAX_AGENT_DELAY_DURATION: Duration = Duration::from_secs(120);
 
     pub fn new(
@@ -187,11 +186,7 @@ impl ShellCommandExecutor {
                     scope,
                     ctx,
                 );
-                if let CommandExecutionPermission::Allowed(reason) = autoexecution_permission {
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::AutoexecutedAgentModeRequestedCommand { reason },
-                        ctx
-                    );
+                if let CommandExecutionPermission::Allowed(_reason) = autoexecution_permission {
                 } else if let CommandExecutionPermission::Denied(reason) = autoexecution_permission
                     && AppExecutionMode::as_ref(ctx).is_autonomous()
                 {
@@ -208,7 +203,7 @@ impl ShellCommandExecutor {
                     // will be returned.
                     true
                 } else {
-                    let should_autoexecute = match blocklist_permissions.can_write_to_pty(
+                    match blocklist_permissions.can_write_to_pty(
                         &input.conversation_id,
                         Some(self.terminal_view_id),
                         scope,
@@ -220,20 +215,7 @@ impl ShellCommandExecutor {
                             .active_block()
                             .has_agent_written_to_block(),
                         _ => false,
-                    };
-
-                    if should_autoexecute {
-                        send_telemetry_from_ctx!(
-                            TelemetryEvent::CLISubagentActionExecuted {
-                                conversation_id: input.conversation_id,
-                                block_id: block_id.clone(),
-                                is_autoexecuted: true,
-                            },
-                            ctx
-                        );
                     }
-
-                    should_autoexecute
                 }
             }
             AIAgentActionType::ReadShellCommandOutput { .. } => true,
@@ -645,9 +627,9 @@ impl ShellCommandExecutor {
         enum WakeReason {
             BlockFinished,
             Timeout,
-            /// User clicked `Check now` in the warping indicator, short-circuiting  
-            /// the agent-set poll timer. Treated as a preemption so the server does  
-            /// not interpret the early snapshot as a completion.  
+            /// User clicked `Check now` in the warping indicator, short-circuiting
+            /// the agent-set poll timer. Treated as a preemption so the server does
+            /// not interpret the early snapshot as a completion.
             ForceRefresh,
         }
 

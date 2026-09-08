@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use instant::Instant;
 pub use remote_server::setup::RemoteServerSetupState;
+use warp_terminal::ImageProtocol;
 pub use warp_terminal::event::{ExecutedExecutorCommandEvent, ParseGeneratorOutputError};
 use warp_util::lazy::Lazy;
 
@@ -15,7 +16,6 @@ use super::model::lifecycle::LifecycleRecoveryRecord;
 use super::model::session::{SessionId, SessionInfo};
 use super::model::terminal_model::{BlockIndex, ExitReason};
 use crate::server::ids::SyncId;
-use crate::server::telemetry::ImageProtocol;
 use crate::terminal::ClipboardType;
 use crate::terminal::model::block::{BlockMetadata, SerializedBlock};
 use crate::terminal::model::blocks::BlockList;

@@ -6,8 +6,7 @@ pub mod link;
 pub mod manager;
 pub mod notebook;
 mod styles;
-pub mod telemetry;
-
+pub mod types;
 use std::sync::Arc;
 
 use anyhow::Result;

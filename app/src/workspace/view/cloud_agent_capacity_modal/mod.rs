@@ -14,7 +14,6 @@ use warpui::ui_components::components::UiComponent;
 use warpui::{AppContext, Element, Entity, SingletonEntity, TypedActionView, View, ViewContext};
 
 use crate::ui_components::blended_colors;
-use crate::{TelemetryEvent, send_telemetry_from_ctx};
 
 const MODAL_WIDTH: f32 = 360.;
 const COMPACT_MODAL_HEIGHT: f32 = 360.;
@@ -190,7 +189,6 @@ impl TypedActionView for CloudAgentCapacityModal {
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
         match action {
             CloudAgentCapacityModalAction::Close => {
-                send_telemetry_from_ctx!(TelemetryEvent::CloudAgentCapacityModalDismissed, ctx);
                 ctx.emit(CloudAgentCapacityModalEvent::Close);
             }
         }

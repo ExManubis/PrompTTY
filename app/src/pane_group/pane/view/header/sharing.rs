@@ -15,7 +15,6 @@ use super::{Event, OpenOverlay, PaneHeader, PaneHeaderAction};
 use crate::drive::sharing::dialog::{SharingDialog, SharingDialogEvent};
 use crate::drive::sharing::{ContentEditability, ShareableObject};
 use crate::pane_group::BackingView;
-use crate::server::telemetry::SharingDialogSource;
 use crate::ui_components::buttons::{icon_button, icon_button_with_color};
 use crate::ui_components::icons::Icon;
 
@@ -88,11 +87,7 @@ impl<P: BackingView> PaneHeader<P> {
     ///
     /// If the user can share the pane contents, this will bring up a sharing dialog. Otherwise, it copies
     /// the backing object's URL.
-    pub fn share_pane_contents(
-        &mut self,
-        source: SharingDialogSource,
-        ctx: &mut ViewContext<Self>,
-    ) {
+    pub fn share_pane_contents(&mut self, ctx: &mut ViewContext<Self>) {
         if !self.is_sharing_dialog_enabled(ctx) {
             return;
         }
@@ -108,37 +103,23 @@ impl<P: BackingView> PaneHeader<P> {
             return;
         }
 
-        let dialog_opened = match self.open_overlay {
+        match self.open_overlay {
             OpenOverlay::OverflowMenu => {
-                self.open_overlay = OpenOverlay::SharingDialog;
                 ctx.emit(Event::PaneHeaderOverflowMenuToggled(false));
+                self.open_overlay = OpenOverlay::SharingDialog;
                 ctx.focus(&self.shared_content.sharing_dialog);
-                true
             }
-            OpenOverlay::SharingDialog => {
-                self.close_overlay(ctx);
-                false
-            }
+            OpenOverlay::SharingDialog => {}
             OpenOverlay::None => {
                 self.open_overlay = OpenOverlay::SharingDialog;
                 ctx.focus(&self.shared_content.sharing_dialog);
-                true
             }
-        };
-
-        if dialog_opened {
-            self.sharing_dialog()
-                .update(ctx, |dialog, ctx| dialog.report_open(source, ctx));
         }
 
         ctx.notify();
     }
 
-    pub fn open_shared_session_qr_code(
-        &mut self,
-        source: SharingDialogSource,
-        ctx: &mut ViewContext<Self>,
-    ) {
+    pub fn open_shared_session_qr_code(&mut self, ctx: &mut ViewContext<Self>) {
         if !self.is_sharing_dialog_enabled(ctx)
             || !self
                 .sharing_dialog()
@@ -148,7 +129,6 @@ impl<P: BackingView> PaneHeader<P> {
             return;
         }
 
-        let dialog_was_closed = self.open_overlay != OpenOverlay::SharingDialog;
         if self.open_overlay == OpenOverlay::OverflowMenu {
             ctx.emit(Event::PaneHeaderOverflowMenuToggled(false));
         }
@@ -156,9 +136,6 @@ impl<P: BackingView> PaneHeader<P> {
         ctx.focus(&self.shared_content.sharing_dialog);
         self.sharing_dialog().update(ctx, |dialog, ctx| {
             dialog.show_qr_code(ctx);
-            if dialog_was_closed {
-                dialog.report_open(source, ctx);
-            }
         });
         ctx.notify();
     }

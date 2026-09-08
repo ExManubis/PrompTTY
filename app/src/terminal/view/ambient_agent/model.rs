@@ -6,7 +6,6 @@ use instant::Instant;
 use session_sharing_protocol::common::SessionId;
 use warp_cli::agent::Harness;
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warp_terminal::model::BlockId;
 use warpui::r#async::{SpawnedFutureHandle, Timer};
@@ -21,7 +20,6 @@ use crate::ai::ambient_agents::github_auth_notifier::{GitHubAuthEvent, GitHubAut
 use crate::ai::ambient_agents::spawn::monitor_spawned_task;
 use crate::ai::ambient_agents::spawn::{AmbientAgentEvent, spawn_task, submit_run_followup};
 use crate::ai::ambient_agents::task::{HarnessAuthSecretsConfig, HarnessConfig};
-use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
 use crate::ai::ambient_agents::{AgentSource, AmbientAgentTaskId};
 use crate::ai::blocklist::BlocklistAIHistoryModel;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
@@ -557,12 +555,6 @@ impl AmbientAgentViewModel {
                 return;
             }
         }
-        send_telemetry_from_ctx!(
-            CloudAgentTelemetryEvent::HandoffSnapshotPrepared {
-                derived_workspace_had_content: created.derived_workspace_had_content,
-            },
-            ctx
-        );
         if created.snapshot_failed {
             ctx.emit(AmbientAgentViewModelEvent::HandoffSnapshotUploadFailed {
                 error_message: "Workspace changes could not be uploaded; continuing without them."
@@ -603,16 +595,7 @@ impl AmbientAgentViewModel {
                 return;
             }
         }
-        let error = handoff_dispatch_error(&failure.issue);
-        send_telemetry_from_ctx!(CloudAgentTelemetryEvent::DispatchFailed { error }, ctx);
-        if let Some(derived_workspace_had_content) = failure.derived_workspace_had_content {
-            send_telemetry_from_ctx!(
-                CloudAgentTelemetryEvent::HandoffSnapshotPrepared {
-                    derived_workspace_had_content,
-                },
-                ctx
-            );
-        }
+        let _error = handoff_dispatch_error(&failure.issue);
         if failure.snapshot_failed {
             ctx.emit(AmbientAgentViewModelEvent::HandoffSnapshotUploadFailed {
                 error_message: "Workspace changes could not be uploaded; continuing without them."
@@ -1375,13 +1358,7 @@ impl AmbientAgentViewModel {
         err: anyhow::Error,
         ctx: &mut ModelContext<Self>,
     ) {
-        let error_message = err.to_string();
-        send_telemetry_from_ctx!(
-            CloudAgentTelemetryEvent::DispatchFailed {
-                error: error_message.clone()
-            },
-            ctx
-        );
+        let _error_message = err.to_string();
 
         match classify_cloud_agent_startup_error(&err) {
             CloudAgentStartupIssue::Blocked(CloudAgentStartupBlocker::GitHubAuthRequired {

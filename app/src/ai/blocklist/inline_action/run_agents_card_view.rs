@@ -10,7 +10,6 @@ use ai::agent::action_result::{RunAgentsAgentOutcomeKind, RunAgentsResult};
 use ai::agent::orchestration_config::{OrchestrationConfig, OrchestrationConfigStatus};
 use ai::skills::SkillReference;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warp_graphql::queries::get_runners::RunnerSortBy;
 use warpui::elements::{
@@ -30,6 +29,7 @@ use crate::ai::blocklist::action_model::{
     RunAgentsExecutorEvent, RunAgentsSpawningSnapshot,
 };
 use crate::ai::blocklist::agent_view::orchestration_pill_bar::render_static_agent_pill;
+use crate::ai::blocklist::analytics_kinds::RunAgentsCardDecision;
 use crate::ai::blocklist::block::AIBlock;
 use crate::ai::blocklist::block::model::{AIBlockModel, AIBlockOutputStatus};
 use crate::ai::blocklist::block::view_impl::WithContentItemSpacing;
@@ -45,10 +45,6 @@ use crate::ai::blocklist::inline_action::orchestration_controls::{
 };
 use crate::ai::blocklist::inline_action::requested_action::{
     CTRL_C_KEYSTROKE, ENTER_KEYSTROKE, render_requested_action_row_for_text,
-};
-use crate::ai::blocklist::telemetry::{
-    BlocklistOrchestrationTelemetryEvent, OrchestrationEnteredEvent, OrchestrationEntrySource,
-    RunAgentsCardDecision, run_agents_card_decision_event,
 };
 use crate::ai::connected_self_hosted_workers::{
     ConnectedSelfHostedWorkersEvent, ConnectedSelfHostedWorkersModel,
@@ -736,45 +732,24 @@ impl RunAgentsCardView {
     /// per card instance.
     fn emit_orchestration_entered_once(
         &mut self,
-        conversation_id: AIConversationId,
-        ctx: &mut ViewContext<Self>,
+        _conversation_id: AIConversationId,
+        _ctx: &mut ViewContext<Self>,
     ) {
         if self.entered_event_emitted {
             return;
         }
         self.entered_event_emitted = true;
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::OrchestrationEntered(OrchestrationEnteredEvent {
-                conversation_id,
-                plan_id: (!self.card.plan_id.is_empty()).then(|| self.card.plan_id.clone()),
-                entry_source: OrchestrationEntrySource::RunAgentsCardShown,
-            }),
-            ctx
-        );
     }
 
     /// Emits `RunAgentsCardDecision` at most once per card instance.
-    fn emit_decision(&mut self, decision: RunAgentsCardDecision, ctx: &mut ViewContext<Self>) {
+    fn emit_decision(&mut self, _decision: RunAgentsCardDecision, ctx: &mut ViewContext<Self>) {
         if self.decision_event_emitted {
             return;
         }
         self.decision_event_emitted = true;
-        let Some(conversation_id) = self.block_model.conversation_id(ctx) else {
+        let Some(_conversation_id) = self.block_model.conversation_id(ctx) else {
             return;
         };
-        let event = run_agents_card_decision_event(
-            conversation_id,
-            (!self.card.plan_id.is_empty()).then(|| self.card.plan_id.clone()),
-            decision,
-            self.card.agent_run_configs.len(),
-            &self.orchestration_edit_state.orchestration_config_state,
-            &self.original_tool_call_request,
-            self.active_config.as_ref(),
-        );
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::RunAgentsCardDecision(event),
-            ctx
-        );
     }
 
     /// Auto-pops the create-key modal once per card per harness/mode

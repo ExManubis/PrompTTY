@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::color::blend::Blend;
 use warp_core::ui::theme::Fill;
 use warpui::elements::{
@@ -15,7 +14,6 @@ use warpui::{
 };
 
 use super::{AgentInputButtonTheme, AmbientAgentViewModel};
-use crate::ai::ambient_agents::telemetry::CloudAgentTelemetryEvent;
 use crate::ai::cloud_environments::CloudEnvironmentCatalog;
 use crate::appearance::Appearance;
 use crate::context_chips::display_menu::{
@@ -210,10 +208,6 @@ impl EnvironmentSelector {
                     .downcast_ref::<NewEnvironmentMenuItem>()
                     .is_some()
                 {
-                    send_telemetry_from_ctx!(
-                        CloudAgentTelemetryEvent::OpenedEnvironmentManagementPane,
-                        ctx
-                    );
                     me.set_menu_visibility(false, ctx);
                     ctx.emit(EnvironmentSelectorEvent::OpenEnvironmentManagementPane);
                     return;
@@ -225,12 +219,6 @@ impl EnvironmentSelector {
                     .as_any()
                     .downcast_ref::<EnvironmentMenuItem>()
                 {
-                    send_telemetry_from_ctx!(
-                        CloudAgentTelemetryEvent::EnvironmentSelected {
-                            environment_id: env_item.id.into_server(),
-                        },
-                        ctx
-                    );
                     if me.is_configuring(ctx) {
                         me.target.set_environment_id(Some(env_item.id), true, ctx);
                         me.environments.update(ctx, |catalog, ctx| {
@@ -337,7 +325,6 @@ impl EnvironmentSelector {
 
         self.is_menu_open = is_open;
         if is_open {
-            send_telemetry_from_ctx!(CloudAgentTelemetryEvent::EnvironmentSelectorOpened, ctx);
             ctx.focus(&self.dropdown);
             self.highlight_selected_environment(ctx);
         }

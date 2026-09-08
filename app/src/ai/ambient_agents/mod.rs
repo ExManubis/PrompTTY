@@ -5,11 +5,10 @@ use crate::ai::agent::{
 
 pub mod github_auth_notifier;
 pub mod github_auth_url;
+pub mod handoff_types;
 pub mod scheduled;
 pub mod spawn;
 pub mod task;
-pub mod telemetry;
-
 pub use task::{
     AgentConfigSnapshot, AgentSource, AmbientAgentLiveSessionState, AmbientAgentTask,
     AmbientAgentTaskState, ExecutionLocation, TaskStatusMessage, cancel_task_silently,

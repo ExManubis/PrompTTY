@@ -41,7 +41,6 @@ use warpui::{
     AppContext, Entity, ModelAsRef, ModelContext, ModelHandle, SingletonEntity, WindowId,
 };
 
-use super::super::telemetry::SelectionMode as TelemetrySelectionMode;
 use super::NotebookWorkflow;
 use super::embedding_model::NotebookEmbed;
 use super::interaction_state_model::InteractionStateModel;
@@ -50,7 +49,7 @@ use crate::cloud_object::model::persistence::{CloudModel, CloudModelEvent};
 use crate::editor::InteractionState;
 use crate::notebooks::editor::interaction_state_model::InteractionStateModelEvent;
 use crate::notebooks::file::MarkdownDisplayMode;
-use crate::notebooks::telemetry::BlockInfo;
+use crate::notebooks::types::{BlockInfo, SelectionMode as TelemetrySelectionMode};
 use crate::terminal::ShellLaunchData;
 
 const DEBOUNCED_RESIZE_PERIOD: Duration = Duration::from_millis(5);

@@ -121,7 +121,6 @@ fn test_reverse_action_replaced_newlines() {
             jkl
             mno
 
-
             pqr
 
             stu
@@ -220,11 +219,9 @@ fn test_reverse_action_replaced_text() {
 
             def
 
-
             jkl
 
             pqr
-
 
             vwx
 
@@ -281,9 +278,7 @@ fn test_reverse_action_deleted_lines() {
             jkl
             mno
 
-
             pqr
-
 
             stu
             vwx
@@ -426,11 +421,9 @@ fn test_coalesce_replacements() {
 
             def
 
-
             jkl
 
             pqr
-
 
             vwx
 

@@ -6,7 +6,6 @@ use ai::agent::action::RunAgentsExecutionMode;
 use ai::agent::orchestration_config::OrchestrationConfigStatus;
 use pathfinder_geometry::vector::vec2f;
 use warp_cli::agent::Harness;
-use warp_core::send_telemetry_from_ctx;
 use warp_graphql::queries::get_runners::RunnerSortBy;
 use warpui::elements::{
     ChildAnchor, ChildView, ConstrainedBox, Container, CornerRadius, CrossAxisAlignment, Empty,
@@ -24,6 +23,7 @@ use warpui::{
 use crate::BlocklistAIHistoryModel;
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::blocklist::BlocklistAIHistoryEvent;
+use crate::ai::blocklist::analytics_kinds::OrchestrationApprovalStatus;
 use crate::ai::blocklist::inline_action::create_environment_modal::{
     CreateEnvironmentModal, CreateEnvironmentModalEvent,
 };
@@ -31,10 +31,6 @@ use crate::ai::blocklist::inline_action::host_picker::{HostPicker, HostPickerEve
 use crate::ai::blocklist::inline_action::orchestration_controls::{
     self as oc, AuthSecretSelection, OrchestrationConfigState, OrchestrationControlAction,
     OrchestrationEditState, OrchestrationPickerHandles,
-};
-use crate::ai::blocklist::telemetry::{
-    AgentProposedConfigEvent, BlocklistOrchestrationTelemetryEvent, OrchestrationApprovalStatus,
-    OrchestrationExecutionModeKind, OrchestrationHarnessKind, PlanConfigApprovalToggledEvent,
 };
 use crate::ai::connected_self_hosted_workers::{
     ConnectedSelfHostedWorkersEvent, ConnectedSelfHostedWorkersModel,
@@ -50,22 +46,6 @@ use crate::server::server_api::ServerApiProvider;
 use crate::ui_components::blended_colors;
 use crate::workspace::WorkspaceAction;
 use crate::workspaces::user_workspaces::UserWorkspaces;
-
-/// True when the mode is remote and `environment_id` is non-empty.
-fn env_presence(execution_mode: &RunAgentsExecutionMode) -> bool {
-    matches!(
-        execution_mode,
-        RunAgentsExecutionMode::Remote { environment_id, .. } if !environment_id.is_empty()
-    )
-}
-
-/// True when the mode is remote and `worker_host` is non-empty.
-fn host_presence(execution_mode: &RunAgentsExecutionMode) -> bool {
-    matches!(
-        execution_mode,
-        RunAgentsExecutionMode::Remote { worker_host, .. } if !worker_host.is_empty()
-    )
-}
 
 const CONFIG_BLOCK_HEADER: &str = "Use orchestration";
 const CONFIG_BLOCK_DESCRIPTION: &str =
@@ -1109,93 +1089,10 @@ impl TypedActionView for OrchestrationConfigBlockView {
 impl OrchestrationConfigBlockView {
     fn emit_plan_config_approval_toggled(
         &self,
-        status: OrchestrationApprovalStatus,
-        ctx: &mut ViewContext<Self>,
+        _status: OrchestrationApprovalStatus,
+        _ctx: &mut ViewContext<Self>,
     ) {
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::PlanConfigApprovalToggled(
-                PlanConfigApprovalToggledEvent {
-                    conversation_id: self.conversation_id,
-                    plan_id: (!self.plan_id.is_empty()).then(|| self.plan_id.clone()),
-                    status,
-                    execution_mode: OrchestrationExecutionModeKind::from_run_agents(
-                        &self
-                            .orchestration_edit_state
-                            .orchestration_config_state
-                            .execution_mode,
-                    ),
-                    harness: OrchestrationHarnessKind::from_str(
-                        &self
-                            .orchestration_edit_state
-                            .orchestration_config_state
-                            .harness_type
-                    ),
-                    has_model: !self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .model_id
-                        .trim()
-                        .is_empty(),
-                    has_environment: env_presence(
-                        &self
-                            .orchestration_edit_state
-                            .orchestration_config_state
-                            .execution_mode
-                    ),
-                    has_worker_host: host_presence(
-                        &self
-                            .orchestration_edit_state
-                            .orchestration_config_state
-                            .execution_mode
-                    ),
-                    has_auth_secret: self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .auth_secret_name()
-                        .is_some(),
-                }
-            ),
-            ctx
-        );
     }
 
-    fn emit_agent_proposed_config(&self, ctx: &mut ViewContext<Self>) {
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::AgentProposedConfig(AgentProposedConfigEvent {
-                conversation_id: self.conversation_id,
-                plan_id: (!self.plan_id.is_empty()).then(|| self.plan_id.clone()),
-                harness: OrchestrationHarnessKind::from_str(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .harness_type
-                ),
-                execution_mode: OrchestrationExecutionModeKind::from_run_agents(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .execution_mode,
-                ),
-                has_model: !self
-                    .orchestration_edit_state
-                    .orchestration_config_state
-                    .model_id
-                    .trim()
-                    .is_empty(),
-                has_environment: env_presence(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .execution_mode
-                ),
-                has_worker_host: host_presence(
-                    &self
-                        .orchestration_edit_state
-                        .orchestration_config_state
-                        .execution_mode
-                ),
-            }),
-            ctx
-        );
-    }
+    fn emit_agent_proposed_config(&self, _ctx: &mut ViewContext<Self>) {}
 }

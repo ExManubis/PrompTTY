@@ -998,7 +998,6 @@ impl TerminalModel {
             honor_ps1,
             is_inverted,
             ObfuscateSecrets::No,
-            false,
             session_startup_path,
             ShellLaunchState::ShellSpawned {
                 available_shell: None,
@@ -1054,7 +1053,6 @@ impl TerminalModel {
         honor_ps1: bool,
         is_inverted: bool,
         obfuscate_secrets: ObfuscateSecrets,
-        is_ai_ugc_telemetry_enabled: bool,
         session_startup_path: Option<PathBuf>,
         shell_state: ShellLaunchState,
         shared_session_status: SharedSessionStatus,
@@ -1077,7 +1075,6 @@ impl TerminalModel {
             honor_ps1,
             is_inverted,
             obfuscate_secrets,
-            is_ai_ugc_telemetry_enabled,
         );
 
         Self {
@@ -1141,7 +1138,6 @@ impl TerminalModel {
         honor_ps1: bool,
         is_inverted: bool,
         obfuscate_secrets: ObfuscateSecrets,
-        is_ai_ugc_telemetry_enabled: bool,
         session_startup_path: Option<PathBuf>,
         shell_state: ShellLaunchState,
     ) -> Self {
@@ -1157,7 +1153,6 @@ impl TerminalModel {
             honor_ps1,
             is_inverted,
             obfuscate_secrets,
-            is_ai_ugc_telemetry_enabled,
             session_startup_path,
             shell_state,
             SharedSessionStatus::NotShared,
@@ -1189,7 +1184,6 @@ impl TerminalModel {
             honor_ps1,
             is_inverted,
             obfuscate_secrets,
-            false,
             None,
             // TODO: use the same shell type as the sharer
             ShellLaunchState::ShellSpawned {
@@ -1225,7 +1219,6 @@ impl TerminalModel {
             honor_ps1,
             is_inverted,
             obfuscate_secrets,
-            false,
             None,
             // TODO: use the same shell type as the sharer
             ShellLaunchState::ShellSpawned {

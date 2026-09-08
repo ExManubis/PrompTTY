@@ -31,7 +31,6 @@ use crate::ai::ambient_agents::{
 use crate::ai::blocklist::ResponseStreamId;
 use crate::ai::blocklist::controller::RequestInput;
 use crate::ai::llms::LLMId;
-use crate::auth::AuthStateProvider;
 use crate::cloud_object::{Owner, Revision, ServerMetadata, ServerPermissions};
 use crate::input_suggestions::HistoryInputSuggestion;
 use crate::persistence::ModelEvent;
@@ -40,7 +39,6 @@ use crate::persistence::model::{
     PersistedAutoexecuteMode,
 };
 use crate::server::ids::ServerId;
-use crate::server::telemetry::context_provider::AppTelemetryContextProvider;
 use crate::terminal::model::session::SessionId;
 use crate::test_util::ai_agent_tasks::create_api_task;
 use crate::test_util::settings::{
@@ -4396,10 +4394,6 @@ fn statuses_after_stream_error(
     let derived_for_test = Arc::clone(&derived);
     App::test((), |mut app| async move {
         initialize_history_persistence_for_tests(&mut app);
-        // Completing a request with an error emits telemetry, which requires
-        // the telemetry context provider (and the auth state it reads).
-        app.add_singleton_model(|_| AuthStateProvider::new_for_test());
-        app.add_singleton_model(AppTelemetryContextProvider::new_context_provider);
         let terminal_view_id = EntityId::new();
         let history_model = app.add_singleton_model(|_| BlocklistAIHistoryModel::new_for_test());
 

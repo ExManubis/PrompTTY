@@ -26,7 +26,6 @@ use std::sync::Arc;
 use anyhow::Context as _;
 use futures::channel::oneshot;
 use futures::future::{Either, select};
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warp_util::standardized_path::StandardizedPath;
 use warpui::{AppContext, EntityId, ModelHandle, SingletonEntity};
@@ -37,9 +36,7 @@ use super::{HandoffLaunchAttachments, PendingCloudLaunch};
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};
 use crate::ai::agent::{CancellationReason, extract_user_query_mode};
 use crate::ai::ambient_agents::AmbientAgentTaskId;
-use crate::ai::ambient_agents::telemetry::{
-    CloudAgentTelemetryEvent, HandoffEntryPoint, HandoffInjectionPath, HandoffSurface,
-};
+use crate::ai::ambient_agents::handoff_types::HandoffInjectionPath;
 use crate::ai::blocklist::orchestration_topology::descendant_conversation_ids_in_spawn_order;
 use crate::ai::blocklist::{
     BlocklistAIContextModel, BlocklistAIController, BlocklistAIHistoryModel, PendingAttachment,
@@ -84,8 +81,6 @@ pub struct HandoffPrepareInput {
     transfer_pending_attachments: bool,
     environment_id: Option<SyncId>,
     environment_required: bool,
-    entry_point: HandoffEntryPoint,
-    surface: HandoffSurface,
     cancellation_reason: CancellationReason,
     require_in_progress_source: bool,
 }
@@ -97,8 +92,6 @@ impl HandoffPrepareInput {
         controller: ModelHandle<BlocklistAIController>,
         context: ModelHandle<BlocklistAIContextModel>,
         snapshot_target: SnapshotUploadTarget,
-        entry_point: HandoffEntryPoint,
-        surface: HandoffSurface,
     ) -> Self {
         Self {
             terminal_surface_id,
@@ -114,8 +107,6 @@ impl HandoffPrepareInput {
             transfer_pending_attachments: true,
             environment_id: None,
             environment_required: false,
-            entry_point,
-            surface,
             cancellation_reason: CancellationReason::ManuallyCancelled,
             require_in_progress_source: false,
         }
@@ -403,8 +394,6 @@ pub fn prepare_handoff(
         transfer_pending_attachments,
         environment_id: selected_environment_id,
         environment_required,
-        entry_point,
-        surface,
         cancellation_reason,
         require_in_progress_source,
     } = input;
@@ -560,23 +549,13 @@ pub fn prepare_handoff(
     };
     let snapshot_disabled = should_disable_snapshot(ctx);
     let empty_prompt = prompt.is_empty();
-    let injection_path = if !empty_prompt {
+    let _injection_path = if !empty_prompt {
         HandoffInjectionPath::None
     } else if source_conversation_active {
         HandoffInjectionPath::Continue
     } else {
         HandoffInjectionPath::SnapshotRehydration
     };
-    send_telemetry_from_ctx!(
-        CloudAgentTelemetryEvent::HandoffInitiated {
-            entry_point,
-            surface,
-            forked_existing_conversation: source_conversation.is_some(),
-            empty_prompt,
-            injection_path,
-        },
-        ctx
-    );
 
     Ok(PendingHandoff {
         source_conversation,
@@ -612,7 +591,6 @@ pub struct HandoffCreated {
     pub url: String,
     pub at_capacity: bool,
     pub request: SpawnAgentRequest,
-    pub derived_workspace_had_content: bool,
     pub snapshot_failed: bool,
 }
 
@@ -625,7 +603,6 @@ pub struct HandoffCommitFailure {
     pub issue: CloudAgentStartupIssue,
     pub request: Option<SpawnAgentRequest>,
     pub restoration: Option<HandoffRestoration>,
-    pub derived_workspace_had_content: Option<bool>,
     pub snapshot_failed: bool,
 }
 
@@ -671,7 +648,6 @@ struct SnapshotSettledHandoff {
     forked_conversation_id: Option<String>,
     initial_snapshot_token: Option<InitialSnapshotToken>,
     restoration: Option<HandoffRestoration>,
-    derived_workspace_had_content: bool,
     snapshot_failed: bool,
 }
 
@@ -765,7 +741,6 @@ async fn execute_validated_handoff(
                 issue: classify_cloud_agent_startup_error(&error),
                 request: None,
                 restoration: forked.pending.take_restoration(),
-                derived_workspace_had_content: None,
                 snapshot_failed: false,
             });
         }
@@ -822,7 +797,6 @@ async fn execute_validated_handoff(
                 issue: classify_cloud_agent_startup_error(&error),
                 request: Some(request),
                 restoration: settled.restoration.take(),
-                derived_workspace_had_content: Some(settled.derived_workspace_had_content),
                 snapshot_failed: settled.snapshot_failed,
             });
         }
@@ -834,7 +808,6 @@ async fn execute_validated_handoff(
         url: oz_run_url(&response.run_id),
         at_capacity: response.at_capacity,
         request,
-        derived_workspace_had_content: settled.derived_workspace_had_content,
         snapshot_failed: settled.snapshot_failed,
     })
 }
@@ -865,7 +838,6 @@ async fn fork_source_conversation(
                     issue: classify_cloud_agent_startup_error(&error),
                     request: None,
                     restoration: pending.take_restoration(),
-                    derived_workspace_had_content: None,
                     snapshot_failed: false,
                 });
             }
@@ -904,9 +876,8 @@ async fn prepare_snapshot_for_spawn(forked: ForkedHandoff) -> SnapshotSettledHan
         snapshot_disabled,
         orchestration_handoff,
     } = forked.pending;
-    let (workspace, snapshot_result) = upload_handoff_snapshot(source_paths, snapshot_target).await;
-    let derived_workspace_had_content =
-        !workspace.repos.is_empty() || !workspace.orphan_files.is_empty();
+    let (_workspace, snapshot_result) =
+        upload_handoff_snapshot(source_paths, snapshot_target).await;
     let (initial_snapshot_token, snapshot_failed) = match snapshot_result {
         Ok(HandoffUploadResult::Uploaded(token)) => (Some(token), false),
         Ok(HandoffUploadResult::EmptyWorkspace) => (None, false),
@@ -929,7 +900,6 @@ async fn prepare_snapshot_for_spawn(forked: ForkedHandoff) -> SnapshotSettledHan
         forked_conversation_id: forked.forked_conversation_id,
         initial_snapshot_token,
         restoration,
-        derived_workspace_had_content,
         snapshot_failed,
     }
 }

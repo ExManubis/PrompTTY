@@ -13,13 +13,11 @@ use warp::tui_export::{
     AIActionStatus, AIAgentAction, AIAgentActionId, AIAgentActionResult, AIAgentActionResultType,
     AIAgentActionType, AIAgentExchangeId, AIAgentInput, AIAgentOutput, AIAgentOutputMessage,
     AIAgentOutputMessageType, AIAgentText, AIAgentTextSection, AIAgentTodo, AIAgentTodoList,
-    AIBlockModel, AIBlockOutputStatus, AIConversationId, AIRequestType, ActiveSession,
-    AgentOutputImage, AgentOutputImageLayout, AgentOutputMermaidDiagram, AgentOutputTable,
-    Appearance, BlocklistAIActionModel, FailedOutputPresentation, GetRelevantFilesController,
-    LLMId, MessageId, ModelEventDispatcher, OutputStatusUpdateCallback, ReceivedMessageDisplay,
-    RenderableAIError, RequestCommandOutputResult, ServerOutputId, Sessions, Shared,
-    SummarizationType, TaskId, TerminalModel, TodoOperation, TodoStatus, UserQueryMode,
-    UserWorkspaces, queue_tui_permission_action, register_tui_session_view_test_singletons,
+    AIBlockModel, AIBlockOutputStatus, AIConversationId, AIRequestType, AgentOutputImage,
+    AgentOutputImageLayout, AgentOutputMermaidDiagram, AgentOutputTable, Appearance,
+    FailedOutputPresentation, LLMId, MessageId, OutputStatusUpdateCallback, ReceivedMessageDisplay,
+    RenderableAIError, RequestCommandOutputResult, ServerOutputId, Shared, SummarizationType,
+    TaskId, TerminalModel, TodoOperation, TodoStatus, UserQueryMode, queue_tui_permission_action,
     should_show_failed_output_usage_notice,
 };
 use warp_core::ui::color::blend::Blend;
@@ -2202,53 +2200,6 @@ fn test_agent_block(app: &mut App, model: FakeAgentBlockModel) -> ViewHandle<Tui
     })
 }
 
-/// Builds an agent block after the full session fixture has registered the app
-/// models needed by out-of-credits presentation.
-fn test_agent_block_with_registered_singletons(
-    app: &mut App,
-    model: FakeAgentBlockModel,
-) -> ViewHandle<TuiAIBlock> {
-    let action_terminal_model = Arc::new(FairMutex::new(TerminalModel::mock(None, None)));
-    let sessions = app.add_model(|_| Sessions::new_for_test());
-    let (_tx, model_events_rx) = async_channel::unbounded();
-    let model_events =
-        app.add_model(|ctx| ModelEventDispatcher::new(model_events_rx, sessions.clone(), ctx));
-    let active_session =
-        app.add_model(|ctx| ActiveSession::new(sessions, model_events.clone(), ctx));
-    let get_relevant_files = app.add_model(|_| GetRelevantFilesController::default());
-    let action_model = app.add_model(|ctx| {
-        BlocklistAIActionModel::new(
-            action_terminal_model,
-            active_session,
-            &model_events,
-            get_relevant_files,
-            EntityId::new(),
-            UserWorkspaces::teamless_context_resolver_for_test(),
-            ctx,
-        )
-    });
-    let block_terminal_model = Arc::new(FairMutex::new(TerminalModel::mock(None, None)));
-    app.update(|ctx| {
-        let (window_id, _) = ctx.add_tui_window(
-            AddWindowOptions {
-                window_style: WindowStyle::NotStealFocus,
-                ..Default::default()
-            },
-            |_| TestHostView,
-        );
-        ctx.add_typed_action_tui_view(window_id, move |ctx| {
-            TuiAIBlock::new(
-                (AIConversationId::new(), AIAgentExchangeId::new()),
-                Rc::new(model),
-                action_model,
-                &model_events,
-                block_terminal_model,
-                false,
-                ctx,
-            )
-        })
-    })
-}
 fn ask_user_question_action(id: &str, question: &str) -> AIAgentAction {
     AIAgentAction {
         id: AIAgentActionId::from(id.to_owned()),

@@ -34,10 +34,10 @@ use crate::pane_group::PaneGroup;
 use crate::prompt::editor_modal::OpenSource as PromptEditorOpenSource;
 use crate::search;
 use crate::server::ids::{ServerId, SyncId};
-use crate::server::telemetry::{
+use crate::settings_view::{SettingsAction as SettingsTabAction, SettingsSection};
+use crate::shared_enums::{
     AddTabWithShellSource, AgentModeEntrypoint, PaletteSource, SharingDialogSource,
 };
-use crate::settings_view::{SettingsAction as SettingsTabAction, SettingsSection};
 use crate::tab::{NewSessionMenuItem, SelectedTabColor};
 use crate::tab_configs::TabConfig;
 use crate::terminal::available_shells::AvailableShell;
@@ -627,7 +627,7 @@ pub enum WorkspaceAction {
         #[cfg(not(all(feature = "local_fs", not(target_family = "wasm"))))]
         launch: Option<()>,
         environment_id: Option<crate::server::ids::SyncId>,
-        entry_point: crate::ai::ambient_agents::telemetry::HandoffEntryPoint,
+        entry_point: crate::ai::ambient_agents::handoff_types::HandoffEntryPoint,
     },
     /// Automatically hand off the active running local agent conversation in the
     /// given terminal view to Cloud Mode.

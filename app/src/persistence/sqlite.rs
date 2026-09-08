@@ -98,9 +98,9 @@ use crate::persistence::model::{
     CODE_REVIEW_PANE_KIND, GET_STARTED_PANE_KIND, NewPersistedObjectAction, NewTeamSettings,
     ProjectRules, UserProfile,
 };
+use crate::safe_info;
 use crate::server::experiments::ServerExperiment;
 use crate::server::ids::{ClientId, HashableId, ServerId, SyncId};
-use crate::server::telemetry::TelemetryEvent;
 use crate::settings_view::SettingsSection;
 use crate::suggestions::ignored_suggestions_model::SuggestionType;
 use crate::tab::SelectedTabColor;
@@ -112,7 +112,6 @@ use crate::workspace::tab_group::TabGroupId;
 use crate::workspaces::team::Team as TeamMetadata;
 use crate::workspaces::user_profiles::{UserProfileWithUID, user_profile_from_persistence};
 use crate::workspaces::workspace::{Workspace as WorkspaceMetadata, WorkspaceUid};
-use crate::{safe_info, send_telemetry_from_app_ctx};
 
 diesel::define_sql_function! {
     fn json_extract(target: diesel::sql_types::Text, path: diesel::sql_types::Text) -> diesel::sql_types::Text;
@@ -145,10 +144,6 @@ pub fn initialize(
             let writer_handles = match start_writer(conn, database_path.clone()) {
                 Ok(writer_handles) => Some(writer_handles),
                 Err(err) => {
-                    send_telemetry_from_app_ctx!(
-                        TelemetryEvent::DatabaseWriteError(err.to_string()),
-                        ctx
-                    );
                     report_db_error("starting writer", err, &database_path);
                     None
                 }
@@ -174,10 +169,6 @@ pub fn initialize(
             (persisted_data, writer_handles)
         }
         Err(err) => {
-            send_telemetry_from_app_ctx!(
-                TelemetryEvent::DatabaseStartUpError(err.to_string()),
-                ctx
-            );
             report_db_error("initialization", err, &database_path);
             (None, None)
         }
@@ -193,7 +184,6 @@ fn read_persisted_data(
     match read_sqlite_data(conn, user_uid, data_scope) {
         Ok(app_state) => Some(Box::new(app_state)),
         Err(err) => {
-            send_telemetry_from_app_ctx!(TelemetryEvent::DatabaseReadError(err.to_string()), ctx);
             report_error!(anyhow::Error::new(err).context("Failed to read persisted data"));
             None
         }
@@ -271,53 +261,7 @@ unsafe fn init_logging() {
             // valid C string pointer.
             let msg = unsafe { CStr::from_ptr(msg) };
             let err_message = String::from_utf8_lossy(msg.to_bytes());
-            // Sentry shouldn't panic, but to be safe, make sure we don't unwind across the FFI
-            // boundary.
             let _ = panic::catch_unwind(|| {
-                // We report SQLite errors to Sentry in a more-structured format so that they have
-                // better grouping (all are under the same Sentry issue, with details for the specific
-                // error kind). Warning and debug SQLite messages are logged - with the default
-                // sentry_log configuration, warnings are added as breadcrumbs to other events and
-                // debug messages are ignored.
-                // In local builds without crash reporting, all SQLite messages get logged locally.
-
-                #[cfg(feature = "crash_reporting")]
-                if level == log::Level::Error {
-                    use std::sync::atomic::{AtomicU64, Ordering};
-
-                    // Each bit represents a primary SQLite error code (0-63). Primary codes are
-                    // the least-significant byte of the extended code; real error codes are ≤ 28.
-                    static REPORTED_PRIMARY_CODES: AtomicU64 = AtomicU64::new(0);
-                    let primary_code = (primary_error_code as u64).min(63);
-                    let bit = 1u64 << primary_code;
-                    if REPORTED_PRIMARY_CODES.fetch_or(bit, Ordering::Relaxed) & bit == 0 {
-                        // First occurrence of this primary error code — report to Sentry.
-                        sentry::with_scope(
-                            |scope| {
-                                let mut context = std::collections::BTreeMap::new();
-                                context.insert("message".to_string(), err_message.into());
-                                context.insert("code".to_string(), err_code.into());
-                                context.insert(
-                                    "code_description".to_string(),
-                                    sqlite3::code_to_str(err_code).into(),
-                                );
-                                scope.set_context(
-                                    "sqlite",
-                                    sentry::protocol::Context::Other(context),
-                                );
-                            },
-                            || {
-                                sentry::capture_message(
-                                    "Sqlite Error",
-                                    sentry_log::convert_log_level(level),
-                                )
-                            },
-                        );
-                        // The structured Sentry event is the record; skip the redundant log line.
-                        return;
-                    }
-                }
-
                 log::log!(
                     level,
                     "SQLite error {} ({}): {}",

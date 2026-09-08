@@ -21,7 +21,6 @@ use session_sharing_protocol::sharer::{
     TeamAccessLevelUpdateResponse, UpdatePendingUserRoleResponse,
 };
 use warp_core::execution_mode::AppExecutionMode;
-use warp_core::send_telemetry_from_ctx;
 use warp_errors::report_error;
 use warpui::{AppContext, ModelHandle, SingletonEntity, ViewContext, ViewHandle, WindowId};
 
@@ -45,7 +44,6 @@ use crate::network::{NetworkStatusEvent, NetworkStatusKind};
 use crate::pane_group::TerminalViewResources;
 use crate::persistence::ModelEvent;
 use crate::server::server_api::ServerApiProvider;
-use crate::server::telemetry::{TelemetryAgentViewEntryOrigin, TelemetryEvent};
 use crate::terminal::cli_agent_sessions::{
     CLIAgentInputState, CLIAgentSessionsModel, CLIAgentSessionsModelEvent,
 };
@@ -487,8 +485,8 @@ fn wire_up_terminal_view_session_sharing(
                     }
                 }
                 AgentViewControllerEvent::ExitedAgentView {
-                    origin,
-                    final_exchange_count,
+                    origin: _,
+                    final_exchange_count: _,
                     ..
                 } => {
                     if conversation_remote_update_guard.should_broadcast() {
@@ -499,13 +497,6 @@ fn wire_up_terminal_view_session_sharing(
                             ctx,
                         );
                     }
-                    send_telemetry_from_ctx!(
-                        TelemetryEvent::AgentViewExited {
-                            origin: TelemetryAgentViewEntryOrigin::from(origin.clone()),
-                            was_empty: *final_exchange_count == 0,
-                        },
-                        ctx
-                    );
                 }
                 AgentViewControllerEvent::ExitConfirmed { .. } => {}
             },
@@ -1690,7 +1681,7 @@ impl TerminalManager<TerminalView> {
                     } else if let Some(interaction_state) =
                         context_update.long_running_command_agent_interaction_state
                     {
-                        // TODO (roland): this is kept around for backward compatibility. Remove after 6 weeks (around Jul 23, 2026) 
+                        // TODO (roland): this is kept around for backward compatibility. Remove after 6 weeks (around Jul 23, 2026)
                         // once clients have updated to use context_update.long_running_command_agent_interaction above
                         terminal_view.update(ctx, |view, ctx| {
                             view.apply_long_running_command_agent_interaction_state(

@@ -19,7 +19,6 @@ use warp::settings::{TuiVoiceSettings, TuiVoiceSettingsChangedEvent};
 use warp::tui_export::{AIConversationAutoexecuteMode, Appearance, ServerConversationToken};
 use warp_core::channel::ChannelState;
 use warp_core::settings::Setting as _;
-use warp_core::telemetry::TelemetryEvent as _;
 use warp_errors::report_error;
 use warpui::SingletonEntity as _;
 use warpui_core::platform::{TerminationMode, WindowStyle};
@@ -30,7 +29,6 @@ use crate::orchestration_model::TuiOrchestrationModel;
 use crate::resume::TuiExitSummaryHandle;
 use crate::root_view::RootTuiView;
 use crate::session_registry::{TuiSessions, TuiSessionsEvent};
-use crate::telemetry::TuiStartupTelemetryEvent;
 use crate::terminal_background::probe_and_select_theme;
 use crate::terminal_session_view::{
     TuiConversationRestoreOrigin, TuiConversationRestoreTarget, tui_resume_shell_command,
@@ -245,7 +243,6 @@ fn init(
     exit_summary: TuiExitSummaryHandle,
     ctx: &mut AppContext,
 ) {
-    warp_core::send_telemetry_from_app_ctx!(TuiStartupTelemetryEvent::from_environment(), ctx);
     // Register the TUI views' keybindings (and, in debug builds, the
     // cross-surface binding validators) before any input can be dispatched.
     crate::keybindings::init(ctx);

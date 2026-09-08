@@ -17,7 +17,6 @@ use crate::ai::agent::api::{self, ConvertToAPITypeError, generate_multi_agent_ou
 use crate::ai::agent::conversation::AIConversationId;
 use crate::ai::agent::{AIIdentifiers, CancellationReason};
 use crate::network::NetworkStatus;
-use crate::send_telemetry_from_ctx;
 use crate::server::retry_strategies::backoff_after_attempts;
 use crate::server::server_api::AIApiError;
 
@@ -399,23 +398,6 @@ impl ResponseStream {
         if is_auto_resume { "resume" } else { "original" }
     }
 
-    /// Helper function to emit AgentModeError telemetry for error that is retryable (not user visible).
-    fn emit_retryable_agent_mode_error_telemetry(
-        &self,
-        error: String,
-        ctx: &mut ModelContext<Self>,
-    ) {
-        send_telemetry_from_ctx!(
-            crate::TelemetryEvent::AgentModeError {
-                identifiers: self.ai_identifiers.clone(),
-                error,
-                is_user_visible: false,
-                will_attempt_to_resume: false,
-            },
-            ctx
-        );
-    }
-
     fn retry(&mut self, ctx: &mut ModelContext<Self>) {
         self.recovery = self.recovery.next_attempt();
         self.retries_sent += 1;
@@ -461,13 +443,11 @@ impl ResponseStream {
                 self.log_recovery(action, &format!("{delay:?}"), error);
                 // Only emit error telemetry here if we're recovering in-request. Final
                 // errors that aren't being retried are emitted elsewhere.
-                self.emit_retryable_agent_mode_error_telemetry(format!("{error:?}"), ctx);
                 self.defer_retry_after_backoff(delay, ctx);
                 RecoveryOutcome::InFlight
             }
             RecoveryAction::RetryWhenOnline => {
                 self.log_recovery(action, "connectivity", error);
-                self.emit_retryable_agent_mode_error_telemetry(format!("{error:?}"), ctx);
                 self.defer_retry_until_online(ctx);
                 RecoveryOutcome::InFlight
             }
@@ -788,15 +768,7 @@ impl ResponseStream {
                             ) {
                                 // Emit retry success telemetry if this was a successful completion after retries
                                 if self.retries_sent > 0
-                                    && let Some(original_error) = &self.original_error {
-                                        send_telemetry_from_ctx!(
-                                            crate::TelemetryEvent::AgentModeRequestRetrySucceeded {
-                                                identifiers: self.ai_identifiers.clone(),
-                                                retry_count: self.retries_sent,
-                                                original_error: original_error.clone(),
-                                            },
-                                            ctx
-                                        );
+                                    && let Some(_original_error) = &self.original_error {
                                     }
                             }
                         }
@@ -866,54 +838,19 @@ impl ResponseStream {
         is_online: bool,
         recovery_attempt: usize,
     ) {
-        #[cfg(feature = "crash_reporting")]
-        sentry::with_scope(
-            |scope| {
-                scope.set_tag(
-                    "has_received_client_actions",
-                    self.has_received_client_actions,
-                );
-                scope.set_tag("error", format!("{error:?}"));
-                scope.set_tag("is_recoverable", error.is_recoverable());
-                scope.set_tag(
-                    "will_attempt_resume",
-                    self.should_resume_conversation_after_stream_finished(),
-                );
-                scope.set_tag("is_online", is_online);
-                scope.set_tag("failed_request", self.failed_request_label());
-            },
-            || {
-                report_error!(
-                    error.as_ref(),
-                    extra: {
-                        "has_received_client_actions" => self.has_received_client_actions,
-                        "is_recoverable" => error.is_recoverable(),
-                        "will_attempt_resume" => self.should_resume_conversation_after_stream_finished(),
-                        "is_online" => is_online,
-                        "failed_request" => self.failed_request_label(),
-                        "recovery_attempt" => recovery_attempt,
-                        "max_recovery_attempts" => MAX_RECOVERY_ATTEMPTS,
-                        "error_debug" => %format!("{error:?}"),
-                    }
-                );
-            },
+        report_error!(
+            error.as_ref(),
+            extra: {
+                "has_received_client_actions" => self.has_received_client_actions,
+                "is_recoverable" => error.is_recoverable(),
+                "will_attempt_resume" => self.should_resume_conversation_after_stream_finished(),
+                "is_online" => is_online,
+                "failed_request" => self.failed_request_label(),
+                "recovery_attempt" => recovery_attempt,
+                "max_recovery_attempts" => MAX_RECOVERY_ATTEMPTS,
+                "error_debug" => %format!("{error:?}"),
+            }
         );
-        #[cfg(not(feature = "crash_reporting"))]
-        {
-            report_error!(
-                error.as_ref(),
-                extra: {
-                    "has_received_client_actions" => self.has_received_client_actions,
-                    "is_recoverable" => error.is_recoverable(),
-                    "will_attempt_resume" => self.should_resume_conversation_after_stream_finished(),
-                    "is_online" => is_online,
-                    "failed_request" => self.failed_request_label(),
-                    "recovery_attempt" => recovery_attempt,
-                    "max_recovery_attempts" => MAX_RECOVERY_ATTEMPTS,
-                    "error_debug" => %format!("{error:?}"),
-                }
-            );
-        }
     }
 
     /// Parks a retry until connectivity returns; cancellation invalidates the parked
