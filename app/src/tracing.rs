@@ -1,21 +1,14 @@
 //! No-op tracing initialization.
 //!
-//! Product OpenTelemetry/OTLP export was removed. Call sites still invoke [`init`] /
-//! [`start_auth_refresh`] during app startup; they are retained as empty hooks so the
-//! surrounding lifecycle code does not need a larger rewrite.
+//! Product OpenTelemetry/OTLP export was removed. Call sites still invoke [`init`]
+//! during app startup; it is retained as an empty hook so the surrounding lifecycle
+//! code does not need a larger rewrite.
 
 use tracing::subscriber;
 
 pub fn init() -> anyhow::Result<Initialization> {
     install_no_subscriber()?;
     Ok(Initialization::default())
-}
-
-/// Previously started cloud-agent OTLP credential refresh. Retained as a no-op.
-pub fn start_auth_refresh(
-    _client: std::sync::Arc<dyn warp_managed_secrets::client::ManagedSecretsClient>,
-    _ctx: &mut warpui::AppContext,
-) {
 }
 
 fn install_no_subscriber() -> anyhow::Result<()> {

@@ -189,13 +189,6 @@ pub enum PromptSuggestionFallbackReason {
     FailedToSendAIRequest,
 }
 
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CodeContextDestination {
-    Pty,
-    RichInput,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 pub enum AddTabWithShellSource {
     CommandPalette,
