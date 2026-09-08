@@ -11,7 +11,6 @@ use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use warp_cli::agent::Harness;
 use warp_core::channel::ChannelState;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::color::blend::Blend;
 use warp_core::ui::color::coloru_with_opacity;
@@ -48,13 +47,12 @@ use crate::ai::blocklist::agent_view::orchestration_pill_bar_model::{
     OrchestrationPillBarEvent, OrchestrationPillBarModel,
 };
 use crate::ai::blocklist::agent_view::{AgentViewController, AgentViewControllerEvent};
+use crate::ai::blocklist::analytics_kinds::{
+    PillBarActionKind, PillBarPillKind, PillSwitchOutcome,
+};
 use crate::ai::blocklist::orchestration_topology::{
     LoadedSubtreeRollup, aggregated_orchestrator_status, child_conversations_in_pill_order,
     loaded_subtree_rollup, orchestration_root_conversation_id,
-};
-use crate::ai::blocklist::telemetry::{
-    BlocklistOrchestrationTelemetryEvent, PillBarActionKind, PillBarInteractionEvent,
-    PillBarPillKind, PillSwitchOutcome,
 };
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};
 use crate::ai::harness_display;
@@ -878,30 +876,17 @@ impl OrchestrationPillBar {
 
     fn emit_pill_bar_interaction_with_outcome(
         &self,
-        action: PillBarActionKind,
-        pill_kind: PillBarPillKind,
-        target_conversation_id: AIConversationId,
-        switch_outcome: Option<PillSwitchOutcome>,
+        _action: PillBarActionKind,
+        _pill_kind: PillBarPillKind,
+        _target_conversation_id: AIConversationId,
+        _switch_outcome: Option<PillSwitchOutcome>,
         ctx: &mut ViewContext<Self>,
     ) {
-        let Some((source_conversation_id, root_conversation_id, total_pills, total_pinned)) =
+        let Some((_source_conversation_id, _root_conversation_id, _total_pills, _total_pinned)) =
             self.pill_bar_telemetry_context(ctx)
         else {
             return;
         };
-        send_telemetry_from_ctx!(
-            BlocklistOrchestrationTelemetryEvent::PillBarInteraction(PillBarInteractionEvent {
-                action,
-                pill_kind,
-                total_pills,
-                total_pinned,
-                source_conversation_id,
-                root_conversation_id,
-                target_conversation_id,
-                switch_outcome,
-            }),
-            ctx
-        );
     }
 
     /// Dispatches the focus-existing-pane navigation. Pulled out of

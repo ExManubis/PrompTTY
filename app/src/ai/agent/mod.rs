@@ -5,11 +5,11 @@ pub(crate) mod todos;
 pub(crate) mod api;
 pub(crate) mod comment;
 pub(crate) mod icons;
+mod identifiers;
 pub(crate) mod linearization;
 pub(crate) mod redaction;
 pub(crate) mod task;
 mod task_store;
-pub(super) mod telemetry;
 pub(super) mod util;
 
 use std::collections::{HashMap, HashSet};
@@ -28,12 +28,12 @@ pub use ai_types::{AIAgentActionId, EntrypointType, PassiveSuggestionTriggerType
 use chrono::{DateTime, Local, TimeDelta};
 use comment::ReviewComment;
 use derivative::Derivative;
+pub use identifiers::AIIdentifiers;
 use markdown_parser::{FormattedTable, FormattedText, FormattedTextInline, parse_markdown};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use session_sharing_protocol::common::ParticipantId;
 use task::TaskId;
-pub use telemetry::AIIdentifiers;
 use uuid::Uuid;
 use warp_core::features::FeatureFlag;
 use warp_editor::render::model::LineCount;
@@ -41,7 +41,6 @@ use warp_multi_agent_api::{AgentEvent, AgentType, diff_hunk as diff_hunk_api};
 
 pub use self::api::{MaybeAIAgentOutputMessage, MessageToAIAgentOutputMessageError};
 use super::llms::LLMId;
-use crate::TelemetryEvent;
 use crate::ai::block_context::BlockContext;
 use crate::ai::blocklist::block::view_impl::output::are_all_text_sections_empty;
 use crate::ai::skills::SkillDescriptor;
@@ -461,7 +460,6 @@ pub struct AIAgentOutput {
     /// Telemetry events related to the AI Agent Output that we want to send after completion.
     #[derivative(Debug = "ignore")]
     #[derivative(PartialEq = "ignore")]
-    pub telemetry_events: Vec<TelemetryEvent>,
 
     /// The number of requests that the request cost.
     pub request_cost: Option<RequestCost>,

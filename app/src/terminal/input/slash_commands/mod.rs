@@ -15,7 +15,6 @@ pub use view::{CloseReason, InlineSlashCommandView, SlashCommandsEvent};
 #[cfg(not(target_family = "wasm"))]
 use warp_cli::agent::Harness;
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::AnsiColorIdentifier;
 use warp_errors::report_error;
@@ -24,14 +23,12 @@ use warp_util::path::{CleanPathResult, LineAndColumnArg};
 use warpui::clipboard::ClipboardContent;
 use warpui::{AppContext, SingletonEntity, ViewContext};
 
-use crate::TelemetryEvent;
 use crate::ai::agent::conversation::AIConversationId;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent_conversations_model::AgentConversationsModel;
 #[cfg(not(target_family = "wasm"))]
-use crate::ai::agent_management::telemetry::AgentManagementTelemetryEvent;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
-use crate::ai::ambient_agents::telemetry::HandoffEntryPoint;
+use crate::ai::ambient_agents::handoff_types::HandoffEntryPoint;
 use crate::ai::blocklist::agent_view::{
     AgentViewEntryOrigin, DismissalStrategy, ENTER_OR_EXIT_CONFIRMATION_WINDOW, EphemeralMessage,
 };
@@ -43,14 +40,13 @@ use crate::ai::blocklist::{
 };
 use crate::ai::conversation_rename::rename_conversation;
 use crate::cloud_object::model::persistence::CloudModel;
-use crate::code_review::telemetry_event::CodeReviewPaneEntrypoint;
+use crate::code_review::CodeReviewPaneEntrypoint;
 #[cfg(not(target_family = "wasm"))]
 use crate::search::slash_command_menu::static_commands::commands;
 use crate::search::slash_command_menu::static_commands::commands::COMMAND_REGISTRY;
 use crate::search::slash_command_menu::static_commands::{Availability, SlashCommandKind};
 use crate::search::slash_command_menu::{SlashCommandId, StaticCommand};
 use crate::server::ids::SyncId;
-use crate::server::telemetry::{AgentModeAutoDetectionSettingOrigin, SlashCommandAcceptedDetails};
 use crate::settings::AISettings;
 use crate::tab::SelectedTabColor;
 use crate::terminal::input::decorations::InputBackgroundJobOptions;
@@ -128,19 +124,10 @@ pub fn should_close_slash_command_menu_for_exact_match(
 
 /// Records a static slash command accepted from either the GUI or TUI surface.
 pub fn record_static_slash_command_accepted(
-    command_name: &str,
-    is_in_agent_view: bool,
-    ctx: &mut AppContext,
+    _command_name: &str,
+    _is_in_agent_view: bool,
+    _ctx: &mut AppContext,
 ) {
-    send_telemetry_from_ctx!(
-        TelemetryEvent::SlashCommandAccepted {
-            command_details: SlashCommandAcceptedDetails::StaticCommand {
-                command_name: command_name.to_owned(),
-            },
-            is_in_agent_view,
-        },
-        ctx
-    );
 }
 
 /// Records an input auto-detection setting toggle triggered from a TUI slash
@@ -149,28 +136,13 @@ pub fn record_static_slash_command_accepted(
 /// Mirrors the `SettingsPage` and `Banner` origins used by the GUI toggle paths,
 /// but reports the toggle as originating from a TUI slash command.
 pub fn record_autodetection_toggle_from_slash_command(
-    is_autodetection_enabled: bool,
-    ctx: &mut AppContext,
+    _is_autodetection_enabled: bool,
+    _ctx: &mut AppContext,
 ) {
-    send_telemetry_from_ctx!(
-        TelemetryEvent::AgentModeToggleAutoDetectionSetting {
-            is_autodetection_enabled,
-            origin: AgentModeAutoDetectionSettingOrigin::SlashCommand,
-        },
-        ctx
-    );
 }
 
 /// Records a saved prompt accepted from either the GUI or TUI slash menu.
-pub fn record_saved_prompt_accepted(is_in_agent_view: bool, ctx: &mut AppContext) {
-    send_telemetry_from_ctx!(
-        TelemetryEvent::SlashCommandAccepted {
-            command_details: SlashCommandAcceptedDetails::SavedPrompt,
-            is_in_agent_view,
-        },
-        ctx
-    );
-}
+pub fn record_saved_prompt_accepted(_is_in_agent_view: bool, _ctx: &mut AppContext) {}
 
 pub fn saved_prompt_text_for_id(id: &SyncId, ctx: &AppContext) -> Option<String> {
     let workflow = CloudModel::as_ref(ctx).get_workflow(id)?;
@@ -795,7 +767,7 @@ impl Input {
                         }
                     }
                     _ => {
-                        use crate::server::telemetry::PaletteSource;
+                        use crate::shared_enums::PaletteSource;
 
                         ctx.emit(Event::OpenFilesPalette {
                             source: PaletteSource::Keybinding,
@@ -1177,11 +1149,6 @@ impl Input {
 
                 let destination =
                     ForkedConversationDestination::for_fork_trigger(trigger.is_cmd_or_ctrl_enter());
-
-                send_telemetry_from_ctx!(
-                    AgentManagementTelemetryEvent::SlashCommandContinueLocally,
-                    ctx
-                );
 
                 // Move any pending attachments out of the source input so they travel with the
                 // initial prompt into the continued local pane and no longer linger on the

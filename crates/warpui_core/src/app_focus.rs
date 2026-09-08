@@ -1,5 +1,4 @@
 use chrono::{DateTime, Duration, Utc};
-use serde_json::json;
 
 use crate::time::get_current_time;
 
@@ -10,21 +9,9 @@ struct DailyAppFocusDuration {
 }
 
 impl DailyAppFocusDuration {
-    // If calendar date has advanced since the last sync, record the
-    // Daily App Focus event with the current duration.
-    #[allow(deprecated)]
-    fn try_record(&mut self, user_id: Option<String>, anonymous_id: String) {
+    // If calendar date has advanced since the last sync, reset the running total.
+    fn try_reset_for_new_day(&mut self) {
         if get_current_time().date_naive() > self.last_synced_time.date_naive() {
-            let daily_app_focus_duration_seconds =
-                json!(self.duration.num_milliseconds() as f64 / 1000.);
-            crate::telemetry::record_event(
-                user_id,
-                anonymous_id,
-                "Daily App Focus Duration (seconds)".into(),
-                Some(daily_app_focus_duration_seconds),
-                false, /* contains_ugc */
-                self.last_synced_time.date().and_hms(0, 0, 0),
-            );
             self.reset();
         }
     }
@@ -34,8 +21,8 @@ impl DailyAppFocusDuration {
         self.last_synced_time = get_current_time();
     }
 
-    fn add_duration(&mut self, duration: Duration, user_id: Option<String>, anonymous_id: String) {
-        self.try_record(user_id, anonymous_id);
+    fn add_duration(&mut self, duration: Duration) {
+        self.try_reset_for_new_day();
         if let Some(new_duration) = self.duration.checked_add(&duration) {
             self.duration = new_duration;
         } else {
@@ -47,6 +34,12 @@ impl DailyAppFocusDuration {
 pub struct AppFocusInfo {
     last_time_app_focused: DateTime<Utc>,
     daily_app_focus_duration: DailyAppFocusDuration,
+}
+
+impl Default for AppFocusInfo {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AppFocusInfo {
@@ -61,24 +54,19 @@ impl AppFocusInfo {
         }
     }
 
-    pub fn record_app_focus(&mut self, user_id: Option<String>, anonymous_id: String) {
+    pub fn record_app_focus(&mut self) {
         self.last_time_app_focused = get_current_time();
-        self.try_record_daily_app_focus_duration(user_id, anonymous_id);
+        self.try_record_daily_app_focus_duration();
     }
 
-    pub fn try_record_daily_app_focus_duration(
-        &mut self,
-        user_id: Option<String>,
-        anonymous_id: String,
-    ) {
-        self.daily_app_focus_duration
-            .try_record(user_id, anonymous_id);
+    pub fn try_record_daily_app_focus_duration(&mut self) {
+        self.daily_app_focus_duration.try_reset_for_new_day();
     }
 
-    pub fn record_app_blur(&mut self, user_id: Option<String>, anonymous_id: String) {
+    pub fn record_app_blur(&mut self) {
         let app_focus_duration =
             get_current_time().signed_duration_since(self.last_time_app_focused);
         self.daily_app_focus_duration
-            .add_duration(app_focus_duration, user_id, anonymous_id);
+            .add_duration(app_focus_duration);
     }
 }

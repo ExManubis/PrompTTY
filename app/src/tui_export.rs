@@ -50,9 +50,7 @@ pub use crate::ai::agent_conversations_model::{
     query_conversation_entries,
 };
 pub use crate::ai::ambient_agents::AmbientAgentTaskId;
-pub use crate::ai::ambient_agents::telemetry::{
-    CloudAgentTelemetryEvent, HandoffEntryPoint, HandoffSurface,
-};
+pub use crate::ai::ambient_agents::handoff_types::{HandoffEntryPoint, HandoffSurface};
 pub use crate::ai::blocklist::agent_view::{
     AgentViewController, AgentViewDisplayMode, AgentViewEntryOrigin, EnterAgentViewError,
     EphemeralMessageModel,
@@ -99,11 +97,6 @@ pub use crate::ai::blocklist::orchestration_topology::{
     orchestration_root_conversation_id, orchestrator_agent_id_for_conversation,
     resolve_orchestration_participant,
 };
-pub use crate::ai::blocklist::telemetry::{
-    BlocklistOrchestrationTelemetryEvent, OrchestrationEnteredEvent, OrchestrationEntrySource,
-    PillBarActionKind, PillBarInteractionEvent, PillBarPillKind, PillSwitchOutcome,
-    RunAgentsCardDecision, run_agents_card_decision_event,
-};
 pub use crate::ai::blocklist::view_util::{
     FAILED_OUTPUT_USAGE_NOTICE_TEXT, FailedOutputPresentation, failed_output_presentation,
     format_credits, should_show_failed_output_usage_notice,
@@ -114,11 +107,11 @@ pub use crate::ai::blocklist::{
     BlocklistAIController, BlocklistAIInputModel, InputConfig, InputModePolicy,
     InputModePolicyHandle, InputType, InputTypeAutoDetectionSource, NewConversationDecision,
     PendingAttachment, PendingAttachmentSummary, PolicyConfigUpdate, QueuedQueryEvent,
-    QueuedQueryModel, RequestFileEditsExecutor, RunAgentsExecutor, RunAgentsExecutorEvent,
-    RunAgentsSpawningSnapshot, ShellCommandExecutor, ShellCommandExecutorEvent, StartAgentExecutor,
-    StartAgentExecutorEvent, StartAgentOutcome, StartAgentRequest, StartAgentRequestId,
-    block_context_from_terminal_model, inherit_child_agent_settings,
-    maybe_build_ai_query_upsert_event,
+    QueuedQueryModel, RequestFileEditsExecutor, RunAgentsCardDecision, RunAgentsExecutor,
+    RunAgentsExecutorEvent, RunAgentsSpawningSnapshot, ShellCommandExecutor,
+    ShellCommandExecutorEvent, StartAgentExecutor, StartAgentExecutorEvent, StartAgentOutcome,
+    StartAgentRequest, StartAgentRequestId, block_context_from_terminal_model,
+    inherit_child_agent_settings, maybe_build_ai_query_upsert_event,
 };
 #[cfg(not(target_family = "wasm"))]
 pub use crate::ai::blocklist::{
@@ -194,7 +187,6 @@ pub use crate::server::server_api::ai::{
 };
 #[cfg(feature = "voice_input")]
 pub use crate::server::team_scope::RequestTeamScope;
-pub use crate::server::telemetry::{SlashMenuSource, TelemetryEvent};
 pub use crate::settings::{AISettingsChangedEvent, InputSettings};
 pub use crate::terminal::alt_screen::{should_intercept_mouse, should_intercept_scroll};
 pub use crate::terminal::color::{Colors as TerminalColors, List as TerminalColorList};

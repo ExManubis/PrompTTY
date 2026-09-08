@@ -1,6 +1,7 @@
 //! This module contains model, controller, and view logic for Blocklist AI.
 mod action_model;
 pub mod agent_view;
+pub mod analytics_kinds;
 pub mod block;
 mod child_agent_launch;
 pub mod code_block;
@@ -30,11 +31,9 @@ pub mod suggested_agent_mode_workflow_modal;
 pub mod suggested_rule_modal;
 mod suggestion_chip_view;
 pub mod summarization_cancel_dialog;
-pub(crate) mod telemetry;
 pub mod usage;
 
 pub(crate) mod codebase_index_speedbump_banner;
-pub(crate) mod telemetry_banner;
 pub(crate) mod view_util;
 
 // Consumed by `tui_export` for the `warp_tui` frontend.
@@ -55,8 +54,7 @@ pub use action_model::{
 };
 #[cfg_attr(target_family = "wasm", allow(unused_imports))]
 pub(crate) use action_model::{
-    FileReadResult, ReadFileContextResult, RequestFileEditsFormatKind, apply_edits,
-    read_local_file_context,
+    FileReadResult, ReadFileContextResult, apply_edits, read_local_file_context,
 };
 // Consumed by `tui_export` for the `warp_tui` frontend.
 #[cfg(feature = "tui")]
@@ -71,9 +69,11 @@ pub use action_model::{
     StartAgentExecutor, StartAgentExecutorEvent, StartAgentOutcome, StartAgentRequest,
     StartAgentRequestId,
 };
+#[cfg(feature = "tui")]
+pub use analytics_kinds::RunAgentsCardDecision;
 #[cfg(any(test, feature = "integration_tests"))]
 pub(crate) use block::model::testing::FakeAIBlockModel;
-pub(crate) use block::{AIBlock, AIBlockEvent, RequestedEditResolution, init, model};
+pub(crate) use block::{AIBlock, AIBlockEvent, init, model};
 pub use block::{keyboard_navigable_buttons, toggleable_items};
 pub use child_agent_launch::inherit_child_agent_settings;
 #[cfg(not(target_family = "wasm"))]
@@ -122,9 +122,9 @@ pub(crate) use passive_suggestions::{
     LegacyPassiveSuggestionsEvent, LegacyPassiveSuggestionsModel, MaaPassiveSuggestionsEvent,
     MaaPassiveSuggestionsModel, PassiveSuggestionsModels,
 };
+pub use permissions::BlocklistAIPermissions;
 #[cfg(test)]
 pub(crate) use permissions::is_agent_mode_autonomy_allowed;
-pub use permissions::{BlocklistAIPermissions, CommandExecutionPermissionAllowedReason};
 #[cfg_attr(target_family = "wasm", allow(unused))]
 pub(crate) use persistence::PersistedAIInputType;
 #[cfg_attr(target_family = "wasm", allow(unused))]

@@ -2028,7 +2028,6 @@ define_settings_group!(AISettings, settings: [
         description: "Whether computer use is enabled for cloud agent conversations.",
     }
 
-
     // Whether file-based MCP servers from third-party AI tools (e.g. Claude, Codex) should
     // be automatically detected and spawned. Warp-native config files (.warp/.mcp.json) are
     // always detected and spawned, regardless of this setting.
@@ -2096,7 +2095,6 @@ define_settings_group!(AISettings, settings: [
         toml_path: "agents.warp_agent.other.show_conversation_history",
         description: "Whether conversation history appears in the tools panel.",
     }
-
 
     // Controls whether agent notifications (mailbox button, toasts, notification items) are shown.
     show_agent_notifications: ShowAgentNotifications {

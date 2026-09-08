@@ -11,7 +11,6 @@ use warp_cli::agent::Harness;
 use warp_core::command::ExitCode;
 use warp_core::execution_mode::AppExecutionMode;
 use warp_core::features::FeatureFlag;
-use warp_core::send_telemetry_from_ctx;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::WarpTheme;
 use warp_core::ui::theme::color::internal_colors;
@@ -59,7 +58,6 @@ use crate::ai::blocklist::{
 };
 use crate::ai::llms::LLMPreferences;
 use crate::ai::skills::SkillDescriptor;
-use crate::code_review::CodeReviewTelemetryEvent;
 use crate::notebooks::NotebookId;
 use crate::persistence::ModelEvent;
 use crate::persistence::model::{
@@ -2648,23 +2646,13 @@ impl AIConversation {
             exchange_id: initial_exchange_id,
             ..
         } = added_exchanges.first();
-        let identifiers = AIIdentifiers {
+        let _identifiers = AIIdentifiers {
             server_output_id: None,
             server_conversation_id: self.server_conversation_token.clone().map(Into::into),
             client_conversation_id: Some(self.id),
             client_exchange_id: Some(*initial_exchange_id),
             model_id: None,
         };
-
-        send_telemetry_from_ctx!(
-            crate::TelemetryEvent::AgentModeError {
-                identifiers,
-                error: error.to_string(),
-                is_user_visible: true,
-                will_attempt_to_resume: recovery_pending,
-            },
-            ctx
-        );
 
         for AddedExchange {
             exchange_id,
@@ -3043,12 +3031,6 @@ impl AIConversation {
                                         comments_op.clone(),
                                     );
                                     if resolved_count > 0 {
-                                        send_telemetry_from_ctx!(
-                                            CodeReviewTelemetryEvent::CommentResolved {
-                                                resolved_count
-                                            },
-                                            ctx
-                                        );
                                     }
                                 } else {
                                     report_error!(
@@ -4716,7 +4698,6 @@ impl AIAgentExchange {
                         server_output_id: Some(server_output_id),
                         api_metadata_bytes: None,
                         suggestions: None,
-                        telemetry_events: vec![],
                         model_info: None,
                         request_cost: None,
                     }));

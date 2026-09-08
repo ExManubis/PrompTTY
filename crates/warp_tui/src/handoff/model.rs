@@ -15,13 +15,12 @@ use parking_lot::FairMutex;
 use warp::settings::{AISettings, PrivacySettings, PrivacySettingsChangedEvent};
 use warp::tui_export::{
     AIConversationId, AISettingsChangedEvent, AttachmentInput, BlocklistAIContextModel,
-    BlocklistAIController, BlocklistAIHistoryModel, CloudAgentTelemetryEvent,
-    CloudEnvironmentCatalog, HandoffCommitOutcome, HandoffEntryPoint, HandoffLaunchAttachments,
-    HandoffPrepareError, HandoffPrepareInput, HandoffRestoration, HandoffSurface, LLMId,
+    BlocklistAIController, BlocklistAIHistoryModel, CloudEnvironmentCatalog, HandoffCommitOutcome,
+    HandoffLaunchAttachments, HandoffPrepareError, HandoffPrepareInput, HandoffRestoration, LLMId,
     LLMPreferences, LLMPreferencesEvent, OptionRow, OptionSnapshot, OptionSourceStatus,
     PendingCloudLaunch, PendingHandoff, ServerApiProvider, SnapshotUploadTarget, TerminalModel,
-    UserWorkspaces, UserWorkspacesEvent, execute_handoff, handoff_dispatch_error,
-    oz_model_snapshot, prepare_handoff, suggest_handoff_environment,
+    UserWorkspaces, UserWorkspacesEvent, execute_handoff, oz_model_snapshot, prepare_handoff,
+    suggest_handoff_environment,
 };
 use warpui::{AppContext, Entity, EntityId, ModelContext, ModelHandle, SingletonEntity as _};
 
@@ -163,8 +162,6 @@ impl TuiHandoffModel {
                     ai_client: provider.get_ai_client(),
                     http: provider.get_http_client(),
                 },
-                HandoffEntryPoint::SlashCommand,
-                HandoffSurface::Tui,
             )
             .with_expected_conversation_id(source_conversation_id)
             .with_current_working_directory(current_working_directory.clone())
@@ -628,22 +625,6 @@ impl TuiHandoffModel {
                     ctx.notify();
                 }
                 HandoffCommitOutcome::Failed(failure) => {
-                    warp::send_telemetry_from_ctx!(
-                        CloudAgentTelemetryEvent::DispatchFailed {
-                            error: handoff_dispatch_error(&failure.issue),
-                        },
-                        ctx
-                    );
-                    if let Some(derived_workspace_had_content) =
-                        failure.derived_workspace_had_content
-                    {
-                        warp::send_telemetry_from_ctx!(
-                            CloudAgentTelemetryEvent::HandoffSnapshotPrepared {
-                                derived_workspace_had_content,
-                            },
-                            ctx
-                        );
-                    }
                     model.dismissed = true;
                     ctx.emit(TuiHandoffModelEvent::Failed {
                         restoration: failure.restoration,
@@ -659,13 +640,6 @@ impl TuiHandoffModel {
                     ctx.notify();
                 }
                 HandoffCommitOutcome::Created(created) => {
-                    warp::send_telemetry_from_ctx!(
-                        CloudAgentTelemetryEvent::HandoffSnapshotPrepared {
-                            derived_workspace_had_content: created
-                                .derived_workspace_had_content,
-                        },
-                        ctx
-                    );
                     model.phase = TuiHandoffPhase::Created {
                         url: created.url,
                         completed_at: Local::now()

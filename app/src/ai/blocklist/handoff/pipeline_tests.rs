@@ -154,8 +154,6 @@ fn prepare_falls_back_to_auto_for_an_implicit_local_model() {
                             ai_client: provider.get_ai_client(),
                             http: provider.get_http_client(),
                         },
-                        HandoffEntryPoint::Ampersand,
-                        HandoffSurface::Gui,
                     )
                     .with_launch(Some(PendingCloudLaunch {
                         prompt: "new task".to_owned(),
@@ -368,8 +366,6 @@ fn prepare_rejects_an_empty_source_without_a_prompt() {
                         ai_client: provider.get_ai_client(),
                         http: provider.get_http_client(),
                     },
-                    HandoffEntryPoint::Ampersand,
-                    HandoffSurface::Gui,
                 ),
                 ctx,
             )
@@ -399,8 +395,6 @@ fn prepare_accepts_a_cwd_snapshot_without_a_source_or_prompt() {
                             ai_client: provider.get_ai_client(),
                             http: provider.get_http_client(),
                         },
-                        HandoffEntryPoint::Ampersand,
-                        HandoffSurface::Gui,
                     )
                     .with_current_working_directory(Some("/repo".to_owned())),
                     ctx,
@@ -447,8 +441,6 @@ fn prepare_preserves_untransferred_source_attachments() {
                             ai_client: provider.get_ai_client(),
                             http: provider.get_http_client(),
                         },
-                        HandoffEntryPoint::Ampersand,
-                        HandoffSurface::Gui,
                     )
                     .with_source_conversation_id(None)
                     .with_launch(Some(PendingCloudLaunch {
@@ -545,8 +537,6 @@ fn prepare_collects_completed_descendant_paths() {
                             ai_client: provider.get_ai_client(),
                             http: provider.get_http_client(),
                         },
-                        HandoffEntryPoint::Ampersand,
-                        HandoffSurface::Gui,
                     )
                     .with_expected_conversation_id(Some(parent_id))
                     .with_launch(Some(PendingCloudLaunch {
@@ -641,8 +631,6 @@ fn prepare_orders_guards_cancellation_token_check_and_attachment_transfer() {
                         ai_client: provider.get_ai_client(),
                         http: provider.get_http_client(),
                     },
-                    HandoffEntryPoint::Ampersand,
-                    HandoffSurface::Gui,
                 )
                 .with_expected_conversation_id(Some(conversation_id))
                 .with_long_running_command(true)
@@ -683,8 +671,6 @@ fn prepare_orders_guards_cancellation_token_check_and_attachment_transfer() {
                         ai_client: provider.get_ai_client(),
                         http: provider.get_http_client(),
                     },
-                    HandoffEntryPoint::Ampersand,
-                    HandoffSurface::Gui,
                 )
                 .with_expected_conversation_id(Some(conversation_id))
                 .with_launch(Some(launch.clone()))
@@ -730,8 +716,6 @@ fn prepare_orders_guards_cancellation_token_check_and_attachment_transfer() {
                         ai_client: provider.get_ai_client(),
                         http: provider.get_http_client(),
                     },
-                    HandoffEntryPoint::Ampersand,
-                    HandoffSurface::Gui,
                 )
                 .with_expected_conversation_id(Some(conversation_id))
                 .with_launch(Some(launch)),
@@ -891,7 +875,6 @@ async fn fresh_launch_skips_fork_and_materializes_before_spawn() {
         panic!("expected created handoff");
     };
     assert!(created.at_capacity);
-    assert!(!created.derived_workspace_had_content);
 }
 
 #[tokio::test]
@@ -1001,7 +984,6 @@ async fn snapshot_failure_degrades_to_spawn_without_token() {
         panic!("snapshot failure should not fail the handoff");
     };
     assert!(created.snapshot_failed);
-    assert!(created.derived_workspace_had_content);
     assert!(created.request.initial_snapshot_token.is_none());
 }
 
