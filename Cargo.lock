@@ -14311,7 +14311,7 @@ dependencies = [
 
 [[package]]
 name = "warp"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "addr",
  "aha-reqwest-eventsource",
@@ -15244,7 +15244,6 @@ dependencies = [
  "warp_editor",
  "warp_errors",
  "warp_files",
- "warp_logging",
  "warp_search_core",
  "warp_terminal",
  "warp_util",
