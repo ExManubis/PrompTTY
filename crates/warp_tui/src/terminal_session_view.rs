@@ -1,7 +1,7 @@
 //! Authenticated terminal-session TUI surface.
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
@@ -114,7 +114,6 @@ use crate::orchestration_tab_bar::{
     orchestration_tab_bar_config, register_orchestration_surface_bindings,
     render_orchestration_child_selected_tab_footer, render_orchestration_tab_footer,
 };
-use crate::platform::reveal_path_in_file_manager;
 use crate::prompt_and_command_history_menu::{
     TuiPromptAndCommandHistoryMenuEvent, TuiPromptAndCommandHistoryMenuModel,
 };
@@ -357,7 +356,6 @@ const COPY_FAILED_HINT: &str = "failed to copy to clipboard";
 const COPY_DEBUGGING_ID_HINT: &str = "Debugging information copied to clipboard";
 const COPY_DEBUGGING_ID_NO_TOKEN_HINT: &str =
     "No debugging ID available for this conversation yet.";
-const LOG_BUNDLE_FAILED_HINT: &str = "Failed to create log bundle (check logs)";
 const NLD_ENABLED_HINT: &str = "Natural language detection enabled.";
 const NLD_DISABLED_HINT: &str = "Natural language detection disabled.";
 const NLD_PERSISTENCE_FAILED_HINT: &str = "Could not save the natural language detection setting.";
@@ -381,10 +379,6 @@ const COST_NO_ACTIVE_CONVERSATION_HINT: &str =
 const COST_EMPTY_CONVERSATION_HINT: &str = "Cannot show conversation cost: conversation is empty";
 const COST_CONVERSATION_IN_PROGRESS_HINT: &str =
     "Cannot show conversation cost: conversation is in progress";
-
-fn log_bundle_success_message(path: &Path) -> String {
-    format!("Log bundle saved to {}", path.display())
-}
 
 /// Shell command that invokes the TUI for the current build channel.
 ///
@@ -3852,7 +3846,6 @@ impl TuiTerminalSessionView {
                 controller.set_latest_instruction(block_id, prompt, ctx);
             });
         }
-        if dispatched {}
     }
 
     /// Wraps the rendered session tree in the hold-to-talk modifier handler.
@@ -4477,35 +4470,6 @@ impl TuiTerminalSessionView {
             SlashCommandKind::Logout => {
                 record_static_slash_command_accepted(command.name, true, ctx);
                 log_out_tui(ctx);
-            }
-            SlashCommandKind::ViewLogs => {
-                self.input_view.update(ctx, |input, ctx| input.clear(ctx));
-                ctx.spawn(
-                    async move {
-                        tokio::task::spawn_blocking(|| {
-                            let path = warp_logging::create_log_bundle_zip()?;
-                            reveal_path_in_file_manager(&path);
-                            Ok::<_, anyhow::Error>(path)
-                        })
-                        .await
-                    },
-                    |me, result, ctx| match result {
-                        Ok(Ok(path)) => {
-                            me.show_success_hint(log_bundle_success_message(&path), ctx);
-                        }
-                        Ok(Err(error)) => {
-                            report_error!(error.context("Failed to create TUI log bundle"));
-                            me.show_transient_hint(LOG_BUNDLE_FAILED_HINT.to_owned(), ctx);
-                        }
-                        Err(error) => {
-                            report_error!(
-                                anyhow::Error::new(error).context("TUI log bundle task failed")
-                            );
-                            me.show_transient_hint(LOG_BUNDLE_FAILED_HINT.to_owned(), ctx);
-                        }
-                    },
-                );
-                record_static_slash_command_accepted(command.name, true, ctx);
             }
             SlashCommandKind::Voice => {
                 #[cfg(feature = "voice_input")]

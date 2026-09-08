@@ -37,13 +37,10 @@ impl ChangelogModel {
         ctx: &mut ModelContext<Self>,
     ) {
         match &self.changelog {
-            ChangelogState::Some(changelog) => {
+            ChangelogState::Some(_) => {
                 // Don't refetch the changelog if we already have it
                 ctx.notify();
-                ctx.emit(Event::ChangelogRequestComplete {
-                    request_type,
-                    changelog: changelog.clone(),
-                });
+                ctx.emit(Event::ChangelogRequestComplete { request_type });
             }
             ChangelogState::Pending => {
                 // There is already a request pending, so no-op while we wait for the response
@@ -85,22 +82,18 @@ impl ChangelogModel {
                 self.maybe_add_changelog_sections();
                 self.parse_changelog_markdown();
                 ctx.notify();
-                ctx.emit(Event::ChangelogRequestComplete {
-                    request_type,
-                    changelog,
-                });
-                // If the image URL is empty, we just log info and don't try to fetch any image
+                ctx.emit(Event::ChangelogRequestComplete { request_type });
                 self.fetch_changelog_image(ctx);
             }
             Ok(None) => {
                 self.changelog = ChangelogState::None;
                 log::info!("No changelog found for current version and channel");
-                ctx.emit(Event::ChangelogRequestFailed { request_type });
+                ctx.emit(Event::ChangelogRequestFailed);
             }
             Err(e) => {
                 self.changelog = ChangelogState::None;
                 log::warn!("Error checking for changelog {e:?}");
-                ctx.emit(Event::ChangelogRequestFailed { request_type });
+                ctx.emit(Event::ChangelogRequestFailed);
             }
         }
     }
@@ -158,39 +151,25 @@ impl ChangelogModel {
             }
         }
     }
-
-    pub fn is_check_pending(&self) -> bool {
-        matches!(self.changelog, ChangelogState::Pending)
-    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ChangelogHeader {
     NewFeatures,
-    Improvements,
-    BugFixes,
 }
 
 impl fmt::Display for ChangelogHeader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ChangelogHeader::NewFeatures => write!(f, "New features"),
-            ChangelogHeader::Improvements => write!(f, "Improvements"),
-            ChangelogHeader::BugFixes => write!(f, "Bug fixes"),
         }
     }
 }
 
 #[derive(Debug)]
 pub enum Event {
-    ChangelogRequestComplete {
-        request_type: ChangelogRequestType,
-        changelog: Changelog,
-    },
-    ChangelogRequestFailed {
-        request_type: ChangelogRequestType,
-    },
-    ImageRequestComplete,
+    ChangelogRequestComplete { request_type: ChangelogRequestType },
+    ChangelogRequestFailed,
 }
 
 #[derive(Debug)]

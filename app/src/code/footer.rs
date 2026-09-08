@@ -1825,8 +1825,6 @@ impl TypedActionView for CodeFooterView {
                         _ => None,
                     };
 
-                    if let Some(_st) = server_type {}
-
                     if needed_install {
                         ctx.emit(CodeFooterViewEvent::InstallAndEnableLSP {
                             path: path.clone(),

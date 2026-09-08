@@ -701,7 +701,6 @@ impl ApiKeyManager {
         key: Option<String>,
         ctx: &mut ModelContext<Self>,
     ) -> anyhow::Result<()> {
-        let was_present = provider.api_key(&self.keys).is_some();
         let mut keys = self.keys.clone();
         if !provider.set_api_key(&mut keys, key) {
             return Err(anyhow::anyhow!(
@@ -717,10 +716,8 @@ impl ApiKeyManager {
                 anyhow::Error::new(error).context("Failed to write API keys to secure storage")
             })?;
         if self.keys != keys {
-            let is_present = provider.api_key(&keys).is_some();
             self.keys = keys;
             ctx.emit(ApiKeyManagerEvent::KeysUpdated);
-            if was_present != is_present {}
         }
         Ok(())
     }
@@ -759,12 +756,9 @@ impl ApiKeyManager {
         if self.grok_tokens == tokens {
             return;
         }
-        let was_connected = self.grok_tokens.is_some();
-        let is_connected = tokens.is_some();
         self.grok_tokens = tokens;
         ctx.emit(ApiKeyManagerEvent::KeysUpdated);
         self.write_grok_tokens_to_secure_storage(ctx);
-        if was_connected != is_connected {}
     }
 
     pub fn set_provider_key(
@@ -773,14 +767,11 @@ impl ApiKeyManager {
         key: Option<String>,
         ctx: &mut ModelContext<Self>,
     ) {
-        let was_present = provider.api_key(&self.keys).is_some();
         if !provider.set_api_key(&mut self.keys, key) {
             return;
         }
         ctx.emit(ApiKeyManagerEvent::KeysUpdated);
         self.write_keys_to_secure_storage(ctx);
-        let is_present = provider.api_key(&self.keys).is_some();
-        if was_present != is_present {}
     }
 
     pub fn add_custom_endpoint(

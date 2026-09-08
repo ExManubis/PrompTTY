@@ -84,7 +84,6 @@ fn tui_commands_have_typed_identities_and_explicit_surface_support() {
         (&commands::MCP, SlashCommandKind::Mcp),
         (&commands::EXIT, SlashCommandKind::Exit),
         (&commands::LOGOUT, SlashCommandKind::Logout),
-        (&commands::VIEW_LOGS, SlashCommandKind::ViewLogs),
         (&commands::VOICE, SlashCommandKind::Voice),
         (&commands::THEME, SlashCommandKind::Theme),
     ] {

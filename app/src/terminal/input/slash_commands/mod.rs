@@ -1299,7 +1299,6 @@ impl Input {
             | SlashCommandKind::ApiKeys
             | SlashCommandKind::ConnectGrok
             | SlashCommandKind::Usage
-            | SlashCommandKind::ViewLogs
             | SlashCommandKind::Voice
             | SlashCommandKind::NaturalLanguageDetection
             | SlashCommandKind::Theme

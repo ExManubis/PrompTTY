@@ -2565,26 +2565,13 @@ impl RootView {
                 ctx.notify();
             }
             AgentOnboardingEvent::UpgradeRequested => {
-                let upgrade_started = match &mut self.auth_onboarding_state {
-                    AuthOnboardingState::PostAuthOnboarding {
-                        account_class,
-                        upgrade_started,
-                        ..
-                    } if !*upgrade_started => {
-                        *upgrade_started = true;
-                        Some(*account_class)
-                    }
-                    AuthOnboardingState::PostAuthOnboarding { .. }
-                    | AuthOnboardingState::Auth(_)
-                    | AuthOnboardingState::ConfirmIncomingAuth(_)
-                    | AuthOnboardingState::NeedsSsoLink(_)
-                    | AuthOnboardingState::Onboarding { .. }
-                    | AuthOnboardingState::LoginSlide { .. }
-                    | AuthOnboardingState::Terminal(_) => None,
-                    #[cfg(target_family = "wasm")]
-                    AuthOnboardingState::WebImport(_) => None,
-                };
-                if let Some(_account_class) = upgrade_started {}
+                if let AuthOnboardingState::PostAuthOnboarding {
+                    upgrade_started, ..
+                } = &mut self.auth_onboarding_state
+                    && !*upgrade_started
+                {
+                    *upgrade_started = true;
+                }
             }
             AgentOnboardingEvent::UpgradeCopyUrlRequested => {}
             AgentOnboardingEvent::UpgradePasteTokenFromClipboardRequested => {

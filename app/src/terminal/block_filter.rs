@@ -83,11 +83,6 @@ struct MouseStateHandles {
     invert_filter_mouse_state_handle: MouseStateHandle,
 }
 
-pub enum OpenedFromClick {
-    Yes,
-    No,
-}
-
 pub enum BlockFilterEditorEvent {
     UpdateFilter(BlockFilterQuery),
     Close,

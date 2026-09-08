@@ -1,4 +1,6 @@
-# PrompTTY
+<p align="center">
+  <img src="ascii-art-text.png" alt="PrompTTY" />
+</p>
 
 PrompTTY is a local-first terminal and agentic development environment, forked from [Warp](https://www.warp.dev). It keeps the desktop and TUI clients. Host builds are **macOS and Linux only**; SSH into Windows remotes still works. Warp-hosted cloud services (Drive, teams, billing, Oz, telemetry, autoupdate) are being removed.
 

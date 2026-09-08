@@ -23,7 +23,6 @@ use super::section_views::{
 };
 use super::{KeybindingsView, ResourceCenterMainEvent, ResourceCenterMainView, TipsCompleted};
 use crate::appearance::Appearance;
-use crate::changelog_model::ChangelogModel;
 use crate::ui_components::buttons::icon_button;
 use crate::ui_components::icons;
 use crate::ui_components::window_focus_dimming::WindowFocusDimming;
@@ -110,17 +109,12 @@ pub enum ResourceCenterAction {
 }
 
 impl ResourceCenterView {
-    pub fn new(
-        ctx: &mut ViewContext<Self>,
-        tips_completed: ModelHandle<TipsCompleted>,
-        changelog_model_handle: ModelHandle<ChangelogModel>,
-    ) -> Self {
+    pub fn new(ctx: &mut ViewContext<Self>, tips_completed: ModelHandle<TipsCompleted>) -> Self {
         let main_view = ResourceCenterPageView {
             page: ResourceCenterPage::Main,
             page_view_handle: ResourceCenterViewHandle::Main(Self::build_main_view(
                 ctx,
                 tips_completed,
-                changelog_model_handle,
             )),
         };
         let keybindings_view = ResourceCenterPageView {
@@ -153,11 +147,9 @@ impl ResourceCenterView {
     fn build_main_view(
         ctx: &mut ViewContext<Self>,
         tips_completed: ModelHandle<TipsCompleted>,
-        changelog_model_handle: ModelHandle<ChangelogModel>,
     ) -> ViewHandle<ResourceCenterMainView> {
-        let main_view = ctx.add_typed_action_view(|ctx| {
-            ResourceCenterMainView::new(ctx, tips_completed.clone(), changelog_model_handle)
-        });
+        let main_view = ctx
+            .add_typed_action_view(|ctx| ResourceCenterMainView::new(ctx, tips_completed.clone()));
 
         ctx.subscribe_to_view(&main_view, move |me, _, event, ctx| {
             me.handle_main_event(event, ctx);
@@ -364,7 +356,11 @@ impl ResourceCenterView {
         let close_button = self.render_close_button(appearance);
         match current_page {
             Some(ResourceCenterPage::Keybindings) => {
-                vec![self.render_back_button(appearance), title, close_button]
+                if FeatureFlag::AvatarInTabBar.is_enabled() {
+                    vec![title, close_button]
+                } else {
+                    vec![self.render_back_button(appearance), title, close_button]
+                }
             }
             _ => {
                 vec![title, self.render_keyboard_button(appearance), close_button]

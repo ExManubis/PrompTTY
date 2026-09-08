@@ -1099,47 +1099,6 @@ impl LeftPanelView {
 }
 
 impl LeftPanelView {
-    pub fn handle_action_with_force_open(
-        &mut self,
-        action: &LeftPanelAction,
-        force_open: bool,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        match action {
-            LeftPanelAction::ProjectExplorer => {
-                active_view_state::set(self, ToolPanelView::ProjectExplorer, ctx);
-                if force_open {}
-            }
-            LeftPanelAction::GlobalSearch { entry_focus } => {
-                let was_active = self.active_view.get()
-                    == ToolPanelView::GlobalSearch {
-                        entry_focus: *entry_focus,
-                    };
-                active_view_state::set(
-                    self,
-                    ToolPanelView::GlobalSearch {
-                        entry_focus: *entry_focus,
-                    },
-                    ctx,
-                );
-                if !was_active {}
-            }
-            LeftPanelAction::WarpDrive => {
-                active_view_state::set(self, ToolPanelView::WarpDrive, ctx);
-                if self.active_view_availability(ctx) == ToolPanelAvailability::Available
-                    && force_open
-                {}
-            }
-            LeftPanelAction::ConversationListView => {
-                active_view_state::set(self, ToolPanelView::ConversationListView, ctx);
-                if self.active_view_availability(ctx) == ToolPanelAvailability::Available {}
-            }
-            LeftPanelAction::SignIn => {
-                ctx.emit(LeftPanelEvent::SignInRequested);
-            }
-        }
-    }
-
     pub fn on_left_panel_visibility_changed(&self, is_now_open: bool, ctx: &mut ViewContext<Self>) {
         if ToolPanelView::ConversationListView == self.active_view.get() {
             self.on_conversation_list_view_visibility_changed(is_now_open, ctx);
@@ -1213,7 +1172,29 @@ impl TypedActionView for LeftPanelView {
     type Action = LeftPanelAction;
 
     fn handle_action(&mut self, action: &Self::Action, ctx: &mut ViewContext<Self>) {
-        self.handle_action_with_force_open(action, false, ctx);
+        match action {
+            LeftPanelAction::ProjectExplorer => {
+                active_view_state::set(self, ToolPanelView::ProjectExplorer, ctx);
+            }
+            LeftPanelAction::GlobalSearch { entry_focus } => {
+                active_view_state::set(
+                    self,
+                    ToolPanelView::GlobalSearch {
+                        entry_focus: *entry_focus,
+                    },
+                    ctx,
+                );
+            }
+            LeftPanelAction::WarpDrive => {
+                active_view_state::set(self, ToolPanelView::WarpDrive, ctx);
+            }
+            LeftPanelAction::ConversationListView => {
+                active_view_state::set(self, ToolPanelView::ConversationListView, ctx);
+            }
+            LeftPanelAction::SignIn => {
+                ctx.emit(LeftPanelEvent::SignInRequested);
+            }
+        }
     }
 }
 

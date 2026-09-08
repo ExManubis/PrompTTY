@@ -4205,12 +4205,6 @@ impl Input {
         _trigger: QueuedPromptSendNowTrigger,
         ctx: &mut ViewContext<Self>,
     ) {
-        // Read the origin before dispatch; the row is removed once it fires.
-        let origin = QueuedQueryModel::as_ref(ctx)
-            .queue(conversation_id)
-            .iter()
-            .find(|row| row.id() == query_id)
-            .map(|row| row.origin());
         let dispatched = if is_command {
             self.execute_queued_command(&text, conversation_id, ctx)
         } else {
@@ -4220,7 +4214,6 @@ impl Input {
         if !dispatched {
             return;
         }
-        if let Some(_origin) = origin {}
         QueuedQueryModel::handle(ctx).update(ctx, |model, ctx| {
             model.remove_fired_row(conversation_id, query_id, ctx);
         });

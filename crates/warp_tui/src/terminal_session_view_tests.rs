@@ -68,14 +68,14 @@ use super::{
     COST_EMPTY_CONVERSATION_HINT, COST_NO_ACTIVE_CONVERSATION_HINT, CTRL_C_EXIT_HINT,
     CTRL_C_KILL_CHILD_HINT, ConversationRestoreState,
     DETACH_AGENT_FROM_RUNNING_COMMAND_BINDING_NAME, INLINE_MENU_TOP_PADDING_ROWS,
-    LOADING_CONVERSATION_HINT, LOG_BUNDLE_FAILED_HINT, RUNNING_COMMAND_DETACH_HINT,
+    LOADING_CONVERSATION_HINT, RUNNING_COMMAND_DETACH_HINT,
     SESSION_CAN_ACCEPT_BLOCKED_TERMINAL_USE_ACTION_FLAG,
     SESSION_CAN_ATTACH_AGENT_TO_RUNNING_COMMAND_FLAG,
     SESSION_CAN_DETACH_AGENT_FROM_RUNNING_COMMAND_FLAG, SHELL_MODE_HINT, STATUSLINE_RESET_HINT,
     TuiConversationRestoreOrigin, TuiTerminalSessionAction, TuiTerminalSessionEvent,
     TuiTerminalSessionView, attachment_focus_available, cost_command_unavailable_hint,
-    export_file_success_message, log_bundle_success_message, mcp_primary_action_hint,
-    raw_prompt_if_not_blank, render_mcp_install_footer, render_mcp_menu_footer,
+    export_file_success_message, mcp_primary_action_hint, raw_prompt_if_not_blank,
+    render_mcp_install_footer, render_mcp_menu_footer,
 };
 #[cfg(feature = "voice_input")]
 use super::{
@@ -964,15 +964,6 @@ fn voice_slash_command_rejects_arguments_before_prompt_fallback() {
 }
 
 #[test]
-fn log_bundle_success_message_includes_the_absolute_path() {
-    let path = std::path::Path::new("/tmp/warp-20260718-132640.zip");
-    assert_eq!(
-        log_bundle_success_message(path),
-        "Log bundle saved to /tmp/warp-20260718-132640.zip"
-    );
-}
-
-#[test]
 fn tui_cli_shell_command_uses_channel_entry_points() {
     assert_eq!(
         super::tui_cli_shell_command(Channel::Release, "--version"),
@@ -982,14 +973,6 @@ fn tui_cli_shell_command_uses_channel_entry_points() {
         super::tui_cli_shell_command(Channel::Integration, "--version"),
         "promptty-integration --version"
     );
-}
-
-#[test]
-fn log_bundle_failure_hint_does_not_hardcode_a_frontend_path() {
-    assert!(!LOG_BUNDLE_FAILED_HINT.contains("warp.log"));
-    assert!(!LOG_BUNDLE_FAILED_HINT.contains("/oz/"));
-    assert!(!LOG_BUNDLE_FAILED_HINT.contains("/tui/"));
-    assert!(!LOG_BUNDLE_FAILED_HINT.contains("/warp-cli/"));
 }
 #[test]
 fn inline_menu_padding_preserves_result_capacity() {
