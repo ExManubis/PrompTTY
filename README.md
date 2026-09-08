@@ -6,6 +6,9 @@ PrompTTY is a local-first terminal and agentic development environment, forked f
 
 The UI framework (`warpui_core` and `warpui`) is licensed under the [MIT license](LICENSE-MIT). The rest of the repository is licensed under the [AGPL v3](LICENSE-AGPL).
 
+<img width="3528" height="2360" alt="CleanShot 2026-09-08 at 15 57 28@2x" src="https://github.com/user-attachments/assets/efb98d66-6dac-42ff-b2c0-49c023b5d350" />
+
+
 ## Build
 
 ```bash
