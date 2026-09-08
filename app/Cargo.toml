@@ -1,11 +1,11 @@
 [package]
 authors = ["Mikkel Jørgensen <mikkel@codemonkey.computer>"]
 default-run = "promptty"
-description = "The local-first terminal for individuals and teams"
+description = "A terminal for agentic workflows"
 edition = "2024"
 autobins = false
 name = "warp"
-version = "0.2.3"
+version = "0.3.0"
 publish.workspace = true
 license.workspace = true
 

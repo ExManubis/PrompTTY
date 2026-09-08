@@ -12,7 +12,6 @@ use super::settings_page::{
     SettingsWidget,
 };
 use crate::appearance::Appearance;
-use crate::channel::ChannelState;
 use crate::themes::theme::ColorScheme;
 use crate::workspace::WorkspaceAction;
 
@@ -45,6 +44,7 @@ impl View for AboutPageView {
 #[derive(Default)]
 struct AboutPageWidget {
     copy_version_button_mouse_state: MouseStateHandle,
+    github_link_mouse_state: MouseStateHandle,
 }
 
 impl SettingsWidget for AboutPageWidget {
@@ -64,12 +64,12 @@ impl SettingsWidget for AboutPageWidget {
         let ui_builder = appearance.ui_builder();
 
         let image_path = if theme.inferred_color_scheme() == ColorScheme::LightOnDark {
-            "bundled/svg/warp-logo-with-light-title.svg"
+            "bundled/svg/promptty-logo-with-light-title.svg"
         } else {
-            "bundled/svg/warp-logo-with-dark-title.svg"
+            "bundled/svg/promptty-logo-with-dark-title.svg"
         };
 
-        let version = ChannelState::app_version().unwrap_or("v#.##.###");
+        let version = concat!("v", env!("CARGO_PKG_VERSION"));
 
         let version_text = ui_builder
             .span(version.to_string())
@@ -114,8 +114,18 @@ impl SettingsWidget for AboutPageWidget {
                 )
                 .with_child(version_row.finish())
                 .with_child(
-                    ui_builder
-                        .span("Copyright 2026 Warp")
+                    appearance
+                        .ui_builder()
+                        .link(
+                            "https://github.com/ExManubis/PrompTTY".to_string(),
+                            None,
+                            Some(Box::new(|ctx| {
+                                ctx.dispatch_typed_action(WorkspaceAction::OpenLink(
+                                    "https://github.com/ExManubis/PrompTTY".to_string(),
+                                ));
+                            })),
+                            self.github_link_mouse_state.clone(),
+                        )
                         .build()
                         .with_margin_top(16.)
                         .finish(),
