@@ -79,48 +79,6 @@ fn slash_command_menu_renders_voice_row() {
 }
 
 #[test]
-fn slash_command_menu_renders_view_logs_row() {
-    App::test((), |mut app| async move {
-        app.update(|ctx| {
-            ctx.add_singleton_model(|_| Appearance::mock());
-            let input_editor = ctx.add_model(|ctx| CodeEditorModel::new_tui(80, ctx));
-            let suggestions_mode = ctx.add_model(|_| TuiInputSuggestionsModeModel::new());
-            suggestions_mode.update(ctx, |mode, ctx| {
-                mode.set_mode(TuiInputSuggestionsMode::SlashCommands, ctx);
-            });
-            let mixer = ctx.add_model(|_| SlashCommandMixer::new());
-            let conversation_selection = add_test_conversation_selection(ctx);
-            let model = ctx.add_model(|_| {
-                TuiSlashCommandModel::new_for_test(
-                    input_editor,
-                    suggestions_mode,
-                    mixer,
-                    conversation_selection,
-                    vec![TuiSlashCommandRow {
-                        title: "/view-logs".to_owned(),
-                        description: Some("Bundle your TUI logs into a zip archive".to_owned()),
-                        action: AcceptSlashCommandOrSavedPrompt::SlashCommand {
-                            id: SlashCommandId::new(),
-                        },
-                    }],
-                    0,
-                )
-            });
-            let menu = TuiInlineMenu::new(model.clone());
-            let element = menu.render(ctx).expect("slash command menu should render");
-            let lines = render_menu_lines(element, ctx);
-
-            assert!(lines.iter().any(|line| line.contains("/view-logs")));
-            assert!(
-                lines
-                    .iter()
-                    .any(|line| line.contains("Bundle your TUI logs"))
-            );
-        });
-    });
-}
-
-#[test]
 fn slash_command_menu_renders_auto_approve_row() {
     App::test((), |mut app| async move {
         register_tui_session_view_test_singletons(&mut app);

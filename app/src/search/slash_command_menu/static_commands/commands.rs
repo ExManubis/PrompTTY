@@ -87,16 +87,6 @@ pub const MCP: StaticCommand = StaticCommand {
     argument: None,
 };
 
-pub const VIEW_LOGS: StaticCommand = StaticCommand {
-    name: "/view-logs",
-    description: "Bundle your logs into a zip archive",
-    kind: SlashCommandKind::ViewLogs,
-    supported_surfaces: SlashCommandSurfaces::TuiOnly,
-    availability: Availability::ALWAYS,
-    auto_enter_ai_mode: false,
-    argument: None,
-};
-
 /// Starts the headless TUI voice-input session.
 pub const VOICE: StaticCommand = StaticCommand {
     name: "/voice",
@@ -987,7 +977,6 @@ fn all_commands_for_all_surfaces() -> Vec<StaticCommand> {
         MODEL.clone(),
         TEAM,
         STATUS,
-        VIEW_LOGS,
         VOICE,
     ];
 
