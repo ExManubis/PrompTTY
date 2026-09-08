@@ -268,10 +268,3 @@ pub enum PromptChoice {
     Default,
     Custom { builtin_chips: Vec<String> },
 }
-
-#[derive(Clone, Copy, Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum WorktreeBranchNamingMode {
-    Auto,
-    Manual,
-}

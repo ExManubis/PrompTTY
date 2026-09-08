@@ -74,17 +74,6 @@ pub enum CodeReviewContextDestination {
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]
-#[cfg_attr(not(feature = "local_fs"), allow(dead_code))]
-pub enum DiffSetContextScope {
-    /// Attach the full diff set for the current review.
-    #[serde(rename = "all")]
-    All,
-    /// Attach the diff set for a single file.
-    #[serde(rename = "file")]
-    File,
-}
-
-#[derive(Clone, Copy, Debug, Serialize)]
 pub enum GitDialogStatus {
     /// User confirmed the dialog and the underlying git operation succeeded.
     #[serde(rename = "succeeded")]

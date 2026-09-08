@@ -879,9 +879,6 @@ impl WorkflowView {
         None
     }
 
-    /// Generic object telemetry metadata for the currently-open object.
-    #[cfg_attr(not(target_family = "wasm"), allow(dead_code))]
-
     pub fn is_team_workflow(&self) -> bool {
         matches!(self.owner, Some(Owner::Team { .. }))
     }

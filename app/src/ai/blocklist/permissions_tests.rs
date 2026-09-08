@@ -9,11 +9,11 @@ use warpui::{App, EntityId, ModelHandle, SingletonEntity};
 use super::{BlocklistAIHistoryModel, BlocklistAIPermissions};
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
 use crate::ai::agent::conversation::AIConversationId;
-use crate::ai::blocklist::CommandExecutionPermissionAllowedReason;
 use crate::ai::blocklist::permissions::{
-    CommandExecutionPermission, CommandExecutionPermissionDeniedReason, FileReadPermission,
-    FileReadPermissionAllowedReason, FileReadPermissionDeniedReason, FileWritePermission,
-    FileWritePermissionAllowedReason, FileWritePermissionDeniedReason,
+    CommandExecutionPermission, CommandExecutionPermissionAllowedReason,
+    CommandExecutionPermissionDeniedReason, FileReadPermission, FileReadPermissionAllowedReason,
+    FileReadPermissionDeniedReason, FileWritePermission, FileWritePermissionAllowedReason,
+    FileWritePermissionDeniedReason,
 };
 use crate::ai::execution_profiles::profiles::AIExecutionProfilesModel;
 use crate::ai::execution_profiles::{ActionPermission, WriteToPtyPermission};

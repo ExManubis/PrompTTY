@@ -71,7 +71,6 @@ use crate::network::NetworkStatus;
 use crate::server::server_api::TranscribeError;
 #[cfg(feature = "voice_input")]
 use crate::server::team_scope::RequestTeamScope;
-#[cfg(not(target_family = "wasm"))]
 use crate::settings::{
     AISettings, AISettingsChangedEvent, CodeSettings, CodeSettingsChangedEvent, PrivacySettings,
     PrivacySettingsChangedEvent,

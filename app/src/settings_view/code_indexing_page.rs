@@ -619,7 +619,7 @@ impl TypedActionView for CodeIndexingPageView {
                     });
                 }
                 #[cfg(not(feature = "local_fs"))]
-                let _ = workspace_path;
+                let _ = (workspace_path, server_type);
                 ctx.notify();
             }
             CodeIndexingPageAction::EnableSuggestedLspServer {

@@ -19,7 +19,6 @@ use crate::ai::{
         },
     },
 };
-#[cfg(not(target_family = "wasm"))]
 pub struct StopRecordingExecutor;
 
 impl StopRecordingExecutor {

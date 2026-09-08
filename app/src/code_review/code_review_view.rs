@@ -60,7 +60,6 @@ use super::comments::{AttachedReviewComment, CommentOrigin, attach_pending_impor
 use super::diff_size_limits::DiffSize;
 use super::git_dialog::{GitDialog, GitDialogEvent, GitDialogKind};
 use super::{GlobalCodeReviewEvent, GlobalCodeReviewModel};
-#[cfg(feature = "local_fs")]
 use crate::ai::agent::{
     AIAgentAttachment, AgentReviewCommentBatch, CurrentHead, DiffBase, DiffSetHunk,
 };
@@ -102,8 +101,7 @@ use crate::code_review::find_model::CodeReviewFindModel;
 use crate::code_review::git_repo_model::{GitRepoModels, GitRepoStatusEvent, GitRepoStatusModel};
 use crate::code_review::github_repo_model::{GitHubRepoEvent, GitHubRepoModel};
 use crate::code_review::hidden_lines::calculate_hidden_lines;
-use crate::code_review::{CodeReviewContextDestination, DiffSetContextScope, DiffSetScope};
-#[cfg(feature = "local_fs")]
+use crate::code_review::{CodeReviewContextDestination, DiffSetScope};
 use crate::coding_panel_enablement_state::CodingPanelEnablementState;
 use crate::editor::InteractionState;
 use crate::menu::{Event as MenuEvent, Menu, MenuItem, MenuItemFields};
@@ -5685,10 +5683,6 @@ impl CodeReviewView {
         if let Some(terminal_view) = self.attach_target_terminal(ctx) {
             let active_cli_agent = terminal_view.read(ctx, |tv, ctx| tv.active_cli_agent(ctx));
 
-            let _diff_set_scope = match &scope {
-                DiffSetScope::All => DiffSetContextScope::All,
-                DiffSetScope::File(_) => DiffSetContextScope::File,
-            };
             // CLI agent path: write per-file hunk ranges to the PTY (or rich input if open).
             if active_cli_agent.is_some() {
                 if let CodeReviewViewState::Loaded(state) = self.state() {

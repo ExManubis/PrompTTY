@@ -1,9 +1,8 @@
 use std::ffi::OsStr;
 
 use byte_unit::Byte;
-use chrono::{DateTime, Utc};
 use sysinfo::ProcessesToUpdate;
-use warpui::{App, Entity, ModelContext, SingletonEntity};
+use warpui::{Entity, ModelContext, SingletonEntity};
 
 use crate::system::memory_footprint;
 
@@ -32,10 +31,6 @@ pub struct SystemInfo {
     /// previous poll tick, while we wait for the next tick to confirm the spike is sustained rather
     /// than a transient blip.  `None` when there is no pending confirmation.
     pending_excessive_memory_footprint_bytes: Option<u64>,
-    /// Number of resource-usage samples collected since startup.
-    sample_count: usize,
-    /// A helper structure for reporting resource usage via telemetry events.
-    resource_usage_reporter: ResourceUsageReporter,
 }
 
 impl SystemInfo {
@@ -49,8 +44,6 @@ impl SystemInfo {
             system: sysinfo::System::new(),
             has_emitted_memory_warning_event: false,
             pending_excessive_memory_footprint_bytes: None,
-            sample_count: 0,
-            resource_usage_reporter: Default::default(),
         };
 
         // Initialize the underlying system info.  This is necessary in order
@@ -67,10 +60,6 @@ impl SystemInfo {
         Self::schedule_refresh(ctx);
 
         me
-    }
-
-    pub fn handle_block_created(&mut self) {
-        self.resource_usage_reporter.handle_block_created();
     }
 
     /// Returns the full memory footprint of the current process, in bytes.
@@ -101,16 +90,8 @@ impl SystemInfo {
         );
         ctx.emit(SystemInfoEvent::Refreshed);
 
-        self.sample_count = self.sample_count.saturating_add(1);
-
         let footprint = self.memory_footprint();
         self.check_for_excessive_memory_usage(footprint, ctx);
-
-        // After collecting enough samples, consider sending a report.
-        const MIN_SAMPLES_BEFORE_REPORT: usize = 60;
-        if self.sample_count >= MIN_SAMPLES_BEFORE_REPORT {
-            self.resource_usage_reporter.maybe_send_report(ctx);
-        }
     }
 
     /// Checks for excessive memory usage and may dump a heap profile when
@@ -218,94 +199,3 @@ impl Entity for SystemInfo {
 }
 
 impl SingletonEntity for SystemInfo {}
-
-/// Helper structure for making resource usage reports.
-struct ResourceUsageReporter {
-    /// The number of blocks created since we last reported on resource usage
-    /// statistics.
-    blocks_created_since_last_report: usize,
-
-    /// The time at which we sent the last report.
-    time_last_report_sent: DateTime<Utc>,
-}
-
-impl ResourceUsageReporter {
-    /// We won't produce a new report unless the user has created at least
-    /// this many blocks since the last one.
-    const MIN_BLOCKS_CREATED_PER_MEMORY_REPORT: usize = 5;
-    /// We won't produce a new report unless at least this much time has
-    /// passed since the last one.
-    const MIN_DURATION_BETWEEN_MEMORY_REPORTS: chrono::Duration = chrono::Duration::hours(1);
-    /// We won't produce a report unless the user has been active recently.
-    const USER_RECENTLY_ACTIVE_INTERVAL: chrono::Duration = chrono::Duration::minutes(5);
-
-    /// Handles creation of a block in a blocklist.
-    fn handle_block_created(&mut self) {
-        self.blocks_created_since_last_report += 1;
-    }
-
-    /// Sends a resource usage report if the required conditions are met.
-    fn maybe_send_report(&mut self, ctx: &mut ModelContext<SystemInfo>) {
-        if self.should_send_report() {
-            // Immediately set the time at which we sent the last report, to
-            // ensure we don't send two if it takes a little while to schedule
-            // the background task below.
-            self.time_last_report_sent = Utc::now();
-
-            // We do this in a task callback to ensure that all terminal views
-            // will be returned when iterating over the app context.  Without
-            // this, we'll skip the active terminal view, as it has been
-            // removed from the app context temporarily in order to provide
-            // mutable access to it.
-            ctx.spawn(futures::future::ready(()), |me, _, _ctx| {
-                me.resource_usage_reporter.send_report();
-            });
-        }
-    }
-
-    /// Returns whether or not it's time to generate a report.
-    fn should_send_report(&self) -> bool {
-        // Don't send reports too frequently.
-        if Utc::now().signed_duration_since(self.time_last_report_sent)
-            < Self::MIN_DURATION_BETWEEN_MEMORY_REPORTS
-        {
-            return false;
-        }
-
-        // If we don't know when the user was last active, don't send a report.
-        let Some(last_active_time) =
-            DateTime::<Utc>::from_timestamp(App::last_active_timestamp(), 0)
-        else {
-            return false;
-        };
-
-        // Don't send a report unless the user has been active recently.
-        if Utc::now().signed_duration_since(last_active_time) > Self::USER_RECENTLY_ACTIVE_INTERVAL
-        {
-            return false;
-        }
-
-        true
-    }
-
-    fn send_report(&mut self) {
-        if cfg!(debug_assertions)
-            && self.blocks_created_since_last_report >= Self::MIN_BLOCKS_CREATED_PER_MEMORY_REPORT
-        {
-            self.blocks_created_since_last_report = 0;
-        }
-    }
-}
-
-impl Default for ResourceUsageReporter {
-    fn default() -> Self {
-        Self {
-            blocks_created_since_last_report: 0,
-            time_last_report_sent: DateTime::UNIX_EPOCH,
-        }
-    }
-}
-
-#[cfg(test)]
-#[path = "info_tests.rs"]
-mod tests;

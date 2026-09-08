@@ -1443,8 +1443,10 @@ impl TerminalView {
     pub fn open_shared_session_on_desktop(
         &mut self,
         _source: SharedSessionActionSource,
-        _ctx: &mut ViewContext<Self>,
+        ctx: &mut ViewContext<Self>,
     ) {
+        #[cfg(not(target_family = "wasm"))]
+        let _ = ctx;
         #[cfg(target_family = "wasm")]
         {
             let shared_session_status = self.model.lock().shared_session_status().clone();
