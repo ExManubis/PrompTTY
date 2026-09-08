@@ -14,7 +14,6 @@ use knowledge_page::{KnowledgePageAction, KnowledgePageEvent, KnowledgePageView}
 use mcp_servers_page::MCPServersSettingsPageView;
 use nav::{SettingsNavItem, SettingsUmbrella};
 use pathfinder_geometry::vector::Vector2F;
-use privacy_page::{PrivacyPageView, PrivacyPageViewEvent};
 use scripting_page::ScriptingSettingsPageView;
 use settings::ToggleableSetting as _;
 use settings_file_footer::{SettingsFooterKind, SettingsFooterMouseStates, render_footer};
@@ -91,8 +90,6 @@ mod nav;
 pub mod pane_manager;
 mod platform;
 mod platform_page;
-mod privacy;
-mod privacy_page;
 mod remove_custom_endpoint_confirmation_dialog;
 mod scripting_page;
 mod set_default_model_modal;
@@ -108,7 +105,6 @@ mod warpify_page;
 pub use cli_agents_page::cli_agent_settings_widget_id;
 pub use code_indexing_page::CodeIndexingPageView;
 pub use features_page::FeaturesPageAction;
-pub use privacy_page::PrivacyPageAction;
 pub use settings_page::{
     AdditionalInfo, InputListItem, LocalOnlyIconState, ToggleState, render_body_item_label,
     render_info_icon, render_input_list, render_separator,
@@ -234,7 +230,6 @@ pub enum SettingsViewEvent {
     Pane(PaneEvent),
     StartResize,
     CheckForUpdate,
-    LaunchNetworkLogging,
     OpenWarpDrive,
     SignupAnonymousUser,
     ShowToast {
@@ -262,7 +257,6 @@ pub enum SettingsSection {
     Appearance,
     Features,
     Keybindings,
-    Privacy,
     Scripting,
     SharedBlocks,
     WarpDrive,
@@ -294,7 +288,6 @@ impl SettingsSection {
             | SettingsSection::Appearance
             | SettingsSection::Features
             | SettingsSection::Keybindings
-            | SettingsSection::Privacy
             | SettingsSection::Scripting
             | SettingsSection::WarpAgent
             | SettingsSection::AgentProfiles
@@ -352,7 +345,6 @@ impl SettingsSection {
             Self::Appearance => "Appearance",
             Self::Features => "Features",
             Self::Keybindings => "Keyboard shortcuts",
-            Self::Privacy => "Privacy",
             Self::Scripting => "Scripting",
             Self::SharedBlocks => "Shared blocks",
             Self::WarpDrive => "Warp Drive",
@@ -386,7 +378,8 @@ impl SettingsSection {
             "Appearance" => Self::Appearance,
             "Features" => Self::Features,
             "Keyboard shortcuts" => Self::Keybindings,
-            "Privacy" => Self::Privacy,
+            // Privacy page was removed; restore to Appearance.
+            "Privacy" => Self::Appearance,
             "Scripting" => Self::Scripting,
             "Shared blocks" => Self::SharedBlocks,
             "Warp Drive" | "WarpDrive" => Self::WarpDrive,
@@ -646,7 +639,6 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
     appearance_page::init_actions_from_parent_view(app, context, builder);
     features_page::init_actions_from_parent_view(app, context, builder);
     warpify_page::init_actions_from_parent_view(app, context, builder);
-    privacy_page::init_actions_from_parent_view(app, context, builder);
     warp_agent_page::init_actions_from_parent_view(app, context, builder);
     agent_profiles_page::init_actions_from_parent_view(app, context, builder);
     knowledge_page::init_actions_from_parent_view(app, context, builder);
@@ -953,7 +945,6 @@ pub enum SettingsAction {
     ToggleUmbrella(usize),
     AppearancePageToggle(AppearancePageAction),
     FeaturesPageToggle(FeaturesPageAction),
-    PrivacyPageToggle(PrivacyPageAction),
     WarpAgent(WarpAgentPageAction),
     AgentProfiles(AgentProfilesPageAction),
     Knowledge(KnowledgePageAction),
@@ -1109,7 +1100,6 @@ macro_rules! update_page {
             SettingsPageViewHandle::WarpCloudAgentAPIKeys(handle) => {
                 $ctx.update_view(handle, $update)
             }
-            SettingsPageViewHandle::Privacy(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::Scripting(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::WarpAgent(handle) => $ctx.update_view(handle, $update),
             SettingsPageViewHandle::AgentProfiles(handle) => $ctx.update_view(handle, $update),
@@ -1236,12 +1226,6 @@ impl SettingsView {
             me.handle_warpify_page_event(event, ctx);
         });
 
-        // Render the privacy page only if telemetry opt-out is enabled.
-        let privacy_page_handle = ctx.add_typed_action_view(PrivacyPageView::new);
-        ctx.subscribe_to_view(&privacy_page_handle, |me, _, event, ctx| {
-            me.handle_privacy_page_event(event, ctx);
-        });
-
         let scripting_page_handle = if FeatureFlag::WarpControlCli.is_enabled() {
             Some(ctx.add_typed_action_view(ScriptingSettingsPageView::new))
         } else {
@@ -1317,7 +1301,6 @@ impl SettingsView {
         settings_pages.extend(vec![
             SettingsPage::new(mcp_servers_page_handle),
             SettingsPage::new(environments_page_handle.clone()),
-            SettingsPage::new(privacy_page_handle),
             SettingsPage::new(about_page_handle),
         ]);
 
@@ -1354,7 +1337,6 @@ impl SettingsView {
             SettingsNavItem::Page(SettingsSection::Warpify),
             SettingsNavItem::Page(SettingsSection::SharedBlocks),
             SettingsNavItem::Page(SettingsSection::WarpDrive),
-            SettingsNavItem::Page(SettingsSection::Privacy),
             SettingsNavItem::Page(SettingsSection::About),
         ];
 
@@ -1734,26 +1716,6 @@ impl SettingsView {
         }
     }
 
-    fn handle_privacy_page_event(
-        &mut self,
-        event: &PrivacyPageViewEvent,
-        ctx: &mut ViewContext<Self>,
-    ) {
-        match event {
-            PrivacyPageViewEvent::LaunchNetworkLogging => {
-                ctx.emit(SettingsViewEvent::LaunchNetworkLogging);
-            }
-            PrivacyPageViewEvent::ShowAddRegexModal => {
-                // Modal rendering is handled in get_modal_content_for_page
-                ctx.notify();
-            }
-            PrivacyPageViewEvent::HideAddRegexModal => {
-                // Modal rendering is handled in get_modal_content_for_page
-                ctx.notify();
-            }
-        }
-    }
-
     fn handle_platform_page_event(
         &mut self,
         event: &platform_page::PlatformPageViewEvent,
@@ -1994,7 +1956,6 @@ impl SettingsView {
             SettingsPageViewHandle::Appearance(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::About(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::WarpCloudAgentAPIKeys(v) => v.as_ref(app).should_render(app),
-            SettingsPageViewHandle::Privacy(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::Warpify(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::Scripting(v) => v.as_ref(app).should_render(app),
             SettingsPageViewHandle::WarpAgent(v) => v.as_ref(app).should_render(app),
@@ -2189,9 +2150,6 @@ impl SettingsView {
         app: &AppContext,
     ) -> Option<Box<dyn Element>> {
         match page_handle {
-            SettingsPageViewHandle::Privacy(view) => {
-                view.read(app, |view, _| view.get_modal_content())
-            }
             SettingsPageViewHandle::WarpCloudAgentAPIKeys(view) => {
                 view.read(app, |view, _| view.get_modal_content())
             }
@@ -2574,15 +2532,6 @@ impl TypedActionView for SettingsView {
                 {
                     view.update(ctx, |view, ctx| {
                         view.handle_action(feature_action, ctx);
-                    })
-                }
-            }
-            SettingsAction::PrivacyPageToggle(privacy_action) => {
-                if let Some(privacy_page) = self.settings_page(SettingsSection::Privacy)
-                    && let SettingsPageViewHandle::Privacy(view) = &privacy_page.view_handle
-                {
-                    view.update(ctx, |view, ctx| {
-                        view.handle_action(privacy_action, ctx);
                     })
                 }
             }
