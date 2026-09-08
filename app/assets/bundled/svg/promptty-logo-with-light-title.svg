@@ -53,5 +53,6 @@
         <path id="path48" fill="#00a9a7" stroke="none" d="M 148.333328 130.555557 L 160.555557 130.555557 L 160.555557 142.777771 L 148.333328 142.777771 Z"/>
         <path id="path49" fill="#00a9a7" stroke="none" d="M 160.555557 130.555557 L 172.777771 130.555557 L 172.777771 142.777771 L 160.555557 142.777771 Z"/>
     </g>
-    <text id="PrompTTY" xml:space="preserve" x="198" y="135" font-family="Workbench" font-size="96" fill="#00a9a7" baseline-shift="20">PrompTTY</text>
+    <text id="PrompTTY" xml:space="preserve" x="198.5" y="159" font-family="Workbench" font-size="96" fill="#06213c" baseline-shift="20">PrompTTY</text>
+    <text id="text1" xml:space="preserve" x="194.5" y="153" font-family="Workbench" font-size="96" fill="#00a9a7" baseline-shift="20">PrompTTY</text>
 </svg>
