@@ -14523,9 +14523,6 @@ impl Workspace {
             SettingsViewEvent::CheckForUpdate => {
                 self.manual_check_for_update(ctx);
             }
-            SettingsViewEvent::LaunchNetworkLogging => {
-                self.open_network_log_pane(ctx);
-            }
             SettingsViewEvent::OpenWarpDrive => {
                 self.close_all_overlays(ctx);
                 self.open_or_toggle_warp_drive(

@@ -76,7 +76,6 @@ const ALL_SECTIONS: &[SettingsSection] = &[
     SettingsSection::Appearance,
     SettingsSection::Features,
     SettingsSection::Keybindings,
-    SettingsSection::Privacy,
     SettingsSection::Scripting,
     SettingsSection::SharedBlocks,
     SettingsSection::WarpDrive,
@@ -106,7 +105,6 @@ fn all_sections_list_is_exhaustive() {
             | SettingsSection::Appearance
             | SettingsSection::Features
             | SettingsSection::Keybindings
-            | SettingsSection::Privacy
             | SettingsSection::Scripting
             | SettingsSection::SharedBlocks
             | SettingsSection::WarpDrive
@@ -232,11 +230,11 @@ fn from_slug_accepts_legacy_spellings() {
 
 #[test]
 fn from_slug_maps_superseded_page_names_to_the_page_that_replaced_them() {
-    // `AI`, `Code`, `MCP Servers` and `Account` named pages that have since been
-    // split, moved, or removed. Persisted sessions and warpctrl callers still
-    // use them, so they resolve here, at the boundary, rather than existing as
-    // sections of their own that every caller would have to remember to
-    // normalize.
+    // `AI`, `Code`, `MCP Servers`, `Account`, and `Privacy` named pages that
+    // have since been split, moved, or removed. Persisted sessions and warpctrl
+    // callers still use them, so they resolve here, at the boundary, rather
+    // than existing as sections of their own that every caller would have to
+    // remember to normalize.
     assert_eq!(
         SettingsSection::from_slug("AI"),
         Some(SettingsSection::WarpAgent)
@@ -251,6 +249,10 @@ fn from_slug_maps_superseded_page_names_to_the_page_that_replaced_them() {
     );
     assert_eq!(
         SettingsSection::from_slug("Account"),
+        Some(SettingsSection::Appearance)
+    );
+    assert_eq!(
+        SettingsSection::from_slug("Privacy"),
         Some(SettingsSection::Appearance)
     );
 }

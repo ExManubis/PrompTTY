@@ -37,7 +37,6 @@ use super::features_page::FeaturesPageView;
 use super::keybindings::KeybindingsView;
 use super::knowledge_page::KnowledgePageView;
 use super::mcp_servers_page::MCPServersSettingsPageView;
-use super::privacy_page::PrivacyPageView;
 use super::scripting_page::ScriptingSettingsPageView;
 use super::show_blocks_view::ShowBlocksView;
 use super::warp_agent_page::WarpAgentPageView;
@@ -108,7 +107,6 @@ pub enum SettingsPageViewHandle {
     CodeIndexing(ViewHandle<CodeIndexingPageView>),
     EditorAndCodeReview(ViewHandle<EditorAndCodeReviewPageView>),
     WarpCloudAgentAPIKeys(ViewHandle<super::platform_page::PlatformPageView>),
-    Privacy(ViewHandle<PrivacyPageView>),
     Warpify(ViewHandle<WarpifyPageView>),
     Scripting(ViewHandle<ScriptingSettingsPageView>),
     WarpAgent(ViewHandle<WarpAgentPageView>),
@@ -132,7 +130,6 @@ impl SettingsPageViewHandle {
             CodeIndexing(view_handle) => ChildView::new(view_handle).finish(),
             EditorAndCodeReview(view_handle) => ChildView::new(view_handle).finish(),
             WarpCloudAgentAPIKeys(view_handle) => ChildView::new(view_handle).finish(),
-            Privacy(view_handle) => ChildView::new(view_handle).finish(),
             Warpify(view_handle) => ChildView::new(view_handle).finish(),
             Scripting(view_handle) => ChildView::new(view_handle).finish(),
             WarpAgent(view_handle) => ChildView::new(view_handle).finish(),
