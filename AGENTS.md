@@ -174,6 +174,7 @@ for itself.
 
 **Testing**:
 
+- Only run tests, clippy, or other validation when explicitly asked to — do not run them unprompted after making changes. The exceptions are the presubmit requirements in the Pull Request Workflow below.
 - Use `cargo nextest` for parallel test execution
 - TUI elements/screens are covered by render-to-lines unit tests (see the `tui-testing` skill).
 - Tests should be run via presubmit script before submitting
