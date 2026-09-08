@@ -75,7 +75,7 @@ cleanup_dmg_files() {
         find "$target_dir" -name "rw.*.dmg" -type f -delete
     fi
     # Also check if any volumes are mounted and unmount them
-    hdiutil info | grep "/Volumes/Warp.*" | awk '{print $1}' | while read -r disk; do
+    hdiutil info | grep -E "/Volumes/(Warp|PrompTTY)" | awk '{print $1}' | while read -r disk; do
         echo "Unmounting disk image: $disk"
         hdiutil detach "$disk" -force || true
     done
@@ -991,38 +991,99 @@ fi
 ########################
 
 if [[ "$ARTIFACT" = app ]]; then
+  apply_dmg_finder_layout() {
+    local mount_dir="$1"
+    local script="$WORKSPACE_ROOT_DIR/script/macos/apply_dmg_finder_layout.py"
+    local runner=(python3)
+
+    if command -v uv >/dev/null 2>&1; then
+      runner=(uv run --with ds_store --with mac_alias python3)
+    elif ! python3 -c "import ds_store, mac_alias" >/dev/null 2>&1; then
+      python3 -m pip install --user ds_store mac_alias
+    fi
+
+    "${runner[@]}" "$script" \
+      --mount-dir "$mount_dir" \
+      --app-name "$WARP_APP_NAME.app" \
+      --background ".background/promptty-dmg-background.png" \
+      --window-height 428
+  }
+
   function create_warp_dmg() {
     echo "Creating $DMG_DIR/$DMG_NAME..."
     rm "$DMG_DIR/$DMG_NAME" || true
     local source_folder="$1"
+    local background_1x="$WORKSPACE_ROOT_DIR/app/assets/resources/mac/promptty-dmg-background.png"
+    local background_2x="$WORKSPACE_ROOT_DIR/app/assets/resources/mac/promptty-dmg-background@2x.png"
+    local skip_finder_layout=false
+
+    mkdir -p "$source_folder/.background"
+    cp "$background_2x" "$source_folder/.background/$(basename "$background_2x")"
 
     local args=(
-      --volname Warp
+      --volname "$WARP_APP_NAME"
       # For --no-internet-enable, see https://github.com/create-dmg/create-dmg/issues/179
       --no-internet-enable
-      --background app/assets/resources/mac/warp_install_image.png
+      --background "$background_1x"
       --icon-size 128
-      --window-size 700 500
+      # PNG is 640×400. Finder bounds include the title bar (~28pt), so the
+      # frame must be taller or the bottom of the picture is clipped.
+      --window-size 640 428
       --format UDZO
-      --app-drop-link 550 250
-      --icon "$WARP_APP_NAME.app" 150 250
+      --app-drop-link 480 200
+      --icon "$WARP_APP_NAME.app" 160 200
       # macOS 26.4 Beta has issues with mounting HFS+ DMGs, so we're using APFS instead.
       # APFS has been supported as a DMG filesystem since macOS 10.13, and we target 10.14
       # as our minimum version.
       #
       # See: https://developer.apple.com/documentation/macos-release-notes/macos-26_4-release-notes#External-Media
       --filesystem APFS
+      # Skip create-dmg's Finder AppleScript: on APFS/Tahoe it opens a default
+      # window and never persists the background picture.
+      --skip-jenkins
     )
 
-    # Skip running an AppleScript to format the DMG contents if running in Namespace - this consistently times out.
-    # See https://github.com/create-dmg/create-dmg/issues/72
     if [[ "${RUNNER_NAME:-}" == nsc-* ]]; then
-      args+=(--skip-jenkins)
+      skip_finder_layout=true
+    else
+      args+=(--skip-finalize)
     fi
 
     args+=("$DMG_DIR/$DMG_NAME" "$source_folder")
 
+    echo "create-dmg will warn that --skip-jenkins skips Finder AppleScript; that is expected."
+    echo "Background and icon positions are written into .DS_Store after the image is assembled."
     create-dmg "${args[@]}"
+    rm -rf "$source_folder/.background"
+
+    if [[ "$skip_finder_layout" = true ]]; then
+      return
+    fi
+
+    echo "Applying Finder layout to $DMG_DIR/$DMG_NAME..."
+    local attach_output
+    attach_output="$(hdiutil attach -nobrowse "$DMG_DIR/$DMG_NAME")"
+    local mount_dir
+    mount_dir="$(echo "$attach_output" | grep -o '/Volumes/.*' | tail -1 | tr -d '[:space:]')"
+    if [[ -z "$mount_dir" ]]; then
+      echo "Failed to mount writable DMG to apply Finder layout:" >&2
+      echo "$attach_output" >&2
+      exit 1
+    fi
+
+    if ! apply_dmg_finder_layout "$mount_dir"; then
+      hdiutil detach "$mount_dir" -force || true
+      echo "Failed to write DMG Finder layout into .DS_Store." >&2
+      exit 1
+    fi
+
+    sync
+    hdiutil detach "$mount_dir"
+
+    local compressed_dmg="$DMG_DIR/compressed.$DMG_NAME"
+    rm -f "$compressed_dmg"
+    hdiutil convert "$DMG_DIR/$DMG_NAME" -format UDZO -imagekey zlib-level=9 -o "$compressed_dmg"
+    mv -f "$compressed_dmg" "$DMG_DIR/$DMG_NAME"
   }
 
   # If we're codesigning, stage the signed app and use that to create the DMG.
