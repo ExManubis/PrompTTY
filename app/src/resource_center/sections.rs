@@ -8,10 +8,8 @@ use super::{
 };
 
 pub fn sections(ctx: &mut ViewContext<ResourceCenterMainView>) -> Vec<Section> {
-    let mut sections = vec![Section::Changelog()];
-
     if FeatureFlag::AvatarInTabBar.is_enabled() {
-        return sections;
+        return Vec::new();
     }
 
     let get_started = FeatureSectionData {
@@ -49,13 +47,11 @@ pub fn sections(ctx: &mut ViewContext<ResourceCenterMainView>) -> Vec<Section> {
             ),
         ],
     };
-    sections.push(Section::Feature(get_started));
 
     let maximize_warp = FeatureSectionData {
         section_name: FeatureSection::MaximizeWarp,
         items: maximize_warp_items(ctx),
     };
-    sections.push(Section::Feature(maximize_warp));
 
     let advanced_setup = ContentSectionData {
         section_name: FeatureSection::AdvancedSetup,
@@ -80,9 +76,12 @@ pub fn sections(ctx: &mut ViewContext<ResourceCenterMainView>) -> Vec<Section> {
             },
         ],
     };
-    sections.push(Section::Content(advanced_setup));
 
-    sections
+    vec![
+        Section::Feature(get_started),
+        Section::Feature(maximize_warp),
+        Section::Content(advanced_setup),
+    ]
 }
 
 fn maximize_warp_items(ctx: &mut ViewContext<ResourceCenterMainView>) -> Vec<FeatureItem> {
