@@ -91,19 +91,22 @@ Remove `is_ai_enabled()` / `is_warp_drive_enabled()`.
 
 ### 2. Slides — `crates/onboarding/src/slides/`
 
-- **`intro_slide.rs`** (rewrite): use a new **`Icon::PromptTtyLogo`** mark
-  instead of `Icon::WarpLogoLight` (`intro_slide.rs:142`), and **keep** the
-  shimmering text title below it. **Remove** the "Already have an account? Log
-  in" link and its jump-to-login (`intro_slide.rs:83,91`, and the
+- **`intro_slide.rs`** (rewrite): render the multi-color PrompTTY mark
+  (`bundled/svg/promptty-mark.svg`) **by path** via
+  `Image::new(AssetSource::Bundled { .. }, CacheOption::BySize)` — mirroring
+  `about_page.rs:105` — instead of the single-fill `Icon::WarpLogoLight`
+  (`intro_slide.rs:142`); the mark is multi-color, so it must NOT go through the
+  `Icon` tint path. **Keep** the shimmering text title below it. **Remove** the
+  "Already have an account? Log in" link and its jump-to-login
+  (`intro_slide.rs:83,91`, and the
   `IntroSlideEvent::LoginRequested`/`IntroSlideAction::LoginClicked` paths). Keep
   the "Get started" primary button. Final copy — title **"Welcome to
   PrompTTY"** (`:150`), subtitle **"A fast, modern terminal. Let's set up your
   theme and prompt."** (`:162`).
-  - **Blocking asset dependency:** a title-less PrompTTY mark SVG does not exist
-    yet (only wordmark-with-title SVGs). Add an `Icon::PromptTtyLogo` variant in
-    `crates/warp_core/src/ui/icons.rs` (enum near `:68`, path mapping near
-    `:416`) pointing at `bundled/svg/promptty-logo-light.svg`, and add that SVG.
-    A placeholder mark unblocks the build; real art is a follow-up.
+  - **Asset:** the real mark is committed at `app/assets/bundled/svg/promptty-mark.svg`
+    (C2PA metadata stripped). Its dark-navy shadow is invisible on dark themes;
+    the teal glyph reads on both, so one file serves both themes (a dark variant
+    is an optional follow-up).
 - **`theme_picker_slide.rs`** (edit): keep the theme grid + "Sync light/dark
   theme with OS". **Remove** the whole `render_disclaimer_section` (`:538-616`)
   and its call (`:169-180`), the `TOS_URL` const (`:53`), the
@@ -207,8 +210,9 @@ interactive builder is not part of the flow.)
 
 ## Open items / dependencies
 
-- **PrompTTY mark SVG (blocking):** a title-less mark for `Icon::PromptTtyLogo`
-  does not exist yet. A placeholder unblocks the build; real art is a follow-up.
+- **PrompTTY mark SVG:** resolved — committed at
+  `app/assets/bundled/svg/promptty-mark.svg` and rendered by path (no `Icon`
+  variant needed). Optional follow-up: a dark-theme variant of the mark.
 - `AccountFirstOnboarding` feature flag becomes unused by onboarding. Leave the
   flag defined (removing it is auth-adjacent cleanup) but remove its onboarding
   references.

@@ -23,56 +23,26 @@
 
 ---
 
-### Task 1: Add `Icon::PromptTtyLogo` + placeholder mark SVG
+### Task 1: PrompTTY mark asset (already placed)
 
-Self-contained; compiles independently of the rest.
+The real, multi-color PrompTTY mark has been added to the repo at
+`app/assets/bundled/svg/promptty-mark.svg` (C2PA provenance metadata stripped;
+teal-gradient glyph with a dark-navy `#06213C` drop-shadow). Because it is
+**multi-color**, it is rendered by path (like `about_page.rs`), NOT via the
+`Icon` enum's single-fill tint — so there is no `warp_core` change in this task.
+The intro slide consumes it in Task 2, Step 5.
 
 **Files:**
-- Create: `app/assets/bundled/svg/promptty-logo-light.svg`
-- Modify: `crates/warp_core/src/ui/icons.rs` (enum near `:68`, path match near `:416`)
+- Committed: `app/assets/bundled/svg/promptty-mark.svg`
 
-**Interfaces:**
-- Produces: `Icon::PromptTtyLogo` — a title-less logo-mark icon variant used by `intro_slide.rs` in Task 2.
+- [ ] **Step 1: Confirm the asset is present and well-formed**
 
-- [ ] **Step 1: Add the placeholder mark SVG**
+Run: `head -1 app/assets/bundled/svg/promptty-mark.svg` and `grep -c c2pa app/assets/bundled/svg/promptty-mark.svg`
+Expected: an `<svg ... viewBox="0 0 1024 1024" ...>` opening tag; c2pa count `0`. (The file is already committed — nothing to add here.)
 
-Create `app/assets/bundled/svg/promptty-logo-light.svg` (a simple mark that uses `currentColor` so the existing `logo_fill` tint applies — replace with real art later):
-
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect x="6" y="6" width="52" height="52" rx="12" stroke="currentColor" stroke-width="4"/>
-  <path d="M20 24 L30 32 L20 40" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M34 40 H44" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-</svg>
-```
-
-- [ ] **Step 2: Add the `Icon` enum variant**
-
-In `crates/warp_core/src/ui/icons.rs`, add next to `WarpLogoLight` (`:68`):
-
-```rust
-    PromptTtyLogo,
-```
-
-- [ ] **Step 3: Map the variant to the SVG path**
-
-In the same file's path `match` (near `:416`, beside the `Icon::WarpLogoLight => "bundled/svg/warp-logo-light.svg"` arm):
-
-```rust
-            Icon::PromptTtyLogo => "bundled/svg/promptty-logo-light.svg",
-```
-
-- [ ] **Step 4: Build to verify it compiles**
-
-Run: `cargo build -p warp_core`
-Expected: PASS (no missing-match-arm or missing-asset errors).
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add crates/warp_core/src/ui/icons.rs app/assets/bundled/svg/promptty-logo-light.svg
-git commit -m "feat: add PromptTtyLogo icon and placeholder mark"
-```
+Note: the dark-navy `#06213C` shadow rects are near-invisible on dark themes; the
+main teal glyph reads on both light and dark, so a single file serves both. A
+dark-specific variant is a possible follow-up, not required.
 
 ---
 
@@ -336,13 +306,19 @@ Note: `upgrade_auth_prompt` is dropped (it served the AI-access/offer slides); i
 
 Edit `crates/onboarding/src/slides/intro_slide.rs`:
 - Delete `IntroSlideEvent` (the `LoginRequested` variant) and change `Entity::Event` to `()`. Delete `IntroSlideAction::LoginClicked` (keep `GetStartedClicked`). Delete the `login_mouse_state` field and the `login_row` block (`:80-118`) plus the `Stack`/`add_positioned_child` wrapping — return the centered content directly.
-- In `render_centered_content`, change the logo to the new mark:
+- In `render_centered_content`, replace the single-fill `Icon` logo with the multi-color mark rendered **by path** (mirrors `app/src/settings_view/about_page.rs:105`), so its colors are preserved. Drop the `logo_fill`/`Icon` usage and add the needed imports (`Image`, `AssetSource`, `CacheOption` from `warpui_core`):
 
 ```rust
-        let logo = ConstrainedBox::new(Icon::PromptTtyLogo.to_warpui_icon(logo_fill).finish())
-            .with_width(64.)
-            .with_height(64.)
-            .finish();
+        let logo = ConstrainedBox::new(
+            Image::new(
+                AssetSource::Bundled { path: "bundled/svg/promptty-mark.svg" },
+                CacheOption::BySize,
+            )
+            .finish(),
+        )
+        .with_width(64.)
+        .with_height(64.)
+        .finish();
 ```
 
 - Update the subtitle text to:
