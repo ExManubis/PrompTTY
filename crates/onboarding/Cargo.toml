@@ -6,19 +6,8 @@ authors.workspace = true
 publish.workspace = true
 license.workspace = true
 
-[[bin]]
-name = "onboarding"
-path = "src/bin/main.rs"
-required-features = ["bin"]
-
-[features]
-bin = []
-
 [dependencies]
-ai.workspace = true
 anyhow.workspace = true
-cfg-if.workspace = true
-instant.workspace = true
 log.workspace = true
 pathfinder_color.workspace = true
 pathfinder_geometry.workspace = true

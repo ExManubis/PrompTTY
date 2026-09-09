@@ -1,4 +1,3 @@
-use onboarding::SelectedSettings;
 use warp_core::execution_mode::AppExecutionMode;
 use warpui::{SingletonEntity as _, ViewContext};
 
@@ -22,18 +21,6 @@ impl OnboardingTutorial {
         match self {
             OnboardingTutorial::NoProject { intention } => *intention,
         }
-    }
-}
-
-impl From<SelectedSettings> for OnboardingTutorial {
-    fn from(settings: SelectedSettings) -> Self {
-        let intention = match settings {
-            SelectedSettings::AgentDrivenDevelopment { .. } => {
-                OnboardingIntention::AgentDrivenDevelopment
-            }
-            SelectedSettings::Terminal { .. } => OnboardingIntention::Terminal,
-        };
-        OnboardingTutorial::NoProject { intention }
     }
 }
 

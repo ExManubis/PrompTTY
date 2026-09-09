@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
-use onboarding::OnboardingIntention;
 use onboarding::callout::{
-    OnboardingCalloutView, OnboardingCalloutViewEvent, OnboardingKeybindings,
+    OnboardingCalloutView, OnboardingCalloutViewEvent, OnboardingIntention, OnboardingKeybindings,
 };
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;

@@ -21,7 +21,7 @@ pub struct OnboardingKeybindings {
     pub return_to_terminal_mode: String,
 }
 
-use crate::OnboardingIntention;
+use super::OnboardingIntention;
 use crate::callout::model::{
     AgentModalityCalloutState, FinalState, OnboardingCalloutModel, OnboardingCalloutModelEvent,
     OnboardingCalloutState, OnboardingQuery, UniversalInputCalloutState,

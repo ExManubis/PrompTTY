@@ -1,6 +1,5 @@
 use pathfinder_color::ColorU;
 use ui_components::{Component as _, Options as _, button};
-use warp_core::features::FeatureFlag;
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::WarpTheme;
 use warp_core::ui::theme::color::internal_colors;
@@ -19,38 +18,22 @@ use warpui_core::{
 };
 
 use super::OnboardingSlide;
-use crate::OnboardingIntention;
-use crate::model::{OnboardingStateEvent, OnboardingStateModel};
+use crate::model::OnboardingStateModel;
 use crate::slides::{bottom_nav, layout, slide_content};
 
 #[derive(Debug, Clone)]
 pub enum ThemePickerSlideEvent {
-    ThemeSelected {
-        theme_name: String,
-    },
-    SyncWithOsToggled {
-        enabled: bool,
-    },
-    /// Emitted when the user clicks the "Privacy Settings" link on the terminal
-    /// intention theme slide. The parent orchestrator is expected to open the
-    /// privacy settings (e.g. via a LoginSlideView in privacy-only mode).
-    PrivacySettingsRequested,
+    ThemeSelected { theme_name: String },
+    SyncWithOsToggled { enabled: bool },
 }
 
 #[derive(Debug, Clone)]
 pub enum ThemePickerSlideAction {
-    SelectTheme {
-        index: usize,
-    },
+    SelectTheme { index: usize },
     ToggleSyncWithOs,
     BackClicked,
     NextClicked,
-    /// Dispatched when the user clicks the "Privacy Settings" link in the
-    /// terminal-intention disclaimer block below the theme options.
-    PrivacySettingsClicked,
 }
-
-const TOS_URL: &str = "https://www.warp.dev/terms-of-service";
 
 #[derive(Debug, Clone)]
 struct ThemeOption {
@@ -64,8 +47,6 @@ pub struct ThemePickerSlide {
     selected_theme_index: usize,
     sync_with_os: bool,
     sync_with_os_mouse: MouseStateHandle,
-    tos_mouse_state: MouseStateHandle,
-    privacy_settings_mouse_state: MouseStateHandle,
     back_button: button::Button,
     next_button: button::Button,
     scroll_state: ClippedScrollStateHandle,
@@ -80,12 +61,6 @@ impl ThemePickerSlide {
         let theme_options = themes.map(|theme| ThemeOption {
             theme,
             mouse_state: MouseStateHandle::default(),
-        });
-
-        ctx.subscribe_to_model(&onboarding_state, |_me, _model, event, ctx| {
-            if matches!(event, OnboardingStateEvent::IntentionChanged) {
-                ctx.notify();
-            }
         });
 
         let appearance = Appearance::as_ref(ctx);
@@ -107,14 +82,23 @@ impl ThemePickerSlide {
                 0
             });
 
+        // Seed the model with the initially-selected theme so the UI-setup
+        // slide's preview matches even if the user never changes the theme.
+        if let Some(name) = theme_options
+            .get(selected_theme_index)
+            .and_then(|option| option.theme.name())
+        {
+            onboarding_state.update(ctx, |model, ctx| {
+                model.set_selected_theme_name(name, ctx);
+            });
+        }
+
         Self {
             onboarding_state,
             theme_options,
             selected_theme_index,
             sync_with_os: false,
             sync_with_os_mouse: MouseStateHandle::default(),
-            tos_mouse_state: MouseStateHandle::default(),
-            privacy_settings_mouse_state: MouseStateHandle::default(),
             back_button: button::Button::default(),
             next_button: button::Button::default(),
             scroll_state: ClippedScrollStateHandle::new(),
@@ -160,24 +144,11 @@ impl ThemePickerSlide {
             theme_options
         };
 
-        let mut content = vec![
+        let content = vec![
             self.render_header_text(appearance),
             theme_options_section,
             self.render_sync_with_os_section(appearance),
         ];
-
-        // Add the Privacy Settings / Terms of Service disclaimer block below the
-        // theme options when the user has selected the terminal intention and
-        // won't hit the login slide afterwards. The terminal-intent flow skips
-        // the login slide (which surfaces the same links) unless Warp Drive is
-        // enabled — in that case the login slide will still run after the theme
-        // step and show the disclaimer, so duplicating it here is unnecessary.
-        let state = self.onboarding_state.as_ref(app);
-        let is_terminal = matches!(state.intention(), OnboardingIntention::Terminal);
-        let warp_drive_enabled = state.ui_customization().show_warp_drive;
-        if !FeatureFlag::AccountFirstOnboarding.is_enabled() && is_terminal && !warp_drive_enabled {
-            content.push(self.render_disclaimer_section(appearance));
-        }
 
         slide_content::onboarding_slide_content(
             content,
@@ -268,14 +239,11 @@ impl ThemePickerSlide {
             },
         );
 
-        let account_first = FeatureFlag::AccountFirstOnboarding.is_enabled();
-        let next_label = if account_first { "Next" } else { "Get Warping" };
-
         let enter = Keystroke::parse("enter").unwrap_or_default();
         let next_button = self.next_button.render(
             appearance,
             button::Params {
-                content: button::Content::Label(next_label.into()),
+                content: button::Content::Label("Next".into()),
                 theme: &button::themes::Primary,
                 options: button::Options {
                     keystroke: Some(enter),
@@ -287,15 +255,7 @@ impl ThemePickerSlide {
             },
         );
 
-        let (step_index, step_count) = if account_first {
-            self.onboarding_state.as_ref(app).progress()
-        } else {
-            let is_terminal = matches!(
-                self.onboarding_state.as_ref(app).intention(),
-                OnboardingIntention::Terminal
-            );
-            if is_terminal { (3, 4) } else { (4, 5) }
-        };
+        let (step_index, step_count) = self.onboarding_state.as_ref(app).progress();
 
         bottom_nav::onboarding_bottom_nav(
             appearance,
@@ -425,53 +385,16 @@ impl ThemePickerSlide {
         Container::new(button).with_margin_bottom(12.).finish()
     }
 
-    /// All onboarding image paths used by the theme picker slide visual.
-    pub(crate) const VISUAL_IMAGE_PATHS: &'static [&'static str] = &[
-        // Terminal intention
-        "async/png/onboarding/terminal_intention/theme/theme_phenomenon_vertical.png",
-        "async/png/onboarding/terminal_intention/theme/theme_phenomenon_horizontal.png",
-        "async/png/onboarding/terminal_intention/theme/theme_dark_vertical.png",
-        "async/png/onboarding/terminal_intention/theme/theme_dark_horizontal.png",
-        "async/png/onboarding/terminal_intention/theme/theme_light_vertical.png",
-        "async/png/onboarding/terminal_intention/theme/theme_light_horizontal.png",
-        "async/png/onboarding/terminal_intention/theme/theme_adeberry_vertical.png",
-        "async/png/onboarding/terminal_intention/theme/theme_adeberry_horizontal.png",
-        // Agent intention
-        "async/png/onboarding/agent_intention/theme/theme_phenomenon_vertical.png",
-        "async/png/onboarding/agent_intention/theme/theme_phenomenon_horizontal.png",
-        "async/png/onboarding/agent_intention/theme/theme_dark_vertical.png",
-        "async/png/onboarding/agent_intention/theme/theme_dark_horizontal.png",
-        "async/png/onboarding/agent_intention/theme/theme_light_vertical.png",
-        "async/png/onboarding/agent_intention/theme/theme_light_horizontal.png",
-        "async/png/onboarding/agent_intention/theme/theme_adeberry_vertical.png",
-        "async/png/onboarding/agent_intention/theme/theme_adeberry_horizontal.png",
-    ];
+    /// All onboarding image paths used by the theme picker slide visual
+    /// (for asset preloading). One preview screenshot per theme.
+    pub(crate) const VISUAL_IMAGE_PATHS: &'static [&'static str] = layout::THEME_SCREENSHOTS;
 
-    fn theme_visual_path(&self, app: &AppContext) -> &'static str {
-        let state = self.onboarding_state.as_ref(app);
-        let vertical = state.ui_customization().use_vertical_tabs;
-        let intention_dir = match state.intention() {
-            OnboardingIntention::AgentDrivenDevelopment => "agent_intention",
-            OnboardingIntention::Terminal => "terminal_intention",
-        };
-        let theme_name = self.theme_display_name(self.selected_theme_index);
-        let name_key = match theme_name.as_str() {
-            "Phenomenon" => "phenomenon",
-            "Dark" => "dark",
-            "Light" => "light",
-            "Adeberry" => "adeberry",
-            _ => "dark",
-        };
-        let orientation = if vertical { "vertical" } else { "horizontal" };
-        // Safety: all combinations are in VISUAL_IMAGE_PATHS.
-        Self::VISUAL_IMAGE_PATHS
-            .iter()
-            .find(|p| p.contains(intention_dir) && p.contains(name_key) && p.contains(orientation))
-            .unwrap_or(&Self::VISUAL_IMAGE_PATHS[0])
+    fn theme_visual_path(&self) -> &'static str {
+        layout::theme_screenshot_path(&self.theme_display_name(self.selected_theme_index))
     }
 
-    fn render_theme_picker_visual(&self, app: &AppContext) -> Box<dyn Element> {
-        let path = self.theme_visual_path(app);
+    fn render_theme_picker_visual(&self) -> Box<dyn Element> {
+        let path = self.theme_visual_path();
         layout::onboarding_right_panel_with_bg(path, layout::FOREGROUND_LAYOUT_DEFAULT)
     }
 }
@@ -491,7 +414,7 @@ impl View for ThemePickerSlide {
         // Background is rendered by the parent onboarding view (including background images).
         layout::static_left(
             || self.render_theme_picker_content(appearance, app),
-            || self.render_theme_picker_visual(app),
+            || self.render_theme_picker_visual(),
         )
     }
 }
@@ -535,97 +458,22 @@ impl ThemePickerSlide {
         .finish()
     }
 
-    fn render_disclaimer_section(&self, appearance: &Appearance) -> Box<dyn Element> {
-        let theme = appearance.theme();
-        let sub_text_color = internal_colors::text_sub(theme, theme.background().into_solid());
-        let ui_builder = appearance.ui_builder();
-
-        let disclaimer_styles = UiComponentStyles {
-            font_color: Some(sub_text_color),
-            font_size: Some(12.),
-            ..Default::default()
-        };
-        let link_styles = UiComponentStyles {
-            font_size: Some(12.),
-            ..Default::default()
-        };
-
-        // The disclaimer block is only rendered on the Terminal-without-Drive
-        // path (see `render_theme_picker_content`), where AI is not part of the
-        // selected onboarding settings; skip the "and AI features" wording.
-        let privacy_line = Flex::row()
-            .with_child(
-                ui_builder
-                    .span("If you'd like to opt out of analytics, you can adjust your ")
-                    .with_style(disclaimer_styles)
-                    .build()
-                    .finish(),
-            )
-            .with_child(
-                ui_builder
-                    .link(
-                        "Privacy Settings".into(),
-                        None,
-                        Some(Box::new(|ctx| {
-                            ctx.dispatch_typed_action(
-                                ThemePickerSlideAction::PrivacySettingsClicked,
-                            );
-                        })),
-                        self.privacy_settings_mouse_state.clone(),
-                    )
-                    .soft_wrap(false)
-                    .with_style(link_styles)
-                    .build()
-                    .finish(),
-            )
-            .finish();
-
-        let tos_line = Flex::row()
-            .with_child(
-                ui_builder
-                    .span("By continuing, you agree to Warp's ")
-                    .with_style(disclaimer_styles)
-                    .build()
-                    .finish(),
-            )
-            .with_child(
-                ui_builder
-                    .link(
-                        "Terms of Service".into(),
-                        Some(TOS_URL.into()),
-                        None,
-                        self.tos_mouse_state.clone(),
-                    )
-                    .soft_wrap(false)
-                    .with_style(link_styles)
-                    .build()
-                    .finish(),
-            )
-            .finish();
-
-        Container::new(
-            Flex::column()
-                .with_main_axis_size(MainAxisSize::Min)
-                .with_cross_axis_alignment(CrossAxisAlignment::Start)
-                .with_child(privacy_line)
-                .with_child(Container::new(tos_line).with_margin_top(8.).finish())
-                .finish(),
-        )
-        .with_margin_top(24.)
-        .finish()
-    }
-
     fn select_theme(&mut self, index: usize, ctx: &mut ViewContext<Self>) {
         self.sync_with_os = false;
         self.selected_theme_index = index;
         let theme_name = self.theme_display_name(index);
+        // Record the choice on the model so the UI-setup slide can show the
+        // matching preview screenshot.
+        self.onboarding_state.update(ctx, |model, ctx| {
+            model.set_selected_theme_name(theme_name.clone(), ctx);
+        });
         ctx.emit(ThemePickerSlideEvent::ThemeSelected { theme_name });
         ctx.notify();
     }
 
     fn next(&mut self, ctx: &mut ViewContext<Self>) {
         self.onboarding_state.update(ctx, |model, ctx| {
-            model.complete(ctx);
+            model.next(ctx);
         });
     }
 }
@@ -693,9 +541,6 @@ impl TypedActionView for ThemePickerSlide {
             }
             ThemePickerSlideAction::NextClicked => {
                 self.next(ctx);
-            }
-            ThemePickerSlideAction::PrivacySettingsClicked => {
-                ctx.emit(ThemePickerSlideEvent::PrivacySettingsRequested);
             }
         }
     }
