@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
-use onboarding::OnboardingIntention;
+use onboarding::callout::OnboardingIntention;
 use onboarding::callout::{
     OnboardingCalloutView, OnboardingCalloutViewEvent, OnboardingKeybindings,
 };
