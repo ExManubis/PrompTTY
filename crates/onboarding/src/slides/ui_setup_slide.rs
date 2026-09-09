@@ -20,10 +20,6 @@ use super::toggle_card::{ToggleCardSpec, render_toggle_card};
 use crate::model::OnboardingStateModel;
 use crate::slides::{bottom_nav, layout, slide_content};
 
-/// The theme-neutral onboarding illustration used on the right panel.
-const RIGHT_PANEL_IMAGE: &str =
-    "async/png/onboarding/terminal_intention/theme/theme_dark_horizontal.png";
-
 /// Which setting card is currently selected (expanded).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum UiCard {
@@ -242,8 +238,11 @@ impl UiSetupSlide {
         )
     }
 
-    fn render_visual(&self) -> Box<dyn Element> {
-        layout::onboarding_right_panel_with_bg(RIGHT_PANEL_IMAGE, layout::FOREGROUND_LAYOUT_DEFAULT)
+    fn render_visual(&self, app: &AppContext) -> Box<dyn Element> {
+        // Mirror the theme the user picked on the theme slide.
+        let path =
+            layout::theme_screenshot_path(self.onboarding_state.as_ref(app).selected_theme_name());
+        layout::onboarding_right_panel_with_bg(path, layout::FOREGROUND_LAYOUT_DEFAULT)
     }
 
     fn select_card(&mut self, card_index: usize, ctx: &mut ViewContext<Self>) {
@@ -278,7 +277,7 @@ impl View for UiSetupSlide {
 
         layout::static_left(
             || self.render_content(appearance, app),
-            || self.render_visual(),
+            || self.render_visual(app),
         )
     }
 }

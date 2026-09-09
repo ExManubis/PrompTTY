@@ -13,7 +13,7 @@ pub fn onboarding_theme_picker_themes() -> [WarpTheme; 4] {
     [
         default_themes::phenomenon(),
         default_themes::dark_theme(),
-        default_themes::light_theme(),
         default_themes::adeberry(),
+        default_themes::gruvbox_dark(),
     ]
 }

@@ -32,11 +32,18 @@ pub(crate) enum OnboardingStateEvent {
     Completed,
 }
 
+/// Display name of the default onboarding theme (Phenomenon). Used as the
+/// initial `selected_theme_name` and the fallback for the UI-setup preview.
+pub(crate) const DEFAULT_THEME_NAME: &str = "Phenomenon";
+
 #[derive(Clone, Debug)]
 pub(crate) struct OnboardingStateModel {
     step: OnboardingStep,
     use_prompttty_prompt: bool,
     vim_mode: bool,
+    /// Display name of the theme chosen on the theme slide, so the UI-setup
+    /// slide can show the matching preview screenshot.
+    selected_theme_name: String,
 }
 
 impl OnboardingStateModel {
@@ -45,6 +52,7 @@ impl OnboardingStateModel {
             step: OnboardingStep::Intro,
             use_prompttty_prompt: true,
             vim_mode: false,
+            selected_theme_name: DEFAULT_THEME_NAME.to_string(),
         }
     }
 
@@ -73,6 +81,18 @@ impl OnboardingStateModel {
             return;
         }
         self.vim_mode = value;
+        ctx.notify();
+    }
+
+    pub(crate) fn selected_theme_name(&self) -> &str {
+        &self.selected_theme_name
+    }
+
+    pub(crate) fn set_selected_theme_name(&mut self, name: String, ctx: &mut ModelContext<Self>) {
+        if self.selected_theme_name == name {
+            return;
+        }
+        self.selected_theme_name = name;
         ctx.notify();
     }
 

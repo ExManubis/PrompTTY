@@ -21,6 +21,37 @@ use warpui_core::{
 // TODO(APP-3934): support the macro outside the app crate
 pub const ONBOARDING_BG_PATH: &str = "async/png/onboarding/onboarding_bg.png";
 
+// Theme-preview screenshots shown on the right panel, one per onboarding theme.
+const THEME_SCREENSHOT_PHENOMENON: &str =
+    "async/png/onboarding/terminal_intention/theme/theme_phenomenon_horizontal.png";
+const THEME_SCREENSHOT_DARK: &str =
+    "async/png/onboarding/terminal_intention/theme/theme_dark_horizontal.png";
+const THEME_SCREENSHOT_ADEBERRY: &str =
+    "async/png/onboarding/terminal_intention/theme/theme_adeberry_horizontal.png";
+const THEME_SCREENSHOT_GRUVBOX: &str =
+    "async/png/onboarding/terminal_intention/theme/theme_gruvbox_horizontal.png";
+
+/// Every onboarding theme-preview screenshot, for asset preloading.
+pub(crate) const THEME_SCREENSHOTS: &[&str] = &[
+    THEME_SCREENSHOT_PHENOMENON,
+    THEME_SCREENSHOT_DARK,
+    THEME_SCREENSHOT_ADEBERRY,
+    THEME_SCREENSHOT_GRUVBOX,
+];
+
+/// Maps an onboarding theme's display name (`WarpTheme::name()`) to its preview
+/// screenshot. Unrecognized names fall back to the default theme (Phenomenon),
+/// so an OS-synced or unknown theme still shows a sensible image.
+pub(crate) fn theme_screenshot_path(theme_name: &str) -> &'static str {
+    match theme_name {
+        "Phenomenon" => THEME_SCREENSHOT_PHENOMENON,
+        "Dark" => THEME_SCREENSHOT_DARK,
+        "Adeberry" => THEME_SCREENSHOT_ADEBERRY,
+        "Gruvbox Dark" => THEME_SCREENSHOT_GRUVBOX,
+        _ => THEME_SCREENSHOT_PHENOMENON,
+    }
+}
+
 const LEFT_COLUMN_WIDTH: f32 = 580.;
 const LEFT_COLUMN_CONTENT_MAX_WIDTH: f32 = 800.;
 const MIN_RIGHT_COLUMN_WIDTH: f32 = 540.;

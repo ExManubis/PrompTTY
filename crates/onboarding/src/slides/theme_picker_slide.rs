@@ -82,6 +82,17 @@ impl ThemePickerSlide {
                 0
             });
 
+        // Seed the model with the initially-selected theme so the UI-setup
+        // slide's preview matches even if the user never changes the theme.
+        if let Some(name) = theme_options
+            .get(selected_theme_index)
+            .and_then(|option| option.theme.name())
+        {
+            onboarding_state.update(ctx, |model, ctx| {
+                model.set_selected_theme_name(name, ctx);
+            });
+        }
+
         Self {
             onboarding_state,
             theme_options,
@@ -374,30 +385,12 @@ impl ThemePickerSlide {
         Container::new(button).with_margin_bottom(12.).finish()
     }
 
-    /// All onboarding image paths used by the theme picker slide visual.
-    pub(crate) const VISUAL_IMAGE_PATHS: &'static [&'static str] = &[
-        "async/png/onboarding/terminal_intention/theme/theme_phenomenon_horizontal.png",
-        "async/png/onboarding/terminal_intention/theme/theme_dark_horizontal.png",
-        "async/png/onboarding/terminal_intention/theme/theme_light_horizontal.png",
-        "async/png/onboarding/terminal_intention/theme/theme_adeberry_horizontal.png",
-    ];
+    /// All onboarding image paths used by the theme picker slide visual
+    /// (for asset preloading). One preview screenshot per theme.
+    pub(crate) const VISUAL_IMAGE_PATHS: &'static [&'static str] = layout::THEME_SCREENSHOTS;
 
     fn theme_visual_path(&self) -> &'static str {
-        let theme_name = self.theme_display_name(self.selected_theme_index);
-        let name_key = match theme_name.as_str() {
-            "Phenomenon" => "phenomenon",
-            "Dark" => "dark",
-            "Light" => "light",
-            "Adeberry" => "adeberry",
-            _ => "dark",
-        };
-        // Safety: all name keys resolve to a horizontal entry in VISUAL_IMAGE_PATHS.
-        Self::VISUAL_IMAGE_PATHS
-            .iter()
-            .find(|p| {
-                p.contains("terminal_intention") && p.contains(name_key) && p.contains("horizontal")
-            })
-            .unwrap_or(&Self::VISUAL_IMAGE_PATHS[0])
+        layout::theme_screenshot_path(&self.theme_display_name(self.selected_theme_index))
     }
 
     fn render_theme_picker_visual(&self) -> Box<dyn Element> {
@@ -469,6 +462,11 @@ impl ThemePickerSlide {
         self.sync_with_os = false;
         self.selected_theme_index = index;
         let theme_name = self.theme_display_name(index);
+        // Record the choice on the model so the UI-setup slide can show the
+        // matching preview screenshot.
+        self.onboarding_state.update(ctx, |model, ctx| {
+            model.set_selected_theme_name(theme_name.clone(), ctx);
+        });
         ctx.emit(ThemePickerSlideEvent::ThemeSelected { theme_name });
         ctx.notify();
     }
