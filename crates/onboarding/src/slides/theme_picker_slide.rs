@@ -394,7 +394,9 @@ impl ThemePickerSlide {
         // Safety: all name keys resolve to a horizontal entry in VISUAL_IMAGE_PATHS.
         Self::VISUAL_IMAGE_PATHS
             .iter()
-            .find(|p| p.contains("terminal_intention") && p.contains(name_key) && p.contains("horizontal"))
+            .find(|p| {
+                p.contains("terminal_intention") && p.contains(name_key) && p.contains("horizontal")
+            })
             .unwrap_or(&Self::VISUAL_IMAGE_PATHS[0])
     }
 

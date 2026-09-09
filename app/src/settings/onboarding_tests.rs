@@ -13,7 +13,10 @@ fn prompttty_prompt_disables_honor_ps1_and_sets_vim() {
         initialize_settings_for_tests(&mut app);
         app.update(|ctx| {
             apply_onboarding_settings(
-                &SelectedSettings { use_prompttty_prompt: true, vim_mode: true },
+                &SelectedSettings {
+                    use_prompttty_prompt: true,
+                    vim_mode: true,
+                },
                 ctx,
             );
         });
@@ -28,7 +31,10 @@ fn keeping_shell_prompt_honors_ps1_and_vim_off() {
         initialize_settings_for_tests(&mut app);
         app.update(|ctx| {
             apply_onboarding_settings(
-                &SelectedSettings { use_prompttty_prompt: false, vim_mode: false },
+                &SelectedSettings {
+                    use_prompttty_prompt: false,
+                    vim_mode: false,
+                },
                 ctx,
             );
         });

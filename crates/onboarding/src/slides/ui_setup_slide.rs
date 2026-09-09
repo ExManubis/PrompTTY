@@ -163,7 +163,9 @@ impl UiSetupSlide {
                     ctx.dispatch_typed_action(UiSetupAction::SetUsePromptTtyPrompt { value: true });
                 }),
                 on_right: Box::new(|ctx, _, _| {
-                    ctx.dispatch_typed_action(UiSetupAction::SetUsePromptTtyPrompt { value: false });
+                    ctx.dispatch_typed_action(UiSetupAction::SetUsePromptTtyPrompt {
+                        value: false,
+                    });
                 }),
                 chips: vec![],
             },

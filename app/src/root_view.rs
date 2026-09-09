@@ -1919,9 +1919,8 @@ impl RootView {
         ctx: &mut ViewContext<Self>,
     ) -> ViewHandle<AgentOnboardingView> {
         let themes = onboarding_theme_picker_themes();
-        let onboarding_view = ctx.add_typed_action_view(move |ctx| {
-            AgentOnboardingView::new(themes.clone(), false, ctx)
-        });
+        let onboarding_view = ctx
+            .add_typed_action_view(move |ctx| AgentOnboardingView::new(themes.clone(), false, ctx));
 
         ctx.subscribe_to_view(&onboarding_view, |me, _view, event, ctx| {
             me.handle_agent_onboarding_event(event, ctx);

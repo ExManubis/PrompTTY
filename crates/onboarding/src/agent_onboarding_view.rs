@@ -1,27 +1,26 @@
-use warpui_core::assets::asset_cache::AssetSource;
-use warpui_core::image_cache::ImageType;
-use warpui_core::windowing::WindowManager;
-use warpui_core::windowing::state::{ApplicationStage, StateEvent};
-
-use crate::model::{OnboardingStateEvent, OnboardingStateModel, OnboardingStep, SelectedSettings};
-use crate::slides::{
-    IntroSlide, OnboardingSlide, ThemePickerSlide, ThemePickerSlideEvent, UiSetupSlide,
-};
-
 use pathfinder_geometry::vector::vec2f;
 use ui_components::{Component as _, Options as _, button};
 use warp_core::ui::appearance::Appearance;
 use warp_core::ui::theme::WarpTheme;
+use warpui_core::assets::asset_cache::AssetSource;
 use warpui_core::elements::{
     CacheOption, ChildAnchor, Container, Empty, Image, OffsetPositioning, ParentAnchor,
     ParentElement, ParentOffsetBounds, Rect, Shrinkable, Stack,
 };
+use warpui_core::image_cache::ImageType;
 use warpui_core::keymap::macros::*;
 use warpui_core::keymap::{FixedBinding, Keystroke};
 use warpui_core::presenter::ChildView;
+use warpui_core::windowing::WindowManager;
+use warpui_core::windowing::state::{ApplicationStage, StateEvent};
 use warpui_core::{
     AppContext, Element, Entity, ModelHandle, SingletonEntity as _, TypedActionView, View,
     ViewContext, ViewHandle,
+};
+
+use crate::model::{OnboardingStateEvent, OnboardingStateModel, OnboardingStep, SelectedSettings};
+use crate::slides::{
+    IntroSlide, OnboardingSlide, ThemePickerSlide, ThemePickerSlideEvent, UiSetupSlide,
 };
 
 #[derive(Clone, Debug)]
