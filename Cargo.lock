@@ -8994,9 +8994,7 @@ dependencies = [
 name = "onboarding"
 version = "0.1.0"
 dependencies = [
- "ai",
  "anyhow",
- "instant",
  "log",
  "pathfinder_color",
  "pathfinder_geometry",

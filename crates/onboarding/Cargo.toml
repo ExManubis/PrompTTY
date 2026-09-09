@@ -7,9 +7,7 @@ publish.workspace = true
 license.workspace = true
 
 [dependencies]
-ai.workspace = true
 anyhow.workspace = true
-instant.workspace = true
 log.workspace = true
 pathfinder_color.workspace = true
 pathfinder_geometry.workspace = true
