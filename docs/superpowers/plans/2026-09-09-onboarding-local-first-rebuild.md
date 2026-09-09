@@ -416,18 +416,27 @@ git commit -m "feat: rebuild onboarding crate as three-step local-first flow"
 
 ---
 
-### Task 3: Detach `RootView` + rewrite settings application
+### Task 3: Restore the app-crate build — detach onboarding from auth (absorbs former Task 4)
 
-Makes the whole workspace compile again against the new crate API, and severs onboarding from auth. Gate: `cargo build` (workspace) + the settings tests.
+Makes the whole `warp` app crate compile again against the new crate API, severs onboarding from auth, and removes the onboarding-triggered tutorial. Gate: `cargo build -p warp` compiles + the settings tests pass.
+
+**Scope note (blast radius, verified by call-site tracing):** the deleted onboarding symbols are consumed by more app files than a naive read suggests. This task restores the *whole* app crate. Files whose types are reachable ONLY from the now-removed onboarding-login/offer wiring are DELETED; the rest are FIXED. The former standalone "Task 4" (tutorial trigger) is folded in here because the `From<SelectedSettings> for OnboardingTutorial` impl and the `OnboardingCompleted` rewrite are the same edit.
 
 **Files:**
-- Modify: `app/src/settings/onboarding.rs`
-- Modify: `app/src/settings/onboarding_tests.rs`
-- Modify: `app/src/root_view.rs`
+- Delete: `app/src/ai/onboarding.rs` (+ remove `pub mod onboarding;` at `app/src/ai/mod.rs:46`)
+- Delete: `app/src/auth/login_slide.rs` (+ remove `pub mod login_slide;` and `login_slide::init(app);` at `app/src/auth/mod.rs:9,62`)
+- Delete: `app/src/auth/paste_auth_token_modal.rs` (+ remove `pub mod paste_auth_token_modal;` and its `init` at `app/src/auth/mod.rs:11,63`)
+- Modify: `app/src/settings/onboarding.rs` (rewrite apply fn; delete account-first/agent helpers)
+- Modify: `app/src/settings/onboarding_tests.rs` (rewrite)
+- Modify: `app/src/root_view.rs` (big prune)
+- Modify: `app/src/terminal/view/action.rs` (one-line re-export path fix)
+- Modify: `app/src/workspace/view/onboarding.rs` (delete the `From<SelectedSettings> for OnboardingTutorial` impl; keep the `OnboardingTutorial` type)
 
 **Interfaces:**
-- Consumes: `onboarding::SelectedSettings { use_prompttty_prompt, vim_mode }` and `AgentOnboardingView::new(themes, skippable, ctx)` from Task 2.
+- Consumes: `onboarding::SelectedSettings { use_prompttty_prompt, vim_mode }`, `AgentOnboardingView::new(themes, skippable, ctx)`, the trimmed `AgentOnboardingEvent`, and `onboarding::callout::OnboardingIntention` (relocated) from Task 2.
 - Produces: `apply_onboarding_settings(selected: &SelectedSettings, app: &mut AppContext)` — sets `honor_ps1` and `vim_mode` only.
+
+**Guiding rule:** let the compiler drive. Delete a symbol/member only after its readers are gone. Do NOT silence errors with `#[allow(dead_code)]` — remove dead code ("rip out, don't bypass"). If something you expected to delete turns out to have a live non-onboarding caller, keep it and report as a concern.
 
 - [ ] **Step 1: Rewrite `apply_onboarding_settings` and delete the account-first/agent helpers**
 
@@ -513,17 +522,17 @@ Adjust `.value()` accessors / read closures to match the codebase's `Setting` AP
 
 - [ ] **Step 3: Update the onboarding imports and view construction in `root_view.rs`**
 
-- Update the onboarding import (`root_view.rs:11`) to `use onboarding::{AgentOnboardingEvent, AgentOnboardingView, SelectedSettings};` (drop `OfferVariant`, `OnboardingIntention`). Update `:81-82` to import only `apply_onboarding_settings`.
-- In `create_agent_onboarding_view` (`:2082-2193`): call `AgentOnboardingView::new(themes.clone(), false, ctx)`. Delete the `build_onboarding_models`, `default_model_id`, `team_enforces_autonomy`, and `current_onboarding_auth_state` locals and the LLMPreferences/UserWorkspaces/AIRequestUsageModel/AuthManager subscriptions (`:2114-2187`). Keep the `subscribe_to_view(&onboarding_view, handle_agent_onboarding_event)` hookup (`:2189-2191`).
+- Update the onboarding import (`root_view.rs:11`) to `use onboarding::{AgentOnboardingEvent, AgentOnboardingView, SelectedSettings};` (drop `OfferVariant`, `OnboardingIntention`). Update `:81-82` to import only `apply_onboarding_settings` (drop `apply_account_first_onboarding_settings`). Where `root_view.rs` still needs `OnboardingIntention` after pruning (surviving uses only), get it via `crate::terminal::view::OnboardingIntention` (fixed in Step 6c) — do not import it from the `onboarding` crate root.
+- In `create_agent_onboarding_view` (`:2082-2193`): call `AgentOnboardingView::new(themes.clone(), false, ctx)`. Delete the `build_onboarding_models`, `default_model_id`, `team_enforces_autonomy`, and `current_onboarding_auth_state` locals and the LLMPreferences/UserWorkspaces/AIRequestUsageModel/AuthManager subscriptions (`:2114-2187`). Also delete `offer_variant_for_account_class` (`:133-137`) once unused. Keep the `subscribe_to_view(&onboarding_view, handle_agent_onboarding_event)` hookup (`:2189-2191`).
 
 - [ ] **Step 4: Simplify the `AgentOnboardingEvent` dispatcher**
 
 In `handle_agent_onboarding_event` (`:2468-2727`) reduce to the surviving variants:
 - `ThemeSelected` / `SyncWithOsToggled`: keep unchanged (`:2474-2490`).
-- `OnboardingCompleted(selected)`: require `Onboarding` state; call `mark_local_onboarding_completed(ctx)` (and `mark_hoa_onboarding_completed` if `HOAOnboardingFlow`, preserving current behavior), `apply_onboarding_settings(&selected, ctx)`, then `target.to_workspace(ctx)` → `Terminal`, emit `AuthOnboardingStateChanged`, `start_pending_tutorial`, `start_autoupdate_polling` (mirror `:2536-2543`). **Delete** the `PostAuthOnboarding` branch (`:2492-2513`) and the `set_user_onboarded` call (`:2531-2534`).
+- `OnboardingCompleted(selected)`: require `Onboarding` state; call `mark_local_onboarding_completed(ctx)` (and `mark_hoa_onboarding_completed` if `HOAOnboardingFlow`, preserving current behavior), `apply_onboarding_settings(&selected, ctx)`, then `target.to_workspace(ctx)` → `Terminal`, emit `AuthOnboardingStateChanged`, `start_autoupdate_polling` (mirror `:2536-2543`). **Delete** the `PostAuthOnboarding` branch (`:2492-2513`), the `set_user_onboarded` call (`:2531-2534`), AND the tutorial trigger — do **not** call `start_pending_tutorial` / `OnboardingTutorial::from(selected)` here (the new UX-only onboarding starts no tutorial; former Task 4). Remove `refresh_pending_onboarding_choices` (`:602-609`) and the `OnboardingTutorial::from` call sites (`:608`, `:2537`) so the `From<SelectedSettings>` impl deleted in Step 6d has no callers.
 - `OnboardingSkipped`: keep `mark_local_onboarding_completed` + `to_workspace → Terminal`; **delete** the `set_user_onboarded` call.
-- `AppBecameActive`: replace the `refresh_onboarding_account_state` body with a no-op (or delete the arm) — it only refreshed billing/models.
-- Delete the arms for every removed variant (`Upgrade*`, `Offer*`, `LoginFromWelcomeRequested`, `PrivacySettingsFromTerminalThemeSlideRequested`).
+- `AppBecameActive`: delete the arm (or make it a no-op) — it only refreshed billing/models, which no longer exist.
+- Delete the arms for every removed variant (`UpgradeRequested`, `UpgradeCopyUrlRequested`, `UpgradePasteTokenFromClipboardRequested`, `OfferSetUpLaterSelected`, `OfferAiSellSatisfied`, `LoginFromWelcomeRequested`, `PrivacySettingsFromTerminalThemeSlideRequested`). Their construction sites for `LoginSlideView` (`:2621`, `:2671`) and `PasteAuthTokenModalView` (`:2578`) go with them — that is what makes the deleted files in Step 6a/6b dead.
 
 - [ ] **Step 5: Remove the auth gating from the first-run decision and completion path**
 
@@ -534,53 +543,37 @@ In `handle_agent_onboarding_event` (`:2468-2727`) reduce to the surviving varian
 
 Note: keep `AuthOnboardingState`, `AuthOnboardingTarget`, `to_workspace`, and `create_workspace` — they build the terminal workspace. The `LoginSlide`/`PostAuthOnboarding` enum variants may become unused; remove them only if the compiler confirms no remaining constructor.
 
-- [ ] **Step 6: Build the workspace**
+- [ ] **Step 6: Delete the now-dead app files and fix the two shared consumers**
 
-Run: `cargo build`
-Expected: PASS. Resolve compiler errors iteratively — the guiding rule is "delete only after readers are gone." Do not silence errors with `#[allow(dead_code)]`; remove the dead code.
+**6a — Delete `app/src/ai/onboarding.rs`.** Its `build_onboarding_models` / `current_onboarding_auth_state` had only one caller (the old `create_agent_onboarding_view` args, removed in Step 3). `git rm app/src/ai/onboarding.rs` and remove `pub mod onboarding;` at `app/src/ai/mod.rs:46`.
 
-- [ ] **Step 7: Run the settings tests**
+**6b — Delete `app/src/auth/login_slide.rs` and `app/src/auth/paste_auth_token_modal.rs`.** `LoginSlideView` was constructed only at the two deleted event arms (`root_view.rs:2621,2671`); `PasteAuthTokenModalView` only at the deleted upgrade-paste arm (`:2578`). The general auth flow renders `AuthView`, not these. `git rm` both files and remove their `pub mod …;` + `…::init(app);` lines at `app/src/auth/mod.rs:9,62` (login_slide) and `:11,63` (paste_auth_token_modal).
+
+**6c — Fix the `OnboardingIntention` re-export (one line).** `app/src/terminal/view/action.rs:7` is the single re-export point feeding every downstream `OnboardingIntention` consumer (workspace/view.rs, oz_launch.rs, terminal/view/init.rs, etc.). Change it to:
+
+```rust
+pub use onboarding::callout::OnboardingIntention;
+```
+
+This fixes all downstream consumers without touching them.
+
+**6d — Fix `app/src/workspace/view/onboarding.rs`.** Delete the `impl From<SelectedSettings> for OnboardingTutorial` block (`:28-37`) — it matched the old enum variants and has no callers after Step 4. **Keep** the `OnboardingTutorial` type itself and everything else in the file; it is still used by the Oz launch modal (`oz_launch.rs`) via `WorkspaceAction::StartAgentOnboardingTutorial`, independent of onboarding. Fix the file's `use onboarding::SelectedSettings;` import (remove it if now unused).
+
+- [ ] **Step 7: Build the whole app crate**
+
+Run: `cargo build -p warp`
+Expected: PASS. Resolve compiler errors iteratively — the guiding rule is "delete only after readers are gone." Do not silence errors with `#[allow(dead_code)]`; remove the dead code. If a symbol you expected to be dead has a live non-onboarding caller, keep it and note it as a concern rather than forcing the deletion.
+
+- [ ] **Step 8: Run the settings tests**
 
 Run: `cargo test -p warp --lib settings::onboarding` (the app crate is named `warp`).
 Expected: PASS — the two `apply_onboarding_settings` tests.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add -A app/src/settings/onboarding.rs app/src/settings/onboarding_tests.rs app/src/root_view.rs
-git commit -m "feat: detach onboarding from auth and apply UX-only settings"
-```
-
----
-
-### Task 4: Neutralize the post-deck AI tutorial trigger
-
-**Files:**
-- Modify: `app/src/workspace/view/onboarding.rs`
-
-**Interfaces:**
-- Consumes: the completion path from Task 3 (`start_pending_tutorial`).
-
-- [ ] **Step 1: Find the tutorial trigger and its callers**
-
-```bash
-grep -rn "start_agent_onboarding_tutorial\|should_show_agent_onboarding\|start_pending_tutorial" app/src
-```
-
-- [ ] **Step 2: Neutralize the AI-gated tutorial**
-
-`start_agent_onboarding_tutorial` (`app/src/workspace/view/onboarding.rs:42`) was gated on AI being enabled (`:75`), which is never true from the new onboarding. Remove the call from the completion path (`start_pending_tutorial` in `root_view.rs`), or make `should_show_agent_onboarding` (`:165`) return `false`, so no in-terminal tutorial launches. Delete the now-dead trigger function if nothing else calls it. Do not delete the `block_onboarding` machinery itself (out of scope).
-
-- [ ] **Step 3: Build**
-
-Run: `cargo build`
-Expected: PASS.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add -A app/src/workspace/view/onboarding.rs app/src/root_view.rs
-git commit -m "chore: drop AI-gated post-onboarding tutorial trigger"
+git add -A
+git commit -m "feat: detach onboarding from auth, restore app build, drop tutorial trigger"
 ```
 
 ---
