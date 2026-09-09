@@ -6,7 +6,9 @@ pub use view::{OnboardingCalloutView, OnboardingCalloutViewEvent, OnboardingKeyb
 
 /// The user's intention, used by the post-onboarding keybindings callout to
 /// branch its tutorial steps and copy. Scoped to this module: the three-step
-/// onboarding flow itself is intention-free.
+/// onboarding flow itself is intention-free. Kept `pub` because the callout's
+/// public constructor `OnboardingCalloutView::new_agent_modality` takes it as a
+/// parameter, so external callers must be able to name it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OnboardingIntention {
     Terminal,

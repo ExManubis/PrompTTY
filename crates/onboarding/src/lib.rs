@@ -7,11 +7,6 @@ pub mod slides;
 
 pub use callout::{OnboardingCalloutView, OnboardingKeybindings};
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "bin")] {
-    }
-}
-
 pub mod components;
 
 pub use agent_onboarding_view::{AgentOnboardingAction, AgentOnboardingEvent, AgentOnboardingView};
