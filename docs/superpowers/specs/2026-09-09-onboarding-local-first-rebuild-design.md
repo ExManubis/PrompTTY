@@ -91,17 +91,34 @@ Remove `is_ai_enabled()` / `is_warp_drive_enabled()`.
 
 ### 2. Slides — `crates/onboarding/src/slides/`
 
-- **`intro_slide.rs`** (rewrite): PrompTTY logo asset instead of
-  `Icon::WarpLogoLight` (`intro_slide.rs:142`); **remove** the "Already have an
-  account? Log in" link and its jump-to-login (`intro_slide.rs:83,91`). Keep the
-  "Get started" primary button. Final copy — title **"Welcome to PrompTTY"**
-  (`:150`), subtitle **"A fast, modern terminal. Let's set up your theme and
-  prompt."** (`:162`).
+- **`intro_slide.rs`** (rewrite): use a new **`Icon::PromptTtyLogo`** mark
+  instead of `Icon::WarpLogoLight` (`intro_slide.rs:142`), and **keep** the
+  shimmering text title below it. **Remove** the "Already have an account? Log
+  in" link and its jump-to-login (`intro_slide.rs:83,91`, and the
+  `IntroSlideEvent::LoginRequested`/`IntroSlideAction::LoginClicked` paths). Keep
+  the "Get started" primary button. Final copy — title **"Welcome to
+  PrompTTY"** (`:150`), subtitle **"A fast, modern terminal. Let's set up your
+  theme and prompt."** (`:162`).
+  - **Blocking asset dependency:** a title-less PrompTTY mark SVG does not exist
+    yet (only wordmark-with-title SVGs). Add an `Icon::PromptTtyLogo` variant in
+    `crates/warp_core/src/ui/icons.rs` (enum near `:68`, path mapping near
+    `:416`) pointing at `bundled/svg/promptty-logo-light.svg`, and add that SVG.
+    A placeholder mark unblocks the build; real art is a follow-up.
 - **`theme_picker_slide.rs`** (edit): keep the theme grid + "Sync light/dark
-  theme with OS". **Remove** the privacy opt-out disclaimer (`:559`), the "you
-  agree to Warp's Terms of Service" line + link (`:586,594`), the `warp.dev`
-  ToS URL (`:53`), and the `PrivacySettingsRequested` event path
-  (`agent_onboarding_view.rs:642`).
+  theme with OS". **Remove** the whole `render_disclaimer_section` (`:538-616`)
+  and its call (`:169-180`), the `TOS_URL` const (`:53`), the
+  `tos_mouse_state`/`privacy_settings_mouse_state` fields (`:67,68`), the
+  `PrivacySettingsClicked` action (`:50`) and `PrivacySettingsRequested` event
+  (`:37`), and its handler in `agent_onboarding_view.rs:642`.
+  - **Now a middle step, not the last:** its Next currently calls
+    `model.complete()` (`:628`) and is labelled "Get Warping" (`:272`) with
+    hardcoded progress `(3,4)/(4,5)` (`:290-298`). Change Next to `model.next()`
+    (advance to UI setup), relabel to **"Next"**, and use
+    `self.onboarding_state.as_ref(app).progress()` for the dots.
+  - **Drop intention/tabs coupling:** the visual-path picker uses
+    `OnboardingIntention` and `use_vertical_tabs` (both deleted). Collapse
+    `theme_visual_path` to a fixed variant (terminal-intention dir, horizontal
+    orientation) and remove the `IntentionChanged` subscription.
 - **`ui_setup_slide.rs`** (new): Prompt toggle + Vim-mode toggle, using the
   existing slide `layout`, `bottom_nav`, and toggle components. Final slide;
   primary button emits completion.
@@ -190,9 +207,29 @@ interactive builder is not part of the flow.)
 
 ## Open items / dependencies
 
-- **PrompTTY logo asset** for the intro slide. Commit `108b5238 "update
-  logotype"` suggests one may already exist; reuse it if present, otherwise flag
-  during implementation.
+- **PrompTTY mark SVG (blocking):** a title-less mark for `Icon::PromptTtyLogo`
+  does not exist yet. A placeholder unblocks the build; real art is a follow-up.
 - `AccountFirstOnboarding` feature flag becomes unused by onboarding. Leave the
   flag defined (removing it is auth-adjacent cleanup) but remove its onboarding
   references.
+- **RootView detachment specifics** (from the wiring map):
+  - First-run gate `root_view.rs:1828-1862`: remove the `if
+    auth_state.is_logged_in()` short-circuit and the `Auth`/`ForceLogin`
+    branches from the onboarding decision; key onboarding purely off
+    `AgentOnboarding && !has_completed_local_onboarding`, then open `Terminal`.
+  - `OnboardingCompleted` handler `:2491-2544`: keep `mark_local_onboarding_completed`
+    (`:2521`), `apply_onboarding_settings` (`:2529`), and the `to_workspace →
+    Terminal` transition (`:2536-2543`); **remove** the `set_user_onboarded`
+    call (`:2531-2534`) and the `PostAuthOnboarding` branch (`:2492-2513`). The
+    existing `LoginLaterConfirmed` path (`:2443-2464`) is the model to mirror.
+  - Remove/neutralize: `complete_auth_and_create_workspace` onboarding gate
+    (`:3831-3848`), `sync_local_onboarding_to_server` (`:3240-3248`), all
+    `set_user_onboarded` calls, `LoginFromWelcomeRequested` (`:2646-2698`),
+    `PrivacySettingsFromTerminalThemeSlideRequested` (`:2590-2645`),
+    `complete_account_first` (`:2352-2415`) and account-first offer/upgrade arms,
+    `refresh_onboarding_account_state`, `apply_account_first_onboarding_settings`,
+    and the `auth_state` argument + auth subscriptions on the onboarding view
+    (`:2100,2108,2132-2187`).
+  - `AgentOnboardingView::new` (`:2102-2110`): drop `models`, `default_model_id`,
+    `workspace_enforces_autonomy`, `auth_state` args (all AI/auth-derived);
+    keep `themes` and `skippable`.
