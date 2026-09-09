@@ -92,9 +92,11 @@ Remove `is_ai_enabled()` / `is_warp_drive_enabled()`.
 ### 2. Slides — `crates/onboarding/src/slides/`
 
 - **`intro_slide.rs`** (rewrite): PrompTTY logo asset instead of
-  `Icon::WarpLogoLight` (`intro_slide.rs:142`); updated title/subtitle copy;
-  **remove** the "Already have an account? Log in" link and its jump-to-login
-  (`intro_slide.rs:83,91`). Keep the "Get started" primary button.
+  `Icon::WarpLogoLight` (`intro_slide.rs:142`); **remove** the "Already have an
+  account? Log in" link and its jump-to-login (`intro_slide.rs:83,91`). Keep the
+  "Get started" primary button. Final copy — title **"Welcome to PrompTTY"**
+  (`:150`), subtitle **"A fast, modern terminal. Let's set up your theme and
+  prompt."** (`:162`).
 - **`theme_picker_slide.rs`** (edit): keep the theme grid + "Sync light/dark
   theme with OS". **Remove** the privacy opt-out disclaimer (`:559`), the "you
   agree to Warp's Terms of Service" line + link (`:586,594`), the `warp.dev`
@@ -148,7 +150,8 @@ Rewrite `apply_onboarding_settings` to take the new `SelectedSettings` struct an
 
 - Set `SessionSettings.honor_ps1` from the Prompt toggle — `true` = "Keep my
   shell's prompt / PS1", `false` = "Use PrompTTY's prompt". Flipping `honor_ps1`
-  already re-syncs `input_box_type` via `settings/init.rs:206`.
+  already re-syncs `input_box_type` via `settings/init.rs:206`. **Default: "Use
+  PrompTTY's prompt"** (`honor_ps1 = false`) pre-selected on the slide.
 - Set `editor.vim_mode` (`settings/editor.rs:204`, toml
   `text_editing.vim_mode_enabled`) from the Vim-mode toggle.
 - **Write no AI settings at all** (no `is_any_ai_enabled`, no autonomy, no
