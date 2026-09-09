@@ -1589,6 +1589,7 @@ enum AuthOnboardingTarget {
 const HAS_COMPLETED_ONBOARDING_KEY: &str = "HasCompletedOnboarding";
 
 /// Returns whether the user has completed the onboarding slides locally (before login).
+#[cfg(not(target_family = "wasm"))]
 pub(crate) fn has_completed_local_onboarding(ctx: &AppContext) -> bool {
     ctx.private_user_preferences()
         .read_value(HAS_COMPLETED_ONBOARDING_KEY)
