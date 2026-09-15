@@ -413,7 +413,6 @@ use crate::themes::theme_deletion_modal::{ThemeDeletionModal, ThemeDeletionModal
 use crate::tips::{TipsEvent, TipsView};
 use crate::ui_components::buttons::{combo_inner_button, icon_button_with_color};
 use crate::ui_components::red_notification_dot::RedNotificationDot;
-use crate::ui_components::window_focus_dimming::WindowFocusDimming;
 use crate::ui_components::{blended_colors, icons};
 use crate::undo_close::UndoCloseStack;
 #[cfg(target_family = "wasm")]
@@ -20560,19 +20559,9 @@ impl Workspace {
         )
         .finish();
 
-        let dimming_color = appearance.theme().background().into();
-        SavePosition::new(
-            WindowFocusDimming::apply_panel_header_dimming(
-                tab_bar_element,
-                self.mouse_states.header_dimming.clone(),
-                tab_bar_height,
-                dimming_color,
-                self.window_id,
-                ctx,
-            ),
-            TAB_BAR_POSITION_ID,
-        )
-        .finish()
+        // The unfocused dim is baked into the chrome fill painted at the workspace root, so the
+        // tab bar needs no overlay of its own.
+        SavePosition::new(tab_bar_element, TAB_BAR_POSITION_ID).finish()
     }
 
     // Render traffic lights, if appropriate for the current platform.

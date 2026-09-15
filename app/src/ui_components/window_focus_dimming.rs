@@ -10,7 +10,7 @@ use crate::workspace::panel_header_corner_radius;
 
 /// Opacity level for dimming the header of unfocused windows.
 /// 0 means no dimming, 100 means 100% cover the top bar.
-const UNFOCUSED_WINDOW_DIMMING_OPACITY: crate::util::color::Opacity = 45;
+pub const UNFOCUSED_WINDOW_DIMMING_OPACITY: crate::util::color::Opacity = 45;
 
 /// Utility functions for applying consistent window focus dimming across all UI components.
 pub struct WindowFocusDimming;

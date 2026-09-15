@@ -13,7 +13,10 @@ use super::OneTimeModalModel;
 use crate::appearance::Appearance;
 use crate::pane_group::PaneId;
 use crate::terminal::TerminalView;
-use crate::themes::theme::WarpTheme;
+use crate::themes::theme::{Blend, WarpTheme};
+use crate::ui_components::window_focus_dimming::{
+    UNFOCUSED_WINDOW_DIMMING_OPACITY, WindowFocusDimming,
+};
 use crate::window_settings::{BackgroundOpacity, WindowSettings};
 use crate::workspace::Workspace;
 use crate::workspace::tab_group::TabGroupId;
@@ -42,7 +45,6 @@ pub(super) struct WorkspaceMouseStates {
     pub(super) dismiss_banner_button: MouseStateHandle,
     pub(super) offline_icon: MouseStateHandle,
     pub(super) avatar_icon: MouseStateHandle,
-    pub(super) header_dimming: MouseStateHandle,
     pub(super) right_panel_icon: MouseStateHandle,
     pub(super) notifications_mailbox: MouseStateHandle,
     pub(super) session_config_tab_config_chip_close: MouseStateHandle,
@@ -411,23 +413,35 @@ pub fn chrome_opacity(window_id: WindowId, app: &AppContext) -> u8 {
     chrome_opacity_for(configured, PLATFORM_SUPPORTS_WINDOW_BLUR)
 }
 
-pub fn chrome_fill(theme: &WarpTheme, opacity: u8) -> Fill {
-    theme.surface_1().with_opacity(opacity).into()
+/// Unfocused windows dim their chrome toward the theme background; baking the dim into the fill
+/// keeps the pane cards, which are painted on top, at full brightness.
+pub fn chrome_fill(theme: &WarpTheme, opacity: u8, window_focused: bool) -> Fill {
+    let base = if window_focused {
+        theme.surface_1()
+    } else {
+        theme.surface_1().blend(
+            &theme
+                .background()
+                .with_opacity(UNFOCUSED_WINDOW_DIMMING_OPACITY),
+        )
+    };
+    base.with_opacity(opacity).into()
 }
 
 pub fn workspace_chrome_fill(window_id: WindowId, app: &AppContext) -> Fill {
     chrome_fill(
         Appearance::as_ref(app).theme(),
         chrome_opacity(window_id, app),
+        WindowFocusDimming::is_window_focused(window_id, app),
     )
 }
 
 /// An active floating tab shares the pane card's solid fill so the two read as one surface.
-pub fn floating_tab_fill(theme: &WarpTheme, chrome_opacity: u8, is_active: bool) -> Fill {
+pub fn floating_tab_fill(theme: &WarpTheme, chrome_fill: Fill, is_active: bool) -> Fill {
     if is_active {
         theme.background().into()
     } else {
-        chrome_fill(theme, chrome_opacity)
+        chrome_fill
     }
 }
 
