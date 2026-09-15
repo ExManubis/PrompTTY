@@ -22,7 +22,7 @@ use warpui::fonts::Weight;
 use warpui::keymap::Keystroke;
 use warpui::platform::keyboard::KeyCode;
 use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::ui_components::text_input::TextInput;
 use warpui::{AppContext, Entity, ModelContext, SingletonEntity, ViewHandle};
 
@@ -1052,6 +1052,10 @@ pub struct TabComponent<'a> {
     tab: TabData,
     tab_bar: TabBarState,
     editor: ViewHandle<EditorView>,
+    /// Height of a single line in `editor`, used to size the inline rename
+    /// input. Without it the editor element expands to the tab's full height
+    /// and paints its text at the top.
+    rename_editor_line_height: f32,
     title: String,
     has_custom_title: bool,
     tab_index: usize,
@@ -1153,6 +1157,8 @@ impl<'a> TabComponent<'a> {
         ctx: &'a AppContext,
     ) -> Self {
         let appearance = Appearance::as_ref(ctx);
+        let rename_editor_line_height =
+            editor.as_ref(ctx).line_height(ctx.font_cache(), appearance);
         let title = tab.pane_group.as_ref(ctx).display_title(ctx);
 
         let active_pane_is_ambient_agent_session = tab
@@ -1234,6 +1240,7 @@ impl<'a> TabComponent<'a> {
             tab: tab.clone(),
             tab_bar,
             editor,
+            rename_editor_line_height,
             title,
             has_custom_title: tab.pane_group.as_ref(ctx).custom_title(ctx).is_some(),
             tab_index,
@@ -1364,23 +1371,11 @@ impl<'a> TabComponent<'a> {
                 TextInput::new(
                     self.editor.clone(),
                     UiComponentStyles::default()
+                        .set_height(self.rename_editor_line_height)
                         .set_background(Fill::None)
                         .set_border_radius(CornerRadius::with_all(Radius::Pixels(0.)))
                         .set_border_width(0.),
                 )
-                .with_style(UiComponentStyles {
-                    margin: Some(Coords::default().top(if self.grouped_member {
-                        // Reduce the top margin for grouped tabs to make it appear centered.
-                        2.
-                    } else if FeatureFlag::NewTabStyling.is_enabled() {
-                        // With the larger tabs in the new ui, we need to give the editor some extra top margin
-                        // to make it appear centered
-                        8.
-                    } else {
-                        3.
-                    })),
-                    ..Default::default()
-                })
                 .build()
                 .finish(),
             )
