@@ -12,6 +12,7 @@ use crate::ai::blocklist::agent_view::agent_input_footer::{
     AgentInputFooter, AgentInputFooterEvent,
 };
 use crate::code_review::CodeReviewPaneEntrypoint;
+use crate::features::is_warp_agent_available;
 use crate::terminal::cli_agent_sessions::{CLIAgentInputEntrypoint, CLIAgentSessionsModel};
 use crate::terminal::shared_session::{
     SharedSessionActionSource, SharedSessionScrollbackType, SharedSessionSource,
@@ -321,6 +322,12 @@ impl TerminalView {
 
             // If a CLIAgent is active, we always want to show the agent footer.
             return true;
+        }
+
+        // All other footer variants exist to bring in the Warp Agent, which local-only
+        // builds can't run (the CLI-agent variants above are unaffected).
+        if !is_warp_agent_available() {
+            return false;
         }
 
         // All other footer variants require the global AI setting to be on.

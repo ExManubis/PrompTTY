@@ -39,7 +39,7 @@ fn match_data_countable_zero_is_not_truthy() {
 
 #[test]
 fn subpage_display_names_are_correct() {
-    assert_eq!(SettingsSection::WarpAgent.to_string(), "Warp Agent");
+    assert_eq!(SettingsSection::WarpAgent.to_string(), "AI");
     assert_eq!(SettingsSection::AgentProfiles.to_string(), "Profiles");
     assert_eq!(SettingsSection::AgentMCPServers.to_string(), "MCP servers");
     assert_eq!(SettingsSection::Knowledge.to_string(), "Knowledge");
@@ -94,8 +94,10 @@ const ALL_SECTIONS: &[SettingsSection] = &[
 /// Sections whose user-facing Display label has deliberately diverged from the
 /// slug it was seeded from, because the slug is a stored contract that the
 /// rename must not follow.
-const SECTIONS_WITH_RENAMED_DISPLAY_LABELS: &[SettingsSection] =
-    &[SettingsSection::WarpCloudAgentAPIKeys];
+const SECTIONS_WITH_RENAMED_DISPLAY_LABELS: &[SettingsSection] = &[
+    SettingsSection::WarpAgent,
+    SettingsSection::WarpCloudAgentAPIKeys,
+];
 
 #[test]
 fn all_sections_list_is_exhaustive() {
@@ -178,12 +180,24 @@ fn renamed_sections_keep_the_slug_they_were_seeded_with() {
         SettingsSection::WarpCloudAgentAPIKeys.slug(),
         "Oz Cloud API Keys"
     );
+    // The page was later renamed from "Warp Agent" to "AI"; the slug keeps the
+    // spelling it was seeded from.
+    assert_eq!(SettingsSection::WarpAgent.to_string(), "AI");
+    assert_eq!(SettingsSection::WarpAgent.slug(), "Warp Agent");
+    assert_eq!(
+        SettingsSection::from_slug("Warp Agent"),
+        Some(SettingsSection::WarpAgent)
+    );
+    assert_eq!(
+        SettingsSection::from_slug("AI"),
+        Some(SettingsSection::WarpAgent)
+    );
 }
 
 #[test]
 fn from_slug_accepts_legacy_spellings() {
-    // Both the legacy "Oz" name and the current "Warp Agent" slug must resolve
-    // to SettingsSection::WarpAgent so existing deep links, persisted sessions
+    // The legacy "Oz" and "Warp Agent" spellings must resolve to
+    // SettingsSection::WarpAgent so existing deep links, persisted sessions
     // and external callers keep working after the user-facing rename (see
     // specs/GH1063/product.md, Behavior #8).
     assert_eq!(

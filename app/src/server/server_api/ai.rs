@@ -18,7 +18,6 @@ use itertools::Itertools;
 #[cfg(test)]
 use mockall::automock;
 use prost::Message;
-use warp_core::channel::ChannelState;
 use warp_core::features::FeatureFlag;
 use warp_errors::report_error;
 use warp_graphql::ai::{AgentTaskState, PlatformErrorCode};
@@ -142,9 +141,6 @@ pub use crate::ai::ambient_agents::{
     task::{AttachmentInput, TaskAttachment},
 };
 use crate::ai::artifacts::Artifact;
-use crate::ai::generate_code_review_content::api::{
-    GenerateCodeReviewContentRequest, GenerateCodeReviewContentResponse,
-};
 use crate::ai::harness_availability::HarnessAvailability;
 use crate::ai::llms::{
     AvailableLLMs, DisableReason, LLMContextWindow, LLMInfo, LLMModelHost, LLMSpec,
@@ -1602,14 +1598,6 @@ pub trait AIClient: 'static + Send + Sync {
         &self,
         run_id: &str,
     ) -> anyhow::Result<serde_json::Value, anyhow::Error>;
-
-    /// Generates AI copy for code-review flows: commit messages at dialog-open
-    /// time and PR titles / bodies at confirm time. `output_type` in the
-    /// request picks which of the three the server returns.
-    async fn generate_code_review_content(
-        &self,
-        request: GenerateCodeReviewContentRequest,
-    ) -> Result<GenerateCodeReviewContentResponse, anyhow::Error>;
 }
 
 fn into_file_artifact_record(
@@ -3248,29 +3236,6 @@ impl AIClient for ServerApi {
         let response: serde_json::Value = self
             .get_public_api(&format!("agent/runs/{run_id}/conversation"))
             .await?;
-        Ok(response)
-    }
-
-    async fn generate_code_review_content(
-        &self,
-        request: GenerateCodeReviewContentRequest,
-    ) -> Result<GenerateCodeReviewContentResponse, anyhow::Error> {
-        let auth_token = self.get_or_refresh_access_token().await?;
-        let request_builder = self.base_client.http_client().post(format!(
-            "{}/ai/generate_code_review_content",
-            ChannelState::server_root_url()
-        ));
-        let response = if let Some(token) = auth_token.as_bearer_token() {
-            request_builder.bearer_auth(token)
-        } else {
-            request_builder
-        }
-        .json(&request)
-        .send()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
         Ok(response)
     }
 }

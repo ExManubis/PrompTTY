@@ -124,18 +124,31 @@ fn exit_command_executes_immediately_and_takes_no_argument() {
 
 #[test]
 fn not_cloud_agent_commands_are_only_active_outside_cloud_mode() {
-    let local_context = BASELINE_AVAILABILITY | Availability::NOT_CLOUD_AGENT;
+    let local_context =
+        BASELINE_AVAILABILITY | Availability::NOT_CLOUD_AGENT | Availability::WARP_AGENT_AVAILABLE;
     assert!(commands::AGENT.is_active(local_context));
     assert!(commands::NEW.is_active(local_context));
 
-    let cloud_context = BASELINE_AVAILABILITY;
+    let cloud_context = BASELINE_AVAILABILITY | Availability::WARP_AGENT_AVAILABLE;
     assert!(!commands::AGENT.is_active(cloud_context));
     assert!(!commands::NEW.is_active(cloud_context));
 
     let _cloud_mode_input_v2 = FeatureFlag::CloudModeInputV2.override_enabled(true);
-    let cloud_mode_v2_context = BASELINE_AVAILABILITY | Availability::CLOUD_MODE_V2_COMPOSER;
+    let cloud_mode_v2_context = BASELINE_AVAILABILITY
+        | Availability::CLOUD_MODE_V2_COMPOSER
+        | Availability::WARP_AGENT_AVAILABLE;
     assert!(!commands::AGENT.is_active(cloud_mode_v2_context));
     assert!(!commands::NEW.is_active(cloud_mode_v2_context));
+}
+
+#[test]
+fn agent_commands_require_the_warp_agent_backend() {
+    // Local-only builds don't ship the agent's cloud orchestration loop, so the
+    // availability context never sets WARP_AGENT_AVAILABLE and the agent commands
+    // are hidden.
+    let context = BASELINE_AVAILABILITY | Availability::NOT_CLOUD_AGENT;
+    assert!(!commands::AGENT.is_active(context));
+    assert!(!commands::NEW.is_active(context));
 }
 
 #[test]

@@ -15,9 +15,11 @@
 
 use std::path::Path;
 
-use crate::ai::generate_code_review_content::api::{GenerateCodeReviewContentRequest, OutputType};
+use ai::code_review::CodeReviewAi;
+use ai::code_review::api::{GenerateCodeReviewContentRequest, OutputType};
+use ai::code_review::prompts::find_pr_template;
+
 use crate::code_review::diff_state::CommitChainMode;
-use crate::server::server_api::ai::AIClient;
 use crate::util::git::{self, Commit, PrInfo, get_branch_commit_messages, get_diff_for_pr};
 
 /// Runs the commit chain — always commits, then optionally pushes, then
@@ -33,7 +35,7 @@ pub async fn run_commit_chain(
     message: &str,
     include_unstaged: bool,
     branch: &str,
-    ai_client: Option<&dyn AIClient>,
+    ai_client: Option<&dyn CodeReviewAi>,
     path_env: Option<&str>,
 ) -> anyhow::Result<(Vec<Commit>, Option<String>, Option<PrInfo>)> {
     git::run_commit(repo_path, message, include_unstaged, path_env).await?;
@@ -69,7 +71,7 @@ pub async fn run_push(
 pub async fn create_pr(
     repo_path: &Path,
     branch: &str,
-    ai_client: Option<&dyn AIClient>,
+    ai_client: Option<&dyn CodeReviewAi>,
     path_env: Option<&str>,
 ) -> anyhow::Result<PrInfo> {
     match ai_client {
@@ -84,8 +86,11 @@ pub async fn generate_commit_message(
     repo_path: &Path,
     branch_name: &str,
     include_unstaged: bool,
-    ai_client: &dyn AIClient,
+    ai_client: Option<&dyn CodeReviewAi>,
 ) -> anyhow::Result<String> {
+    let Some(ai_client) = ai_client else {
+        anyhow::bail!("no AI backend configured (an OpenRouter API key is required)");
+    };
     let diff = git::get_diff_for_commit_message(repo_path, include_unstaged).await?;
     // Skip the AI round trip when there's nothing to summarize.
     if diff.trim().is_empty() {
@@ -97,6 +102,7 @@ pub async fn generate_commit_message(
             diff,
             branch_name: branch_name.to_string(),
             commit_messages: Vec::new(),
+            pr_template: None,
         })
         .await?
         .content;
@@ -114,25 +120,30 @@ pub async fn generate_commit_message(
 async fn create_pr_with_ai_content(
     repo_path: &Path,
     branch_name: &str,
-    code_review_ai: &dyn AIClient,
+    code_review_ai: &dyn CodeReviewAi,
     path_env: Option<&str>,
 ) -> anyhow::Result<PrInfo> {
     let diff = get_diff_for_pr(repo_path).await?;
     let commit_messages = get_branch_commit_messages(repo_path)
         .await
         .unwrap_or_default();
+    // The body fills the repo's own PR template when one exists, so generated
+    // descriptions match the project's layout.
+    let pr_template = find_pr_template(repo_path);
 
     let title_req = GenerateCodeReviewContentRequest {
         output_type: OutputType::PrTitle,
         diff: diff.clone(),
         branch_name: branch_name.to_string(),
         commit_messages: commit_messages.clone(),
+        pr_template: None,
     };
     let body_req = GenerateCodeReviewContentRequest {
         output_type: OutputType::PrDescription,
         diff,
         branch_name: branch_name.to_string(),
         commit_messages,
+        pr_template,
     };
 
     match futures::try_join!(

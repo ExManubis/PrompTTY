@@ -4,11 +4,16 @@
 
 use std::path::Path;
 
+use pathfinder_geometry::vector::vec2f;
 use warp_core::ui::appearance::Appearance;
 use warp_errors::report_error;
+use warpui::elements::shimmering_text::{
+    ShimmerConfig, ShimmeringTextElement, ShimmeringTextStateHandle,
+};
 use warpui::elements::{
-    ChildView, ClippedScrollStateHandle, Container, CornerRadius, CrossAxisAlignment, Element,
-    Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, ParentElement, Radius, Text,
+    ChildAnchor, ChildView, ClippedScrollStateHandle, Container, CornerRadius, CrossAxisAlignment,
+    Element, Flex, MainAxisAlignment, MainAxisSize, MouseStateHandle, OffsetPositioning,
+    ParentAnchor, ParentElement, ParentOffsetBounds, Radius, Stack, Text,
 };
 use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::ui_components::switch::SwitchStateHandle;
@@ -39,8 +44,8 @@ pub enum CommitSubAction {
 
 const EDITOR_FONT_SIZE: f32 = 12.;
 const EDITOR_MIN_HEIGHT: f32 = 72.;
-/// Placeholder shown while the open-time AI commit-message autogen is in
-/// flight.
+/// Text shimmered over the message editor while the open-time AI commit-message
+/// autogen is in flight.
 const GENERATING_PLACEHOLDER_TEXT: &str = "Generating commit message\u{2026}";
 /// Placeholder shown once the open-time autogen resolves — either as a
 /// nudge if the user later clears the generated draft, or as guidance when
@@ -50,6 +55,10 @@ const FALLBACK_PLACEHOLDER_TEXT: &str = "Type a commit message";
 /// which chain is in flight — the success toast communicates what actually
 /// ran.
 const LOADING_LABEL: &str = "Committing\u{2026}";
+/// Offset from the message editor's container origin to its text origin, matching the
+/// default text-input styles from `UiBuilder::default_text_input_styles` (10px padding +
+/// 1px border) that the dialog inherits.
+const MESSAGE_EDITOR_TEXT_ORIGIN_INSET: f32 = 11.;
 
 pub struct CommitState {
     pub(super) intent: CommitChainMode,
@@ -60,6 +69,11 @@ pub struct CommitState {
     summary_mouse_state: MouseStateHandle,
     changes_scroll_state: ClippedScrollStateHandle,
     pub(super) message_editor: ViewHandle<EditorView>,
+    /// Whether the open-time AI commit-message autogen is still running. While
+    /// true, a shimmering "Generating commit message…" overlay takes the place of
+    /// the editor placeholder.
+    autogen_in_flight: bool,
+    shimmer_handle: ShimmeringTextStateHandle,
     commit_button: ViewHandle<ActionButton>,
     commit_and_push_button: ViewHandle<ActionButton>,
     /// `None` when creating a PR doesn't make sense for this branch —
@@ -86,14 +100,17 @@ pub(super) fn new_state(
     } else {
         ("Commit and publish", Icon::UploadCloud)
     };
-    // If AI autogen is on, the dialog opens with "Generating\u{2026}" and a
-    // background request fills the editor when it resolves. Otherwise, we
-    // land on the manual-type prompt immediately.
+    // If AI autogen is on, the dialog opens with a shimmering "Generating\u{2026}" overlay and a
+    // background request fills the editor when it resolves. Otherwise, we land on the
+    // manual-type prompt immediately.
     let ai_autogen_enabled = should_send_git_ops_ai_request(ctx);
-    let initial_placeholder = if ai_autogen_enabled {
-        GENERATING_PLACEHOLDER_TEXT
+    // While the autogen request is in flight the shimmering overlay stands in for the
+    // placeholder, so the editor gets no static placeholder until it resolves.
+    let autogen_in_flight = ai_autogen_enabled;
+    let message_editor_placeholder = if ai_autogen_enabled {
+        None
     } else {
-        FALLBACK_PLACEHOLDER_TEXT
+        Some(FALLBACK_PLACEHOLDER_TEXT)
     };
     let message_editor = ctx.add_typed_action_view(|ctx| {
         let appearance = Appearance::as_ref(ctx);
@@ -112,7 +129,9 @@ pub(super) fn new_state(
         };
 
         let mut editor = EditorView::new(options, ctx);
-        editor.set_placeholder_text(initial_placeholder, ctx);
+        if let Some(placeholder) = message_editor_placeholder {
+            editor.set_placeholder_text(placeholder, ctx);
+        }
         editor
     });
 
@@ -189,6 +208,8 @@ pub(super) fn new_state(
         summary_mouse_state: MouseStateHandle::default(),
         changes_scroll_state: ClippedScrollStateHandle::default(),
         message_editor,
+        autogen_in_flight,
+        shimmer_handle: ShimmeringTextStateHandle::default(),
         commit_button,
         commit_and_push_button,
         commit_and_create_pr_button,
@@ -248,6 +269,9 @@ pub(super) fn apply_generated_commit_message(
         GitDialogMode::Commit(state) => state.message_editor.clone(),
         _ => return,
     };
+    if let GitDialogMode::Commit(state) = me.mode_mut() {
+        state.autogen_in_flight = false;
+    }
     match result {
         Ok(generated) => {
             let user_typed = !editor_handle.as_ref(ctx).buffer_text(ctx).trim().is_empty();
@@ -437,6 +461,18 @@ fn handle_editor_event(me: &mut GitDialog, event: &EditorEvent, ctx: &mut ViewCo
             }
         }
         EditorEvent::Edited(_) => {
+            // Typing while autogen is in flight means the user is taking over — drop the
+            // shimmer overlay and swap in the manual-type placeholder (the result still
+            // arrives later and user input wins).
+            if let GitDialogMode::Commit(state) = me.mode_mut()
+                && state.autogen_in_flight
+            {
+                state.autogen_in_flight = false;
+                let message_editor = state.message_editor.clone();
+                message_editor.update(ctx, |editor, ctx| {
+                    editor.set_placeholder_text(FALLBACK_PLACEHOLDER_TEXT, ctx);
+                });
+            }
             me.refresh_confirm_enabled(ctx);
             ctx.notify();
         }
@@ -592,17 +628,13 @@ fn render_message_editor(
     appearance: &Appearance,
     app: &AppContext,
 ) -> Box<dyn Element> {
+    let theme = appearance.theme();
     let label = Text::new(
         "Commit message",
         appearance.ui_font_family(),
         appearance.ui_font_size(),
     )
-    .with_color(
-        appearance
-            .theme()
-            .main_text_color(appearance.theme().surface_1())
-            .into_solid(),
-    )
+    .with_color(theme.main_text_color(theme.surface_1()).into_solid())
     .finish();
 
     let line_height = state
@@ -614,13 +646,46 @@ fn render_message_editor(
         .ui_builder()
         .text_input(state.message_editor.clone())
         .with_style(UiComponentStyles {
-            border_color: Some(appearance.theme().surface_3().into()),
+            border_color: Some(theme.surface_3().into()),
             border_radius: Some(CornerRadius::with_all(Radius::Pixels(6.))),
             height: Some(EDITOR_MIN_HEIGHT.max(line_height * 3.)),
             ..Default::default()
         })
         .build()
         .finish();
+
+    // While autogen is in flight, shimmer the "Generating…" text over the editor in place of
+    // the placeholder. The editor paints its text flush at its content origin, so the overlay
+    // anchors inset by the input's padding + border to land on the same corner, using the
+    // placeholder's hint color as the shimmer base color.
+    let editor_element = if state.autogen_in_flight {
+        let shimmer = ShimmeringTextElement::new(
+            GENERATING_PLACEHOLDER_TEXT,
+            appearance.ui_font_family(),
+            EDITOR_FONT_SIZE,
+            theme.hint_text_color(theme.background()).into_solid(),
+            theme.main_text_color(theme.background()).into_solid(),
+            ShimmerConfig::default(),
+            state.shimmer_handle.clone(),
+        )
+        .finish();
+        let mut stack = Stack::new().with_child(editor_element);
+        stack.add_positioned_overlay_child(
+            shimmer,
+            OffsetPositioning::offset_from_parent(
+                vec2f(
+                    MESSAGE_EDITOR_TEXT_ORIGIN_INSET,
+                    MESSAGE_EDITOR_TEXT_ORIGIN_INSET,
+                ),
+                ParentOffsetBounds::ParentByPosition,
+                ParentAnchor::TopLeft,
+                ChildAnchor::TopLeft,
+            ),
+        );
+        stack.finish()
+    } else {
+        editor_element
+    };
 
     Flex::column()
         .with_child(Container::new(label).with_margin_bottom(8.).finish())

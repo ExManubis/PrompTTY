@@ -18,6 +18,7 @@ use crate::ai::agent_conversations_model::{AgentConversationsModel, AgentConvers
 use crate::ai::blocklist::block::cli_controller::{CLISubagentController, CLISubagentEvent};
 use crate::ai::blocklist::{BlocklistAIHistoryEvent, BlocklistAIHistoryModel};
 use crate::ai::skills::{SkillDescriptor, SkillManager};
+use crate::features::is_warp_agent_available;
 use crate::search::slash_command_menu::fuzzy_match::SlashCommandFuzzyMatchResult;
 use crate::search::slash_command_menu::static_commands::{Availability, commands};
 use crate::search::slash_command_menu::{SlashCommandId, StaticCommand};
@@ -358,6 +359,12 @@ pub trait SlashCommandDataSource {
 
         if AISettings::as_ref(ctx).is_any_ai_enabled(ctx) {
             availability |= Availability::AI_ENABLED;
+        }
+
+        // The Warp Agent's orchestration loop lives in Warp's cloud, which local-only
+        // builds don't ship.
+        if is_warp_agent_available() {
+            availability |= Availability::WARP_AGENT_AVAILABLE;
         }
 
         availability

@@ -17,7 +17,9 @@ pub static AGENT: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
     supported_surfaces: SlashCommandSurfaces::GuiAndTui {
         icon_path: "bundled/svg/warp-3.svg",
     },
-    availability: Availability::AI_ENABLED.union(Availability::NOT_CLOUD_AGENT),
+    availability: Availability::AI_ENABLED
+        .union(Availability::NOT_CLOUD_AGENT)
+        .union(Availability::WARP_AGENT_AVAILABLE),
     auto_enter_ai_mode: false,
     argument: Some(Argument::optional().with_execute_on_selection()),
 });
@@ -499,7 +501,8 @@ pub static NEW: LazyLock<StaticCommand> = LazyLock::new(|| StaticCommand {
     },
     availability: Availability::NO_LRC_CONTROL
         | Availability::AI_ENABLED
-        | Availability::NOT_CLOUD_AGENT,
+        | Availability::NOT_CLOUD_AGENT
+        | Availability::WARP_AGENT_AVAILABLE,
     auto_enter_ai_mode: false,
     argument: Some(Argument::optional().with_execute_on_selection()),
 });

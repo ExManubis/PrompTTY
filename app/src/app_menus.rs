@@ -522,20 +522,23 @@ fn make_new_tab_menu(ctx: &AppContext) -> Menu {
 }
 
 fn make_new_ai_menu(ctx: &AppContext) -> Menu {
-    let mut items = vec![updateable_custom_item_without_checkmark(
-        CustomAction::NewAgentModePane,
-        ctx,
-    )];
+    let mut items = Vec::new();
+    if crate::features::is_warp_agent_available() {
+        items.push(updateable_custom_item_without_checkmark(
+            CustomAction::NewAgentModePane,
+            ctx,
+        ));
+        items.push(updateable_custom_item_without_checkmark(
+            CustomAction::AttachSelectionAsAgentModeContext,
+            ctx,
+        ));
+        items.push(MenuItem::Separator);
+    }
 
     items.push(updateable_custom_item_without_checkmark(
-        CustomAction::AttachSelectionAsAgentModeContext,
+        CustomAction::AISearch,
         ctx,
     ));
-
-    items.extend([
-        MenuItem::Separator,
-        updateable_custom_item_without_checkmark(CustomAction::AISearch, ctx),
-    ]);
 
     if FeatureFlag::AIRules.is_enabled() {
         items.extend([

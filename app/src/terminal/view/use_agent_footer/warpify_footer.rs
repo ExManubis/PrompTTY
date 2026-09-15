@@ -121,14 +121,20 @@ impl View for WarpifyFooterView {
     fn render(&self, _app: &AppContext) -> Box<dyn Element> {
         let terminal_model = self.terminal_model.lock();
 
-        let button_row = Flex::row()
+        let mut button_row = Flex::row()
             .with_spacing(4.)
             .with_main_axis_size(MainAxisSize::Max)
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_child(ChildView::new(&self.warpify_button).finish())
-            .with_child(ChildView::new(&self.use_agent_button).finish())
-            .with_child(Expanded::new(1., Empty::new().finish()).finish())
-            .with_child(ChildView::new(&self.dismiss_button).finish());
+            .with_child(ChildView::new(&self.warpify_button).finish());
+
+        // The "Use agent" button hands the command off to the Warp Agent, which local-only
+        // builds can't run, so it's only rendered when the agent is available.
+        if crate::features::is_warp_agent_available() {
+            button_row.add_child(ChildView::new(&self.use_agent_button).finish());
+        }
+
+        button_row.add_child(Expanded::new(1., Empty::new().finish()).finish());
+        button_row.add_child(ChildView::new(&self.dismiss_button).finish());
 
         let mut container = Container::new(button_row.finish())
             .with_horizontal_padding(*PADDING_LEFT)

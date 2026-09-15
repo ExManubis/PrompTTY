@@ -722,6 +722,29 @@ impl ApiKeyManager {
         Ok(())
     }
 
+    /// Stores (or clears, with `None`) the OpenRouter API key and persists it
+    /// to secure storage. An empty string is treated as clearing the key.
+    pub fn set_open_router_key(
+        &mut self,
+        key: Option<String>,
+        ctx: &mut ModelContext<Self>,
+    ) -> anyhow::Result<()> {
+        let mut keys = self.keys.clone();
+        keys.open_router = key.filter(|key| !key.trim().is_empty());
+        let json = serde_json::to_string(&keys)
+            .map_err(|error| anyhow::Error::new(error).context("Failed to serialize API keys"))?;
+        ctx.secure_storage()
+            .write_value(SECURE_STORAGE_KEY, &json)
+            .map_err(|error| {
+                anyhow::Error::new(error).context("Failed to write API keys to secure storage")
+            })?;
+        if self.keys != keys {
+            self.keys = keys;
+            ctx.emit(ApiKeyManagerEvent::KeysUpdated);
+        }
+        Ok(())
+    }
+
     /// The currently stored xAI/Grok OAuth tokens, if the user has connected a
     /// Grok subscription.
     pub fn grok_tokens(&self) -> Option<&GrokTokens> {
