@@ -459,6 +459,9 @@ pub trait Window: 'static + WindowContext + std::any::Any {
     fn as_any(&self) -> &dyn std::any::Any;
 }
 
+/// The refresh rate assumed when a display's rate cannot be determined.
+pub const DEFAULT_DISPLAY_REFRESH_RATE: f64 = 60.0;
+
 pub trait WindowContext {
     /// Returns the current inner (content) size of the window, in logical
     /// pixels.
@@ -487,6 +490,12 @@ pub trait WindowContext {
     /// When the frame is captured, the provided callback will be invoked with the
     /// captured frame data.
     fn request_frame_capture(&self, callback: Box<dyn FnOnce(CapturedFrame) + Send + 'static>);
+
+    /// Returns the maximum refresh rate of the display the window is currently
+    /// on, in frames per second.
+    fn display_refresh_rate(&self) -> f64 {
+        DEFAULT_DISPLAY_REFRESH_RATE
+    }
 }
 
 /// Pixel format of the data in a `CapturedFrame`.

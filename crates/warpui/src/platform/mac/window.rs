@@ -1059,6 +1059,10 @@ impl platform::WindowContext for Window {
     ) {
         self.0.request_frame_capture(callback);
     }
+
+    fn display_refresh_rate(&self) -> f64 {
+        self.0.display_refresh_rate()
+    }
 }
 
 impl WindowState {
@@ -1092,6 +1096,15 @@ impl WindowState {
 
     pub fn backing_scale_factor(&self) -> f64 {
         self.window().backingScaleFactor()
+    }
+
+    /// Returns the maximum refresh rate of the screen the window is currently on, in Hz.
+    fn display_refresh_rate(&self) -> f64 {
+        self.window()
+            .screen()
+            .map(|screen| screen.maximumFramesPerSecond())
+            .filter(|fps| *fps > 0)
+            .map_or(platform::DEFAULT_DISPLAY_REFRESH_RATE, |fps| fps as f64)
     }
 
     fn next_synthetic_drag_id(&self) -> usize {
@@ -1214,6 +1227,10 @@ impl platform::WindowContext for WindowState {
         // `setNeedsDisplayAsync` is a custom WarpWindow selector.
         // SAFETY: messaging a valid window.
         let _: () = unsafe { msg_send![self.window(), setNeedsDisplayAsync] };
+    }
+
+    fn display_refresh_rate(&self) -> f64 {
+        self.display_refresh_rate()
     }
 }
 
