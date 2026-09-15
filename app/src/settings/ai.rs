@@ -30,6 +30,7 @@ use warpui::{AppContext, Entity, ModelContext, SingletonEntity, UpdateModel, Wea
 
 use crate::ai::execution_profiles::ExecutionProfilesConfig;
 use crate::ai::request_usage_model::RequestLimitInfo;
+use crate::features::is_warp_agent_available;
 use crate::settings::PrivacySettings;
 use crate::terminal::{CLIAgent, TerminalView};
 use crate::workspaces::user_workspaces::{TeamScope, UserWorkspaces};
@@ -2288,9 +2289,15 @@ impl AISettings {
         match mode {
             // Terminal and TabConfig don't require AI.
             DefaultSessionMode::Terminal | DefaultSessionMode::TabConfig => mode,
-            // Agent and CloudAgent require AI to be enabled.
+            // Agent and CloudAgent require AI to be enabled, and Agent additionally
+            // requires the Warp Agent backend (its orchestration loop lives in Warp's
+            // cloud, which local-only builds don't ship).
             DefaultSessionMode::Agent | DefaultSessionMode::CloudAgent => {
-                if self.is_any_ai_enabled(app) {
+                let agent_available = match mode {
+                    DefaultSessionMode::Agent => is_warp_agent_available(),
+                    _ => true,
+                };
+                if self.is_any_ai_enabled(app) && agent_available {
                     mode
                 } else {
                     DefaultSessionMode::Terminal

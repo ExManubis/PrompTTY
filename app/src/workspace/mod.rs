@@ -46,7 +46,7 @@ use warpui::keymap::{BindingDescription, EditableBinding, FixedBinding};
 
 use crate::ai::blocklist::NEW_AGENT_PANE_LABEL;
 use crate::channel::{Channel, ChannelState};
-use crate::features::FeatureFlag;
+use crate::features::{FeatureFlag, is_warp_agent_available};
 use crate::palette::PaletteMode;
 use crate::settings_view::{self, SettingsSection, flags};
 use crate::shared_enums::{AgentModeEntrypoint, PaletteSource};
@@ -707,6 +707,7 @@ pub fn init(app: &mut AppContext) {
         )
         .with_group(bindings::BindingGroup::WarpAi.as_str())
         .with_custom_action(CustomAction::NewAgentTab)
+        .with_enabled(is_warp_agent_available)
         .with_context_predicate(
             id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED) & !id!("Workspace_PaneDragging"),
         ),
@@ -1300,7 +1301,7 @@ pub fn init(app: &mut AppContext) {
                 zero_state_prompt_suggestion_type: None,
             },
         )
-        .with_enabled(|| FeatureFlag::AgentMode.is_enabled())
+        .with_enabled(|| FeatureFlag::AgentMode.is_enabled() && is_warp_agent_available())
         .with_context_predicate(id!("Workspace") & id!(flags::IS_ANY_AI_ENABLED))
         .with_group(bindings::BindingGroup::WarpAi.as_str())
         .with_custom_action(CustomAction::NewAgentModePane),

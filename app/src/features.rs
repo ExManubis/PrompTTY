@@ -16,6 +16,15 @@ pub fn init_feature_flags() {
     mark_initialized();
 }
 
+/// Whether the built-in Warp Agent (Agent Mode) can run.
+///
+/// The agent's orchestration loop lives in Warp's cloud, which local-only builds
+/// don't ship, so local-only builds hide agent entry points and fall agent actions
+/// back to plain terminal sessions.
+pub fn is_warp_agent_available() -> bool {
+    ChannelState::cloud_enabled()
+}
+
 /// Returns all feature flags which should be enabled in the current channel.
 fn enabled_features() -> HashSet<FeatureFlag> {
     // Enable features overridden for the given channel.

@@ -44,6 +44,9 @@ bitflags! {
         /// is enabled. Commands that require this bit are hidden everywhere except the V2
         /// cloud-mode composing input.
         const CLOUD_MODE_V2_COMPOSER = 1 << 10;
+        /// Requires the Warp Agent backend to be available. The agent's orchestration
+        /// loop lives in Warp's cloud, so local-only builds don't set this bit.
+        const WARP_AGENT_AVAILABLE = 1 << 11;
     }
 }
 /// Stable identity for a static slash command.

@@ -153,13 +153,13 @@ use super::util::{
 };
 use super::{ActiveSession, TabBarDropTargetData, TabBarLocation, WorkspaceRegistry};
 use crate::ai::active_agent_views_model::ActiveAgentViewsModel;
+use crate::ai::agent::AIAgentInput;
 #[cfg(all(feature = "local_fs", not(target_family = "wasm")))]
 use crate::ai::agent::CancellationReason;
 use crate::ai::agent::api::ServerConversationToken;
 #[cfg(not(target_family = "wasm"))]
 use crate::ai::agent::conversation::AIAgentHarness;
 use crate::ai::agent::conversation::{AIConversation, AIConversationId};
-use crate::ai::agent::{AIAgentInput, EntrypointType};
 #[cfg(target_family = "wasm")]
 use crate::ai::agent_conversations_model::AgentConversationsModelEvent;
 use crate::ai::agent_conversations_model::{
@@ -268,6 +268,7 @@ use crate::editor::{
 use crate::env_vars::CloudEnvVarCollection;
 use crate::env_vars::manager::{EnvVarCollectionManager, EnvVarCollectionSource};
 use crate::experiments::{BlockOnboarding, Experiment};
+use crate::features::is_warp_agent_available;
 use crate::launch_configs::launch_config::WindowTemplate;
 use crate::launch_configs::save_modal::{LaunchConfigModalEvent, LaunchConfigSaveModal};
 use crate::menu::{
@@ -6497,7 +6498,7 @@ impl Workspace {
             keybinding_name_to_display_string("app:reopen_closed_session", ctx);
 
         // 1. Agent (if AI enabled)
-        if is_any_ai_enabled {
+        if is_any_ai_enabled && is_warp_agent_available() {
             let mut agent_item = MenuItemFields::new("Agent")
                 .with_on_select_action(WorkspaceAction::AddAgentTab)
                 .with_icon(icons::Icon::LayoutAlt01);
@@ -23118,7 +23119,20 @@ impl TypedActionView for Workspace {
             }
             AddGetStartedTab => self.add_get_started_tab(ctx),
             AddAmbientAgentTab => self.add_ambient_agent_tab(ctx),
-            AddAgentTab => self.add_terminal_tab_with_new_agent_view(ctx),
+            AddAgentTab => {
+                // Local-only builds can't run the Warp Agent, so fall back to a plain
+                // terminal tab (deep links and stray dispatches land here too).
+                if is_warp_agent_available() {
+                    self.add_terminal_tab_with_new_agent_view(ctx)
+                } else {
+                    self.handle_action(
+                        &WorkspaceAction::AddTerminalTab {
+                            hide_homepage: false,
+                        },
+                        ctx,
+                    )
+                }
+            }
             AddDockerSandboxTab => self.add_docker_sandbox_tab(ctx),
             StartAgentOnboardingTutorial(tutorial) => {
                 self.start_agent_onboarding_tutorial(tutorial.clone(), ctx)
@@ -23886,13 +23900,33 @@ impl TypedActionView for Workspace {
                 entrypoint: _,
                 zero_state_prompt_suggestion_type,
             } => {
-                self.add_terminal_tab_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
+                // Local-only builds can't run the Warp Agent; fall back to a plain tab.
+                if is_warp_agent_available() {
+                    self.add_terminal_tab_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
+                } else {
+                    self.handle_action(
+                        &WorkspaceAction::AddTerminalTab {
+                            hide_homepage: false,
+                        },
+                        ctx,
+                    );
+                }
             }
             NewPaneInAgentMode {
                 entrypoint: _,
                 zero_state_prompt_suggestion_type,
             } => {
-                self.add_terminal_pane_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
+                // Local-only builds can't run the Warp Agent; fall back to a plain tab.
+                if is_warp_agent_available() {
+                    self.add_terminal_pane_in_ai_mode(*zero_state_prompt_suggestion_type, ctx);
+                } else {
+                    self.handle_action(
+                        &WorkspaceAction::AddTerminalTab {
+                            hide_homepage: false,
+                        },
+                        ctx,
+                    );
+                }
             }
             OpenCloudAgentSetupGuide => {
                 if AISettings::as_ref(ctx).is_any_ai_enabled(ctx)
@@ -24219,26 +24253,8 @@ impl TypedActionView for Workspace {
                 self.dismiss_workspace_banner(ctx, &WorkspaceBanner::WaylandCrashRecovery);
                 ctx.open_url("https://docs.warp.dev/terminal/more-features/linux#native-wayland");
             }
-            FixInAgentMode { query } => {
-                self.active_tab_pane_group().update(ctx, |pane_group, ctx| {
-                    pane_group.add_terminal_pane_in_agent_mode(None, None, ctx);
-                    if let Some(terminal_view) = pane_group.focused_session_view(ctx) {
-                        terminal_view.update(ctx, |terminal_view, terminal_view_ctx| {
-                            terminal_view.ai_controller().update(
-                                terminal_view_ctx,
-                                |controller, ctx| {
-                                    controller.send_user_query_in_new_conversation(
-                                        query.to_owned(),
-                                        None,
-                                        EntrypointType::UserInitiated,
-                                        None,
-                                        ctx,
-                                    );
-                                },
-                            );
-                        });
-                    }
-                });
+            FixInAgentMode { .. } => {
+                // The Warp Agent can't run in local-only builds; stray dispatches no-op.
             }
             OpenAIFactCollection => {
                 self.open_ai_fact_collection_pane(None, None, ctx);

@@ -15,7 +15,7 @@ use crate::ai::blocklist::agent_view::{
 };
 use crate::ai::predict::prompt_suggestions::ACCEPT_PROMPT_SUGGESTION_KEYBINDING;
 use crate::channel::{Channel, ChannelState};
-use crate::features::FeatureFlag;
+use crate::features::{FeatureFlag, is_warp_agent_available};
 use crate::settings_view::flags;
 use crate::shared_enums::{InteractionSource, ToggleBlockFilterSource};
 use crate::terminal::TerminalView;
@@ -259,7 +259,8 @@ pub fn init(app: &mut AppContext) {
                     & (!id!(flags::AGENT_VIEW_ENABLED)
                         | id!(flags::ACTIVE_AGENT_VIEW)
                         | id!(flags::ACTIVE_INLINE_AGENT_VIEW)),
-            ),
+            )
+            .with_enabled(is_warp_agent_available),
         ]);
     }
 
@@ -758,7 +759,7 @@ pub fn init(app: &mut AppContext) {
                 ),
             TerminalAction::ContextMenu(ContextMenuAction::AskAI(AskAISource::SelectedBlocks)),
         )
-        .with_enabled(|| FeatureFlag::AgentMode.is_enabled())
+        .with_enabled(|| FeatureFlag::AgentMode.is_enabled() && is_warp_agent_available())
         .with_custom_action(CustomAction::AttachSelectionAsAgentModeContext)
         .with_group(bindings::BindingGroup::WarpAi.as_str())
         // When possible, prioritize the text selection action over attaching a block as
@@ -781,7 +782,7 @@ pub fn init(app: &mut AppContext) {
                 AskAISource::SelectedTerminalText,
             )),
         )
-        .with_enabled(|| FeatureFlag::AgentMode.is_enabled())
+        .with_enabled(|| FeatureFlag::AgentMode.is_enabled() && is_warp_agent_available())
         .with_custom_action(CustomAction::AttachSelectionAsAgentModeContext)
         .with_group(bindings::BindingGroup::WarpAi.as_str())
         .with_context_predicate(
@@ -1190,7 +1191,7 @@ fn register_input_mode_bindings(app: &mut AppContext) {
             TerminalAction::SetInputModeAgent,
             agent_conversation_predicate & agent_mode_predicate.clone() & command_predicate,
         )
-        .with_enabled(|| FeatureFlag::AgentView.is_enabled()),
+        .with_enabled(|| FeatureFlag::AgentView.is_enabled() && is_warp_agent_available()),
     ]);
 
     app.register_editable_bindings([
@@ -1200,6 +1201,7 @@ fn register_input_mode_bindings(app: &mut AppContext) {
             TerminalAction::SetInputModeAgent,
         )
         .with_group(bindings::BindingGroup::WarpAi.as_str())
+        .with_enabled(is_warp_agent_available)
         .with_context_predicate(agent_mode_predicate)
         .with_mac_key_binding("cmd-i")
         .with_linux_or_windows_key_binding("ctrl-i"),

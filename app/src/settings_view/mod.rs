@@ -51,6 +51,7 @@ use crate::editor::{
     EditorView, Event as EditorEvent, PropagateAndNoOpNavigationKeys, SingleLineEditorOptions,
     TextColors, TextOptions,
 };
+use crate::features::is_warp_agent_available;
 use crate::menu::{self, Menu, MenuItem, MenuItemFields};
 use crate::pane_group::focus_state::PaneFocusHandle;
 use crate::pane_group::pane::view;
@@ -2353,7 +2354,7 @@ impl View for SettingsView {
             footer_kind,
             appearance,
             self.settings_file_error.as_ref(),
-            AISettings::as_ref(app).is_any_ai_enabled(app),
+            AISettings::as_ref(app).is_any_ai_enabled(app) && is_warp_agent_available(),
             &self.footer_mouse_states,
         );
 
