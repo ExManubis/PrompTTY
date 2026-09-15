@@ -607,9 +607,17 @@ lazy_static! {
 pub const AI_CONTROL_PANEL_MARGIN: f32 = 10.;
 
 pub const OVERFLOW_BUTTON_OFFSET_X: f32 = -3.;
-pub const MAX_WAKEUPS_PER_SECOND: u64 = 60;
+/// Wakeups per second when the display refresh rate is unavailable, e.g. in the TUI.
+pub const DEFAULT_WAKEUPS_PER_SECOND: u64 = 60;
 pub const WAKEUP_THROTTLE_PERIOD: Duration =
-    Duration::from_micros(1000 * 1000 / MAX_WAKEUPS_PER_SECOND);
+    Duration::from_micros(1000 * 1000 / DEFAULT_WAKEUPS_PER_SECOND);
+
+/// Returns the period for coalescing terminal-output wakeups, matching the refresh rate of
+/// the display so high-refresh displays (e.g. ProMotion) can repaint at their full rate.
+pub fn wakeup_throttle_period(display_refresh_rate: f64) -> Duration {
+    let wakeups_per_second = (display_refresh_rate.round() as u64).max(1);
+    Duration::from_micros(1000 * 1000 / wakeups_per_second)
+}
 
 pub const EXECUTE_PENDING_COMMAND_DELAY: Duration = Duration::from_millis(100);
 
@@ -3801,8 +3809,14 @@ impl TerminalView {
             },
         );
 
+        let wakeup_throttle_period = ctx
+            .windows()
+            .platform_window(ctx.window_id())
+            .map(|window| window.as_ctx().display_refresh_rate())
+            .map_or(WAKEUP_THROTTLE_PERIOD, wakeup_throttle_period);
+
         let _ = ctx.spawn_stream_local(
-            throttle(WAKEUP_THROTTLE_PERIOD, wakeups_rx),
+            throttle(wakeup_throttle_period, wakeups_rx),
             Self::handle_terminal_wakeup,
             |_, _| {}, /* on_done */
         );
