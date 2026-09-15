@@ -1,5 +1,6 @@
 pub mod entrypoints;
 pub use entrypoints::*;
+pub(crate) mod ai_backend;
 #[cfg_attr(not(feature = "local_fs"), allow(unused_imports))]
 pub(crate) mod code_review_header;
 pub mod code_review_view;

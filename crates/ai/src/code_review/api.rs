@@ -16,6 +16,10 @@ pub struct GenerateCodeReviewContentRequest {
     pub branch_name: String,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub commit_messages: Vec<String>,
+    /// The target repo's PR template (when found), embedded verbatim in the
+    /// PR-description prompt so generated bodies match the project's layout.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub pr_template: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -283,6 +283,11 @@ impl VoiceInputToggleKey {
     }
 }
 
+/// OpenRouter model slug used for code-review AI generation when the user
+/// hasn't picked one. A solid general-purpose coding model that OpenRouter
+/// routes reliably.
+pub const DEFAULT_OPENROUTER_CODE_REVIEW_MODEL: &str = "anthropic/claude-sonnet-4.5";
+
 /// The full ISO-639-1 language catalog offered in the voice-input Speech
 /// Language picker, as `(code, display_name)` pairs. The empty code is the
 /// `Auto-detect` sentinel: when it is the stored value, no language is forced
@@ -1348,6 +1353,19 @@ define_settings_group!(AISettings, settings: [
         toml_path: "agents.warp_agent.active_ai.git_operations_autogen_enabled",
         description: "Controls whether AI auto-generates commit messages and PR title/body in the code review dialogs.",
     }
+    // OpenRouter model slug for the code-review AI features. Read through
+    // `openrouter_code_review_model()`, which falls back to the default when
+    // cleared.
+    openrouter_code_review_model: OpenrouterCodeReviewModel {
+        type: String,
+        default: DEFAULT_OPENROUTER_CODE_REVIEW_MODEL.to_string(),
+        supported_platforms: SupportedPlatforms::ALL,
+        sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
+        surface: settings::SettingSurfaces::GUI,
+        private: false,
+        toml_path: "agents.warp_agent.active_ai.openrouter_code_review_model",
+        description: "OpenRouter model used to generate commit messages and PR titles/bodies.",
+    }
     // This field should not be referenced directly to lookup Rule Suggestions
     // enablement -- use the `is_rule_suggestions_enabled()` getter.
     rule_suggestions_enabled_internal: RuleSuggestionsEnabled {
@@ -2341,6 +2359,18 @@ impl AISettings {
 
     pub fn is_git_operations_autogen_enabled(&self, app: &warpui::AppContext) -> bool {
         self.is_active_ai_enabled(app) && *self.git_operations_autogen_enabled_internal
+    }
+
+    /// Returns the OpenRouter model slug used for code-review AI generation
+    /// (commit messages, PR titles/bodies). An empty stored value falls back
+    /// to [`DEFAULT_OPENROUTER_CODE_REVIEW_MODEL`].
+    pub fn openrouter_code_review_model(&self) -> String {
+        let model = self.openrouter_code_review_model.trim();
+        if model.is_empty() {
+            DEFAULT_OPENROUTER_CODE_REVIEW_MODEL.to_string()
+        } else {
+            model.to_string()
+        }
     }
 
     pub fn is_intelligent_autosuggestions_enabled(&self, app: &warpui::AppContext) -> bool {

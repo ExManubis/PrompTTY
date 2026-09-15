@@ -66,6 +66,7 @@ use super::proto::{
 use super::server_buffer_tracker::{PendingBufferRequestKind, ServerBufferTracker};
 use super::{diff_state_proto, ripgrep_search};
 use crate::code::global_buffer_model::{GlobalBufferModel, GlobalBufferModelEvent};
+use crate::code_review::ai_backend::resolve_code_review_ai;
 use crate::code_review::diff_state::{CommitChainMode, DiffMode, FileStatusInfo};
 use crate::code_review::git_repo_model::{GitRepoModels, GitRepoStatusModel};
 use crate::code_review::github_repo_model::{GitHubRepoEvent, GitHubRepoModel};
@@ -3131,7 +3132,8 @@ impl ServerModel {
         // commit-only / commit-and-push never touch the AI path.
         let ai_client = (matches!(mode, GitCommitChainMode::CommitAndCreatePr)
             && msg.autogenerate_pr_content)
-            .then(|| ServerApiProvider::handle(ctx).as_ref(ctx).get_ai_client());
+            .then(|| resolve_code_review_ai(ctx))
+            .flatten();
         let chain_mode = CommitChainMode::from(mode);
         let path_future = Self::interactive_path_future(ctx);
         let request_id_for_response = request_id.clone();
@@ -3277,7 +3279,8 @@ impl ServerModel {
         // authenticated with the user's forwarded bearer token.
         let ai_client = msg
             .autogenerate_content
-            .then(|| ServerApiProvider::handle(ctx).as_ref(ctx).get_ai_client());
+            .then(|| resolve_code_review_ai(ctx))
+            .flatten();
         let path_future = Self::interactive_path_future(ctx);
         let request_id_for_response = request_id.clone();
         let handle = self.spawn_request_handler(
@@ -3367,9 +3370,8 @@ impl ServerModel {
     }
 
     /// Handles `GitGenerateCommitMessageRequest` — computes the working-tree
-    /// diff locally, then calls the Warp server's code-review content endpoint
-    /// via the daemon's authenticated `AIClient` and returns the generated
-    /// message.
+    /// diff locally and generates a message via the code-review AI backend
+    /// (OpenRouter when a key is configured).
     fn handle_generate_git_commit_message(
         &mut self,
         msg: GitGenerateCommitMessageRequest,
@@ -3387,7 +3389,7 @@ impl ServerModel {
         );
         let include_unstaged = msg.include_unstaged;
         let branch_name = msg.branch_name;
-        let ai_client = ServerApiProvider::handle(ctx).as_ref(ctx).get_ai_client();
+        let ai_client = resolve_code_review_ai(ctx);
         let request_id_for_response = request_id.clone();
         let handle = self.spawn_request_handler(
             request_id.clone(),
@@ -3396,7 +3398,7 @@ impl ServerModel {
                     &repo_path,
                     &branch_name,
                     include_unstaged,
-                    ai_client.as_ref(),
+                    ai_client.as_deref(),
                 )
                 .await
             },

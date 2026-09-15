@@ -87,7 +87,8 @@ use crate::modal::{Modal, ModalEvent, ModalViewState};
 use crate::settings::{
     AIAutoDetectionEnabled, AICommandDenylist, AISettings, AISettingsChangedEvent,
     AgentModeQuerySuggestionsEnabled, AutoApproveBypassesCommandDenylist, AwsBedrockAutoLogin,
-    AwsBedrockCredentialsEnabled, CanUseWarpCreditsForFallback, EnableAiCommandSearchHashTrigger,
+    AwsBedrockCredentialsEnabled, CanUseWarpCreditsForFallback,
+    DEFAULT_OPENROUTER_CODE_REVIEW_MODEL, EnableAiCommandSearchHashTrigger,
     GeminiEnterpriseCredentialsEnabled, GitOperationsAutogenEnabled, IncludeAgentCommandsInHistory,
     InputSettings, IntelligentAutosuggestionsEnabled, LongRunningCommandSubmissionMode,
     NLDInTerminalEnabled, NaturalLanguageAutosuggestionsEnabled, OrchestrationMessageDisplayMode,
@@ -2120,6 +2121,16 @@ impl WarpAgentPageView {
                 },
             ),
             vec![Box::new(ApiKeysWidget::new(ctx))],
+        ));
+
+        categories.push(Category::with_header(
+            CategoryHeader::new("OpenRouter").with_subtitle(
+                "Generates commit messages and pull request titles and descriptions",
+            ),
+            vec![
+                Box::new(OpenRouterApiKeyWidget::new(ctx)),
+                Box::new(OpenRouterModelWidget::new(ctx)),
+            ],
         ));
 
         categories.push(Category::new(
@@ -5252,6 +5263,153 @@ impl ApiKeysWidget {
             .with_child(toggle)
             .with_child(description)
             .finish()
+    }
+}
+
+const OPENROUTER_KEY_PLACEHOLDER: &str = "sk-or-...";
+
+fn render_openrouter_input_row(
+    appearance: &Appearance,
+    label: &'static str,
+    editor: ViewHandle<EditorView>,
+    app: &AppContext,
+) -> Box<dyn Element> {
+    let editor_style = UiComponentStyles {
+        padding: Some(Coords {
+            top: 10.,
+            bottom: 10.,
+            left: 16.,
+            right: 16.,
+        }),
+        background: Some(appearance.theme().surface_2().into()),
+        ..Default::default()
+    };
+    let label = Text::new_inline(label, appearance.ui_font_family(), CONTENT_FONT_SIZE)
+        .with_color(styles::header_font_color(true, app).into())
+        .finish();
+    let input = appearance
+        .ui_builder()
+        .text_input(editor)
+        .with_style(editor_style)
+        .build()
+        .finish();
+    Flex::column()
+        .with_spacing(8.)
+        .with_child(label)
+        .with_child(input)
+        .finish()
+}
+
+struct OpenRouterApiKeyWidget {
+    editor: ViewHandle<EditorView>,
+}
+
+impl OpenRouterApiKeyWidget {
+    fn new(ctx: &mut ViewContext<WarpAgentPageView>) -> Self {
+        let key = ApiKeyManager::as_ref(ctx).keys().open_router.clone();
+        let editor = ctx.add_typed_action_view(move |ctx| {
+            let appearance = Appearance::handle(ctx).as_ref(ctx);
+            let options = SingleLineEditorOptions {
+                is_password: true,
+                propagate_and_no_op_vertical_navigation_keys:
+                    PropagateAndNoOpNavigationKeys::Always,
+                text: TextOptions {
+                    font_size_override: Some(appearance.ui_font_size()),
+                    font_family_override: Some(appearance.monospace_font_family()),
+                    text_colors_override: Some(editor_text_colors(appearance)),
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            let mut editor = EditorView::single_line(options, ctx);
+            editor.set_placeholder_text(OPENROUTER_KEY_PLACEHOLDER, ctx);
+            if let Some(key) = &key {
+                editor.set_buffer_text(key, ctx);
+            }
+            editor
+        });
+        ctx.subscribe_to_view(&editor, move |_, editor, event, ctx| {
+            if matches!(event, EditorEvent::Blurred | EditorEvent::Enter) {
+                let buffer_text = editor.as_ref(ctx).buffer_text(ctx);
+                let key = buffer_text.is_empty().not().then_some(buffer_text);
+                ApiKeyManager::handle(ctx).update(ctx, |manager, ctx| {
+                    report_if_error!(manager.set_open_router_key(key, ctx));
+                });
+            }
+        });
+        Self { editor }
+    }
+}
+
+impl SettingsWidget for OpenRouterApiKeyWidget {
+    type View = WarpAgentPageView;
+
+    fn search_terms(&self) -> &str {
+        "openrouter api key bring your own byo custom inference code review commit message"
+    }
+
+    fn render(
+        &self,
+        _view: &Self::View,
+        appearance: &Appearance,
+        app: &AppContext,
+    ) -> Box<dyn Element> {
+        render_openrouter_input_row(appearance, "OpenRouter API key", self.editor.clone(), app)
+    }
+}
+
+struct OpenRouterModelWidget {
+    editor: ViewHandle<EditorView>,
+}
+
+impl OpenRouterModelWidget {
+    fn new(ctx: &mut ViewContext<WarpAgentPageView>) -> Self {
+        let model = AISettings::as_ref(ctx).openrouter_code_review_model();
+        let editor = ctx.add_typed_action_view(move |ctx| {
+            let appearance = Appearance::handle(ctx).as_ref(ctx);
+            let options = SingleLineEditorOptions {
+                propagate_and_no_op_vertical_navigation_keys:
+                    PropagateAndNoOpNavigationKeys::Always,
+                text: TextOptions {
+                    font_size_override: Some(appearance.ui_font_size()),
+                    font_family_override: Some(appearance.monospace_font_family()),
+                    text_colors_override: Some(editor_text_colors(appearance)),
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            let mut editor = EditorView::single_line(options, ctx);
+            editor.set_placeholder_text(DEFAULT_OPENROUTER_CODE_REVIEW_MODEL, ctx);
+            editor.set_buffer_text(&model, ctx);
+            editor
+        });
+        ctx.subscribe_to_view(&editor, move |_, editor, event, ctx| {
+            if matches!(event, EditorEvent::Blurred | EditorEvent::Enter) {
+                let model = editor.as_ref(ctx).buffer_text(ctx);
+                AISettings::handle(ctx).update(ctx, |settings, ctx| {
+                    report_if_error!(settings.openrouter_code_review_model.set_value(model, ctx));
+                });
+                ctx.notify();
+            }
+        });
+        Self { editor }
+    }
+}
+
+impl SettingsWidget for OpenRouterModelWidget {
+    type View = WarpAgentPageView;
+
+    fn search_terms(&self) -> &str {
+        "openrouter model slug claude gpt gemini code review commit message pull request title description"
+    }
+
+    fn render(
+        &self,
+        _view: &Self::View,
+        appearance: &Appearance,
+        app: &AppContext,
+    ) -> Box<dyn Element> {
+        render_openrouter_input_row(appearance, "OpenRouter model", self.editor.clone(), app)
     }
 }
 
