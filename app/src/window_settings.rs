@@ -5,7 +5,7 @@ use warpui::{AppContext, WindowId};
 define_settings_group!(WindowSettings, settings: [
     background_blur_radius: BackgroundBlurRadius {
         type: u8,
-        default: 40,
+        default: 64,
         supported_platforms: SupportedPlatforms::MAC,
         sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
@@ -27,7 +27,7 @@ define_settings_group!(WindowSettings, settings: [
     }
     background_opacity: BackgroundOpacity {
         type: u8,
-        default: 85,
+        default: 95,
         supported_platforms: SupportedPlatforms::DESKTOP,
         sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
