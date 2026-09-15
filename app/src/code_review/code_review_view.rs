@@ -116,7 +116,7 @@ use crate::terminal::cli_agent::{
     build_selection_line_range_prompt, build_selection_substring_prompt,
 };
 use crate::terminal::input::MenuPositioning;
-use crate::terminal::view::{CliAgentRouting, InitProjectModel, TerminalAction, TerminalView};
+use crate::terminal::view::{CliAgentRouting, TerminalAction, TerminalView};
 use crate::themes::theme::WarpTheme;
 use crate::ui_components::blended_colors::{neutral_2, neutral_3};
 use crate::ui_components::buttons::icon_button_with_color;
@@ -253,6 +253,9 @@ pub(crate) const CONTENT_RIGHT_MARGIN: f32 = 4.;
 const CODE_REVIEW_EDITOR_LINE_HEIGHT_RATIO: f32 = 1.4;
 /// Extra scroll buffer (in pixels) added when scrolling to a line that has a comment editor below it.
 const COMMENT_EDITOR_SCROLL_BUFFER: f32 = 200.0;
+/// Maximum width of the "no open changes" zero state, so its text wraps on narrow panes
+/// instead of overflowing and getting clipped.
+const ZERO_STATE_MAX_WIDTH: f32 = 425.;
 
 pub const CODE_REVIEW_TOOLTIP_TEXT: &str = "View changes";
 const REMOTE_TEXT: &str = "Diffs only work for local workspaces.";
@@ -331,7 +334,6 @@ pub enum CodeReviewAction {
     OpenCommentComposerFromHeader,
     ShowFindBar,
     FocusView,
-    InitProjectForCurrentDirectory,
     OpenRepository,
     OpenCommitDialog,
     ToggleGitOperationsMenu,
@@ -641,7 +643,6 @@ pub struct CodeReviewView {
 
     active_comment_model: Option<ModelHandle<ReviewCommentBatch>>,
 
-    init_project_button: ViewHandle<ActionButton>,
     #[cfg(not(target_family = "wasm"))]
     open_repository_button: ViewHandle<ActionButton>,
 
@@ -1283,16 +1284,6 @@ impl CodeReviewView {
         let ui_state_handles = UiStateHandles::default();
         let header = CodeReviewHeader::new();
 
-        let init_project_button = ctx.add_typed_action_view(|_ctx| {
-            ActionButton::new("Initialize codebase", NakedTheme)
-                .with_size(ButtonSize::Small)
-                .with_tooltip("Enables codebase indexing and WARP.md")
-                .with_tooltip_alignment(TooltipAlignment::Center)
-                .on_click(|ctx| {
-                    ctx.dispatch_typed_action(CodeReviewAction::InitProjectForCurrentDirectory)
-                })
-        });
-
         #[cfg(not(target_family = "wasm"))]
         let open_repository_button = ctx.add_typed_action_view(|_ctx| {
             ActionButton::new("Open repository", NakedTheme)
@@ -1342,7 +1333,6 @@ impl CodeReviewView {
             pending_precise_scroll: None,
             pending_jump_to_comment: None,
             active_comment_model: None,
-            init_project_button,
             #[cfg(not(target_family = "wasm"))]
             open_repository_button,
             is_open: false,
@@ -3965,11 +3955,6 @@ impl CodeReviewView {
     ) -> Box<dyn Element> {
         let theme = appearance.theme();
 
-        let mut main_row = Flex::row()
-            .with_main_axis_alignment(MainAxisAlignment::SpaceBetween)
-            .with_cross_axis_alignment(CrossAxisAlignment::Center)
-            .with_main_axis_size(MainAxisSize::Max);
-
         let mut zero_state_column = Flex::column()
             .with_main_axis_alignment(MainAxisAlignment::Center)
             .with_cross_axis_alignment(CrossAxisAlignment::Center)
@@ -4009,60 +3994,45 @@ impl CodeReviewView {
                 .finish(),
             );
 
-        let should_show_init = self
-            .repo_path()
-            .and_then(LocalOrRemotePath::to_local_path)
-            .map(|path| {
-                let has_steps = InitProjectModel::should_have_available_steps(path, app);
-                let is_terminal_in_correct_dir = self
-                    .focused_terminal(app)
-                    .and_then(|view| {
-                        view.read(app, |t, _| t.pwd().map(|pwd| pwd == path.to_string_lossy()))
-                    })
-                    .unwrap_or(false);
-                has_steps && is_terminal_in_correct_dir
-            })
-            .unwrap_or(false);
-
-        if should_show_init {
-            zero_state_column.add_child(
-                Container::new(ChildView::new(&self.init_project_button).finish())
-                    .with_margin_top(16.)
-                    .finish(),
-            );
-        } else if let Some(repo_path) = self.repo_path() {
-            // Check for initialized project-scoped rules.
-            if let Some(rules) =
+        // Check for initialized project-scoped rules.
+        if let Some(repo_path) = self.repo_path()
+            && let Some(rules) =
                 ProjectContextModel::as_ref(app).find_applicable_project_rules(repo_path)
-                && let Some(first_rule) = rules.active_rules.first()
-                && let Some(file_name) = first_rule.path.file_name()
-            {
-                zero_state_column.add_child(
-                    Container::new(
-                        Text::new(
-                            format!("Repo is initialized with a {file_name} file."),
-                            appearance.ui_font_family(),
-                            12.,
-                        )
-                        .with_color(theme.sub_text_color(theme.surface_2()).into())
-                        .finish(),
+            && let Some(first_rule) = rules.active_rules.first()
+            && let Some(file_name) = first_rule.path.file_name()
+        {
+            zero_state_column.add_child(
+                Container::new(
+                    Text::new(
+                        format!("Repo is initialized with a {file_name} file."),
+                        appearance.ui_font_family(),
+                        12.,
                     )
-                    .with_margin_top(8.)
+                    .with_color(theme.sub_text_color(theme.surface_2()).into())
                     .finish(),
-                );
-            }
+                )
+                .with_margin_top(8.)
+                .finish(),
+            );
         }
 
-        let zero_state_content = Container::new(zero_state_column.finish()).finish();
+        // Bound the zero state's width so the subtitle wraps on narrow panes instead of
+        // overflowing and getting clipped. The vertical flex fills the bordered container
+        // and centers the content on both axes.
+        let zero_state_content = ConstrainedBox::new(zero_state_column.finish())
+            .with_max_width(ZERO_STATE_MAX_WIDTH)
+            .finish();
 
-        // Add expandable spacers on left and right to center the content and force full width.
-        main_row.add_child(Shrinkable::new(1., Empty::new().finish()).finish());
-        main_row.add_child(zero_state_content);
-        main_row.add_child(Shrinkable::new(1., Empty::new().finish()).finish());
+        let centered = Flex::column()
+            .with_main_axis_size(MainAxisSize::Max)
+            .with_main_axis_alignment(MainAxisAlignment::Center)
+            .with_cross_axis_alignment(CrossAxisAlignment::Center)
+            .with_child(zero_state_content)
+            .finish();
 
         Shrinkable::new(
             1.,
-            Container::new(Clipped::new(main_row.finish()).finish())
+            Container::new(Clipped::new(centered).finish())
                 .with_border(Border::new(1.0).with_border_fill(theme.outline()))
                 .with_corner_radius(CornerRadius::with_all(Radius::Pixels(8.)))
                 .with_uniform_padding(16.)
@@ -7302,13 +7272,6 @@ impl TypedActionView for CodeReviewView {
                 if let Some(terminal_view) = self.focused_terminal(ctx) {
                     terminal_view.update(ctx, |terminal, ctx| {
                         terminal.handle_action(&TerminalAction::PickRepoToOpen, ctx);
-                    });
-                }
-            }
-            CodeReviewAction::InitProjectForCurrentDirectory => {
-                if let Some(terminal_view) = self.focused_terminal(ctx) {
-                    terminal_view.update(ctx, |terminal, ctx| {
-                        terminal.handle_action(&TerminalAction::InitProject, ctx);
                     });
                 }
             }
