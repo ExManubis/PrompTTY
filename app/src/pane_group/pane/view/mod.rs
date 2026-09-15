@@ -30,7 +30,7 @@ use crate::settings::{PaneSettings, PaneSettingsChangedEvent};
 use crate::util::bindings::CustomAction;
 use crate::workspace::util::{
     FLOATING_CARD_RADIUS, FLOATING_CHROME_INSET, get_pane_card_fill, metallic_border,
-    theme_background_image, workspace_chrome_fill,
+    theme_background_image,
 };
 
 const HAS_SHARED_OBJECT_CONTEXT_KEY: &str = "PaneView_HasSharedObject";
@@ -422,16 +422,15 @@ impl<P: BackingView> View for PaneView<P> {
         column.add_child(Shrinkable::new(1., ChildView::new(&active_child).finish()).finish());
 
         let dim_even_if_focused = pane_configuration.dim_even_if_focused();
-        let window_id = self.header.window_id(app);
         let card_radius = CornerRadius::with_all(Radius::Pixels(FLOATING_CARD_RADIUS));
         let mut card = Container::new(Clipped::new(column.finish()).finish())
-            .with_background(get_pane_card_fill(window_id, app))
+            .with_background(get_pane_card_fill(app))
             .with_corner_radius(card_radius);
         if split_pane_state.is_focused() && !dim_even_if_focused {
             card = card.with_foreground_border(metallic_border());
         }
 
-        let card = if let Some(image) = theme_background_image(window_id, card_radius, app) {
+        let card = if let Some(image) = theme_background_image(card_radius, app) {
             let mut card_stack = Stack::new();
             card_stack.add_child(image);
             card_stack.add_child(card.finish());
@@ -440,9 +439,8 @@ impl<P: BackingView> View for PaneView<P> {
             card.finish()
         };
 
-        let mut container = Container::new(card)
-            .with_background(workspace_chrome_fill())
-            .with_uniform_padding(PANE_CARD_PADDING);
+        // The gutter around the card is the workspace chrome, painted once at the workspace root.
+        let mut container = Container::new(card).with_uniform_padding(PANE_CARD_PADDING);
         if pane_configuration.show_accent_border {
             container = container.with_foreground_border(
                 Border::all(2.).with_border_fill(appearance.theme().accent()),

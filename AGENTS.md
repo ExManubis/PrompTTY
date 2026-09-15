@@ -1,220 +1,95 @@
 # AGENTS.md
 
-This file provides guidance when working with code in this repository.
+PrompTTY is a local-first terminal and agentic development environment forked from
+[Warp](https://www.warp.dev). Rust, Cargo workspace of 70+ crates, macOS and Linux hosts only.
 
-## Project
+## Commands
 
-PrompTTY is a local-first terminal and agentic development environment, forked from [Warp](https://www.warp.dev). It keeps the desktop and TUI clients. Host builds are **macOS and Linux only**; SSH into Windows remotes still works. Warp-hosted cloud services (Drive, teams, billing, Oz, telemetry, autoupdate) are being removed — treat related code (e.g. `app/src/drive`, `app/src/autoupdate`, sync/telemetry plumbing) as legacy on its way out; don't extend it.
+| Task | Command |
+| --- | --- |
+| Run GUI app | `./script/run` (or `cargo run`) |
+| Run headless TUI | `./script/run-tui` |
+| Core tests (what CI runs) | `./script/run-core-tests` |
+| Single crate tests | `cargo nextest run -p <crate>` |
+| Full presubmit (fmt, clippy, tests) | `./script/presubmit` |
+| Format | `./script/format` |
+| First-time setup | `./script/bootstrap` (`--skip-gcloud-auth` to skip the gcloud check) |
 
-## Development Commands
+Presubmit runs clippy with `-D warnings` on several package subsets (not `--all-features`); read
+`./script/presubmit` rather than guessing the flags.
 
-### Build and Run
+## Architecture
 
-- `cargo run` / `./script/run` - Build and run the GUI desktop app locally
-- `./script/run-tui` - Build and run the headless TUI front-end (`crates/warp_tui`)
-- `cargo bundle --bin warp` - Bundle the main (GUI) app
+Two front-ends share one core:
 
-### Running with a local server
+- **Shared core**: `crates/warp_core`, `crates/warpui`, `crates/warpui_core`. A global `App` owns
+  all views and models as entities; views reference each other via `ViewHandle<T>`, never direct
+  ownership. `AppContext`/`ViewContext`/`ModelContext` give temporary access during render/events.
+- **GUI** (`app/`): WarpUI pixel/GPU framework, Flutter-style `Element`/`View` layout, WGSL
+  shaders, mouse input.
+- **TUI** (`crates/warp_tui` + `crates/warpui_core/src/elements/tui`, behind the `tui` feature):
+  cell-grid `TuiElement` trait painting into a `TuiBuffer`, crossterm input → `TuiEvent`. No GPU.
 
-```bash
-# Connect to server on default port 8080
-WITH_LOCAL_SERVER=1 ./script/run
+Feature surfaces the TUI reuses live in `app/` (`terminal/`, `ai/`, `workspace/`).
 
-# Connect to server on custom port (e.g. 8082)
-WITH_LOCAL_SERVER=1 SERVER_ROOT_URL=http://localhost:8082 WS_SERVER_URL=ws://localhost:8082/graphql/v2 ./script/run
-```
+**Skills**: `gui-*` skills are GUI-only, `tui-*` skills are TUI-only, anything else applies to
+both. Load the matching one before UI work and ignore the other front-end's.
 
-Environment variables:
+## Legacy code, do not extend
 
-- `SERVER_ROOT_URL` - HTTP endpoint (default: `http://localhost:8080`)
-- `WS_SERVER_URL` - WebSocket endpoint (default: `ws://localhost:8080/graphql/v2`)
+- Warp cloud services (Drive, teams, billing, Oz, telemetry, autoupdate, sync) are being removed.
+  Treat `app/src/drive`, `app/src/autoupdate`, and sync/telemetry plumbing as on the way out.
+- The `FeatureFlag` system (`crates/warp_features`, `app/src/features.rs`) is deprecated. Don't add
+  flags; write ungated implementations.
 
-### Testing
+## Gotchas
 
-- `./script/run-core-tests` - Core suite (emulator, parsers, utilities). This is what CI and `./script/presubmit` run.
-- `cargo nextest run --no-fail-fast --workspace --exclude command-signatures-v2` - Full inherited suite (account/UI tests included)
-- `cargo nextest run -p warp_completer --features v2` - Run completer tests with v2 features
-- `./script/run-core-tests --doc` - Optional rustdoc examples (not part of CI)
-- `cargo test` - Run standard tests for individual packages
+- **IMPORTANT: `TerminalModel` locking.** Nested `model.lock()` calls from different call sites
+  deadlock and freeze the UI. Before adding a lock, confirm nothing up the call stack already holds
+  it. Prefer passing an already-locked reference down; keep any new lock scope minimal and call
+  nothing that might lock again.
+- `MouseStateHandle` must be created once at construction and cloned where needed. An inline
+  `MouseStateHandle::default()` during render silently disables all mouse interaction. Applies to
+  TUI hover/click elements too (`TuiHoverable`, `tui_collapsible`).
+- Avoid `_` wildcards in `match`; exhaustive matching surfaces new enum variants at compile time.
 
-### Linting and Formatting
+## Code style
 
-- `./script/presubmit` - Run all presubmit checks (fmt, clippy, tests)
-- `./script/format` - Format code
-- `cargo clippy --workspace --all-targets --all-features --tests -- -D warnings` - Run clippy
-- `./script/run-clang-format.py -r --extensions 'c,h,cpp,m' ./crates/warpui/src/ ./app/src/` - Format C/C++/Obj-C code
-- `find . -name "*.wgsl" -exec wgslfmt --check {} +` - Check WGSL shader formatting
+Rules that differ from rustfmt/clippy defaults or that clippy won't catch:
 
-### Platform Setup
+- Context parameters (`AppContext`, `ViewContext`, `ModelContext`) are named `ctx` and go last,
+  unless the function takes a closure, which goes last instead.
+- Remove unused parameters entirely; don't rename them to `_foo`.
+- Prefer imports at the top of the file over long path qualifiers. Inside `cfg`-gated blocks a
+  scoped import or a one-off absolute path is fine.
+- Skip type annotations that inference handles, especially in closure params.
+- Use inline format args (`format!("{message}")`).
+- Never pass `Itertools::format` output to logging macros (`log::*`, `safe_*`); they may format
+  twice and the formatter is single-use. Pass a `String` (`iter.join(", ")`) instead.
+- Reflow comments to the formatter's 100-column width.
 
-- `./script/bootstrap` - Platform-specific setup
-- `./script/bootstrap --skip-gcloud-auth` - Platform setup without the gcloud login check
-- `./script/install_cargo_build_deps` - Install Cargo build dependencies
-- `./script/install_cargo_test_deps` - Install Cargo test dependencies
+### Comments
 
-## Architecture Overview
+- Explain *why*, never *what* or *how*. Assume a senior engineer is reading.
+- Doc comments on a container (struct, enum, trait) describe the whole; member docs describe the
+  members. Don't repeat one in the other, and don't repeat a doc comment at call sites.
+- Don't list a function's callers in its doc comment.
+- No edit-narration comments ("this used to…"); that belongs in the PR.
+- Don't touch existing comments unless the code they describe changed.
 
-This is a Rust-based terminal emulator with a custom UI framework called **WarpUI**. It has **two front-ends** that share a common core.
+## Testing
 
-### Front-ends: GUI and TUI
+- Unit tests go in a sibling file (`foo_tests.rs` or `mod_test.rs`) included with
+  `#[cfg(test)] #[path = "foo_tests.rs"] mod tests;`. Inline `mod tests {}` fails presubmit.
+- TUI screens are tested with render-to-lines tests (see the `tui-testing` skill). The old GUI
+  integration harness is gone; prefer unit tests.
+- After a change, verify with the narrowest check that proves it: `cargo check -p <crate>`, then
+  the affected test file. Don't run the full suite or full clippy unprompted; that's presubmit's job.
 
-Warp has two front-ends that share the `warp_core`/`warpui` Entity/model core (App/Entity/`AppContext`, actions, `Appearance`) but differ in UI framework, rendering, and input:
+## Pull requests
 
-- **GUI desktop app** — the `app/` crate on the WarpUI pixel/GPU framework (`warpui`, `crates/warpui_core`): `Element`/`View` layout, GPU/WGSL rendering, mouse input, `.app` bundles. Run with `cargo run` / `./script/run`.
-- **Headless TUI** — the `crates/warp_tui` crate: a console app (run with `./script/run-tui`; no `.app`/GPU) rendered with a parallel cell-grid element library at `crates/warpui_core/src/elements/tui` (the `TuiElement` trait), behind the `tui` cargo feature. Verify by running it in a real terminal and observing output; test with render-to-lines unit tests.
-
-**Skill convention:** a skill specific to one front-end says so in its name and/or description (e.g. `gui-ui-guidelines` is GUI-only; `tui-ui-guidelines`, `tui-testing`, and `tui-verify-change` are TUI-specific). Skills with no front-end call-out are surface-agnostic and apply to both. For TUI work prefer the `tui-*` skills and ignore GUI-only ones — and vice versa.
-
-### Key Components
-
-**Shared UI core** (`crates/warpui`, `crates/warpui_core`) — used by **both** front-ends:
-
-- Entity-Component-Handle pattern: a global `App` object owns all views/models (entities); views hold `ViewHandle<T>` references to other views; `AppContext` provides temporary access to handles during render/events.
-- Actions system for event handling.
-- `crates/warpui_core` also hosts the TUI cell-grid element library under `src/elements/tui` (behind the `tui` feature).
-
-**GUI rendering** (WarpUI GUI elements — GUI-specific):
-
-- `Element`s describe visual layout (Flutter-inspired), rendered on the GPU (WGSL).
-- Mouse input uses `MouseStateHandle`: create it once during construction and reference/clone it wherever mouse input is tracked. An inline `MouseStateHandle::default()` while rendering means no mouse interactions work. (The TUI's hover/click elements — `TuiHoverable`, `tui_collapsible` — also build on `MouseStateHandle`, so the same ownership rule applies there.)
-
-**TUI rendering** (`crates/warp_tui` + `crates/warpui_core/src/elements/tui` — TUI-specific):
-
-- Headless console front-end. The `TuiElement` trait lays out and paints into a cell-grid `TuiBuffer`; crossterm input is converted to `TuiEvent`. No GPU/WGSL, pixel geometry, or `.app` bundle.
-
-**Main app / shared surfaces** (`app/`) — the GUI desktop app plus feature surfaces the TUI reuses:
-
-- Terminal emulation and shell management (`terminal/`)
-- AI integration including Agent Mode (`ai/`)
-- Workspace and session management (`workspace/`)
-
-**Core Libraries**:
-
-- `crates/warp_core/` - Core utilities and platform abstractions (shared)
-- `crates/warp_tui/` - Headless TUI front-end
-- `crates/editor/` - Text editing functionality
-- `crates/warpui/` and `crates/warpui_core/` - Custom UI framework (shared core plus the GUI and TUI element libraries)
-- `crates/ipc/` - Inter-process communication
-- `crates/graphql/` - GraphQL client and schema
-
-### Key Architectural Patterns
-
-1. **Entity-Handle System**: Views reference other views via handles, not direct ownership
-2. **Modular Structure**: Workspace contains multiple workspace configurations, each with terminals, notebooks, etc.
-3. **Cross-Platform**: Host builds for macOS and Linux, plus a WASM target. SSH into Windows remotes is still supported.
-4. **AI Integration**: Built-in AI assistant with context awareness and codebase indexing
-
-### Development Guidelines
-
-**Workspace Structure**:
-
-- This is a Cargo workspace with 60+ member crates
-- Main binary is in `app/`, UI framework in `crates/warpui/`
-- Platform-specific code is conditionally compiled
-- Prefer unit tests and TUI render-to-lines tests; the old GUI integration harness was removed.
-
-**Coding Style Preferences**:
-
-- Avoid unnecessary type annotations, especially in closure params.
-- Avoid using too many Rust path qualifiers and use imports for concision. Place import statements at the top of the file as per convention.
-  An exception to this is inside cfg-guarded code branches. In those cases, you can either embed the import into the relevant scope or just use an absolute path for one-offs.
-- If a function takes a context parameter (`AppContext`, `ViewContext`, or `ModelContext`), it should be named `ctx` and go last. The one exception is for
-  functions that take a closure parameter, in which case the closure should be last.
-- Always remove unused parameters completely rather than prefixing them with `_`. Update the function signature and all call sites accordingly.
-- Prefer inline format arguments in macros like `println!`, `eprintln!`, and `format!` (for example, `eprintln!("{message}")` instead of `eprintln!("{}", message)`) to satisfy Clippy's `uninlined_format_args` lint.
-- Do not pass `Itertools::format` results directly to logging macros (`log::*`, `safe_*`, etc.). `Itertools::format` produces a single-use formatter, while logging implementations may format a message more than once. Use a reusable `String` such as `iter.join(", ")` for logging arguments instead. Direct use in `format!` or `write!` is fine.
-
-**Comments**:
-Comments have a cost. They carry a maintenance burden, because they must be kept in sync
-with the code they describe. It is tempting to assume that more comments is always better,
-but be judicious about when a comment is actually necessary because the code cannot speak
-for itself.
-
-- **Minimalist Comments**: Assume the reader is a Senior Software Engineer. Never comment
-  to explain WHAT or HOW code works if self-documenting names accomplish that.
-- **Strictly "Why" Only**: Reserve inline comments strictly for non-obvious business
-  rationale, workarounds for third-party bugs, complex algorithms, unidiomatic code, or
-  unexpected edge cases.
-- **No Line-by-Line Narrations**: Never add comments restating the syntax (e.g., omit
-  `# Initialize array`, `# Loop over users`).
-- **Clean Docstrings**: Keep doc comments concise. Document public APIs, arguments, types,
-  and returns. Do not narrate the method's internal implementation steps.
-- **Single-source of documentation**: For items/members that have a doc comment explaining
-  their purpose, you do not need to repeat that explanation anywhere else. A good example
-  is a float const specifying an amount of spacing. You may use a doc comment on the
-  declaration if necessary, but do not repeat that where the const is *referenced*. Another
-  example is function call sites. Function doc comments explain what they do. Do not repeat
-  the explanation at the call site.
-- **Container docs describe the whole, member docs describe the parts**: A field's, variant's,
-  or parameter's own doc comment is where that member gets explained. A container's item-level
-  doc comment (struct, enum, enum variant, trait) describes the item as a whole and must not
-  enumerate or re-explain its members. Do not name members in the container's doc comment just
-  to describe them, and do not restate in a member's doc comment what the container's doc
-  comment already said. Behavior genuinely shared by several members belongs in exactly one
-  place, not both.
-- **Don't enumerate function call sites in doc comments**: Function doc comments should
-  document their behavior and NOT their callers, e.g. it should never say things like,
-  "this is used by [certain callers]" or "this is used when...".
-- **No "transformation comments"**: Do not add comments that explain *your edits*. Comments
-  only need explain the *current state* of the code. Explanations of edits belong in pull
-  request comments instead. You shouldn't add comments with phrases like, "this used to do
-  so-and-so".
-- Do not remove existing comments when making unrelated changes. Only remove or modify a
-  comment if the logic it describes has changed.
-- The formatter (`./script/format`) is configured with a `max_width` (max line length) of
-  100. Flow (reflow) comment line-wrapping to fill that full width rather than wrapping
-  early at a narrower column, so comments span as few lines as possible.
-
-**Terminal Model Locking**:
-
-- Be extremely careful when calling `model.lock()` on the terminal model (`TerminalModel`). Acquiring multiple locks on the same model from different call sites can cause a deadlock, resulting in a UI freeze (beach ball on macOS).
-- Before adding a new `model.lock()` call, verify that no caller in the current call stack already holds the lock.
-- Prefer passing already-locked model references down the call stack rather than acquiring new locks.
-- If you must lock the model, keep the lock scope as short as possible and avoid calling other functions that might also attempt to lock.
-
-**Testing**:
-
-- Only run tests, clippy, or other validation when explicitly asked to — do not run them unprompted after making changes. The exceptions are the presubmit requirements in the Pull Request Workflow below.
-- Use `cargo nextest` for parallel test execution
-- TUI elements/screens are covered by render-to-lines unit tests (see the `tui-testing` skill).
-- Tests should be run via presubmit script before submitting
-- Unit tests should be placed in separate files using the naming convention `${filename}_tests.rs` or `mod_test.rs`
-- Test files should be included at the end of their corresponding module with:
-
-  ```rust
-  #[cfg(test)]
-  #[path = "filename_tests.rs"]  // or "mod_test.rs"
-  mod tests;
-  ```
-
-**Pull Request Workflow**:
-
-- **ALWAYS** run `./script/format` and `cargo clippy` (the versions specified in ./script/presubmit) before opening a PR or pushing updates to an existing PR branch
-- Those commands must pass completely before creating or updating a pull request
-- Specifically, ensure `./script/format` and `cargo clippy` checks pass
-- If they fail, fix all issues before proceeding with the PR
-- Do not create public pull requests or public issues that disclose a non-public security vulnerability. Refer users to `SECURITY.md` for the proper disclosure methods instead.
-- This applies to:
-  - Opening new pull requests
-  - Pushing new commits to existing PR branches
-  - Any branch updates that will be reviewed
-- When opening PRs, use the PR template at `.github/pull_request_template.md`
-
-**Database**:
-
-- Uses Diesel ORM with SQLite
-- Migrations in `crates/persistence/migrations/`
-- Schema defined in `crates/persistence/src/schema.rs`
-
-**GraphQL**:
-
-- Schema and client code generation from `crates/warp_graphql_schema/api/schema.graphql`
-- TypeScript types generated for frontend integration
-
-### Feature Flags (deprecated)
-
-The compile-time/runtime `FeatureFlag` system (`crates/warp_features`, bridged in `app/src/features.rs`) still exists but is deprecated — don't add new flags or extend gated code paths; prefer ungated implementations.
-
-### Exhaustive Matching
-
-When adding/editing match statements, avoid using the wildcard _ when at all possible. Exhaustive matching is helpful for ensuring that all variants are handled, especially when adding new variants to enums in the future.
+- Run `./script/format` and the clippy commands from `./script/presubmit` before opening a PR or
+  pushing to a PR branch. They must pass; fix everything first.
+- Use the template at `.github/pull_request_template.md`.
+- Never open a public PR or issue disclosing a non-public security vulnerability. Point to
+  `SECURITY.md` instead.

@@ -4,7 +4,6 @@ use instant::Instant;
 use pathfinder_color::ColorU;
 use pathfinder_geometry::vector::vec2f;
 use serde::{Deserialize, Serialize};
-use warp_core::ui::color::coloru_with_opacity;
 use warpui::elements::{
     Border, CacheOption, Clipped, CornerRadius, Element, Fill, Image, MouseStateHandle,
 };
@@ -14,7 +13,11 @@ use super::OneTimeModalModel;
 use crate::appearance::Appearance;
 use crate::pane_group::PaneId;
 use crate::terminal::TerminalView;
-use crate::window_settings::WindowSettings;
+use crate::themes::theme::{Blend, WarpTheme};
+use crate::ui_components::window_focus_dimming::{
+    UNFOCUSED_WINDOW_DIMMING_OPACITY, WindowFocusDimming,
+};
+use crate::window_settings::{BackgroundOpacity, WindowSettings};
 use crate::workspace::Workspace;
 use crate::workspace::tab_group::TabGroupId;
 
@@ -42,7 +45,6 @@ pub(super) struct WorkspaceMouseStates {
     pub(super) dismiss_banner_button: MouseStateHandle,
     pub(super) offline_icon: MouseStateHandle,
     pub(super) avatar_icon: MouseStateHandle,
-    pub(super) header_dimming: MouseStateHandle,
     pub(super) right_panel_icon: MouseStateHandle,
     pub(super) notifications_mailbox: MouseStateHandle,
     pub(super) session_config_tab_config_chip_close: MouseStateHandle,
@@ -372,19 +374,6 @@ pub fn get_context_target_terminal_view(
         })
 }
 
-const WORKSPACE_CHROME_COLOR: ColorU = ColorU {
-    r: 0x1D,
-    g: 0x1D,
-    b: 0x1D,
-    a: 255,
-};
-const WORKSPACE_CHROME_OPACITY: u8 = 99;
-const FLOATING_TAB_ACTIVE_COLOR: ColorU = ColorU {
-    r: 0x17,
-    g: 0x18,
-    b: 0x18,
-    a: 255,
-};
 const METALLIC_BORDER_HIGHLIGHT: ColorU = ColorU {
     r: 0x5C,
     g: 0x5C,
@@ -402,15 +391,57 @@ pub const FLOATING_CHROME_INSET: f32 = 6.;
 pub const TAB_FLOATING_VERTICAL_INSET: f32 = 3.;
 pub const FLOATING_CARD_RADIUS: f32 = 8.;
 
-pub fn workspace_chrome_fill() -> Fill {
-    coloru_with_opacity(WORKSPACE_CHROME_COLOR, WORKSPACE_CHROME_OPACITY).into()
+/// Window background blur is only implemented on macOS (via a private CoreGraphics API), and
+/// translucent chrome with nothing blurring the desktop behind it reads as a rendering bug.
+const PLATFORM_SUPPORTS_WINDOW_BLUR: bool = cfg!(target_os = "macos");
+
+/// The chrome is the only translucent surface in the window: pane cards stay solid so the
+/// terminal remains readable, while the top bar, pane gutters and side panels let the blurred
+/// desktop show through.
+pub fn chrome_opacity_for(configured_opacity: u8, blur_supported: bool) -> u8 {
+    if blur_supported {
+        configured_opacity
+    } else {
+        BackgroundOpacity::MAX
+    }
 }
 
-pub fn floating_tab_fill(is_active: bool) -> Fill {
-    if is_active {
-        FLOATING_TAB_ACTIVE_COLOR.into()
+pub fn chrome_opacity(window_id: WindowId, app: &AppContext) -> u8 {
+    let configured = WindowSettings::as_ref(app)
+        .background_opacity
+        .effective_opacity(window_id, app);
+    chrome_opacity_for(configured, PLATFORM_SUPPORTS_WINDOW_BLUR)
+}
+
+/// Unfocused windows dim their chrome toward the theme background; baking the dim into the fill
+/// keeps the pane cards, which are painted on top, at full brightness.
+pub fn chrome_fill(theme: &WarpTheme, opacity: u8, window_focused: bool) -> Fill {
+    let base = if window_focused {
+        theme.surface_1()
     } else {
-        workspace_chrome_fill()
+        theme.surface_1().blend(
+            &theme
+                .background()
+                .with_opacity(UNFOCUSED_WINDOW_DIMMING_OPACITY),
+        )
+    };
+    base.with_opacity(opacity).into()
+}
+
+pub fn workspace_chrome_fill(window_id: WindowId, app: &AppContext) -> Fill {
+    chrome_fill(
+        Appearance::as_ref(app).theme(),
+        chrome_opacity(window_id, app),
+        WindowFocusDimming::is_window_focused(window_id, app),
+    )
+}
+
+/// An active floating tab shares the pane card's solid fill so the two read as one surface.
+pub fn floating_tab_fill(theme: &WarpTheme, chrome_fill: Fill, is_active: bool) -> Fill {
+    if is_active {
+        theme.background().into()
+    } else {
+        chrome_fill
     }
 }
 
@@ -425,25 +456,25 @@ pub fn metallic_border() -> Border {
     )
 }
 
-pub fn get_pane_card_fill(window_id: WindowId, app: &AppContext) -> Fill {
-    get_terminal_background_fill(window_id, app)
+pub fn get_pane_card_fill(app: &AppContext) -> Fill {
+    let theme = Appearance::as_ref(app).theme();
+    // With a background image the card only tints the image; without one it is solid.
+    let opacity = match theme.background_image() {
+        Some(img) => BackgroundOpacity::MAX - img.opacity,
+        None => BackgroundOpacity::MAX,
+    };
+    theme.background().with_opacity(opacity).into()
 }
 
 pub fn theme_background_image(
-    window_id: WindowId,
     corner_radius: CornerRadius,
     app: &AppContext,
 ) -> Option<Box<dyn Element>> {
     let img = Appearance::as_ref(app).theme().background_image()?;
-    let opacity_ratio = WindowSettings::as_ref(app)
-        .background_opacity
-        .effective_opacity(window_id, app) as f32
-        / 100.;
     Some(
         Clipped::new(
             Image::new(img.source(), CacheOption::Original)
                 .stretch()
-                .with_opacity(opacity_ratio)
                 .with_corner_radius(corner_radius)
                 .enable_animation_with_start_time(theme_background_image_animation_start())
                 .finish(),
@@ -457,27 +488,6 @@ fn theme_background_image_animation_start() -> Instant {
     *START.get_or_init(Instant::now)
 }
 
-pub fn get_terminal_background_fill(
-    window_id: WindowId,
-    app: &AppContext,
-) -> warpui::elements::Fill {
-    let theme = Appearance::as_ref(app).theme();
-    let terminal_opacity = get_terminal_background_opacity(window_id, app);
-    theme.background().with_opacity(terminal_opacity).into()
-}
-
-fn get_terminal_background_opacity(window_id: WindowId, app: &AppContext) -> u8 {
-    let theme = Appearance::as_ref(app).theme();
-    let background_opacity = WindowSettings::as_ref(app)
-        .background_opacity
-        .effective_opacity(window_id, app);
-
-    match theme.background_image() {
-        Some(img) => {
-            let opacity_ratio = background_opacity as f32 / 100.;
-            // Scale the overlay opacity with the background opacity ratio.
-            (((100 - img.opacity) as f32) * opacity_ratio) as u8
-        }
-        _ => background_opacity,
-    }
-}
+#[cfg(test)]
+#[path = "util_tests.rs"]
+mod tests;

@@ -413,7 +413,6 @@ use crate::themes::theme_deletion_modal::{ThemeDeletionModal, ThemeDeletionModal
 use crate::tips::{TipsEvent, TipsView};
 use crate::ui_components::buttons::{combo_inner_button, icon_button_with_color};
 use crate::ui_components::red_notification_dot::RedNotificationDot;
-use crate::ui_components::window_focus_dimming::WindowFocusDimming;
 use crate::ui_components::{blended_colors, icons};
 use crate::undo_close::UndoCloseStack;
 #[cfg(target_family = "wasm")]
@@ -20558,22 +20557,11 @@ impl Workspace {
                 })
                 .finish(),
         )
-        .with_background(workspace_chrome_fill())
         .finish();
 
-        let dimming_color = appearance.theme().background().into();
-        SavePosition::new(
-            WindowFocusDimming::apply_panel_header_dimming(
-                tab_bar_element,
-                self.mouse_states.header_dimming.clone(),
-                tab_bar_height,
-                dimming_color,
-                self.window_id,
-                ctx,
-            ),
-            TAB_BAR_POSITION_ID,
-        )
-        .finish()
+        // The unfocused dim is baked into the chrome fill painted at the workspace root, so the
+        // tab bar needs no overlay of its own.
+        SavePosition::new(tab_bar_element, TAB_BAR_POSITION_ID).finish()
     }
 
     // Render traffic lights, if appropriate for the current platform.
@@ -20651,97 +20639,100 @@ impl Workspace {
 
         let theme = appearance.theme();
 
-        Hoverable::new(self.mouse_states.new_tab.clone(), |state| {
-            let window_id = self.window_id;
-            let is_active = self.show_new_session_dropdown_menu.is_some();
+        Align::new(
+            Hoverable::new(self.mouse_states.new_tab.clone(), |state| {
+                let window_id = self.window_id;
+                let is_active = self.show_new_session_dropdown_menu.is_some();
 
-            let new_tab_button = combo_inner_button(
-                appearance,
-                icons::Icon::Plus,
-                false,
-                self.mouse_states.new_tab_button.clone(),
-            )
-            .with_style(
-                UiComponentStyles::default()
-                    .set_border_radius(CornerRadius::with_left(CORNER_RADIUS)),
-            )
-            .with_tooltip(self.render_tab_bar_icon_button_tooltip(
-                appearance,
-                new_tab_tool_tip_label_text.clone(),
-                new_tab_tool_tip_sublabel_text.clone(),
-            ))
-            .build()
-            .on_click(move |ctx, _, _| {
-                ctx.dispatch_typed_action(WorkspaceAction::AddDefaultTab);
-            })
-            .finish();
-
-            let new_session_menu_button = combo_inner_button(
-                appearance,
-                icons::Icon::ChevronDown,
-                is_active,
-                self.mouse_states.new_tab_menu.clone(),
-            )
-            .with_style(
-                UiComponentStyles::default()
-                    .set_border_radius(CornerRadius::with_right(CORNER_RADIUS))
-                    .set_width(SIDE_MENU_WIDTH),
-            )
-            .with_active_styles(
-                UiComponentStyles::default()
-                    .set_background(internal_colors::fg_overlay_3(theme).into()),
-            )
-            .with_tooltip(self.render_tab_bar_icon_button_tooltip(
-                appearance,
-                tab_configs_tool_tip_label_text.clone(),
-                tab_configs_tool_tip_sublabel_text.clone(),
-            ))
-            .build()
-            .on_click(move |ctx, app, _| {
-                // We are positioning the menu to the lower-left corner of the new tab button.
-                // This gives the impression that both individual buttons are one big button.
-                if let Some(position) =
-                    app.element_position_by_id_at_last_frame(window_id, NEW_TAB_BUTTON_POSITION_ID)
-                {
-                    ctx.dispatch_typed_action(WorkspaceAction::ToggleNewSessionMenu {
-                        anchor: NewSessionMenuAnchor::AddTabButton(position.lower_left()),
-                    });
-                }
-            })
-            .finish();
-
-            let row = Flex::row()
-                .with_cross_axis_alignment(CrossAxisAlignment::Center)
-                .with_child(
-                    SavePosition::new(
-                        Align::new(new_tab_button).finish(),
-                        NEW_TAB_BUTTON_POSITION_ID,
-                    )
-                    .finish(),
+                let new_tab_button = combo_inner_button(
+                    appearance,
+                    icons::Icon::Plus,
+                    false,
+                    self.mouse_states.new_tab_button.clone(),
                 )
-                .with_child(
-                    SavePosition::new(
-                        Align::new(new_session_menu_button).finish(),
-                        NEW_SESSION_MENU_BUTTON_POSITION_ID,
-                    )
-                    .finish(),
+                .with_style(
+                    UiComponentStyles::default()
+                        .set_border_radius(CornerRadius::with_left(CORNER_RADIUS)),
                 )
+                .with_tooltip(self.render_tab_bar_icon_button_tooltip(
+                    appearance,
+                    new_tab_tool_tip_label_text.clone(),
+                    new_tab_tool_tip_sublabel_text.clone(),
+                ))
+                .build()
+                .on_click(move |ctx, _, _| {
+                    ctx.dispatch_typed_action(WorkspaceAction::AddDefaultTab);
+                })
                 .finish();
 
-            let mut ret = Container::new(
-                ConstrainedBox::new(row)
-                    .with_height(BUTTON_HEIGHT)
-                    .with_width(BUTTON_WIDTH)
-                    .finish(),
-            )
-            .with_corner_radius(CornerRadius::with_all(CORNER_RADIUS))
-            .with_margin_left(BUTTON_LEFT_MARGIN);
+                let new_session_menu_button = combo_inner_button(
+                    appearance,
+                    icons::Icon::ChevronDown,
+                    is_active,
+                    self.mouse_states.new_tab_menu.clone(),
+                )
+                .with_style(
+                    UiComponentStyles::default()
+                        .set_border_radius(CornerRadius::with_right(CORNER_RADIUS))
+                        .set_width(SIDE_MENU_WIDTH),
+                )
+                .with_active_styles(
+                    UiComponentStyles::default()
+                        .set_background(internal_colors::fg_overlay_3(theme).into()),
+                )
+                .with_tooltip(self.render_tab_bar_icon_button_tooltip(
+                    appearance,
+                    tab_configs_tool_tip_label_text.clone(),
+                    tab_configs_tool_tip_sublabel_text.clone(),
+                ))
+                .build()
+                .on_click(move |ctx, app, _| {
+                    // We are positioning the menu to the lower-left corner of the new tab button.
+                    // This gives the impression that both individual buttons are one big button.
+                    if let Some(position) = app
+                        .element_position_by_id_at_last_frame(window_id, NEW_TAB_BUTTON_POSITION_ID)
+                    {
+                        ctx.dispatch_typed_action(WorkspaceAction::ToggleNewSessionMenu {
+                            anchor: NewSessionMenuAnchor::AddTabButton(position.lower_left()),
+                        });
+                    }
+                })
+                .finish();
 
-            if state.is_hovered() {
-                ret = ret.with_background(internal_colors::neutral_1(theme));
-            }
-            ret.finish()
-        })
+                let row = Flex::row()
+                    .with_cross_axis_alignment(CrossAxisAlignment::Center)
+                    .with_child(
+                        SavePosition::new(
+                            Align::new(new_tab_button).finish(),
+                            NEW_TAB_BUTTON_POSITION_ID,
+                        )
+                        .finish(),
+                    )
+                    .with_child(
+                        SavePosition::new(
+                            Align::new(new_session_menu_button).finish(),
+                            NEW_SESSION_MENU_BUTTON_POSITION_ID,
+                        )
+                        .finish(),
+                    )
+                    .finish();
+
+                let mut ret = Container::new(
+                    ConstrainedBox::new(row)
+                        .with_height(BUTTON_HEIGHT)
+                        .with_width(BUTTON_WIDTH)
+                        .finish(),
+                )
+                .with_corner_radius(CornerRadius::with_all(CORNER_RADIUS))
+                .with_margin_left(BUTTON_LEFT_MARGIN);
+
+                if state.is_hovered() {
+                    ret = ret.with_background(internal_colors::neutral_1(theme));
+                }
+                ret.finish()
+            })
+            .finish(),
+        )
         .finish()
     }
 
@@ -21656,19 +21647,15 @@ impl Workspace {
         }
         col.add_child(Shrinkable::new(1.0, contents).finish());
 
-        self.wrap_in_panel_surface(appearance, side, col.finish(), *PANEL_CORNER_RADIUS)
+        Self::wrap_in_panel_surface(side, col.finish(), *PANEL_CORNER_RADIUS)
     }
 
     fn wrap_in_panel_surface(
-        &self,
-        appearance: &Appearance,
         side: &PanelPosition,
         contents: Box<dyn Element>,
         corner_radius: CornerRadius,
     ) -> Box<dyn Element> {
-        let mut container = Container::new(contents)
-            .with_background(appearance.theme().surface_1().with_opacity(90))
-            .with_corner_radius(corner_radius);
+        let mut container = Container::new(contents).with_corner_radius(corner_radius);
 
         match side {
             PanelPosition::Left => container = container.with_margin_right(2.0),
@@ -26470,7 +26457,11 @@ impl View for Workspace {
         let workspace = Container::new(stack.finish()).with_corner_radius(window_corner_radius);
 
         let mut stack = Stack::new();
-        stack.add_child(workspace.with_background(workspace_chrome_fill()).finish());
+        stack.add_child(
+            workspace
+                .with_background(workspace_chrome_fill(self.window_id, app))
+                .finish(),
+        );
 
         let input_position_id = self
             .get_active_input_view_handle(app)

@@ -5,14 +5,14 @@ use warpui::{AppContext, WindowId};
 define_settings_group!(WindowSettings, settings: [
     background_blur_radius: BackgroundBlurRadius {
         type: u8,
-        default: 1,
+        default: 64,
         supported_platforms: SupportedPlatforms::MAC,
         sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         storage_key: "OverrideBlur",
         toml_path: "appearance.window.override_blur",
-        description: "The blur radius applied to the window background.",
+        description: "The blur radius applied to the desktop behind the translucent window chrome.",
     },
     background_blur_texture: BackgroundBlurTexture {
         type: bool,
@@ -27,14 +27,14 @@ define_settings_group!(WindowSettings, settings: [
     }
     background_opacity: BackgroundOpacity {
         type: u8,
-        default: 100,
+        default: 95,
         supported_platforms: SupportedPlatforms::DESKTOP,
         sync_to_cloud: SyncToCloud::Globally(RespectUserSyncSetting::Yes),
         surface: settings::SettingSurfaces::GUI,
         private: false,
         storage_key: "OverrideOpacity",
         toml_path: "appearance.window.override_opacity",
-        description: "The opacity of the window background, from 1 to 100 percent.",
+        description: "The opacity of the window chrome (tab bar, pane gutters and side panels), from 1 to 100 percent. Terminal panes always stay solid.",
     },
     open_windows_at_custom_size: OpenWindowsAtCustomSize {
         type: bool,

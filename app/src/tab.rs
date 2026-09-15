@@ -22,7 +22,7 @@ use warpui::fonts::Weight;
 use warpui::keymap::Keystroke;
 use warpui::platform::keyboard::KeyCode;
 use warpui::text_layout::ClipConfig;
-use warpui::ui_components::components::{Coords, UiComponent, UiComponentStyles};
+use warpui::ui_components::components::{UiComponent, UiComponentStyles};
 use warpui::ui_components::text_input::TextInput;
 use warpui::{AppContext, Entity, ModelContext, SingletonEntity, ViewHandle};
 
@@ -54,7 +54,9 @@ use crate::workspace::tab_group::{TabGroup, TabGroupId};
 use crate::workspace::tab_settings::{
     TabCloseButtonPosition, TabSettings, VerticalTabsDisplayGranularity,
 };
-use crate::workspace::util::{FLOATING_CARD_RADIUS, floating_tab_fill, metallic_border};
+use crate::workspace::util::{
+    FLOATING_CARD_RADIUS, floating_tab_fill, metallic_border, workspace_chrome_fill,
+};
 use crate::workspace::{
     PaneViewLocator, TabBarDropTargetData, TabBarLocation, TabContextMenuAnchor, WorkspaceAction,
 };
@@ -1052,6 +1054,10 @@ pub struct TabComponent<'a> {
     tab: TabData,
     tab_bar: TabBarState,
     editor: ViewHandle<EditorView>,
+    /// Height of a single line in `editor`, used to size the inline rename
+    /// input. Without it the editor element expands to the tab's full height
+    /// and paints its text at the top.
+    rename_editor_line_height: f32,
     title: String,
     has_custom_title: bool,
     tab_index: usize,
@@ -1062,6 +1068,8 @@ pub struct TabComponent<'a> {
     appearance: &'a Appearance,
     is_drag_target: bool,
     background_opacity: u8,
+    /// Fill of the surrounding chrome, which an inactive floating tab blends into.
+    chrome_fill: Fill,
     /// Set to `true` when this `TabComponent` is being rendered inside the
     /// floating chip overlay used during a cross-window tab drag. In that
     /// mode `build()` skips the outer `SavePosition`, `Draggable`, and
@@ -1153,6 +1161,8 @@ impl<'a> TabComponent<'a> {
         ctx: &'a AppContext,
     ) -> Self {
         let appearance = Appearance::as_ref(ctx);
+        let rename_editor_line_height =
+            editor.as_ref(ctx).line_height(ctx.font_cache(), appearance);
         let title = tab.pane_group.as_ref(ctx).display_title(ctx);
 
         let active_pane_is_ambient_agent_session = tab
@@ -1224,6 +1234,7 @@ impl<'a> TabComponent<'a> {
             .background_opacity
             .effective_opacity(window_id, ctx)
             .clamp(20, 100);
+        let chrome_fill = workspace_chrome_fill(window_id, ctx);
         let pane_group_id = tab.pane_group.id();
         let pane_id = tab.pane_group.as_ref(ctx).focused_pane_id(ctx);
         let locator = PaneViewLocator {
@@ -1234,6 +1245,7 @@ impl<'a> TabComponent<'a> {
             tab: tab.clone(),
             tab_bar,
             editor,
+            rename_editor_line_height,
             title,
             has_custom_title: tab.pane_group.as_ref(ctx).custom_title(ctx).is_some(),
             tab_index,
@@ -1244,6 +1256,7 @@ impl<'a> TabComponent<'a> {
             appearance,
             is_drag_target,
             background_opacity,
+            chrome_fill,
             for_drag_ghost: false,
             grouped_member: false,
             sole_grouped_member: false,
@@ -1364,23 +1377,11 @@ impl<'a> TabComponent<'a> {
                 TextInput::new(
                     self.editor.clone(),
                     UiComponentStyles::default()
+                        .set_height(self.rename_editor_line_height)
                         .set_background(Fill::None)
                         .set_border_radius(CornerRadius::with_all(Radius::Pixels(0.)))
                         .set_border_width(0.),
                 )
-                .with_style(UiComponentStyles {
-                    margin: Some(Coords::default().top(if self.grouped_member {
-                        // Reduce the top margin for grouped tabs to make it appear centered.
-                        2.
-                    } else if FeatureFlag::NewTabStyling.is_enabled() {
-                        // With the larger tabs in the new ui, we need to give the editor some extra top margin
-                        // to make it appear centered
-                        8.
-                    } else {
-                        3.
-                    })),
-                    ..Default::default()
-                })
                 .build()
                 .finish(),
             )
@@ -1699,7 +1700,7 @@ impl<'a> TabComponent<'a> {
                     }
                 }
             } else {
-                floating_tab_fill(is_active)
+                floating_tab_fill(theme, self.chrome_fill, is_active)
             };
             (bg, None)
         } else if FeatureFlag::NewTabStyling.is_enabled() {
