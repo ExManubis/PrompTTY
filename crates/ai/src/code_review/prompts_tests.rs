@@ -20,7 +20,8 @@ fn commit_message_prompt_enforces_conventional_format() {
     for expected in ["feat", "fix", "chore", "imperative mood", "72 characters"] {
         assert!(user.contains(expected), "prompt missing `{expected}`");
     }
-    assert!(user.contains("Example: `feat(auth): implement JWT-based authentication`"));
+    assert!(user.contains("Example: `feat: implement JWT-based authentication`"));
+    assert!(user.contains("Never add a scope in parentheses"));
     assert!(user.contains("Branch name: mikkel/add-auth"));
     assert!(user.contains("diff --git a/src/main.rs"));
 }

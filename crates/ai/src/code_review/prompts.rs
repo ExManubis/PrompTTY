@@ -96,10 +96,11 @@ fn commit_message_prompt(request: &GenerateCodeReviewContentRequest) -> String {
     format!(
         "Write a commit message for the diff below.\n\
          \n\
-         Use the conventional commit format:\n\
-         \x20 <type>(<optional scope>): <subject>\n\
+         Use the conventional commit format without a scope:\n\
+         \x20 <type>: <subject>\n\
          \n\
          - `type` is one of: feat, fix, chore, docs, style, refactor, perf, test.\n\
+         - Never add a scope in parentheses after the type.\n\
          - The subject uses the imperative mood, starts lowercase, has no\n\
            trailing period, and stays within 72 characters.\n\
          - Add a blank line and a short body explaining why the change was\n\
@@ -107,7 +108,7 @@ fn commit_message_prompt(request: &GenerateCodeReviewContentRequest) -> String {
            at 72 characters. Omit the body for trivial changes.\n\
          - Output exactly one commit message and nothing else.\n\
          \n\
-         Example: `feat(auth): implement JWT-based authentication`\n\
+         Example: `feat: implement JWT-based authentication`\n\
          \n\
          {}",
         diff_context(request)
