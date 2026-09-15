@@ -1,7 +1,7 @@
-//! The "Warp Agent" settings page, shown under the Agents umbrella.
+//! The "AI" settings page, shown under the Agents umbrella.
 //!
 //! Covers Warp's own AI: the global toggle, Active AI suggestions, agent
-//! input behavior, voice input, credentials (Bedrock, Gemini Enterprise,
+//! input behavior, credentials (Bedrock, Gemini Enterprise,
 //! custom routers) and the miscellaneous agent display settings.
 
 use std::cell::RefCell;
@@ -41,7 +41,7 @@ use super::settings_page::{
     CONTENT_FONT_SIZE, Category, CategoryHeader, HEADER_PADDING, LocalOnlyIconState, MatchData,
     PageTitle, PageType, SettingsPageMeta, SettingsPageViewHandle, SettingsWidget,
     TOGGLE_BUTTON_RIGHT_PADDING, ToggleState, build_toggle_element, render_body_item_label,
-    render_dropdown_item, render_filterable_dropdown_item,
+    render_dropdown_item,
 };
 use super::{
     SettingActionPairContexts, SettingActionPairDescriptions, SettingsAction, SettingsSection,
@@ -70,13 +70,12 @@ use crate::settings::{
     NaturalLanguageAutosuggestionsEnabled, OrchestrationMessageDisplayMode, PromptSubmissionMode,
     SharedBlockTitleGenerationEnabled, ShouldRenderUseAgentToolbarForUserCommands,
     ShouldShowOzUpdatesInZeroState, ShowAgentTips, ShowConversationHistory, ShowHintText,
-    ThinkingDisplayMode, VOICE_INPUT_LANGUAGES, VoiceInputEnabled, VoiceInputLanguage,
-    VoiceInputToggleKey,
+    ThinkingDisplayMode,
 };
 use crate::ui_components::icons::Icon;
 use crate::util::bindings;
 use crate::view_components::action_button::{ActionButton, ButtonSize, SecondaryTheme};
-use crate::view_components::{Dropdown, DropdownItem, FilterableDropdown};
+use crate::view_components::{Dropdown, DropdownItem};
 use crate::workspaces::user_workspaces::UserWorkspacesEvent;
 use crate::workspaces::workspace::{AdminEnablementSetting, CustomerType};
 
@@ -92,7 +91,6 @@ const SHARED_BLOCK_TITLE_GENERATION_DESCRIPTION: &str =
     "Let AI generate a title for your shared block based on the command and output.";
 const GIT_OPERATIONS_AUTOGEN_DESCRIPTION: &str =
     "Let AI generate commit messages and pull request titles and descriptions.";
-const WISPR_FLOW_URL: &str = "https://wisprflow.ai/";
 
 pub fn init_actions_from_parent_view<T: Action + Clone>(
     app: &mut AppContext,
@@ -424,21 +422,6 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
     );
     ToggleSettingActionPair::add_toggle_setting_action_pairs_as_bindings(
         vec![
-            ToggleSettingActionPair::new(
-                "voice input",
-                builder(SettingsAction::WarpAgent(
-                    WarpAgentPageAction::ToggleVoiceInput,
-                )),
-                &(context.clone() & id!(flags::IS_ANY_AI_ENABLED)),
-                flags::IS_VOICE_INPUT_ENABLED,
-            )
-            .with_group(bindings::BindingGroup::WarpAi)
-            .with_enabled(|| cfg!(feature = "voice_input")),
-        ],
-        app,
-    );
-    ToggleSettingActionPair::add_toggle_setting_action_pairs_as_bindings(
-        vec![
             ToggleSettingActionPair::custom(
                 SettingActionPairDescriptions::new(
                     "Show \"Use Agent\" footer",
@@ -527,8 +510,6 @@ pub fn init_actions_from_parent_view<T: Action + Clone>(
 pub struct WarpAgentPageView {
     page: PageType<Self>,
     self_handle: WeakViewHandle<Self>,
-    voice_input_toggle_key_dropdown: ViewHandle<Dropdown<WarpAgentPageAction>>,
-    voice_input_language_dropdown: ViewHandle<FilterableDropdown<WarpAgentPageAction>>,
     local_only_icon_tooltip_states: RefCell<HashMap<String, MouseStateHandle>>,
     autodetection_denylist_editor: ViewHandle<EditorView>,
     agent_toolbar_inline_editor: ViewHandle<AgentToolbarInlineEditor>,
@@ -551,74 +532,6 @@ impl WarpAgentPageView {
     pub fn new(ctx: &mut ViewContext<Self>) -> Self {
         let self_handle = ctx.handle();
         let is_any_ai_enabled = AISettings::as_ref(ctx).is_any_ai_enabled(ctx);
-
-        let voice_input_toggle_key_dropdown = ctx.add_typed_action_view(|ctx| {
-            let mut dropdown = Dropdown::new(ctx);
-            dropdown.set_top_bar_max_width(AI_SETTINGS_DROPDOWN_WIDTH);
-            if !AISettings::as_ref(ctx).is_voice_input_enabled(ctx) {
-                dropdown.set_disabled(ctx);
-            }
-
-            let values = VoiceInputToggleKey::all_possible_values();
-            let current_value = AISettings::as_ref(ctx).voice_input_toggle_key.value();
-            let selected_index = values
-                .iter()
-                .position(|val| val == current_value)
-                .unwrap_or_else(|| {
-                    log::warn!(
-                        "Could not find current VoiceInputToggleKey value in dropdown option list"
-                    );
-                    0
-                });
-
-            dropdown.add_items(
-                values
-                    .into_iter()
-                    .map(|val| {
-                        DropdownItem::new(
-                            val.display_name(),
-                            WarpAgentPageAction::SetVoiceInputToggleKey(val),
-                        )
-                    })
-                    .collect(),
-                ctx,
-            );
-            dropdown.set_selected_by_index(selected_index, ctx);
-
-            dropdown
-        });
-
-        let voice_input_language_dropdown = ctx.add_typed_action_view(|ctx| {
-            let mut dropdown = FilterableDropdown::new(ctx);
-            dropdown.set_top_bar_max_width(AI_SETTINGS_DROPDOWN_WIDTH);
-            dropdown.set_menu_width(AI_SETTINGS_DROPDOWN_WIDTH, ctx);
-            if !AISettings::as_ref(ctx).is_voice_input_enabled(ctx) {
-                dropdown.set_disabled(ctx);
-            }
-
-            dropdown.add_items(
-                VOICE_INPUT_LANGUAGES
-                    .iter()
-                    .map(|&(code, name)| {
-                        DropdownItem::new(
-                            name,
-                            WarpAgentPageAction::SetVoiceInputLanguage(code.to_string()),
-                        )
-                    })
-                    .collect(),
-                ctx,
-            );
-            let current_code = AISettings::as_ref(ctx)
-                .voice_input_language_code()
-                .unwrap_or("")
-                .to_string();
-            dropdown.set_selected_by_action(
-                WarpAgentPageAction::SetVoiceInputLanguage(current_code),
-                ctx,
-            );
-
-            dropdown
-        });
 
         let thinking_display_mode_dropdown =
             OtherAIWidget::create_thinking_display_mode_dropdown(ctx);
@@ -729,34 +642,6 @@ impl WarpAgentPageView {
                         is_enabled,
                         ctx,
                     );
-
-                    me.update_voice_input_dropdown_enablement(ctx);
-                }
-                AISettingsChangedEvent::VoiceInputEnabled { .. } => {
-                    me.update_voice_input_dropdown_enablement(ctx);
-                }
-                AISettingsChangedEvent::VoiceInputToggleKey { .. } => {
-                    let current_value = AISettings::as_ref(ctx)
-                        .voice_input_toggle_key
-                        .value()
-                        .display_name();
-                    me.voice_input_toggle_key_dropdown
-                        .update(ctx, |dropdown, ctx| {
-                            dropdown.set_selected_by_name(current_value, ctx)
-                        });
-                }
-                AISettingsChangedEvent::VoiceInputLanguage { .. } => {
-                    let current_code = AISettings::as_ref(ctx)
-                        .voice_input_language_code()
-                        .unwrap_or("")
-                        .to_string();
-                    me.voice_input_language_dropdown
-                        .update(ctx, |dropdown, ctx| {
-                            dropdown.set_selected_by_action(
-                                WarpAgentPageAction::SetVoiceInputLanguage(current_code),
-                                ctx,
-                            )
-                        });
                 }
                 AISettingsChangedEvent::ThinkingDisplayMode { .. } => {
                     let current_mode = *AISettings::as_ref(ctx).thinking_display_mode.value();
@@ -883,8 +768,6 @@ impl WarpAgentPageView {
         Self {
             page: Self::build_page(ctx),
             self_handle,
-            voice_input_toggle_key_dropdown,
-            voice_input_language_dropdown,
             autodetection_denylist_editor,
             local_only_icon_tooltip_states: Default::default(),
             agent_toolbar_inline_editor,
@@ -899,27 +782,6 @@ impl WarpAgentPageView {
             #[cfg(feature = "local_fs")]
             add_router_button,
         }
-    }
-
-    fn update_voice_input_dropdown_enablement(&mut self, ctx: &mut ViewContext<Self>) {
-        let is_voice_enabled = AISettings::as_ref(ctx).is_voice_input_enabled(ctx);
-        self.voice_input_toggle_key_dropdown
-            .update(ctx, |dropdown, ctx| {
-                if is_voice_enabled {
-                    dropdown.set_enabled(ctx);
-                } else {
-                    dropdown.set_disabled(ctx);
-                }
-            });
-        self.voice_input_language_dropdown
-            .update(ctx, |dropdown, ctx| {
-                if is_voice_enabled {
-                    dropdown.set_enabled(ctx);
-                } else {
-                    dropdown.set_disabled(ctx);
-                }
-            });
-        ctx.notify();
     }
 
     fn build_page(ctx: &mut ViewContext<Self>) -> PageType<Self> {
@@ -975,17 +837,6 @@ impl WarpAgentPageView {
                 Box::new(PromptSubmissionModeWidget),
             ],
         ));
-
-        let voice_supported = cfg!(feature = "voice_input")
-            && ai_settings
-                .voice_input_enabled_internal
-                .is_supported_on_current_platform();
-        if voice_supported {
-            categories.push(Category::new(
-                "Voice",
-                vec![Box::new(VoiceWidget::default())],
-            ));
-        }
 
         categories.push(Category::new(
             "Cloud Handoff",
@@ -1056,11 +907,11 @@ impl WarpAgentPageView {
         let global_ai_switch_state = SwitchStateHandle::default();
         PageType::new_categorized(
             categories,
-            Some(PageTitle::new("Warp Agent").with_trailing_element(
-                move |_view, appearance, app| {
+            Some(
+                PageTitle::new("AI").with_trailing_element(move |_view, appearance, app| {
                     render_global_ai_toggle(&global_ai_switch_state, appearance, app)
-                },
-            )),
+                }),
+            ),
         )
     }
 
@@ -1161,8 +1012,6 @@ impl Entity for WarpAgentPageView {
 #[derive(Debug, Clone, PartialEq)]
 pub enum WarpAgentPageAction {
     OpenUrl(String),
-    SetVoiceInputToggleKey(VoiceInputToggleKey),
-    SetVoiceInputLanguage(String),
     ToggleGlobalAI,
     ToggleActiveAI,
     ToggleIntelligentAutosuggestions,
@@ -1174,7 +1023,6 @@ pub enum WarpAgentPageAction {
     ToggleAIInputAutoDetection,
     ToggleNLDInTerminal,
     ToggleUseAgentToolbar,
-    ToggleVoiceInput,
     HyperlinkClick(HyperlinkUrl),
     ToggleShowInputHintText,
     ToggleAiCommandSearchHashTrigger,
@@ -1215,24 +1063,6 @@ impl TypedActionView for WarpAgentPageView {
         match action {
             WarpAgentPageAction::OpenUrl(url) => {
                 ctx.open_url(url.as_str());
-            }
-            WarpAgentPageAction::SetVoiceInputToggleKey(key) => {
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
-                    report_if_error!(settings.voice_input_toggle_key.set_value(*key, ctx));
-                    report_if_error!(
-                        settings
-                            .explicitly_interacted_with_voice
-                            .set_value(true, ctx)
-                    );
-                });
-                ctx.notify();
-            }
-            WarpAgentPageAction::SetVoiceInputLanguage(language) => {
-                let language = language.clone();
-                AISettings::handle(ctx).update(ctx, |settings, ctx| {
-                    report_if_error!(settings.voice_input_language.set_value(language, ctx));
-                });
-                ctx.notify();
             }
             WarpAgentPageAction::ToggleGlobalAI => {
                 match AISettings::handle(ctx).update(ctx, |settings, ctx| {
@@ -1381,19 +1211,6 @@ impl TypedActionView for WarpAgentPageView {
                     Ok(_new_value) => {}
                     Err(e) => {
                         log::warn!("Failed to set value for Use Agent Footer setting: {e:?}");
-                    }
-                }
-                ctx.notify();
-            }
-            WarpAgentPageAction::ToggleVoiceInput => {
-                match AISettings::handle(ctx).update(ctx, |settings, ctx| {
-                    settings
-                        .voice_input_enabled_internal
-                        .toggle_and_save_value(ctx)
-                }) {
-                    Ok(_new_value) => {}
-                    Err(e) => {
-                        log::warn!("Failed to set value for Voice Input: {e:?}");
                     }
                 }
                 ctx.notify();
@@ -2487,117 +2304,6 @@ impl NaturalLanguageDetectionWidget {
     }
 }
 
-#[derive(Default)]
-struct VoiceWidget {
-    voice_input_toggle: SwitchStateHandle,
-    wispr_highlight_index: HighlightedHyperlink,
-}
-
-impl VoiceWidget {
-    fn render_voice_section(
-        &self,
-        view: &WarpAgentPageView,
-        appearance: &Appearance,
-        app: &warpui::AppContext,
-    ) -> Box<dyn warpui::Element> {
-        let ai_settings = AISettings::as_ref(app);
-        let is_toggleable = ai_settings.is_any_ai_enabled(app);
-        let mut column = Flex::column().with_child(render_ai_setting_toggle::<VoiceInputEnabled>(
-            "Voice Input",
-            WarpAgentPageAction::ToggleVoiceInput,
-            *ai_settings.voice_input_enabled_internal,
-            is_toggleable,
-            self.voice_input_toggle.clone(),
-            &view.local_only_icon_tooltip_states,
-            app,
-        ));
-
-        let voice_input_description_text_fragments = vec![
-            FormattedTextFragment::plain_text(
-                "Voice input allows you to control Warp by speaking directly to your terminal (powered by ",
-            ),
-            FormattedTextFragment::hyperlink("Wispr Flow", WISPR_FLOW_URL),
-            FormattedTextFragment::plain_text(")."),
-        ];
-
-        let voice_input_description = FormattedTextElement::new(
-            FormattedText::new([FormattedTextLine::Line(
-                voice_input_description_text_fragments,
-            )]),
-            appearance.ui_font_size(),
-            appearance.ui_font_family(),
-            appearance.ui_font_family(),
-            styles::description_font_color(is_toggleable, app).into(),
-            self.wispr_highlight_index.clone(),
-        )
-        .with_hyperlink_font_color(appearance.theme().accent().into_solid())
-        .register_default_click_handlers(|url, ctx, _| {
-            ctx.dispatch_typed_action(WarpAgentPageAction::HyperlinkClick(url));
-        });
-
-        column.add_child(
-            Container::new(voice_input_description.finish())
-                .with_margin_top(styles::DESCRIPTION_NEGATIVE_MARGIN_OFFSET)
-                .with_margin_bottom(styles::DESCRIPTION_MARGIN_BOTTOM)
-                .with_margin_right(styles::TOGGLE_WIDTH_MARGIN)
-                .finish(),
-        );
-
-        if ai_settings.is_voice_input_enabled(app) {
-            column.add_child(render_dropdown_item(
-                appearance,
-                "Key for Activating Voice Input",
-                Some("Press and hold to activate."),
-                None,
-                LocalOnlyIconState::for_setting(
-                    VoiceInputToggleKey::storage_key(),
-                    VoiceInputToggleKey::sync_to_cloud(),
-                    &mut view.local_only_icon_tooltip_states.borrow_mut(),
-                    app,
-                ),
-                None,
-                &view.voice_input_toggle_key_dropdown,
-            ));
-            column.add_child(render_filterable_dropdown_item(
-                appearance,
-                "Speech Language",
-                Some("Language used when transcribing voice input."),
-                None,
-                LocalOnlyIconState::for_setting(
-                    VoiceInputLanguage::storage_key(),
-                    VoiceInputLanguage::sync_to_cloud(),
-                    &mut view.local_only_icon_tooltip_states.borrow_mut(),
-                    app,
-                ),
-                None,
-                &view.voice_input_language_dropdown,
-            ));
-        }
-
-        column.finish()
-    }
-}
-
-impl SettingsWidget for VoiceWidget {
-    type View = WarpAgentPageView;
-
-    fn search_terms(&self) -> &str {
-        "voice agent oz ai a.i. speech input natural language talk english spanish french german estonian finnish"
-    }
-
-    fn should_render(&self, app: &AppContext) -> bool {
-        cfg!(feature = "voice_input") && UserWorkspaces::as_ref(app).is_voice_enabled()
-    }
-
-    fn render(
-        &self,
-        view: &Self::View,
-        appearance: &Appearance,
-        app: &AppContext,
-    ) -> Box<dyn Element> {
-        self.render_voice_section(view, appearance, app)
-    }
-}
 struct OtherAIWidget;
 
 impl OtherAIWidget {
