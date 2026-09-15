@@ -54,7 +54,9 @@ use crate::workspace::tab_group::{TabGroup, TabGroupId};
 use crate::workspace::tab_settings::{
     TabCloseButtonPosition, TabSettings, VerticalTabsDisplayGranularity,
 };
-use crate::workspace::util::{FLOATING_CARD_RADIUS, floating_tab_fill, metallic_border};
+use crate::workspace::util::{
+    FLOATING_CARD_RADIUS, chrome_opacity, floating_tab_fill, metallic_border,
+};
 use crate::workspace::{
     PaneViewLocator, TabBarDropTargetData, TabBarLocation, TabContextMenuAnchor, WorkspaceAction,
 };
@@ -1066,6 +1068,8 @@ pub struct TabComponent<'a> {
     appearance: &'a Appearance,
     is_drag_target: bool,
     background_opacity: u8,
+    /// Opacity of the surrounding chrome, which an inactive floating tab blends into.
+    chrome_opacity: u8,
     /// Set to `true` when this `TabComponent` is being rendered inside the
     /// floating chip overlay used during a cross-window tab drag. In that
     /// mode `build()` skips the outer `SavePosition`, `Draggable`, and
@@ -1230,6 +1234,7 @@ impl<'a> TabComponent<'a> {
             .background_opacity
             .effective_opacity(window_id, ctx)
             .clamp(20, 100);
+        let chrome_opacity = chrome_opacity(window_id, ctx);
         let pane_group_id = tab.pane_group.id();
         let pane_id = tab.pane_group.as_ref(ctx).focused_pane_id(ctx);
         let locator = PaneViewLocator {
@@ -1251,6 +1256,7 @@ impl<'a> TabComponent<'a> {
             appearance,
             is_drag_target,
             background_opacity,
+            chrome_opacity,
             for_drag_ghost: false,
             grouped_member: false,
             sole_grouped_member: false,
@@ -1694,7 +1700,7 @@ impl<'a> TabComponent<'a> {
                     }
                 }
             } else {
-                floating_tab_fill(is_active)
+                floating_tab_fill(theme, self.chrome_opacity, is_active)
             };
             (bg, None)
         } else if FeatureFlag::NewTabStyling.is_enabled() {

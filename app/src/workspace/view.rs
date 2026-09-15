@@ -20558,7 +20558,6 @@ impl Workspace {
                 })
                 .finish(),
         )
-        .with_background(workspace_chrome_fill())
         .finish();
 
         let dimming_color = appearance.theme().background().into();
@@ -21659,19 +21658,15 @@ impl Workspace {
         }
         col.add_child(Shrinkable::new(1.0, contents).finish());
 
-        self.wrap_in_panel_surface(appearance, side, col.finish(), *PANEL_CORNER_RADIUS)
+        Self::wrap_in_panel_surface(side, col.finish(), *PANEL_CORNER_RADIUS)
     }
 
     fn wrap_in_panel_surface(
-        &self,
-        appearance: &Appearance,
         side: &PanelPosition,
         contents: Box<dyn Element>,
         corner_radius: CornerRadius,
     ) -> Box<dyn Element> {
-        let mut container = Container::new(contents)
-            .with_background(appearance.theme().surface_1().with_opacity(90))
-            .with_corner_radius(corner_radius);
+        let mut container = Container::new(contents).with_corner_radius(corner_radius);
 
         match side {
             PanelPosition::Left => container = container.with_margin_right(2.0),
@@ -26473,7 +26468,11 @@ impl View for Workspace {
         let workspace = Container::new(stack.finish()).with_corner_radius(window_corner_radius);
 
         let mut stack = Stack::new();
-        stack.add_child(workspace.with_background(workspace_chrome_fill()).finish());
+        stack.add_child(
+            workspace
+                .with_background(workspace_chrome_fill(self.window_id, app))
+                .finish(),
+        );
 
         let input_position_id = self
             .get_active_input_view_handle(app)
